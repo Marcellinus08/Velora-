@@ -2,7 +2,7 @@
 import "./globals.css";
 
 export const metadata = {
-  title: "VideoHub",
+  title: "Velora",
   description: "Platform video dengan poin & tugas",
 };
 
