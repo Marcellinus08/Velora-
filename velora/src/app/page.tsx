@@ -1,8 +1,24 @@
-import Image from "next/image";
+// app/page.tsx
+import Header from "@/components/header";
+import Sidebar from "@/components/sidebar";
+import Carousel from "@/components/carousel";
+import Categories from "@/components/categories";
+import CardsGrid from "@/components/cardsgrid";
 
 export default function Home() {
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-    </div>
+    <>
+      <Header />
+      <div className="flex h-full grow flex-row">
+        <Sidebar />
+        <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8">
+          <div className="relative mb-6 w-full">
+            <Carousel />
+          </div>
+          <Categories />
+          <CardsGrid />
+        </main>
+      </div>
+    </>
   );
 }
