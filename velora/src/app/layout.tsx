@@ -1,5 +1,6 @@
 // app/layout.tsx
 import "./globals.css";
+import Header from "@/components/header";
 
 export const metadata = {
   title: "Velora",
@@ -13,6 +14,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         className="relative flex min-h-screen size-full flex-col overflow-x-hidden bg-neutral-900"
         style={{ fontFamily: `"Be Vietnam Pro", "Noto Sans", sans-serif` }}
       >
+        <Header />
         {children}
       </body>
     </html>
