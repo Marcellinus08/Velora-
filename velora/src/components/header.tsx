@@ -424,8 +424,8 @@ export default function Header() {
               setProfileOpen(false);
             }}
             className="relative flex size-10 cursor-pointer items-center justify-center overflow-hidden rounded-full text-neutral-50 transition-colors hover:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-[var(--primary-500)]/40"
-            aria-label="Notifikasi"
-            title="Notifikasi"
+            aria-label="Notification"
+            title="Notification"
           >
             <svg fill="currentColor" height="20" width="20" viewBox="0 0 256 256" aria-hidden="true">
               <path d="M221.8,175.94C216.25,166.38,208,139.33,208,104a80,80,0,1,0-160,0c0,35.34-8.26,62.38-13.81,71.94A16,16,0,0,0,48,200H88.81a40,40,0,0,0,78.38,0H208a16,16,0,0,0,13.8-24.06ZM128,216a24,24,0,0,1-22.62-16h45.24A24,24,0,0,1,128,216ZM48,184c7.7-13.24,16-43.92,16-80a64,64,0,1,1,128,0c0,36.05,8.28,66.73,16,80Z"></path>
@@ -444,7 +444,7 @@ export default function Header() {
             >
               <div className="flex items-center justify-between border-b border-neutral-800 px-4 py-3">
                 <h3 id="notif-title" className="text-sm font-semibold text-neutral-100">
-                  Notifikasi
+                  Notifications
                 </h3>
               </div>
 
@@ -455,8 +455,9 @@ export default function Header() {
                       <path d="M18 16l1 2H5l1-2c.667-1.333 1-3.667 1-7a5 5 0 1110 0c0 3.333.333 5.667 1 7zM9 19a3 3 0 006 0H9z" />
                     </svg>
                   </div>
-                  <p className="mt-3 text-sm font-medium text-neutral-200">Belum ada notifikasi</p>
-                  <p className="mt-1 text-xs text-neutral-400">Nanti pemberitahuan akan muncul di sini.</p>
+                  <p className="mt-3 text-sm font-medium text-neutral-200">No notifications yet</p>
+                  <p className="mt-1 text-xs text-neutral-400">Notifications will appear here later.</p>
+
                 </div>
               ) : (
                 <ul className="max-h-80 divide-y divide-neutral-800 overflow-auto">

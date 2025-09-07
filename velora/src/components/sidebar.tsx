@@ -1,17 +1,43 @@
-import Link from "next/link";
+"use client";
 
-// components/Sidebar.tsx
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+
 export default function Sidebar() {
+  const pathname = usePathname();
+
+  // aktif jika path sama persis, atau berada di bawahnya (nested route)
+  const isActive = (href: string) => {
+    if (href === "/") return pathname === "/";
+    return pathname === href || pathname.startsWith(href + "/");
+  };
+
+  const base =
+    "flex items-center gap-4 rounded-lg px-3 py-2 text-sm font-medium transition-colors";
+  const activeCls = "bg-neutral-800 text-neutral-50";
+  const inactiveCls = "text-neutral-50 hover:bg-neutral-700";
+
   return (
     <aside className="sticky top-[57px] hidden h-[calc(100vh-57px)] w-64 flex-shrink-0 flex-col gap-y-2 overflow-y-auto border-r border-solid border-neutral-800 bg-neutral-900 px-3 py-4 md:flex">
       <nav className="flex flex-col gap-1">
-        <Link className="flex items-center gap-4 rounded-lg bg-neutral-800 px-3 py-2 text-sm font-medium text-neutral-50 hover:bg-neutral-700" href="/">
+        {/* Homepage */}
+        <Link
+          href="/"
+          aria-current={isActive("/") ? "page" : undefined}
+          className={`${base} ${isActive("/") ? activeCls : inactiveCls}`}
+        >
           <svg className="size-6" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
             <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"></path>
           </svg>
           <span>Homepage</span>
         </Link>
-        <Link className="flex items-center gap-4 rounded-lg px-3 py-2 text-sm font-medium text-neutral-50 hover:bg-neutral-700" href="subcription">
+
+        {/* Subscription */}
+        <Link
+          href="/subscription" /* ganti ke "/subcription" jika folder route kamu memang pakai ejaan itu */
+          aria-current={isActive("/subscription") ? "page" : undefined}
+          className={`${base} ${isActive("/subscription") ? activeCls : inactiveCls}`}
+        >
           <svg className="size-6" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
             <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"></path>
             <path
@@ -22,13 +48,25 @@ export default function Sidebar() {
           </svg>
           <span>Subscription</span>
         </Link>
-        <Link className="flex items-center gap-4 rounded-lg px-3 py-2 text-sm font-medium text-neutral-50 hover:bg-neutral-700" href="#">
+
+        {/* Meet */}
+        <Link
+          href="/meet"
+          aria-current={isActive("/meet") ? "page" : undefined}
+          className={`${base} ${isActive("/meet") ? activeCls : inactiveCls}`}
+        >
           <svg className="size-6" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
             <path d="M2 6a2 2 0 012-2h12a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zm14.553 1.106A1 1 0 0016 8v4a1 1 0 00.553.894l2 1A1 1 0 0020 13V7a1 1 0 00-1.447-.894l-2 1z"></path>
           </svg>
           <span>Meet</span>
         </Link>
-        <Link className="flex items-center gap-4 rounded-lg px-3 py-2 text-sm font-medium text-neutral-50 hover:bg-neutral-700" href="#">
+
+        {/* Leaderboard */}
+        <Link
+          href="/leaderboard"
+          aria-current={isActive("/leaderboard") ? "page" : undefined}
+          className={`${base} ${isActive("/leaderboard") ? activeCls : inactiveCls}`}
+        >
           <svg className="size-6" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
             <path
               fillRule="evenodd"
@@ -38,7 +76,13 @@ export default function Sidebar() {
           </svg>
           <span>Leaderboard</span>
         </Link>
-        <Link className="flex items-center gap-4 rounded-lg px-3 py-2 text-sm font-medium text-neutral-50 hover:bg-neutral-700" href="#">
+
+        {/* Community */}
+        <Link
+          href="/community"
+          aria-current={isActive("/community") ? "page" : undefined}
+          className={`${base} ${isActive("/community") ? activeCls : inactiveCls}`}
+        >
           <svg className="size-6" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
             <path
               fillRule="evenodd"
