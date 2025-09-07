@@ -1,0 +1,237 @@
+<html><head>
+<meta charset="utf-8"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com/" rel="preconnect"/>
+<link as="style" href="https://fonts.googleapis.com/css2?display=swap&amp;family=Be+Vietnam+Pro%3Awght%40400%3B500%3B700%3B900&amp;family=Noto+Sans%3Awght%40400%3B500%3B700%3B900" onload="this.rel='stylesheet'" rel="stylesheet"/>
+<title>Stitch Design</title>
+<link href="data:image/x-icon;base64," rel="icon" type="image/x-icon"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<style type="text/tailwindcss">
+      :root {
+        --primary-500: #9D00FF;
+        --neutral-900: #000000;
+        --neutral-800: #1f1f1f;
+        --neutral-700: #333333;
+        --neutral-400: #a0a0a0;
+        --neutral-50: #ffffff;
+      }
+    </style>
+</head>
+<body class="relative flex size-full min-h-screen flex-col bg-neutral-900 overflow-x-hidden" style='font-family: "Be Vietnam Pro", "Noto Sans", sans-serif;'>
+<header class="sticky top-0 z-20 flex w-full items-center justify-between gap-4 border-b border-solid border-neutral-800 bg-neutral-900 px-4 py-2 sm:px-6 lg:px-8">
+<div class="flex items-center gap-4">
+<button class="flex items-center justify-center rounded-full p-2 text-neutral-50 hover:bg-neutral-800 md:hidden">
+<svg class="size-6" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"></path></svg>
+</button>
+<div class="flex items-center gap-2">
+<svg class="size-8 text-[var(--primary-500)]" fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+<g clip-path="url(#clip0_6_330)">
+<path clip-rule="evenodd" d="M24 0.757355L47.2426 24L24 47.2426L0.757355 24L24 0.757355ZM21 35.7574V12.2426L9.24264 24L21 35.7574Z" fill="currentColor" fill-rule="evenodd"></path>
+</g>
+<defs>
+<clipPath id="clip0_6_330"><rect fill="white" height="48" width="48"></rect></clipPath>
+</defs>
+</svg>
+<h1 class="hidden text-xl font-bold leading-tight tracking-[-0.015em] text-neutral-50 sm:block">VideoHub</h1>
+</div>
+</div>
+<div class="flex flex-1 justify-center px-4 md:ml-[16.5rem] md:flex-grow-0 md:justify-start md:px-0">
+<div class="w-full max-w-2xl">
+<label class="relative flex w-full">
+<div class="relative w-full">
+<input class="form-input h-10 w-full rounded-full border border-solid border-neutral-800 bg-neutral-900 py-2 pl-10 pr-4 text-base font-normal leading-normal text-neutral-50 placeholder:text-neutral-400 focus:border-[var(--primary-500)] focus:outline-none focus:ring-0" placeholder="Search discussions" value=""/>
+<div class="absolute inset-y-0 left-0 flex items-center pl-3">
+<svg class="size-5 text-neutral-400" fill="currentColor" viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
+<path d="M229.66,218.34l-50.07-50.06a88.11,88.11,0,1,0-11.31,11.31l50.06,50.07a8,8,0,0,0,11.32-11.32ZM40,112a72,72,0,1,1,72,72A72.08,72.08,0,0,1,40,112Z"></path>
+</svg>
+</div>
+</div>
+</label>
+</div>
+</div>
+<div class="flex items-center gap-2 sm:gap-4">
+<button class="flex size-10 cursor-pointer items-center justify-center rounded-full text-neutral-50 transition-colors hover:bg-neutral-800">
+<svg class="h-6 w-6" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path clip-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" fill-rule="evenodd"></path></svg>
+</button>
+<button class="flex size-10 cursor-pointer items-center justify-center overflow-hidden rounded-full text-neutral-50 transition-colors hover:bg-neutral-800">
+<div class="text-neutral-50" data-icon="Bell" data-size="20px" data-weight="regular">
+<svg fill="currentColor" height="20px" viewBox="0 0 256 256" width="20px" xmlns="http://www.w3.org/2000/svg">
+<path d="M221.8,175.94C216.25,166.38,208,139.33,208,104a80,80,0,1,0-160,0c0,35.34-8.26,62.38-13.81,71.94A16,16,0,0,0,48,200H88.81a40,40,0,0,0,78.38,0H208a16,16,0,0,0,13.8-24.06ZM128,216a24,24,0,0,1-22.62-16h45.24A24,24,0,0,1,128,216ZM48,184c7.7-13.24,16-43.92,16-80a64,64,0,1,1,128,0c0,36.05,8.28,66.73,16,80Z"></path>
+</svg>
+</div>
+</button>
+<div class="aspect-square size-10 rounded-full bg-cover bg-center bg-no-repeat" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuC3txMvWebVOWUCSc_JSlUiMuPymMamNlXpP6eVstETd_jpkEBvYMGpJlTLoyuPwEwsMNuVYLjzgBpWmzSf6GYUfFWATxj-4TF40AhJkCdlDSb39pF3NUuSO2eLUVCQs7Le4yeaVhGRKD7Qej0a1_iX065ldiv32JMh2TvPLfeEluliBoM5Mhmqpjee8Q6p86zTwHwQRPn-qtU0pO3lN1OOfA7nhRXvoyjsnoDZoNavsdfvB9Zuu4lWLeWohE9LasU1LScS-OKcER7f");'></div>
+</div>
+</header>
+<div class="flex h-full grow flex-row">
+<aside class="sticky top-[57px] hidden h-[calc(100vh-57px)] w-64 flex-shrink-0 flex-col gap-y-2 overflow-y-auto border-r border-solid border-neutral-800 bg-neutral-900 px-3 py-4 md:flex">
+<nav class="flex flex-col gap-1">
+<a class="flex items-center gap-4 rounded-lg px-3 py-2 text-sm font-medium text-neutral-50 hover:bg-neutral-800" href="#">
+<svg class="size-6" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"></path></svg>
+<span>Homepage</span>
+</a>
+<a class="flex items-center gap-4 rounded-lg px-3 py-2 text-sm font-medium text-neutral-50 hover:bg-neutral-800" href="#">
+<svg class="size-6" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M10 12a2 2 0 100-4 2 2 0 000 4z"></path><path clip-rule="evenodd" d="M.458 10C3.732 4.943 9.522 3 10 3s6.268 1.943 9.542 7c-3.274 5.057-9.062 7-9.542 7S3.732 15.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" fill-rule="evenodd"></path></svg>
+<span>Subscription</span>
+</a>
+<a class="flex items-center gap-4 rounded-lg px-3 py-2 text-sm font-medium text-neutral-50 hover:bg-neutral-800" href="#">
+<svg class="size-6" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M2 6a2 2 0 012-2h12a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zm14.553 1.106A1 1 0 0016 8v4a1 1 0 00.553.894l2 1A1 1 0 0020 13V7a1 1 0 00-1.447-.894l-2 1z"></path></svg>
+<span>Meet</span>
+</a>
+<a class="flex items-center gap-4 rounded-lg px-3 py-2 text-sm font-medium text-neutral-50 hover:bg-neutral-800" href="#">
+<svg class="size-6" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path clip-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.414-1.414L11 9.586V6z" fill-rule="evenodd"></path></svg>
+<span>Leaderboard</span>
+</a>
+<a class="flex items-center gap-4 rounded-lg bg-neutral-800 px-3 py-2 text-sm font-medium text-neutral-50 hover:bg-neutral-700" href="#">
+<svg class="size-6" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path clip-rule="evenodd" d="M18 5v8a2 2 0 01-2 2h-5l-5 4v-4H4a2 2 0 01-2-2V5a2 2 0 012-2h12a2 2 0 012 2zM7 8H5v2h2V8zm2 0h2v2H9V8zm6 0h-2v2h2V8z" fill-rule="evenodd"></path></svg>
+<span>Community</span>
+</a>
+</nav>
+</aside>
+<main class="flex-1 px-4 py-6 sm:px-6 lg:px-8">
+<div class="flex flex-col gap-6">
+<div class="flex flex-col items-start gap-4 md:flex-row md:items-center md:justify-between">
+<h2 class="text-2xl font-bold text-neutral-50">Community Discussions</h2>
+<button class="flex items-center gap-2 rounded-full bg-[var(--primary-500)] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-opacity-80">
+<svg class="size-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path clip-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" fill-rule="evenodd"></path></svg>
+<span>Create New Post</span>
+</button>
+</div>
+<div class="border-b border-neutral-800">
+<div class="flex items-center gap-x-2 overflow-x-auto">
+<button class="whitespace-nowrap border-b-2 border-[var(--primary-500)] px-3 py-2 text-sm font-medium text-neutral-50">All Topics</button>
+<button class="whitespace-nowrap border-b-2 border-transparent px-3 py-2 text-sm font-medium text-neutral-400 hover:border-neutral-700 hover:text-neutral-50">Cooking</button>
+<button class="whitespace-nowrap border-b-2 border-transparent px-3 py-2 text-sm font-medium text-neutral-400 hover:border-neutral-700 hover:text-neutral-50">Business</button>
+<button class="whitespace-nowrap border-b-2 border-transparent px-3 py-2 text-sm font-medium text-neutral-400 hover:border-neutral-700 hover:text-neutral-50">Music</button>
+<button class="whitespace-nowrap border-b-2 border-transparent px-3 py-2 text-sm font-medium text-neutral-400 hover:border-neutral-700 hover:text-neutral-50">Arts &amp; Crafts</button>
+<button class="whitespace-nowrap border-b-2 border-transparent px-3 py-2 text-sm font-medium text-neutral-400 hover:border-neutral-700 hover:text-neutral-50">Development</button>
+<button class="whitespace-nowrap border-b-2 border-transparent px-3 py-2 text-sm font-medium text-neutral-400 hover:border-neutral-700 hover:text-neutral-50">Fitness</button>
+<button class="whitespace-nowrap border-b-2 border-transparent px-3 py-2 text-sm font-medium text-neutral-400 hover:border-neutral-700 hover:text-neutral-50">Photography</button>
+</div>
+</div>
+<div class="flex flex-col gap-4">
+<div class="rounded-lg border border-neutral-800 bg-neutral-900 p-4 transition-colors hover:bg-neutral-800">
+<div class="flex items-start gap-4">
+<div class="aspect-square size-10 rounded-full bg-cover bg-center bg-no-repeat" style='background-image: url("https://lh3.googleusercontent.com/a-/ACNPEu8_L6L-2fV3oA-Z2k-3yYg1Y_Fh9_jZ-7E_j8J=s96-c");'></div>
+<div class="flex-1">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<p class="font-semibold text-neutral-50">Isabella Rossi</p>
+<p class="text-sm text-neutral-400">posted in <span class="font-medium text-neutral-50">Cooking</span></p>
+</div>
+<p class="text-sm text-neutral-400">2 hours ago</p>
+</div>
+<h3 class="mt-2 text-lg font-bold text-neutral-50">What are your go-to knife skills for beginners?</h3>
+<p class="mt-1 text-neutral-400">Looking for tips and tricks to share with my students. I've found that mastering the basic cuts makes a huge difference. What are some of your favorite techniques or resources for teaching knife skills?</p>
+<div class="mt-4 flex items-center gap-6 text-sm text-neutral-400">
+<button class="flex items-center gap-1.5 hover:text-neutral-50">
+<svg class="size-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M2 10.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6zM6 10.333v5.43a2 2 0 001.106 1.787l.25.125a2 2 0 002.29-1.787v-5.43M14 10.333v5.43a2 2 0 001.106 1.787l.25.125a2 2 0 002.29-1.787v-5.43M10 4.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6z"></path></svg>
+<span>12 Likes</span>
+</button>
+<button class="flex items-center gap-1.5 hover:text-neutral-50">
+<svg class="size-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path clip-rule="evenodd" d="M18 5v8a2 2 0 01-2 2h-5l-5 4v-4H4a2 2 0 01-2-2V5a2 2 0 012-2h12a2 2 0 012 2zM7 8H5v2h2V8zm2 0h2v2H9V8zm6 0h-2v2h2V8z" fill-rule="evenodd"></path></svg>
+<span>8 Replies</span>
+</button>
+<button class="flex items-center gap-1.5 hover:text-neutral-50">
+<svg class="size-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.74l4.94-2.47C13.456 7.68 14.19 8 15 8z"></path></svg>
+<span>Share</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<div class="rounded-lg border border-neutral-800 bg-neutral-900 p-4 transition-colors hover:bg-neutral-800">
+<div class="flex items-start gap-4">
+<div class="aspect-square size-10 rounded-full bg-cover bg-center bg-no-repeat" style='background-image: url("https://lh3.googleusercontent.com/a-/ACNPEu9K3f8Z4Q7f-f_p-z_a_R7Y_h_F_X_lY9w_o_w=s96-c");'></div>
+<div class="flex-1">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<p class="font-semibold text-neutral-50">David Chen</p>
+<p class="text-sm text-neutral-400">posted in <span class="font-medium text-neutral-50">Business</span></p>
+</div>
+<p class="text-sm text-neutral-400">5 hours ago</p>
+</div>
+<h3 class="mt-2 text-lg font-bold text-neutral-50">Favorite public speaking warm-up exercises?</h3>
+<p class="mt-1 text-neutral-400">I'm preparing for a big presentation next week and would love to hear how others get ready to speak. Tongue twisters, breathing exercises, power posing – what works for you?</p>
+<div class="mt-4 flex items-center gap-6 text-sm text-neutral-400">
+<button class="flex items-center gap-1.5 text-[var(--primary-500)] hover:text-opacity-80">
+<svg class="size-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M2 10.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6zM6 10.333v5.43a2 2 0 001.106 1.787l.25.125a2 2 0 002.29-1.787v-5.43M14 10.333v5.43a2 2 0 001.106 1.787l.25.125a2 2 0 002.29-1.787v-5.43M10 4.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6z"></path></svg>
+<span>25 Likes</span>
+</button>
+<button class="flex items-center gap-1.5 hover:text-neutral-50">
+<svg class="size-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path clip-rule="evenodd" d="M18 5v8a2 2 0 01-2 2h-5l-5 4v-4H4a2 2 0 01-2-2V5a2 2 0 012-2h12a2 2 0 012 2zM7 8H5v2h2V8zm2 0h2v2H9V8zm6 0h-2v2h2V8z" fill-rule="evenodd"></path></svg>
+<span>15 Replies</span>
+</button>
+<button class="flex items-center gap-1.5 hover:text-neutral-50">
+<svg class="size-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.74l4.94-2.47C13.456 7.68 14.19 8 15 8z"></path></svg>
+<span>Share</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<div class="rounded-lg border border-neutral-800 bg-neutral-900 p-4 transition-colors hover:bg-neutral-800">
+<div class="flex items-start gap-4">
+<div class="aspect-square size-10 rounded-full bg-cover bg-center bg-no-repeat" style='background-image: url("https://lh3.googleusercontent.com/a-/ACNPEu-lG_H3f_tY_c_K_X_a7_f_w_z_q_Q_H-i-A=s96-c");'></div>
+<div class="flex-1">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<p class="font-semibold text-neutral-50">Emily Carter</p>
+<p class="text-sm text-neutral-400">posted in <span class="font-medium text-neutral-50">Photography</span></p>
+</div>
+<p class="text-sm text-neutral-400">1 day ago</p>
+</div>
+<h3 class="mt-2 text-lg font-bold text-neutral-50">Lens recommendations for portrait photography?</h3>
+<p class="mt-1 text-neutral-400">I'm looking to upgrade my gear and specialize more in portraits. I'm currently using a standard kit lens. What prime or zoom lenses would you recommend for capturing stunning portraits with beautiful bokeh?</p>
+<div class="mt-4 flex items-center gap-6 text-sm text-neutral-400">
+<button class="flex items-center gap-1.5 hover:text-neutral-50">
+<svg class="size-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M2 10.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6zM6 10.333v5.43a2 2 0 001.106 1.787l.25.125a2 2 0 002.29-1.787v-5.43M14 10.333v5.43a2 2 0 001.106 1.787l.25.125a2 2 0 002.29-1.787v-5.43M10 4.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6z"></path></svg>
+<span>18 Likes</span>
+</button>
+<button class="flex items-center gap-1.5 hover:text-neutral-50">
+<svg class="size-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path clip-rule="evenodd" d="M18 5v8a2 2 0 01-2 2h-5l-5 4v-4H4a2 2 0 01-2-2V5a2 2 0 012-2h12a2 2 0 012 2zM7 8H5v2h2V8zm2 0h2v2H9V8zm6 0h-2v2h2V8z" fill-rule="evenodd"></path></svg>
+<span>11 Replies</span>
+</button>
+<button class="flex items-center gap-1.5 hover:text-neutral-50">
+<svg class="size-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.74l4.94-2.47C13.456 7.68 14.19 8 15 8z"></path></svg>
+<span>Share</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<div class="rounded-lg border border-neutral-800 bg-neutral-900 p-4 transition-colors hover:bg-neutral-800">
+<div class="flex items-start gap-4">
+<div class="aspect-square size-10 rounded-full bg-cover bg-center bg-no-repeat" style='background-image: url("https://lh3.googleusercontent.com/a-/ACNPEu8TzY_q_O_Y_e_j_h_X_q_w_z_p_Z_q_Q_H-i-A=s96-c");'></div>
+<div class="flex-1">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<p class="font-semibold text-neutral-50">Lucas "Fingers" Martinez</p>
+<p class="text-sm text-neutral-400">posted in <span class="font-medium text-neutral-50">Music</span></p>
+</div>
+<p class="text-sm text-neutral-400">2 days ago</p>
+</div>
+<h3 class="mt-2 text-lg font-bold text-neutral-50">How do you overcome writer's block when composing?</h3>
+<p class="mt-1 text-neutral-400">We've all been there, staring at a blank page. What are your strategies for breaking through creative blocks and finding inspiration for new melodies and lyrics?</p>
+<div class="mt-4 flex items-center gap-6 text-sm text-neutral-400">
+<button class="flex items-center gap-1.5 hover:text-neutral-50">
+<svg class="size-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M2 10.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6zM6 10.333v5.43a2 2 0 001.106 1.787l.25.125a2 2 0 002.29-1.787v-5.43M14 10.333v5.43a2 2 0 001.106 1.787l.25.125a2 2 0 002.29-1.787v-5.43M10 4.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6z"></path></svg>
+<span>31 Likes</span>
+</button>
+<button class="flex items-center gap-1.5 hover:text-neutral-50">
+<svg class="size-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path clip-rule="evenodd" d="M18 5v8a2 2 0 01-2 2h-5l-5 4v-4H4a2 2 0 01-2-2V5a2 2 0 012-2h12a2 2 0 012 2zM7 8H5v2h2V8zm2 0h2v2H9V8zm6 0h-2v2h2V8z" fill-rule="evenodd"></path></svg>
+<span>22 Replies</span>
+</button>
+<button class="flex items-center gap-1.5 hover:text-neutral-50">
+<svg class="size-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.74l4.94-2.47C13.456 7.68 14.19 8 15 8z"></path></svg>
+<span>Share</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>
