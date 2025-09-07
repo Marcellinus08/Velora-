@@ -163,7 +163,8 @@ export default function Header() {
             <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"></path>
           </svg>
         </button>
-
+        
+        <Link href="/">
         <Image
           src="/logo.png"
           alt="Velora Logo"
@@ -172,6 +173,7 @@ export default function Header() {
           priority
           className="h-[44px] w-auto sm:h-[42px] lg:h-[46px]"
         />
+        </Link>
       </div>
 
       {/* Kolom 2: SEARCH — start tepat setelah sidebar */}
