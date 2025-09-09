@@ -1,6 +1,9 @@
 // app/layout.tsx
 import "./globals.css";
 import Header from "@/components/header";
+// src/app/layout.tsx
+import "sweetalert2/dist/sweetalert2.min.css";
+
 
 export const metadata = {
   title: "Velora",
