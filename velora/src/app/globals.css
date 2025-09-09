@@ -3,31 +3,29 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* ===== Variabel kamu (tetap) + beberapa tambahan brand ===== */
 :root {
-  --primary-500: #9d00ff;   /* Ungu brand */
-  --neutral-900: #000000;   /* Hitam */
-  --neutral-800: #1f1f1f;   /* Abu gelap */
-  --neutral-400: #a0a0a0;   /* Abu medium */
-  --neutral-50:  #ffffff;   /* Putih */
+  --primary-500: #9d00ff;   
+  --neutral-900: #000000;   
+  --neutral-800: #1f1f1f;   
+  --neutral-400: #a0a0a0;   
+  --neutral-50:  #ffffff;   
 
-  /* ===== Token shadcn (DARK by default) =====
-     Boleh pakai hex di sini; Tailwind v4 + shadcn tetap menerima. */
+  /* Token shadcn  */
   --radius: 0.625rem;
 
-  --background: #000000;               /* Latar utama hitam */
-  --foreground: #ffffff;               /* Teks utama putih */
+  --background: #000000;               
+  --foreground: #ffffff;               
 
-  --card: #121212;                     /* Panel/kartu */
+  --card: #121212;                    
   --card-foreground: #ffffff;
 
-  --popover: #121212;                  /* Dropdown/Popover */
+  --popover: #121212;                  
   --popover-foreground: #ffffff;
 
-  --primary: #9d00ff;                  /* Ungu brand */
+  --primary: #9d00ff;                  
   --primary-foreground: #ffffff;
 
-  --secondary: #ffd700;                /* Kuning aksen */
+  --secondary: #ffd700;                
   --secondary-foreground: #111111;
 
   --muted: #1a1a1a;
@@ -42,7 +40,7 @@
   --input: #2a2a2a;
   --ring: #9d00ff;
 
-  /* Opsional (chart & sidebar), sesuaikan kalau perlu */
+  /* chart & sidebar,  */
   --chart-1: #7e57c2;
   --chart-2: #26a69a;
   --chart-3: #5c6bc0;
@@ -59,12 +57,9 @@
   --sidebar-ring: #9d00ff;
 }
 
-/* Kalau suatu saat kamu ingin toggle mode terang/gelap,
-   kamu bisa isi ulang token di .dark di sini.
-   Untuk sekarang, biarkan kosong agar tidak override root. */
 .dark {}
 
-/* Mapping Tailwind v4 (biarkan seperti ini) */
+/* Mapping Tailwind v4  */
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
@@ -104,12 +99,6 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
-/* ==== PENTING: Tidak ada reset global di sini ==== */
 @layer base {
-  /* sengaja dikosongkan:
-     - HAPUS baris:
-       * { @apply border-border outline-ring/50; }
-       body { @apply bg-background text-foreground; }
-     - Supaya UI lama kamu TIDAK berubah.
-  */
+  
 }
