@@ -337,7 +337,7 @@ export default function Header() {
 
       {/* Kolom 3: kanan */}
       <div className="flex items-center gap-2 sm:gap-4">
-        {/* === SWITCH: sebelum connect → tombol Sign In; setelah connect → UI kamu === */}
+        {/* === SWITCH: sebelum connect → tombol Sign In; setelah connect → UI === */}
         {!isConnected ? (
           <button
             onClick={login}
