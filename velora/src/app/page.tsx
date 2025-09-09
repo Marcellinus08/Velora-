@@ -1,8 +1,8 @@
 // app/page.tsx
 import Sidebar from "@/components/sidebar";
-import Carousel from "@/components/carousel";
-import Categories from "@/components/categories";
-import CardsGrid from "@/components/cardsgrid";
+import Carousel from "@/components/home/carousel";
+import Categories from "@/components/home/categories";
+import CardsGrid from "@/components/home/cardsgrid";
 
 export default function Home() {
   return (

@@ -1,9 +1,7 @@
-// app/page.tsx
 import Sidebar from "@/components/sidebar";
-import {
-  SubscriptionSection as Section,
-  SubscriptionVideoRow as VideoRow,
-} from "@/components/subscription";
+import { SubscriptionSection as Section } from "@/components/subscription/section";
+import { SubscriptionVideoRow as VideoRow } from "@/components/subscription/videorow";
+
 
 const available = [
   {

@@ -1,6 +1,6 @@
 // src/app/meet/page.tsx
 import Sidebar from "@/components/sidebar";
-import { Meeting, MeetingGrid } from "@/components/meet";
+import { Meeting, MeetingGrid } from "@/components/meet/meetgrid";
 
 /* =========================
    Mock data (sesuai contoh)
@@ -72,7 +72,7 @@ const meetings: Meeting[] = [
   {
     id: "8",
     title: "Lingkaran Menulis Kreatif",
-    host: 'The Writer\'s Block',
+    host: "The Writer's Block",
     viewers: "2.1K menonton",
     live: true,
     thumb:

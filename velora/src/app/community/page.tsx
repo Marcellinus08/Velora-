@@ -1,15 +1,11 @@
-// src/app/community/page.tsx
 "use client";
 
 import { useState } from "react";
 import Sidebar from "@/components/sidebar";
-import {
-  CommunityTabs,
-  CommunityPostRow,
-  CommunityPost,
-  CreatePostModal,
-  NewPostPayload,
-} from "@/components/community";
+import CommunityTabs from "@/components/community/tabs";
+import CommunityPostRow from "@/components/community/postrow";
+import CreatePostModal from "@/components/community/createmodal";
+import { CommunityPost, NewPostPayload } from "@/components/community/types";
 
 const posts: CommunityPost[] = [
   {

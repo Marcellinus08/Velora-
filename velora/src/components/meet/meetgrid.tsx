@@ -1,4 +1,4 @@
-// src/components/meet.tsx
+// src/components/meet/meet-grid.tsx
 import React from "react";
 
 /* =========================
@@ -8,9 +8,9 @@ export type Meeting = {
   id: string;
   title: string;
   host: string;
-  viewers: string; // tampilkan text seperti "2.3K menonton"
+  viewers: string; // text seperti "2.3K menonton"
   live?: boolean;
-  thumb: string; // pakai <img> biasa biar tak perlu next/image config
+  thumb: string; // pakai <img> biasa agar tidak perlu next/image config
 };
 
 /* =========================

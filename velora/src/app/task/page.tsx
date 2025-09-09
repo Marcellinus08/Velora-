@@ -1,8 +1,13 @@
-// src/app/task/page.tsx
-import Task from "@/components/task";
+import HeroPlayer from "@/components/task/heroplayer";
+import TaskPanel from "@/components/task/taskpanel";
+import VideoInfoSection from "@/components/task/videoinfo";
+import Comments from "@/components/task/comments";
+import type { Comment, VideoInfo } from "@/components/task/types";
+
+export const metadata = { title: "Task" };
 
 export default function TaskPage() {
-  const video = {
+  const video: VideoInfo = {
     title: "Masterclass Memasak: Seni Kuliner Modern",
     views: "1.2M",
     heroImage:
@@ -17,7 +22,7 @@ export default function TaskPage() {
     },
   };
 
-  const comments = [
+  const comments: Comment[] = [
     {
       id: 1,
       name: "Siti aisyah",
@@ -38,5 +43,22 @@ export default function TaskPage() {
     },
   ];
 
-  return <Task video={video} comments={comments} />;
+  return (
+    <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8">
+      <div className="grid grid-cols-12 items-stretch gap-8">
+        {/* Row 1 */}
+        <section className="col-span-12 lg:col-span-8">
+          <HeroPlayer image={video.heroImage} />
+        </section>
+        <aside className="col-span-12 lg:col-span-4">
+          <TaskPanel className="h-full" />
+        </aside>
+
+        {/* Row 2 (info + creator) */}
+        <VideoInfoSection video={video} />
+      </div>
+
+      <Comments items={comments} />
+    </main>
+  );
 }

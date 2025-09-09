@@ -1,0 +1,247 @@
+"use client";
+
+import Image from "next/image";
+import { useMemo, useState } from "react";
+import type { Comment } from "./types";
+
+function SortDropdown({
+  value,
+  onChange,
+}: {
+  value: "top" | "newest";
+  onChange: (v: "top" | "newest") => void;
+}) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setOpen((o) => !o)}
+        onBlur={() => setOpen(false)}
+        className="flex items-center gap-2 rounded-full border border-neutral-700 bg-neutral-800/80 px-3 py-1.5 text-sm text-neutral-200 hover:bg-neutral-700"
+      >
+        <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+          <path d="M3 5h14a1 1 0 010 2H3a1 1 0 010-2zm3 4h8a1 1 0 010 2H6a1 1 0 110-2zm3 4h2a1 1 0 010 2H9a1 1 0 110-2z" />
+        </svg>
+        <span>{value === "top" ? "Top" : "Newest"}</span>
+        <svg className="h-4 w-4 opacity-70" viewBox="0 0 20 20" fill="currentColor">
+          <path d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 011.08 1.04l-4.24 4.5a.75.75 0 01-1.08 0l-4.24-4.5a.75.75 0 01.02-1.06z" />
+        </svg>
+      </button>
+
+      {open && (
+        <div className="absolute right-0 z-10 mt-2 w-36 overflow-hidden rounded-xl border border-neutral-800 bg-neutral-900/95 backdrop-blur">
+          {(["top", "newest"] as const).map((opt) => (
+            <button
+              key={opt}
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => {
+                onChange(opt);
+                setOpen(false);
+              }}
+              className={`block w-full px-3 py-2 text-left text-sm ${
+                value === opt ? "bg-neutral-800 text-neutral-50" : "text-neutral-300 hover:bg-neutral-800/70"
+              }`}
+            >
+              {opt === "top" ? "Top" : "Newest"}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function CommentItem({
+  name,
+  time,
+  avatar,
+  text,
+  seed = 8,
+}: {
+  name: string;
+  time: string;
+  avatar: string;
+  text: string;
+  seed?: number;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const [liked, setLiked] = useState(false);
+  const [disliked, setDisliked] = useState(false);
+  const [count, setCount] = useState(5 + (seed % 37));
+
+  const toggleLike = () => {
+    if (liked) {
+      setLiked(false);
+      setCount((c) => Math.max(0, c - 1));
+    } else {
+      setLiked(true);
+      setCount((c) => c + 1);
+      if (disliked) setDisliked(false);
+    }
+  };
+
+  const toggleDislike = () => {
+    setDisliked((d) => !d);
+    if (!disliked && liked) {
+      setLiked(false);
+      setCount((c) => Math.max(0, c - 1));
+    }
+  };
+
+  return (
+    <div className="group grid grid-cols-[40px_1fr] gap-3 rounded-xl border border-neutral-800 bg-neutral-900/60 p-3 transition-colors hover:bg-neutral-900">
+      <div className="relative h-10 w-10 overflow-hidden rounded-full">
+        <Image src={avatar} alt={`${name} avatar`} fill sizes="40px" className="object-cover" />
+      </div>
+
+      <div>
+        <div className="flex items-center gap-2">
+          <p className="font-semibold text-neutral-50">{name}</p>
+          <span className="text-sm text-neutral-400">• {time}</span>
+        </div>
+
+        <p
+          className="mt-1 text-neutral-50"
+          style={
+            expanded
+              ? undefined
+              : {
+                  display: "-webkit-box",
+                  WebkitLineClamp: 3,
+                  WebkitBoxOrient: "vertical",
+                  overflow: "hidden",
+                }
+          }
+        >
+          {text}
+        </p>
+
+        <div className="mt-2 flex items-center gap-2 text-sm">
+          <button
+            onClick={toggleLike}
+            className={`inline-flex items-center gap-1 rounded-full px-2 py-1 ${
+              liked ? "bg-[var(--primary-500)]/20 text-[var(--primary-300)]" : "text-neutral-300 hover:bg-neutral-800"
+            }`}
+          >
+            <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M2 10.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6zM6 10.333v5.43a2 2 0 001.106 1.79l.05.025A4 4 0 008.943 18h5.416a2 2 0 001.962-1.608l1.2-6A2 2 0 0015.56 8H12V4a2 2 0 00-2-2 1 1 0 00-1 1v.667a4 4 0 01-.8 2.4L6.8 7.933a4 4 0 00-.8 2.4z" />
+            </svg>
+            <span>{count}</span>
+          </button>
+
+          <button
+            onClick={toggleDislike}
+            aria-label="Dislike"
+            title="Dislike"
+            className={`inline-flex items-center gap-1 rounded-full px-2 py-1 ${
+              disliked ? "bg-neutral-700 text-neutral-200" : "text-neutral-300 hover:bg-neutral-800"
+            }`}
+          >
+            <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M18 9.5a1.5 1.5 0 11-3 0v-6a1.5 1.5 0 013 0v6zM14 9.667v-5.43a2 2 0 00-1.106-1.79l-.05-.025A4 4 0 0011.057 2H5.642a2 2 0 00-1.962 1.608l-1.2 6A2 2 0 004.44 12H8v4a2 2 0 002 2 1 1 0 001-1v-.667a4 4 0 01.8-2.4l1.2-2.667a4 4 0 00.8-2.4z" />
+            </svg>
+          </button>
+
+          <button className="ml-1 rounded-full px-2 py-1 text-neutral-300 hover:bg-neutral-800">Reply</button>
+
+          {!expanded && (
+            <button
+              onClick={() => setExpanded(true)}
+              className="ml-2 rounded-full px-2 py-1 text-neutral-300 hover:bg-neutral-800"
+            >
+              Read more
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CommentComposer() {
+  const [val, setVal] = useState("");
+
+  return (
+    <div className="flex items-start gap-3">
+      <div className="relative h-10 w-10 overflow-hidden rounded-full">
+        <Image
+          src="https://lh3.googleusercontent.com/aida-public/AB6AXuC3txMvWebVOWUCSc_JSlUiMuPymMamNlXpP6eVstETd_jpkEBvYMGpJlTLoyuPwEwsMNuVYLjzgBpWmzSf6GYUfFWATxj-4TF40AhJkCdlDSb39pF3NUuSO2eLUVCQs7Le4yeaVhGRKD7Qej0a1_iX065ldiv32JMh2TvPLfeEluliBoM5Mhmqpjee8Q6p86zTwHwQRPn-qtU0pO3lN1OOfA7nhRXvoyjsnoDZoNavsdfvB9Zuu4lWLeWohE9LasU1LScS-OKcER7f"
+          alt="Your avatar"
+          fill
+          sizes="40px"
+          className="object-cover"
+        />
+      </div>
+
+      <div className="w-full rounded-2xl border border-neutral-700 bg-neutral-800/60 focus-within:border-[var(--primary-500)]">
+        <textarea
+          rows={1}
+          value={val}
+          onChange={(e) => setVal(e.target.value)}
+          placeholder="Write a comment…"
+          className="block w-full resize-none rounded-2xl bg-transparent px-4 pt-3 text-neutral-50 placeholder:text-neutral-400 focus:outline-none"
+        />
+        <div className="flex items-center justify-between px-3 pb-2 pt-1">
+          <div className="flex items-center gap-2 text-neutral-400">
+            <button className="rounded p-1 hover:bg-neutral-700/60" title="Emoji">
+              <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M10 18a8 8 0 100-16 8 8 0 000 16zm3-7a1 1 0 10-2 0 1 1 0 002 0zM9 11a1 1 0 11-2 0 1 1 0 012 0zm1 4a5 5 0 004.546-2.916.75.75 0 10-1.343-.668A3.5 3.5 0 0110 13.5a3.5 3.5 0 01-3.203-2.084.75.75 0 10-1.343.668A5 5 0 0010 15z" />
+              </svg>
+            </button>
+            <button className="rounded p-1 hover:bg-neutral-700/60" title="Attach">
+              <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M8 7a3 3 0 016 0v5a4 4 0 11-8 0V6a2 2 0 114 0v6a1 1 0 11-2 0V7H6v5a3 3 0 006 0V6a4 4 0 10-8 0v6a5 5 0 0010 0V7h-2v5a3 3 0 11-6 0V7z" />
+              </svg>
+            </button>
+          </div>
+
+          <button
+            disabled={!val.trim()}
+            className="rounded-full bg-[var(--primary-500)] px-4 py-1.5 text-sm font-semibold text-white transition hover:bg-opacity-90 disabled:cursor-not-allowed disabled:bg-neutral-700"
+          >
+            Send
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Comments({ items }: { items: Comment[] }) {
+  const [sort, setSort] = useState<"top" | "newest">("top");
+
+  const sorted = useMemo(() => {
+    if (sort === "top") return items;
+    const numeric = items.every((i) => typeof i.id === "number");
+    return numeric ? [...items].sort((a, b) => (b.id as number) - (a.id as number)) : items;
+  }, [items, sort]);
+
+  return (
+    <div className="w-full border-t border-neutral-800 bg-neutral-900 px-4 py-6 sm:px-6 lg:px-8">
+      <div className="mb-4 flex items-center justify-between">
+        <h2 className="text-xl font-semibold text-neutral-50">
+          Comments <span className="ml-2 text-base font-normal text-neutral-400">• {items.length}</span>
+        </h2>
+        <SortDropdown value={sort} onChange={setSort} />
+      </div>
+
+      <CommentComposer />
+
+      <div className="mt-5 space-y-4">
+        {sorted.map((c, idx) => (
+          <CommentItem
+            key={c.id}
+            name={c.name}
+            time={c.time}
+            avatar={c.avatar}
+            text={c.text}
+            seed={idx + (typeof c.id === "number" ? (c.id as number) : 0)}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export default Comments;
