@@ -2,8 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import Swal from "sweetalert2"; // ★ SweetAlert2
-import { supabase } from "@/lib/supabase"; // ★ your Supabase client
+import Swal from "sweetalert2"; 
+import { supabase } from "@/lib/supabase"; 
 
 /* ---------- Config ---------- */
 const ACCEPT =
@@ -26,8 +26,8 @@ const CATEGORIES = [
   "Film & Animation",
 ];
 
-const VIDEO_BUCKET = "videos";      // ★ change to your bucket
-const THUMB_BUCKET = "thumbnails";  // ★ optional (separate bucket for thumbs)
+const VIDEO_BUCKET = "videos";      
+const THUMB_BUCKET = "thumbnails";  
 
 const fmtBytes = (n: number) => {
   const units = ["B", "KB", "MB", "GB"];
