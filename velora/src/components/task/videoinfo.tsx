@@ -2,9 +2,10 @@
 
 import Image from "next/image";
 import { useState } from "react";
-import { VideoInfo } from "./types";
+import { VideoInfo, RecommendedVideo } from "./types";
+import RecommendationPanel from "./recommendationpanel";
 
-function VideoInfoSection({ video }: { video: VideoInfo }) {
+function VideoInfoSection({ video, recommendations }: { video: VideoInfo; recommendations: RecommendedVideo[] }) {
   const [expanded, setExpanded] = useState(false);
   const topics = ["Cooking Techniques", "Sauces", "Beginner"];
 
@@ -116,16 +117,7 @@ function VideoInfoSection({ video }: { video: VideoInfo }) {
               Follow
             </button>
 
-            <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
-              <div className="rounded-lg bg-neutral-800/60 p-3">
-                <p className="text-neutral-400">Views</p>
-                <p className="font-semibold text-neutral-50">{video.views}</p>
-              </div>
-              <div className="rounded-lg bg-neutral-800/60 p-3">
-                <p className="text-neutral-400">Status</p>
-                <p className="font-semibold text-emerald-400">Public</p>
-              </div>
-            </div>
+            <RecommendationPanel items={recommendations} />
           </div>
         </aside>
       </div>

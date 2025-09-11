@@ -19,3 +19,10 @@ export type Comment = {
   avatar: string;
   text: string;
 };
+
+export type RecommendedVideo = {
+  id: number;
+  title: string;
+  creator: string;
+  thumbnail: string;
+};

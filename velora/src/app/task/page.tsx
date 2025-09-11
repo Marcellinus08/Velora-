@@ -2,7 +2,8 @@ import HeroPlayer from "@/components/task/heroplayer";
 import TaskPanel from "@/components/task/taskpanel";
 import VideoInfoSection from "@/components/task/videoinfo";
 import Comments from "@/components/task/comments";
-import type { Comment, VideoInfo } from "@/components/task/types";
+import type { Comment, VideoInfo, RecommendedVideo } from "@/components/task/types";
+
 
 export const metadata = { title: "Task" };
 
@@ -21,6 +22,27 @@ export default function TaskPage() {
         "https://lh3.googleusercontent.com/aida-public/AB6AXuBdp3wvAajxEl_0k41FgIiRWN6Q1G_uNYEpPQD9XyHX14D2rv2npeqz4jB-gIc8LxIcNHUYe3rvxG8sqD1u6ZbEMqISAkXTc1Gx5QfpW8y8r8dCDLK4Ao_QcDMNGxqewhFeKz_XcBNcE2RtvrkT9UoqnKmSnj3udgSCbSFm6pmk7SZ8932rouDEA9MNNyRleh-9m-yZle2JE80MKIZkqLgQt7BV53Go_bbQkG92rPFHAAk-tzPol-FfB1XV4rCnjpOmcMeNtDNfMe2I",
     },
   };
+
+  const recommendedVideos: RecommendedVideo[] = [
+    {
+      id: 1,
+      title: "Seni Pastry dari Dasar",
+      creator: "Cedric Grolet",
+      thumbnail: "http://googleusercontent.com/profile/picture/5",
+    },
+    {
+      id: 2,
+      title: "Masakan Italia Otentik untuk Pemula",
+      creator: "Massimo Bottura",
+      thumbnail: "http://googleusercontent.com/profile/picture/6",
+    },
+    {
+      id: 3,
+      title: "Teknik Barbekyu Khas Texas",
+      creator: "Aaron Franklin",
+      thumbnail: "http://googleusercontent.com/profile/picture/7",
+    },
+  ];
 
   const comments: Comment[] = [
     {
@@ -55,7 +77,7 @@ export default function TaskPage() {
         </aside>
 
         {/* Row 2 (info + creator) */}
-        <VideoInfoSection video={video} />
+        <VideoInfoSection video={video} recommendations={recommendedVideos} />
       </div>
 
       <Comments items={comments} />
