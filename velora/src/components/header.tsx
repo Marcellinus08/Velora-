@@ -588,8 +588,6 @@
 
 
 
-
-
 "use client";
 
 import dynamic from "next/dynamic";
@@ -630,8 +628,21 @@ export default function Header() {
   const isConnected = status === "connected" && !!address;
   const { logout } = useLoginWithAbstract();
 
-  // watch balance for badge syncing
-  const { data: balanceData } = useBalance({ address: address as `0x${string}` | undefined, watch: true });
+  // useBalance without `watch` (watch caused TS error). We'll use refetch polling below.
+  const { data: balanceData, refetch: refetchBalance } = useBalance({
+    address: address as `0x${string}` | undefined,
+  });
+
+  // Poll balance every 15s while connected (safe alternative to `watch`)
+  useEffect(() => {
+    if (!address) return;
+    // immediate refetch (in case connect just happened)
+    void refetchBalance();
+    const id = setInterval(() => {
+      void refetchBalance();
+    }, 15000); // 15 seconds
+    return () => clearInterval(id);
+  }, [address, refetchBalance]);
 
   // search state
   const [q, setQ] = useState("");
@@ -694,14 +705,21 @@ export default function Header() {
 
   const formattedBadgeBalance = balanceData ? `${parseFloat(balanceData.formatted).toFixed(4)} ${balanceData.symbol}` : "0.0000 ETH";
 
+  // quick suggestions + filtered (needed by search UI)
+  const quick = ["tutorial", "olahraga", "crypto", "masak", "pendidikan", "fotografi"];
+  const filtered = [...recent, ...quick]
+    .filter((s, i, a) => a.indexOf(s) === i)
+    .filter((s) => (q ? s.toLowerCase().includes(q.toLowerCase()) : true))
+    .slice(0, 7);
+
   // wallet dropdown items for profile menu (used by ConnectWalletButton when connected)
   const walletDropdownItems = [
     <div key="profile-head" className="px-3 py-2">
       <div className="flex items-center gap-3">
         <div className="h-10 w-10 rounded-full bg-neutral-800 flex items-center justify-center text-neutral-200">
           <svg viewBox="0 0 24 24" className="h-6 w-6" fill="currentColor">
-            <path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"/>
-            <path fillRule="evenodd" clipRule="evenodd" d="M4 19c0-3.314 3.582-6 8-6s8 2.686 8 6v1H4v-1z"/>
+            <path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8z" />
+            <path fillRule="evenodd" clipRule="evenodd" d="M4 19c0-3.314 3.582-6 8-6s8 2.686 8 6v1H4v-1z" />
           </svg>
         </div>
         <div className="min-w-0">
@@ -779,7 +797,7 @@ export default function Header() {
               </button>
             </div>
 
-            {/* Voice button (keputusan tetap) */}
+            {/* Voice button (keep existing behavior) */}
             <button type="button" onClick={() => {
               const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
               if (!SR) return alert("Voice search tidak didukung di browser ini.");
@@ -874,7 +892,7 @@ export default function Header() {
               </DropdownMenu>
             </div>
 
-            {/* Notifikasi (dropdown dengan empty state like gambar kedua) */}
+            {/* Notifikasi (dropdown with empty state) */}
             <div className="relative">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
