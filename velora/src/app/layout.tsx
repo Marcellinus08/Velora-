@@ -1,12 +1,9 @@
 import "./globals.css";
-import "sweetalert2/dist/sweetalert2.min.css";
-
-import type { Metadata } from "next";
 import Header from "@/components/header";
 import { NextAbstractWalletProvider } from "@/components/agw-provider";
-import { Toaster } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
-export const metadata: Metadata = {
+export const metadata = {
   title: "Velora",
   description: "Platform video dengan poin & tugas",
 };
@@ -19,9 +16,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         style={{ fontFamily: `"Be Vietnam Pro", "Noto Sans", sans-serif` }}
       >
         <NextAbstractWalletProvider>
-          <Header />
-          {children}
-          <Toaster />
+          <TooltipProvider delayDuration={150}>
+            <Header />
+            {children}
+          </TooltipProvider>
         </NextAbstractWalletProvider>
       </body>
     </html>
