@@ -3,7 +3,7 @@ export type ProfileStats = {
   followers: number;
   following: number;
   points: number;
-  eth: number;
+  eth?: number; // <- opsional sekarang, karena diganti rank
 };
 
 export type ActivityItem = {
