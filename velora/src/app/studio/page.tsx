@@ -44,6 +44,28 @@ export default function StudioPage() {
       description:
         "Step-by-step plating and styling tricks to make dishes look irresistible.",
     },
+    {
+      id: "v4",
+      title: "Cooking Masterclass: Knife Skills",
+      thumb:
+        "https://lh3.googleusercontent.com/aida-public/AB6AXuAoJxTecPhE_PaHpo4ZMSRgsJyjjbygHj90EAayCOOo8Z61pIDLDKnANPpOPMRJmq9pRh3GMZuQ6uk1F3nKNawraJTtfehJfC_EZ7qgQX7ktNINJtTTaNVMIDSty3QfcJigHJbB3XiHQiekgePmLgzhWdD4qqrOg1SkYCaulR27KioxNtGqHocE0ZH5NdikY51LvDifBXYWb0FaNbVIWW5BUhX2AyI6Nya7Aw0kimRjnIV-d2QKl-v9HkNwdMBubIFjjRe9LfWk-bXH",
+      views: 12500,
+      duration: "12:34",
+      date: "2d ago",
+      description:
+        "Fundamental grips, safety, and precision techniques to speed up your prep.",
+    },
+    {
+      id: "v5",
+      title: "Portrait Photography: Natural Light",
+      thumb:
+        "https://lh3.googleusercontent.com/aida-public/AB6AXuAHrvuNync_nTfcbA8iztllr7QKztBcoVpacwu54RVKBswSfbItkTVJlz3hT84f_fPd19JQbWdWflKUR5QZhd8dnNvJ9PbUD467CPGDlp32MM7J2zKjZGdvNcFnBnUSg769Z3vxEf62UlUqigg401KvZvlTFSSHmkqrf6s3avv9qjWvIxYKX5cP8AMXFIbF6THqs5CLCJ66iZ9y9vN6xDJi6RYXOdodIArH96v7OdGhL42jSmFEiKnMxg0BQ2A_M4g3wW6O0qXmMdU-",
+      views: 8800,
+      duration: "08:10",
+      date: "5d ago",
+      description:
+        "Find flattering angles and soft light using windows and simple reflectors.",
+    },
   ];
 
   const ads: StudioAd[] = [
@@ -72,6 +94,24 @@ export default function StudioPage() {
       budget: "$150",
       spend: "$64",
       ctr: 3.4,
+      date: "Paused yesterday",
+    },
+    {
+      id: "a4",
+      name: "Cooking Course Launch",
+      status: "Active",
+      budget: "$150",
+      spend: "$64",
+      ctr: 3.4,
+      date: "Running",
+    },
+    {
+      id: "a5",
+      name: "Portrait Workshop Promo",
+      status: "Paused",
+      budget: "$200",
+      spend: "$120",
+      ctr: 2.1,
       date: "Paused yesterday",
     },
   ];

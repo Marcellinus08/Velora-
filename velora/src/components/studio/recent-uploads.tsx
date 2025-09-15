@@ -44,16 +44,6 @@ function CrudMenu({
             onMouseDown={(e) => e.preventDefault()}
             onClick={() => {
               setOpen(false);
-              onDuplicate();
-            }}
-            className="block w-full px-3 py-2 text-left text-sm text-neutral-200 hover:bg-neutral-800/70"
-          >
-            Duplicate
-          </button>
-          <button
-            onMouseDown={(e) => e.preventDefault()}
-            onClick={() => {
-              setOpen(false);
               onDelete();
             }}
             className="block w-full px-3 py-2 text-left text-sm text-red-300 hover:bg-red-900/30"
