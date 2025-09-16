@@ -82,20 +82,8 @@ export default function SettingsAccount() {
         </div>
       </div>
 
-      {/* Display Name */}
       <div className="space-y-4">
-        <div>
-          <label className="mb-1 block text-sm text-neutral-300">Display Name</label>
-          <input
-            value={displayName}
-            onChange={(e) => setDisplayName(e.target.value)}
-            className="w-full rounded-lg border border-neutral-700 bg-neutral-950 px-3 py-2 text-neutral-100 placeholder:text-neutral-500 focus:border-neutral-500 focus:outline-none"
-            placeholder="Your name"
-          />
-        </div>
-
         {/* Username */}
-        <div>
           <label className="mb-1 block text-sm text-neutral-300">Username</label>
           <input
             value={username}
@@ -103,10 +91,6 @@ export default function SettingsAccount() {
             className="w-full rounded-lg border border-neutral-700 bg-neutral-950 px-3 py-2 text-neutral-100 placeholder:text-neutral-500 focus:border-neutral-500 focus:outline-none"
             placeholder="username"
           />
-          <p className="mt-1 text-xs text-neutral-500">
-            Used in your profile URL and mentions.
-          </p>
-        </div>
       </div>
 
       {/* Actions */}
