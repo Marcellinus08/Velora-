@@ -1,3 +1,4 @@
+// src/components/header.tsx
 "use client";
 
 import Image from "next/image";
@@ -6,9 +7,9 @@ import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useRef, useState } from "react";
 
 import { useLoginWithAbstract } from "@abstract-foundation/agw-react";
-import { useAccount, useBalance } from "wagmi";
+import { useAccount, usePublicClient, useWatchBlockNumber } from "wagmi";
+import { formatUnits, type Abi } from "viem";
 
-import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -18,15 +19,29 @@ import {
 
 import { ConnectWalletButton } from "@/components/connect-wallet-button";
 import { AbstractProfile } from "@/components/abstract-profile";
+import { getContractWithCurrentChain } from "@/lib/chain-utils";
 
-type Notif = {
-  id: string;
-  title: string;
-  body?: string;
-  time?: string;
-  unread?: boolean;
-};
+/* ===== Minimal ERC20 ABI (read-only) ===== */
+const ERC20_MIN_ABI = [
+  { type: "function", name: "decimals", stateMutability: "view", inputs: [], outputs: [{ type: "uint8" }] },
+  { type: "function", name: "balanceOf", stateMutability: "view", inputs: [{ type: "address" }], outputs: [{ type: "uint256" }] },
+] as const satisfies Abi;
 
+/* Format $: 12.34 → $12.34, 12.3k/m/b utk besar, dan saldo kecil <1 ditulis sampai 4 desimal */
+function formatUSD(n: number) {
+  if (!isFinite(n) || n <= 0) return "$0";
+  if (n < 1) return `$${n.toFixed(4)}`;
+  if (n < 1000) return `$${n.toFixed(2)}`;
+  const units = [
+    { v: 1e9, s: "b" },
+    { v: 1e6, s: "m" },
+    { v: 1e3, s: "k" },
+  ];
+  for (const u of units) if (n >= u.v) return `$${(n / u.v).toFixed(1)}${u.s}`;
+  return `$${n.toFixed(0)}`;
+}
+
+type Notif = { id: string; title: string; body?: string; time?: string; unread?: boolean };
 const RECENT_KEY = "vh_recent_queries";
 const short = (addr?: `0x${string}`) => (addr ? `${addr.slice(0, 6)}…${addr.slice(-4)}` : "");
 
@@ -36,18 +51,50 @@ export default function Header() {
   const isConnected = status === "connected" && !!address;
   const { logout } = useLoginWithAbstract();
 
-  // Balance + polling
-  const { data: balanceData, refetch: refetchBalance } = useBalance({
-    address: address as `0x${string}` | undefined,
-  });
-  useEffect(() => {
-    if (!address) return;
-    void refetchBalance();
-    const id = setInterval(() => void refetchBalance(), 15_000);
-    return () => clearInterval(id);
-  }, [address, refetchBalance]);
+  /* ========= USDC.e balance (live per block) ========= */
+  const client = usePublicClient();
+  const [usdceText, setUsdceText] = useState<string>("$0");
 
-  // Search state
+  async function refreshUsdce() {
+    try {
+      if (!client || !address) {
+        setUsdceText("$0");
+        return;
+      }
+      // kontrak USDC.e dari config (alamat sesuai chain aktif)
+      const usdce = getContractWithCurrentChain("usdce");
+      const [dec, bal] = await Promise.all([
+        client.readContract({
+          address: usdce.address as `0x${string}`,
+          abi: ERC20_MIN_ABI,
+          functionName: "decimals",
+        }),
+        client.readContract({
+          address: usdce.address as `0x${string}`,
+          abi: ERC20_MIN_ABI,
+          functionName: "balanceOf",
+          args: [address],
+        }),
+      ]);
+      const amount = Number(formatUnits(bal as bigint, Number(dec)));
+      setUsdceText(formatUSD(amount));
+    } catch {
+      // kalau alamat usdce belum di-set di ENV / chain salah, tampilkan $0
+      setUsdceText("$0");
+    }
+  }
+
+  useEffect(() => {
+    void refreshUsdce();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [client, address]);
+
+  useWatchBlockNumber({
+    enabled: Boolean(client && address),
+    onBlockNumber: () => void refreshUsdce(),
+  });
+
+  /* ========= Search state ========= */
   const [q, setQ] = useState("");
   const [openSug, setOpenSug] = useState(false);
   const [recent, setRecent] = useState<string[]>([]);
@@ -104,10 +151,6 @@ export default function Header() {
 
   const [notifications] = useState<Notif[]>([]);
   const unreadCount = notifications.filter((n) => n.unread).length;
-
-  const formattedBadgeBalance = balanceData
-    ? `${parseFloat(balanceData.formatted).toFixed(4)} ${balanceData.symbol}`
-    : "0.0000 ETH";
 
   const quick = ["tutorial", "olahraga", "crypto", "masak", "pendidikan", "fotografi"];
   const filtered = [...recent, ...quick]
@@ -171,12 +214,22 @@ export default function Header() {
               />
 
               {q && (
-                <button type="button" onClick={clear} className="absolute inset-y-0 right-16 my-1 flex h-8 w-8 items-center justify-center rounded-full text-neutral-400 hover:bg-neutral-800 hover:text-neutral-200" aria-label="Bersihkan">
+                <button
+                  type="button"
+                  onClick={clear}
+                  className="absolute inset-y-0 right-16 my-1 flex h-8 w-8 items-center justify-center rounded-full text-neutral-400 hover:bg-neutral-800 hover:text-neutral-200"
+                  aria-label="Bersihkan"
+                >
                   <svg viewBox="0 0 20 20" className="h-4 w-4" fill="currentColor" aria-hidden="true"><path fillRule="evenodd" d="M10 8.586l3.536-3.536a1 1 0 111.415 1.415L11.414 10l3.536 3.536a1 1 0 11-1.415 1.414L10 11.414l-3.536 3.536a1 1 0 01-1.415-1.415L8.586 10 5.05 6.464A1 1 0 016.464 5.05L10 8.586z" clipRule="evenodd"/></svg>
                 </button>
               )}
 
-              <button type="submit" className="h-10 w-16 rounded-r-full border border-l-0 border-neutral-700 bg-neutral-800 text-neutral-200 hover:bg-neutral-700" aria-label="Cari" title="Cari">
+              <button
+                type="submit"
+                className="h-10 w-16 rounded-r-full border border-l-0 border-neutral-700 bg-neutral-800 text-neutral-200 hover:bg-neutral-700"
+                aria-label="Cari"
+                title="Cari"
+              >
                 <svg className="mx-auto h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fillRule="evenodd" d="M12.9 14.32a8 8 0 111.414-1.414l3.39 3.39a1 1 0 01-1.414 1.415l-3.39-3.39zM14 8a6 6 0 11-12 0 6 6 0 0112 0z" clipRule="evenodd" /></svg>
               </button>
             </div>
@@ -210,7 +263,13 @@ export default function Header() {
               {recent.length > 0 && (
                 <div className="flex items-center justify-between px-4 py-2 text-xs text-neutral-400">
                   <span>Recent searches</span>
-                  <button onMouseDown={(e) => e.preventDefault()} onClick={clearAllRecent} className="rounded-md px-2 py-1 text-neutral-300 hover:bg-neutral-800 hover:text-neutral-100">Clear all</button>
+                  <button
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={clearAllRecent}
+                    className="rounded-md px-2 py-1 text-neutral-300 hover:bg-neutral-800 hover:text-neutral-100"
+                  >
+                    Clear all
+                  </button>
                 </div>
               )}
 
@@ -221,7 +280,12 @@ export default function Header() {
                     <li key={s} className="group relative">
                       <button
                         onMouseDown={(e) => e.preventDefault()}
-                        onClick={() => { setQ(s); saveRecent(s); router.push(`/search?q=${encodeURIComponent(s)}`); setOpenSug(false); }}
+                        onClick={() => {
+                          setQ(s);
+                          saveRecent(s);
+                          router.push(`/search?q=${encodeURIComponent(s)}`);
+                          setOpenSug(false);
+                        }}
                         className="flex w-full items-center gap-3 px-4 py-2 pr-12 text-left text-sm text-neutral-200 hover:bg-neutral-800"
                       >
                         <span className="truncate">{s}</span>
@@ -230,7 +294,10 @@ export default function Header() {
                       {isRecent && (
                         <button
                           onMouseDown={(e) => e.preventDefault()}
-                          onClick={(e) => { e.stopPropagation(); removeRecent(s); }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            removeRecent(s);
+                          }}
                           aria-label="Remove from history"
                           title="Remove from history"
                           className="absolute right-2 top-1/2 hidden h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full text-neutral-400 hover:bg-neutral-700 hover:text-neutral-100 group-hover:flex"
@@ -256,8 +323,9 @@ export default function Header() {
           </div>
         ) : (
           <>
-            {/* Poin & saldo */}
+            {/* Points + USDC.e */}
             <div className="hidden items-center gap-4 rounded-full bg-neutral-800 px-4 py-1.5 sm:flex">
+              {/* Points */}
               <div className="flex items-center gap-2">
                 <svg className="h-5 w-5 text-yellow-400" fill="currentColor" viewBox="0 0 256 256"><path d="M239.2,97.41a16.4,16.4,0,0,0-14.21-10.06l-49.33-7.17L153.8,36.52a16.37,16.37,0,0,0-29.6,0L102.34,80.18,53,87.35A16.4,16.4,0,0,0,38.8,97.41a16.43,16.43,0,0,0,4.28,17.27l35.69,34.78-8.43,49.14a16.4,16.4,0,0,0,7.86,17.2,16.32,16.32,0,0,0,18.15,.11L128,193.07l44.13,23.2a16.32,16.32,0,0,0,18.15-.11,16.4,16.4,0,0,0,7.86-17.2l-8.43-49.14,35.69-34.78A16.43,16.43,0,0,0,239.2,97.41Z"></path></svg>
                 <span className="text-sm font-semibold text-neutral-50">2.500</span>
@@ -265,30 +333,11 @@ export default function Header() {
 
               <div className="h-5 w-px bg-neutral-700" />
 
+              {/* USDC.e */}
               <div className="flex items-center gap-2">
                 <svg className="h-5 w-5 text-[var(--primary-500)]" fill="currentColor" viewBox="0 0 256 256"><path d="M224,72H48A24,24,0,0,0,24,96V192a24,24,0,0,0,24,24H200a24,24,0,0,0,24-24V160H192a8,8,0,0,1,0-16h32V96A24,24,0,0,0,224,72ZM40,96a8,8,0,0,1,8-8H224a8,8,0,0,1,8,8v48H192a24,24,0,0,0-24,24v16H48a8,8,0,0,1-8-8Z"></path></svg>
-                <span className="text-sm font-semibold text-neutral-50">{formattedBadgeBalance}</span>
+                <span className="text-sm font-semibold text-neutral-50">USDC.e {usdceText}</span>
               </div>
-            </div>
-
-            {/* Tombol + */}
-            <div className="relative">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button className="flex size-10 cursor-pointer items-center justify-center rounded-full text-neutral-50 transition-colors hover:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-[var(--primary-500)]/40" aria-label="Tambah" title="Tambah">
-                    <svg className="h-6 w-6" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" clipRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z"/></svg>
-                  </button>
-                </DropdownMenuTrigger>
-
-                <DropdownMenuContent align="end" side="bottom" className="w-44">
-                  <DropdownMenuItem onClick={() => router.push("/ads")}>
-                    Create ads
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => router.push("/upload")}>
-                    Upload video
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
             </div>
 
             {/* Notifikasi */}
@@ -306,31 +355,18 @@ export default function Header() {
                     <h3 className="text-sm font-semibold text-neutral-100">Notifications</h3>
                   </div>
 
-                  {notifications.length === 0 ? (
-                    <div className="flex flex-col items-center px-6 py-8 text-center">
-                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-neutral-800/70">
-                        <svg viewBox="0 0 24 24" className="h-6 w-6 text-neutral-300" fill="currentColor"><path d="M18 16l1 2H5l1-2c.667-1.333 1-3.667 1-7a5 5 0 1110 0c0 3.333.333 5.667 1 7zM9 19a3 3 0 006 0H9z"/></svg>
-                      </div>
-                      <p className="mt-3 text-sm font-medium text-neutral-200">No notifications yet</p>
-                      <p className="mt-1 text-xs text-neutral-400">Notifications will appear here later.</p>
+                  <div className="flex flex-col items-center px-6 py-8 text-center">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-neutral-800/70">
+                      <svg viewBox="0 0 24 24" className="h-6 w-6 text-neutral-300" fill="currentColor"><path d="M18 16l1 2H5l1-2c.667-1.333 1-3.667 1-7a5 5 0 1110 0c0 3.333.333 5.667 1 7zM9 19a3 3 0 006 0H9z"/></svg>
                     </div>
-                  ) : (
-                    <ul className="max-h-80 divide-y divide-neutral-800 overflow-auto">
-                      {notifications.map((n) => (
-                        <li key={n.id} className="flex gap-3 px-4 py-3 hover:bg-neutral-800/60">
-                          <div className="mt-0.5 h-2 w-2 flex-shrink-0 rounded-full" style={{ backgroundColor: n.unread ? "var(--primary-500)" : "transparent" }} />
-                          <div className="min-w-0 flex-1">
-                            <p className="truncate text-sm font-medium text-neutral-100">{n.title}</p>
-                            {n.body && <p className="truncate text-xs text-neutral-400">{n.body}</p>}
-                          </div>
-                          {n.time && <span className="ml-2 whitespace-nowrap text-xs text-neutral-500">{n.time}</span>}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
+                    <p className="mt-3 text-sm font-medium text-neutral-200">No notifications yet</p>
+                    <p className="mt-1 text-xs text-neutral-400">Notifications will appear here later.</p>
+                  </div>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
+
+            {/* Avatar / Profile */}
             <div>
               <ConnectWalletButton
                 customTrigger={
