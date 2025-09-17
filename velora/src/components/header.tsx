@@ -1,3 +1,4 @@
+// src/components/header.tsx
 "use client";
 
 import Image from "next/image";
@@ -6,7 +7,8 @@ import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useRef, useState } from "react";
 
 import { useLoginWithAbstract } from "@abstract-foundation/agw-react";
-import { useAccount, useBalance } from "wagmi";
+import { useAccount, usePublicClient, useWatchBlockNumber } from "wagmi";
+import { formatUnits, type Abi } from "viem";
 
 import {
   DropdownMenu,
@@ -17,16 +19,30 @@ import {
 
 import { ConnectWalletButton } from "@/components/connect-wallet-button";
 import { AbstractProfile } from "@/components/abstract-profile";
-import ProfileUpsertOnLogin from "@/components/boot/profile-upsert-on-login"; // ⬅️ auto-upsert
+import ProfileUpsertOnLogin from "@/components/boot/profile-upsert-on-login"; // auto-upsert profil saat connect
+import { getContractWithCurrentChain } from "@/lib/chain-utils";
 
-type Notif = {
-  id: string;
-  title: string;
-  body?: string;
-  time?: string;
-  unread?: boolean;
-};
+/* ===== Minimal ERC20 ABI (read-only) ===== */
+const ERC20_MIN_ABI = [
+  { type: "function", name: "decimals", stateMutability: "view", inputs: [], outputs: [{ type: "uint8" }] },
+  { type: "function", name: "balanceOf", stateMutability: "view", inputs: [{ type: "address" }], outputs: [{ type: "uint256" }] },
+] as const satisfies Abi;
 
+/* Format $: 12.34 → $12.34, 12.3k/m/b utk besar, dan saldo kecil <1 ditulis sampai 4 desimal */
+function formatUSD(n: number) {
+  if (!isFinite(n) || n <= 0) return "$0";
+  if (n < 1) return `$${n.toFixed(4)}`;
+  if (n < 1000) return `$${n.toFixed(2)}`;
+  const units = [
+    { v: 1e9, s: "b" },
+    { v: 1e6, s: "m" },
+    { v: 1e3, s: "k" },
+  ];
+  for (const u of units) if (n >= u.v) return `$${(n / u.v).toFixed(1)}${u.s}`;
+  return `$${n.toFixed(0)}`;
+}
+
+type Notif = { id: string; title: string; body?: string; time?: string; unread?: boolean };
 const RECENT_KEY = "vh_recent_queries";
 const short = (addr?: `0x${string}`) => (addr ? `${addr.slice(0, 6)}…${addr.slice(-4)}` : "");
 
@@ -36,18 +52,50 @@ export default function Header() {
   const isConnected = status === "connected" && !!address;
   const { logout } = useLoginWithAbstract();
 
-  // Balance + polling
-  const { data: balanceData, refetch: refetchBalance } = useBalance({
-    address: address as `0x${string}` | undefined,
-  });
-  useEffect(() => {
-    if (!address) return;
-    void refetchBalance();
-    const id = setInterval(() => void refetchBalance(), 15_000);
-    return () => clearInterval(id);
-  }, [address, refetchBalance]);
+  /* ========= USDC.e balance (live per block) ========= */
+  const client = usePublicClient();
+  const [usdceText, setUsdceText] = useState<string>("$0");
 
-  // Search state
+  async function refreshUsdce() {
+    try {
+      if (!client || !address) {
+        setUsdceText("$0");
+        return;
+      }
+      // kontrak USDC.e dari config (alamat sesuai chain aktif)
+      const usdce = getContractWithCurrentChain("usdce");
+      const [dec, bal] = await Promise.all([
+        client.readContract({
+          address: usdce.address as `0x${string}`,
+          abi: ERC20_MIN_ABI,
+          functionName: "decimals",
+        }),
+        client.readContract({
+          address: usdce.address as `0x${string}`,
+          abi: ERC20_MIN_ABI,
+          functionName: "balanceOf",
+          args: [address],
+        }),
+      ]);
+      const amount = Number(formatUnits(bal as bigint, Number(dec)));
+      setUsdceText(formatUSD(amount)); // tampilkan sebagai USD-style singkat
+    } catch {
+      // kalau alamat usdce belum di-set di ENV / chain salah, tampilkan $0
+      setUsdceText("$0");
+    }
+  }
+
+  useEffect(() => {
+    void refreshUsdce();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [client, address]);
+
+  useWatchBlockNumber({
+    enabled: Boolean(client && address),
+    onBlockNumber: () => void refreshUsdce(),
+  });
+
+  /* ========= Search state ========= */
   const [q, setQ] = useState("");
   const [openSug, setOpenSug] = useState(false);
   const [recent, setRecent] = useState<string[]>([]);
@@ -104,10 +152,6 @@ export default function Header() {
 
   const [notifications] = useState<Notif[]>([]);
   const unreadCount = notifications.filter((n) => n.unread).length;
-
-  const formattedBadgeBalance = balanceData
-    ? `${parseFloat(balanceData.formatted).toFixed(4)} ${balanceData.symbol}`
-    : "0.0000 ETH";
 
   const quick = ["tutorial", "olahraga", "crypto", "masak", "pendidikan", "fotografi"];
   const filtered = [...recent, ...quick]
@@ -327,8 +371,9 @@ export default function Header() {
           </div>
         ) : (
           <>
-            {/* Poin & saldo */}
+            {/* Points + USDC.e */}
             <div className="hidden items-center gap-4 rounded-full bg-neutral-800 px-4 py-1.5 sm:flex">
+              {/* Points */}
               <div className="flex items-center gap-2">
                 <svg className="h-5 w-5 text-yellow-400" fill="currentColor" viewBox="0 0 256 256">
                   <path d="M239.2,97.41a16.4,16.4,0,0,0-14.21-10.06l-49.33-7.17L153.8,36.52a16.37,16.37,0,0,0-29.6,0L102.34,80.18,53,87.35A16.4,16.4,0,0,0,38.8,97.41a16.43,16.43,0,0,0,4.28,17.27l35.69,34.78-8.43,49.14a16.4,16.4,0,0,0,7.86,17.2,16.32,16.32,0,0,0,18.15,.11L128,193.07l44.13,23.2a16.32,16.32,0,0,0,18.15-.11,16.4,16.4,0,0,0,7.86-17.2l-8.43-49.14,35.69-34.78A16.43,16.43,0,0,0,239.2,97.41Z"></path>
@@ -338,11 +383,12 @@ export default function Header() {
 
               <div className="h-5 w-px bg-neutral-700" />
 
+              {/* USDC.e (bridged) */}
               <div className="flex items-center gap-2">
                 <svg className="h-5 w-5 text-[var(--primary-500)]" fill="currentColor" viewBox="0 0 256 256">
                   <path d="M224,72H48A24,24,0,0,0,24,96V192a24,24,0,0,0,24,24H200a24,24,0,0,0,24-24V160H192a8,8,0,0,1,0-16h32V96A24,24,0,0,0,224,72ZM40,96a8,8,0,0,1,8-8H224a8,8,0,0,1,8,8v48H192a24,24,0,0,0-24,24v16H48a8,8,0,0,1-8-8Z"></path>
                 </svg>
-                <span className="text-sm font-semibold text-neutral-50">{formattedBadgeBalance}</span>
+                <span className="text-sm font-semibold text-neutral-50">USDC.e {usdceText}</span>
               </div>
             </div>
 
@@ -367,7 +413,7 @@ export default function Header() {
 
                 <DropdownMenuContent align="end" side="bottom" className="w-44">
                   <DropdownMenuItem onClick={() => router.push("/ads")}>Create ads</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => router.push("/upload")}>Upload video</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => router.push("/studio/upload")}>Upload video</DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
@@ -428,6 +474,7 @@ export default function Header() {
               </DropdownMenu>
             </div>
 
+            {/* Avatar / Profile */}
             <div>
               <ConnectWalletButton
                 customTrigger={
@@ -448,7 +495,7 @@ export default function Header() {
         )}
       </div>
 
-      {/* ⬇️ Komponen boot agar upsert profile otomatis begitu user terhubung */}
+      {/* Komponen boot agar upsert profile otomatis begitu user terhubung */}
       <ProfileUpsertOnLogin />
     </header>
   );

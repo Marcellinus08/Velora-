@@ -1,6 +1,7 @@
-import { abstractTestnet } from "viem/chains";
+// src/config/chain.ts
+import { abstract, abstractTestnet } from "viem/chains";
 
 export const chain =
-  process.env.NODE_ENV === "development"
-    ? abstractTestnet // Local development: Use Abstract Testnet
-    : abstractTestnet; // Production: Use Abstract Testnet (change to mainnet when ready)
+  process.env.NEXT_PUBLIC_ABSTRACT_NETWORK === "testnet"
+    ? abstractTestnet
+    : abstract;
