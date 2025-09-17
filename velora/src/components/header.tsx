@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 
 import { useLoginWithAbstract } from "@abstract-foundation/agw-react";
-import { useAccount, usePublicClient, useWatchBlockNumber } from "wagmi";
+import { useAccount, usePublicClient } from "wagmi";
 import { formatUnits, type Abi } from "viem";
 
 import {
@@ -19,7 +19,7 @@ import {
 
 import { ConnectWalletButton } from "@/components/connect-wallet-button";
 import { AbstractProfile } from "@/components/abstract-profile";
-import ProfileUpsertOnLogin from "@/components/boot/profile-upsert-on-login"; // auto-upsert profil saat connect
+import ProfileUpsertOnLogin from "@/components/boot/profile-upsert-on-login";
 import { getContractWithCurrentChain } from "@/lib/chain-utils";
 
 /* ===== Minimal ERC20 ABI (read-only) ===== */
@@ -28,7 +28,7 @@ const ERC20_MIN_ABI = [
   { type: "function", name: "balanceOf", stateMutability: "view", inputs: [{ type: "address" }], outputs: [{ type: "uint256" }] },
 ] as const satisfies Abi;
 
-/* Format $ */
+/* ===== Helpers ===== */
 function formatUSD(n: number) {
   if (!isFinite(n) || n <= 0) return "$0";
   if (n < 1) return `$${n.toFixed(4)}`;
@@ -41,22 +41,35 @@ function formatUSD(n: number) {
   for (const u of units) if (n >= u.v) return `$${(n / u.v).toFixed(1)}${u.s}`;
   return `$${n.toFixed(0)}`;
 }
-
-type Notif = { id: string; title: string; body?: string; time?: string; unread?: boolean };
-const RECENT_KEY = "vh_recent_queries";
 const short = (addr?: `0x${string}`) => (addr ? `${addr.slice(0, 6)}…${addr.slice(-4)}` : "-");
 
-/* ============== Hook: load profile dari DB ============== */
+/* ========= Simple client cache (sessionStorage) ========= */
+const TTL_MS = 30_000; // 30s cache
+function readCache<T>(key: string): T | null {
+  try {
+    const raw = sessionStorage.getItem(key);
+    if (!raw) return null;
+    const { ts, value } = JSON.parse(raw);
+    if (Date.now() - ts > TTL_MS) return null;
+    return value as T;
+  } catch {
+    return null;
+  }
+}
+function writeCache<T>(key: string, value: T) {
+  try {
+    sessionStorage.setItem(key, JSON.stringify({ ts: Date.now(), value }));
+  } catch {}
+}
+
+/* ============== Hook: load profile dari DB (cached) ============== */
 type DbProfile = { abstract_id: string; username: string | null; avatar_url: string | null };
 
 function useDbProfile(address?: `0x${string}`) {
   const [username, setUsername] = useState<string | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
-  const addrLower = useMemo(
-    () => (address ? address.toLowerCase() : ""),
-    [address]
-  );
+  const addrLower = useMemo(() => (address ? address.toLowerCase() : ""), [address]);
 
   useEffect(() => {
     let alive = true;
@@ -66,14 +79,23 @@ function useDbProfile(address?: `0x${string}`) {
         setAvatarUrl(null);
         return;
       }
+      const key = `dbprof:${addrLower}`;
+      const cached = readCache<DbProfile>(key);
+      if (cached) {
+        if (!alive) return;
+        setUsername(cached.username ?? null);
+        setAvatarUrl(cached.avatar_url ? `${cached.avatar_url}?v=${Date.now()}` : null);
+        return;
+      }
       try {
-        const r = await fetch(`/api/profiles/${addrLower}`, { cache: "no-store" });
+        const r = await fetch(`/api/profiles/${addrLower}`, { cache: "force-cache" });
         if (!r.ok) {
           setUsername(null);
           setAvatarUrl(null);
           return;
         }
         const p = (await r.json()) as DbProfile;
+        writeCache(key, p);
         if (!alive) return;
         setUsername(p?.username ?? null);
         setAvatarUrl(p?.avatar_url ? `${p.avatar_url}?v=${Date.now()}` : null);
@@ -89,6 +111,47 @@ function useDbProfile(address?: `0x${string}`) {
   }, [addrLower]);
 
   return { username, avatarUrl };
+}
+
+/* ============== Hook: load avatar dari Abstract (cached) ============== */
+function useAbstractAvatar(address?: `0x${string}`, enabled = true) {
+  const [absAvatar, setAbsAvatar] = useState<string | null>(null);
+  const addrLower = useMemo(() => (address ? address.toLowerCase() : ""), [address]);
+
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      if (!enabled || !addrLower || !/^0x[a-f0-9]{40}$/.test(addrLower)) {
+        setAbsAvatar(null);
+        return;
+      }
+      const key = `absavatar:${addrLower}`;
+      const cached = readCache<string>(key);
+      if (cached) {
+        if (alive) setAbsAvatar(cached);
+        return;
+      }
+      try {
+        const r = await fetch(`/api/abstract/user/${addrLower}`, {
+          // route ini sudah pakai revalidate di server; di client tetap cache-kan lokal
+          cache: "force-cache",
+        });
+        if (!r.ok) return;
+        const j = await r.json();
+        const url: string | null =
+          j?.profilePicture || j?.avatar || j?.imageUrl || null;
+        if (url) {
+          writeCache(key, url);
+          if (alive) setAbsAvatar(url);
+        }
+      } catch {}
+    })();
+    return () => {
+      alive = false;
+    };
+  }, [addrLower, enabled]);
+
+  return absAvatar;
 }
 
 /* ============== Avatar kecil (trigger) ============== */
@@ -122,17 +185,24 @@ function HeaderAvatar({
 }
 
 /* =================== Header =================== */
+type Notif = { id: string; title: string; body?: string; time?: string; unread?: boolean };
+const RECENT_KEY = "vh_recent_queries";
+const POLL_MS = 60_000; // refresh USDC.e tiap 60 detik, pause saat tab hidden
+
 export default function Header() {
   const router = useRouter();
   const { address, status } = useAccount();
   const isConnected = status === "connected" && !!address;
   const { logout } = useLoginWithAbstract();
 
+  // DB profile & Abstract fallback (cached)
   const { username: dbUsername, avatarUrl: dbAvatarUrl } = useDbProfile(address as `0x${string}` | undefined);
+  const abstractAvatar = useAbstractAvatar(address as `0x${string}` | undefined, !dbAvatarUrl);
 
-  /* ========= USDC.e balance (live per block) ========= */
+  /* ========= USDC.e balance (interval, no per-block) ========= */
   const client = usePublicClient();
   const [usdceText, setUsdceText] = useState<string>("$0");
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   async function refreshUsdce() {
     try {
@@ -161,15 +231,40 @@ export default function Header() {
     }
   }
 
+  // start/stop polling on connect + page visibility
   useEffect(() => {
+    // initial fetch
     void refreshUsdce();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [client, address]);
 
-  useWatchBlockNumber({
-    enabled: Boolean(client && address),
-    onBlockNumber: () => void refreshUsdce(),
-  });
+    function start() {
+      if (pollRef.current) clearInterval(pollRef.current);
+      pollRef.current = setInterval(() => {
+        if (document.visibilityState === "visible") {
+          void refreshUsdce();
+        }
+      }, POLL_MS);
+    }
+    function stop() {
+      if (pollRef.current) {
+        clearInterval(pollRef.current);
+        pollRef.current = null;
+      }
+    }
+    if (isConnected) start();
+    else stop();
+
+    const onVis = () => {
+      // refresh sekali saat tab kembali aktif
+      if (document.visibilityState === "visible") void refreshUsdce();
+    };
+    document.addEventListener("visibilitychange", onVis);
+
+    return () => {
+      document.removeEventListener("visibilitychange", onVis);
+      stop();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [client, address, isConnected]);
 
   /* ========= Search state ========= */
   const [q, setQ] = useState("");
@@ -530,7 +625,7 @@ export default function Header() {
               </DropdownMenu>
             </div>
 
-            {/* Avatar / Profile + dropdown kustom (pakai data DB) */}
+            {/* Avatar / Profile + dropdown kustom (pakai data DB/Abstract cached) */}
             <div>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -539,7 +634,10 @@ export default function Header() {
                     aria-label="Open wallet menu"
                     title="Open wallet menu"
                   >
-                    <HeaderAvatar address={address as `0x${string}`} avatarUrlOverride={dbAvatarUrl} />
+                    <HeaderAvatar
+                      address={address as `0x${string}`}
+                      avatarUrlOverride={dbAvatarUrl || abstractAvatar || null}
+                    />
                   </button>
                 </DropdownMenuTrigger>
 
@@ -547,8 +645,8 @@ export default function Header() {
                   {/* Header di dalam kotak */}
                   <div className="flex items-center gap-3 px-4 py-3 border-b border-neutral-800">
                     <div className="relative h-8 w-8 overflow-hidden rounded-full ring-2 ring-[var(--primary-500)]">
-                      {dbAvatarUrl ? (
-                        <img src={dbAvatarUrl} alt="Avatar" className="h-full w-full object-cover" />
+                      {dbAvatarUrl || abstractAvatar ? (
+                        <img src={(dbAvatarUrl || abstractAvatar)!} alt="Avatar" className="h-full w-full object-cover" />
                       ) : (
                         <AbstractProfile size="xs" showTooltip={false} className="!h-8 !w-8" />
                       )}
