@@ -1,4 +1,3 @@
-// src/components/upload/create.tsx
 "use client";
 
 import { useEffect, useRef, useState } from "react";
@@ -7,7 +6,6 @@ import { supabase } from "@/lib/supabase";
 import UploadFilePanel from "./file-panel";
 import UploadDetailsPanel from "./details-panel";
 import UploadActionPanel from "./upload-panel";
-import { useAccount } from "wagmi"; // ✅ tambahkan: ikuti referensi header
 
 /* ---------- Config ---------- */
 const ACCEPT =
@@ -45,6 +43,43 @@ const fmtBytes = (n: number) => {
   return `${v.toFixed(i === 0 ? 0 : 1)} ${units[i]}`;
 };
 
+/* ===== Pricing helpers (UI only) ===== */
+type PriceRule = {
+  min_cents: number;
+  max_cents: number;
+  step_cents: number;
+  default_cents: number;
+};
+
+// Range slider: $10 – $100 (step $1)
+const DEFAULT_PRICE_RULE: PriceRule = {
+  min_cents: 1000,
+  max_cents: 10000,
+  step_cents: 100,
+  default_cents: 1999,
+};
+
+// bisa dipakai kalau suatu saat kamu mau beda per kategori
+function getRuleForCategory(_category: string): PriceRule {
+  return DEFAULT_PRICE_RULE;
+}
+
+// saran harga sederhana berdasar durasi (tetap di-clamp ke rule)
+function suggestPriceByDuration(durationSec: number, rule: PriceRule): number {
+  const m = Math.max(1, Math.round(durationSec / 60));
+  let usd =
+    m <= 10 ? 12 :
+    m <= 30 ? 19 :
+    m <= 60 ? 29 : 39;
+  const cents = Math.round(usd * 100);
+  const snapped =
+    Math.min(
+      Math.max(Math.round(cents / rule.step_cents) * rule.step_cents, rule.min_cents),
+      rule.max_cents
+    );
+  return snapped;
+}
+
 export default function UploadCreate() {
   // File & preview
   const [file, setFile] = useState<File | null>(null);
@@ -59,6 +94,10 @@ export default function UploadCreate() {
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState<string>("");
 
+  // Pricing state
+  const [priceRule, setPriceRule] = useState<PriceRule>(DEFAULT_PRICE_RULE);
+  const [priceCents, setPriceCents] = useState<number>(DEFAULT_PRICE_RULE.default_cents);
+
   // Thumbnail
   const [thumbURL, setThumbURL] = useState<string | null>(null);
   const [thumbBlob, setThumbBlob] = useState<Blob | null>(null);
@@ -68,69 +107,42 @@ export default function UploadCreate() {
   const [progress, setProgress] = useState(0);
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Abstract ID (ambil dari user login/profil)
+  // Abstract ID (ambil dari tabel profiles)
   const [abstractId, setAbstractId] = useState<string | null>(null);
-
-  // ✅ sesuai header: dapatkan address dari wagmi
-  const { address, status } = useAccount();
-
-  // ✅ helper kecil: resolve abstract_id mengikuti urutan di header
-  async function resolveAbstractId(): Promise<string | null> {
-    try {
-      // 1) Jika wallet connect, gunakan address lowercased dan pastikan ada di profiles.abstract_id
-      const addr = address?.toLowerCase();
-      if (addr) {
-        const { data } = await supabase
-          .from("profiles")
-          .select("abstract_id")
-          .eq("abstract_id", addr)
-          .maybeSingle();
-        if (data?.abstract_id) return data.abstract_id;
-      }
-
-      // 2) Cek Supabase Auth user -> profiles.id
-      const { data: authData } = await supabase.auth.getUser();
-      const user = authData?.user;
-      if (user) {
-        const { data: prof } = await supabase
-          .from("profiles")
-          .select("abstract_id")
-          .eq("id", user.id)
-          .maybeSingle();
-        if (prof?.abstract_id) return prof.abstract_id;
-      }
-
-      // 3) Fallback localStorage (kalau kamu simpan di sana), dan validasi ada di tabel
-      try {
-        const fromLS = window.localStorage.getItem("abstract_id");
-        if (fromLS) {
-          const { data: prof2 } = await supabase
-            .from("profiles")
-            .select("abstract_id")
-            .eq("abstract_id", fromLS.toLowerCase())
-            .maybeSingle();
-          if (prof2?.abstract_id) return prof2.abstract_id;
-        }
-      } catch {}
-
-      return null;
-    } catch {
-      return null;
-    }
-  }
-
-  // ✅ ganti useEffect lama: jangan ambil "row terbaru", tapi ambil milik user aktif
   useEffect(() => {
     let mounted = true;
     (async () => {
-      const aid = await resolveAbstractId();
-      if (mounted) setAbstractId(aid);
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("abstract_id")
+        .not("abstract_id", "is", null)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (!error && mounted && data?.abstract_id) setAbstractId(data.abstract_id);
     })();
     return () => {
       mounted = false;
     };
-    // refresh ketika status/address wallet berubah
-  }, [address, status]);
+  }, []);
+
+  // update rule & suggested price ketika kategori/durasi berubah
+  useEffect(() => {
+    const rule = getRuleForCategory(category);
+    setPriceRule(rule);
+    setPriceCents((prev) => {
+      // kalau user belum pilih harga, pakai saran; kalau sudah, clamp ke rule
+      const chosen = prev || rule.default_cents;
+      const suggested = suggestPriceByDuration(durationSec, rule);
+      const target = prev ? chosen : suggested;
+      const clamped =
+        Math.min(
+          Math.max(Math.round(target / rule.step_cents) * rule.step_cents, rule.min_cents),
+          rule.max_cents
+        );
+      return clamped;
+    });
+  }, [category, durationSec]);
 
   /* cleanup URLs/timer */
   useEffect(() => {
@@ -250,12 +262,28 @@ export default function UploadCreate() {
     return { path: uploadRes?.path ?? path, publicUrl: pub.publicUrl };
   }
 
+  // insert metadata (coba dengan price, kalau kolomnya tidak ada -> fallback tanpa price)
+  async function insertVideoRow(payloadBase: Record<string, any>) {
+    // 1) coba dengan price
+    const withPrice = {
+      ...payloadBase,
+      price_cents: priceCents,
+      currency: "USD",
+    };
+    let { error: e1 } = await supabase.from("videos").insert(withPrice);
+    if (!e1) return;
+
+    // 2) fallback tanpa price (misal kolom tidak ada)
+    const { error: e2 } = await supabase.from("videos").insert(payloadBase);
+    if (e2) throw e2;
+  }
+
   async function startUpload() {
     try {
       if (!file || !title.trim() || !category) return;
 
-      // Wajib ada abstract_id dari profil user yang aktif
-      const aid = (abstractId || "").trim();
+      // Wajib ada abstract_id dari tabel profiles
+      const aid = abstractId?.trim();
       if (!aid) {
         setError(
           "abstract_id tidak ditemukan di tabel profiles. Buat/isi profil dulu atau sesuaikan query pengambilan profil."
@@ -300,7 +328,7 @@ export default function UploadCreate() {
       }
 
       // 3) metadata → public.videos (sertakan abstract_id)
-      const { error: insertErr } = await supabase.from("videos").insert({
+      const payload = {
         abstract_id: aid, // FK ke profiles.abstract_id
         title,
         description,
@@ -310,8 +338,9 @@ export default function UploadCreate() {
         video_url: videoRes.publicUrl,
         thumb_path: thumbRes?.path ?? null,
         thumb_url: thumbRes?.publicUrl ?? null,
-      });
-      if (insertErr) throw insertErr;
+      };
+
+      await insertVideoRow(payload);
 
       if (timer.current) {
         clearInterval(timer.current);
@@ -356,6 +385,8 @@ export default function UploadCreate() {
     setTitle("");
     setDescription("");
     setCategory("");
+    setPriceRule(DEFAULT_PRICE_RULE);
+    setPriceCents(DEFAULT_PRICE_RULE.default_cents);
     if (thumbURL?.startsWith("blob:")) URL.revokeObjectURL(thumbURL);
     setThumbURL(null);
     setThumbBlob(null);
@@ -415,6 +446,14 @@ export default function UploadCreate() {
           onChangeTitle={setTitle}
           onChangeDescription={setDescription}
           onChangeCategory={setCategory}
+          /* pricing props */
+          durationSec={durationSec}
+          priceRule={priceRule}
+          priceCents={priceCents}
+          onChangePriceCents={setPriceCents}
+          onUseSuggested={() =>
+            setPriceCents(suggestPriceByDuration(durationSec, priceRule))
+          }
         />
         <UploadActionPanel
           uploading={uploading}
