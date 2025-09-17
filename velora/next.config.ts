@@ -1,4 +1,8 @@
+// next.config.ts
 import type { NextConfig } from "next";
+
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+const SUPABASE_HOST = SUPABASE_URL ? new URL(SUPABASE_URL).host : undefined;
 
 const nextConfig: NextConfig = {
   images: {
@@ -13,9 +17,16 @@ const nextConfig: NextConfig = {
         hostname: "lh3.googleusercontent.com",
         pathname: "/**",
       },
+      ...(SUPABASE_HOST
+        ? [
+            {
+              protocol: "https",
+              hostname: SUPABASE_HOST, // contoh: kpdfvndcsstsoxmondwqv.supabase.co
+              pathname: "/storage/**", // /storage/v1/object/public/<bucket>/...
+            } as const,
+          ]
+        : []),
     ],
-    // Opsional (boleh dihapus kalau pakai remotePatterns saja)
-    // domains: ["lh3.googleusercontent.com", "images.unsplash.com"],
   },
 };
 

@@ -8,7 +8,6 @@ import { FormEvent, useEffect, useRef, useState } from "react";
 import { useLoginWithAbstract } from "@abstract-foundation/agw-react";
 import { useAccount, useBalance } from "wagmi";
 
-import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -18,6 +17,7 @@ import {
 
 import { ConnectWalletButton } from "@/components/connect-wallet-button";
 import { AbstractProfile } from "@/components/abstract-profile";
+import ProfileUpsertOnLogin from "@/components/boot/profile-upsert-on-login"; // ⬅️ auto-upsert
 
 type Notif = {
   id: string;
@@ -127,7 +127,11 @@ export default function Header() {
       Setting
     </DropdownMenuItem>,
     <div key="sep" className="h-px my-0.5 bg-neutral-800" />,
-    <DropdownMenuItem key="disconnect" className={itemCls + " text-destructive"} onClick={() => logout()}>
+    <DropdownMenuItem
+      key="disconnect"
+      className={itemCls + " text-destructive"}
+      onClick={() => logout()}
+    >
       Disconnect
     </DropdownMenuItem>,
   ];
@@ -139,12 +143,24 @@ export default function Header() {
     >
       {/* Kolom 1: Logo */}
       <div className="flex items-center gap-4">
-        <button className="flex items-center justify-center rounded-full p-2 text-neutral-50 hover:bg-neutral-800 md:hidden" aria-label="Buka menu">
-          <svg className="size-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"></path></svg>
+        <button
+          className="flex items-center justify-center rounded-full p-2 text-neutral-50 hover:bg-neutral-800 md:hidden"
+          aria-label="Buka menu"
+        >
+          <svg className="size-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"></path>
+          </svg>
         </button>
 
         <Link href="/" aria-label="Home">
-          <Image src="/logo.png" alt="Velora Logo" width={512} height={128} priority className="h-[44px] w-auto sm:h-[42px] lg:h-[46px]" />
+          <Image
+            src="/logo.png"
+            alt="Velora Logo"
+            width={512}
+            height={128}
+            priority
+            className="h-[44px] w-auto sm:h-[42px] lg:h-[46px]"
+          />
         </Link>
       </div>
 
@@ -154,7 +170,18 @@ export default function Header() {
           <form onSubmit={onSubmit} className="flex w-full items-center">
             <div className="relative flex min-w-0 flex-1">
               <span className="pointer-events-none absolute inset-y-0 left-4 flex items-center">
-                <svg className="h-5 w-5 text-neutral-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fillRule="evenodd" d="M12.9 14.32a8 8 0 111.414-1.414l3.39 3.39a1 1 0 01-1.414 1.415l-3.39-3.39zM14 8a6 6 0 11-12 0 6 6 0 0112 0z" clipRule="evenodd"/></svg>
+                <svg
+                  className="h-5 w-5 text-neutral-400"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  aria-hidden="true"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M12.9 14.32a8 8 0 111.414-1.414l3.39 3.39a1 1 0 01-1.414 1.415l-3.39-3.39zM14 8a6 6 0 11-12 0 6 6 0 0112 0z"
+                    clipRule="evenodd"
+                  />
+                </svg>
               </span>
 
               <input
@@ -171,13 +198,35 @@ export default function Header() {
               />
 
               {q && (
-                <button type="button" onClick={clear} className="absolute inset-y-0 right-16 my-1 flex h-8 w-8 items-center justify-center rounded-full text-neutral-400 hover:bg-neutral-800 hover:text-neutral-200" aria-label="Bersihkan">
-                  <svg viewBox="0 0 20 20" className="h-4 w-4" fill="currentColor" aria-hidden="true"><path fillRule="evenodd" d="M10 8.586l3.536-3.536a1 1 0 111.415 1.415L11.414 10l3.536 3.536a1 1 0 11-1.415 1.414L10 11.414l-3.536 3.536a1 1 0 01-1.415-1.415L8.586 10 5.05 6.464A1 1 0 016.464 5.05L10 8.586z" clipRule="evenodd"/></svg>
+                <button
+                  type="button"
+                  onClick={clear}
+                  className="absolute inset-y-0 right-16 my-1 flex h-8 w-8 items-center justify-center rounded-full text-neutral-400 hover:bg-neutral-800 hover:text-neutral-200"
+                  aria-label="Bersihkan"
+                >
+                  <svg viewBox="0 0 20 20" className="h-4 w-4" fill="currentColor" aria-hidden="true">
+                    <path
+                      fillRule="evenodd"
+                      d="M10 8.586l3.536-3.536a1 1 0 111.415 1.415L11.414 10l3.536 3.536a1 1 0 11-1.415 1.414L10 11.414l-3.536 3.536a1 1 0 01-1.415-1.415L8.586 10 5.05 6.464A1 1 0 016.464 5.05L10 8.586z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
                 </button>
               )}
 
-              <button type="submit" className="h-10 w-16 rounded-r-full border border-l-0 border-neutral-700 bg-neutral-800 text-neutral-200 hover:bg-neutral-700" aria-label="Cari" title="Cari">
-                <svg className="mx-auto h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fillRule="evenodd" d="M12.9 14.32a8 8 0 111.414-1.414l3.39 3.39a1 1 0 01-1.414 1.415l-3.39-3.39zM14 8a6 6 0 11-12 0 6 6 0 0112 0z" clipRule="evenodd" /></svg>
+              <button
+                type="submit"
+                className="h-10 w-16 rounded-r-full border border-l-0 border-neutral-700 bg-neutral-800 text-neutral-200 hover:bg-neutral-700"
+                aria-label="Cari"
+                title="Cari"
+              >
+                <svg className="mx-auto h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                  <path
+                    fillRule="evenodd"
+                    d="M12.9 14.32a8 8 0 111.414-1.414l3.39 3.39a1 1 0 01-1.414 1.415l-3.39-3.39zM14 8a6 6 0 11-12 0 6 6 0 0112 0z"
+                    clipRule="evenodd"
+                  />
+                </svg>
               </button>
             </div>
 
@@ -201,7 +250,9 @@ export default function Header() {
               aria-label="Pencarian suara"
               title="Pencarian suara"
             >
-              <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor"><path d="M12 14a3 3 0 003-3V6a3 3 0 10-6 0v5a3 3 0 003 3zm5-3a5 5 0 01-10 0H5a7 7 0 0013.9 1H19a7 7 0 00-2-1zM11 19.93V22h2v-2.07A8.001 8.001 0 0020 12h-2a6 6 0 11-12 0H4a8.001 8.001 0 007 7.93z" /></svg>
+              <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor">
+                <path d="M12 14a3 3 0 003-3V6a3 3 0 10-6 0v5a3 3 0 003 3zm5-3a5 5 0 01-10 0H5a7 7 0 0013.9 1H19a7 7 0 00-2-1zM11 19.93V22h2v-2.07A8.001 8.001 0 0020 12h-2a6 6 0 11-12 0H4a8.001 8.001 0 007 7.93z" />
+              </svg>
             </button>
           </form>
 
@@ -210,7 +261,13 @@ export default function Header() {
               {recent.length > 0 && (
                 <div className="flex items-center justify-between px-4 py-2 text-xs text-neutral-400">
                   <span>Recent searches</span>
-                  <button onMouseDown={(e) => e.preventDefault()} onClick={clearAllRecent} className="rounded-md px-2 py-1 text-neutral-300 hover:bg-neutral-800 hover:text-neutral-100">Clear all</button>
+                  <button
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={clearAllRecent}
+                    className="rounded-md px-2 py-1 text-neutral-300 hover:bg-neutral-800 hover:text-neutral-100"
+                  >
+                    Clear all
+                  </button>
                 </div>
               )}
 
@@ -221,7 +278,12 @@ export default function Header() {
                     <li key={s} className="group relative">
                       <button
                         onMouseDown={(e) => e.preventDefault()}
-                        onClick={() => { setQ(s); saveRecent(s); router.push(`/search?q=${encodeURIComponent(s)}`); setOpenSug(false); }}
+                        onClick={() => {
+                          setQ(s);
+                          saveRecent(s);
+                          router.push(`/search?q=${encodeURIComponent(s)}`);
+                          setOpenSug(false);
+                        }}
                         className="flex w-full items-center gap-3 px-4 py-2 pr-12 text-left text-sm text-neutral-200 hover:bg-neutral-800"
                       >
                         <span className="truncate">{s}</span>
@@ -230,12 +292,21 @@ export default function Header() {
                       {isRecent && (
                         <button
                           onMouseDown={(e) => e.preventDefault()}
-                          onClick={(e) => { e.stopPropagation(); removeRecent(s); }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            removeRecent(s);
+                          }}
                           aria-label="Remove from history"
                           title="Remove from history"
                           className="absolute right-2 top-1/2 hidden h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full text-neutral-400 hover:bg-neutral-700 hover:text-neutral-100 group-hover:flex"
                         >
-                          <svg viewBox="0 0 20 20" className="h-4 w-4" fill="currentColor"><path fillRule="evenodd" d="M11.414 10l3.536-3.536a1 1 0 10-1.414-1.414L10 8.586 6.464 5.05A1 1 0 105.05 6.464L8.586 10l-3.536 3.536a1 1 0 001.414-1.414L11.414 10z" clipRule="evenodd" /></svg>
+                          <svg viewBox="0 0 20 20" className="h-4 w-4" fill="currentColor">
+                            <path
+                              fillRule="evenodd"
+                              d="M11.414 10l3.536-3.536a1 1 0 10-1.414-1.414L10 8.586 6.464 5.05A1 1 0 105.05 6.464L8.586 10l-3.536 3.536a1 1 0 001.414-1.414L11.414 10z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
                         </button>
                       )}
                     </li>
@@ -259,14 +330,18 @@ export default function Header() {
             {/* Poin & saldo */}
             <div className="hidden items-center gap-4 rounded-full bg-neutral-800 px-4 py-1.5 sm:flex">
               <div className="flex items-center gap-2">
-                <svg className="h-5 w-5 text-yellow-400" fill="currentColor" viewBox="0 0 256 256"><path d="M239.2,97.41a16.4,16.4,0,0,0-14.21-10.06l-49.33-7.17L153.8,36.52a16.37,16.37,0,0,0-29.6,0L102.34,80.18,53,87.35A16.4,16.4,0,0,0,38.8,97.41a16.43,16.43,0,0,0,4.28,17.27l35.69,34.78-8.43,49.14a16.4,16.4,0,0,0,7.86,17.2,16.32,16.32,0,0,0,18.15,.11L128,193.07l44.13,23.2a16.32,16.32,0,0,0,18.15-.11,16.4,16.4,0,0,0,7.86-17.2l-8.43-49.14,35.69-34.78A16.43,16.43,0,0,0,239.2,97.41Z"></path></svg>
+                <svg className="h-5 w-5 text-yellow-400" fill="currentColor" viewBox="0 0 256 256">
+                  <path d="M239.2,97.41a16.4,16.4,0,0,0-14.21-10.06l-49.33-7.17L153.8,36.52a16.37,16.37,0,0,0-29.6,0L102.34,80.18,53,87.35A16.4,16.4,0,0,0,38.8,97.41a16.43,16.43,0,0,0,4.28,17.27l35.69,34.78-8.43,49.14a16.4,16.4,0,0,0,7.86,17.2,16.32,16.32,0,0,0,18.15,.11L128,193.07l44.13,23.2a16.32,16.32,0,0,0,18.15-.11,16.4,16.4,0,0,0,7.86-17.2l-8.43-49.14,35.69-34.78A16.43,16.43,0,0,0,239.2,97.41Z"></path>
+                </svg>
                 <span className="text-sm font-semibold text-neutral-50">2.500</span>
               </div>
 
               <div className="h-5 w-px bg-neutral-700" />
 
               <div className="flex items-center gap-2">
-                <svg className="h-5 w-5 text-[var(--primary-500)]" fill="currentColor" viewBox="0 0 256 256"><path d="M224,72H48A24,24,0,0,0,24,96V192a24,24,0,0,0,24,24H200a24,24,0,0,0,24-24V160H192a8,8,0,0,1,0-16h32V96A24,24,0,0,0,224,72ZM40,96a8,8,0,0,1,8-8H224a8,8,0,0,1,8,8v48H192a24,24,0,0,0-24,24v16H48a8,8,0,0,1-8-8Z"></path></svg>
+                <svg className="h-5 w-5 text-[var(--primary-500)]" fill="currentColor" viewBox="0 0 256 256">
+                  <path d="M224,72H48A24,24,0,0,0,24,96V192a24,24,0,0,0,24,24H200a24,24,0,0,0,24-24V160H192a8,8,0,0,1,0-16h32V96A24,24,0,0,0,224,72ZM40,96a8,8,0,0,1,8-8H224a8,8,0,0,1,8,8v48H192a24,24,0,0,0-24,24v16H48a8,8,0,0,1-8-8Z"></path>
+                </svg>
                 <span className="text-sm font-semibold text-neutral-50">{formattedBadgeBalance}</span>
               </div>
             </div>
@@ -275,18 +350,24 @@ export default function Header() {
             <div className="relative">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="flex size-10 cursor-pointer items-center justify-center rounded-full text-neutral-50 transition-colors hover:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-[var(--primary-500)]/40" aria-label="Tambah" title="Tambah">
-                    <svg className="h-6 w-6" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" clipRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z"/></svg>
+                  <button
+                    className="flex size-10 cursor-pointer items-center justify-center rounded-full text-neutral-50 transition-colors hover:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-[var(--primary-500)]/40"
+                    aria-label="Tambah"
+                    title="Tambah"
+                  >
+                    <svg className="h-6 w-6" fill="currentColor" viewBox="0 0 20 20">
+                      <path
+                        fillRule="evenodd"
+                        clipRule="evenodd"
+                        d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z"
+                      />
+                    </svg>
                   </button>
                 </DropdownMenuTrigger>
 
                 <DropdownMenuContent align="end" side="bottom" className="w-44">
-                  <DropdownMenuItem onClick={() => router.push("/ads")}>
-                    Create ads
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => router.push("/upload")}>
-                    Upload video
-                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => router.push("/ads")}>Create ads</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => router.push("/upload")}>Upload video</DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
@@ -295,9 +376,17 @@ export default function Header() {
             <div className="relative">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="relative flex size-10 cursor-pointer items-center justify-center overflow-hidden rounded-full text-neutral-50 transition-colors hover:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-[var(--primary-500)]/40" aria-label="Notification" title="Notification">
-                    <svg fill="currentColor" height="20" width="20" viewBox="0 0 256 256"><path d="M221.8,175.94C216.25,166.38,208,139.33,208,104a80,80,0,1,0-160,0c0,35.34-8.26,62.38-13.81,71.94A16,16,0,0,0,48,200H88.81a40,40,0,0,0,78.38,0H208a16,16,0,0,0,13.8-24.06ZM128,216a24,24,0,0,1-22.62-16h45.24A24,24,0,0,1,128,216ZM48,184c7.7-13.24,16-43.92,16-80a64,64,0,1,1,128,0c0,36.05,8.28,66.73,16,80Z"></path></svg>
-                    {unreadCount > 0 && <span className="absolute right-1 top-1 block h-2 w-2 rounded-full bg-[var(--primary-500)]" />}
+                  <button
+                    className="relative flex size-10 cursor-pointer items-center justify-center overflow-hidden rounded-full text-neutral-50 transition-colors hover:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-[var(--primary-500)]/40"
+                    aria-label="Notification"
+                    title="Notification"
+                  >
+                    <svg fill="currentColor" height="20" width="20" viewBox="0 0 256 256">
+                      <path d="M221.8,175.94C216.25,166.38,208,139.33,208,104a80,80,0,1,0-160,0c0,35.34-8.26,62.38-13.81,71.94A16,16,0,0,0,48,200H88.81a40,40,0,0,0,78.38,0H208a16,16,0,0,0,13.8-24.06ZM128,216a24,24,0,0,1-22.62-16h45.24A24,24,0,0,1,128,216ZM48,184c7.7-13.24,16-43.92,16-80a64,64,0,1,1,128,0c0,36.05,8.28,66.73,16,80Z"></path>
+                    </svg>
+                    {unreadCount > 0 && (
+                      <span className="absolute right-1 top-1 block h-2 w-2 rounded-full bg-[var(--primary-500)]" />
+                    )}
                   </button>
                 </DropdownMenuTrigger>
 
@@ -309,7 +398,9 @@ export default function Header() {
                   {notifications.length === 0 ? (
                     <div className="flex flex-col items-center px-6 py-8 text-center">
                       <div className="flex h-12 w-12 items-center justify-center rounded-full bg-neutral-800/70">
-                        <svg viewBox="0 0 24 24" className="h-6 w-6 text-neutral-300" fill="currentColor"><path d="M18 16l1 2H5l1-2c.667-1.333 1-3.667 1-7a5 5 0 1110 0c0 3.333.333 5.667 1 7zM9 19a3 3 0 006 0H9z"/></svg>
+                        <svg viewBox="0 0 24 24" className="h-6 w-6 text-neutral-300" fill="currentColor">
+                          <path d="M18 16l1 2H5l1-2c.667-1.333 1-3.667 1-7a5 5 0 1110 0c0 3.333.333 5.667 1 7zM9 19a3 3 0 006 0H9z" />
+                        </svg>
                       </div>
                       <p className="mt-3 text-sm font-medium text-neutral-200">No notifications yet</p>
                       <p className="mt-1 text-xs text-neutral-400">Notifications will appear here later.</p>
@@ -318,12 +409,17 @@ export default function Header() {
                     <ul className="max-h-80 divide-y divide-neutral-800 overflow-auto">
                       {notifications.map((n) => (
                         <li key={n.id} className="flex gap-3 px-4 py-3 hover:bg-neutral-800/60">
-                          <div className="mt-0.5 h-2 w-2 flex-shrink-0 rounded-full" style={{ backgroundColor: n.unread ? "var(--primary-500)" : "transparent" }} />
+                          <div
+                            className="mt-0.5 h-2 w-2 flex-shrink-0 rounded-full"
+                            style={{ backgroundColor: n.unread ? "var(--primary-500)" : "transparent" }}
+                          />
                           <div className="min-w-0 flex-1">
                             <p className="truncate text-sm font-medium text-neutral-100">{n.title}</p>
                             {n.body && <p className="truncate text-xs text-neutral-400">{n.body}</p>}
                           </div>
-                          {n.time && <span className="ml-2 whitespace-nowrap text-xs text-neutral-500">{n.time}</span>}
+                          {n.time && (
+                            <span className="ml-2 whitespace-nowrap text-xs text-neutral-500">{n.time}</span>
+                          )}
                         </li>
                       ))}
                     </ul>
@@ -331,6 +427,7 @@ export default function Header() {
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
+
             <div>
               <ConnectWalletButton
                 customTrigger={
@@ -350,6 +447,9 @@ export default function Header() {
           </>
         )}
       </div>
+
+      {/* ⬇️ Komponen boot agar upsert profile otomatis begitu user terhubung */}
+      <ProfileUpsertOnLogin />
     </header>
   );
 }
