@@ -7,6 +7,7 @@ import { supabase } from "@/lib/supabase";
 import UploadFilePanel from "./file-panel";
 import UploadDetailsPanel from "./details-panel";
 import UploadActionPanel from "./upload-panel";
+import { useAccount } from "wagmi"; // ✅ tambahkan: ikuti referensi header
 
 /* ---------- Config ---------- */
 const ACCEPT =
@@ -67,24 +68,69 @@ export default function UploadCreate() {
   const [progress, setProgress] = useState(0);
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Abstract ID (ambil dari tabel profiles)
+  // Abstract ID (ambil dari user login/profil)
   const [abstractId, setAbstractId] = useState<string | null>(null);
+
+  // ✅ sesuai header: dapatkan address dari wagmi
+  const { address, status } = useAccount();
+
+  // ✅ helper kecil: resolve abstract_id mengikuti urutan di header
+  async function resolveAbstractId(): Promise<string | null> {
+    try {
+      // 1) Jika wallet connect, gunakan address lowercased dan pastikan ada di profiles.abstract_id
+      const addr = address?.toLowerCase();
+      if (addr) {
+        const { data } = await supabase
+          .from("profiles")
+          .select("abstract_id")
+          .eq("abstract_id", addr)
+          .maybeSingle();
+        if (data?.abstract_id) return data.abstract_id;
+      }
+
+      // 2) Cek Supabase Auth user -> profiles.id
+      const { data: authData } = await supabase.auth.getUser();
+      const user = authData?.user;
+      if (user) {
+        const { data: prof } = await supabase
+          .from("profiles")
+          .select("abstract_id")
+          .eq("id", user.id)
+          .maybeSingle();
+        if (prof?.abstract_id) return prof.abstract_id;
+      }
+
+      // 3) Fallback localStorage (kalau kamu simpan di sana), dan validasi ada di tabel
+      try {
+        const fromLS = window.localStorage.getItem("abstract_id");
+        if (fromLS) {
+          const { data: prof2 } = await supabase
+            .from("profiles")
+            .select("abstract_id")
+            .eq("abstract_id", fromLS.toLowerCase())
+            .maybeSingle();
+          if (prof2?.abstract_id) return prof2.abstract_id;
+        }
+      } catch {}
+
+      return null;
+    } catch {
+      return null;
+    }
+  }
+
+  // ✅ ganti useEffect lama: jangan ambil "row terbaru", tapi ambil milik user aktif
   useEffect(() => {
     let mounted = true;
     (async () => {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("abstract_id")
-        .not("abstract_id", "is", null)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      if (!error && mounted && data?.abstract_id) setAbstractId(data.abstract_id);
+      const aid = await resolveAbstractId();
+      if (mounted) setAbstractId(aid);
     })();
     return () => {
       mounted = false;
     };
-  }, []);
+    // refresh ketika status/address wallet berubah
+  }, [address, status]);
 
   /* cleanup URLs/timer */
   useEffect(() => {
@@ -208,8 +254,8 @@ export default function UploadCreate() {
     try {
       if (!file || !title.trim() || !category) return;
 
-      // Wajib ada abstract_id dari tabel profiles
-      const aid = abstractId?.trim();
+      // Wajib ada abstract_id dari profil user yang aktif
+      const aid = (abstractId || "").trim();
       if (!aid) {
         setError(
           "abstract_id tidak ditemukan di tabel profiles. Buat/isi profil dulu atau sesuaikan query pengambilan profil."
