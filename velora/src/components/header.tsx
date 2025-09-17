@@ -28,7 +28,6 @@ const ERC20_MIN_ABI = [
   { type: "function", name: "balanceOf", stateMutability: "view", inputs: [{ type: "address" }], outputs: [{ type: "uint256" }] },
 ] as const satisfies Abi;
 
-/* Format $ */
 function formatUSD(n: number) {
   if (!isFinite(n) || n <= 0) return "$0";
   if (n < 1) return `$${n.toFixed(4)}`;
@@ -44,15 +43,14 @@ function formatUSD(n: number) {
 
 type Notif = { id: string; title: string; body?: string; time?: string; unread?: boolean };
 const RECENT_KEY = "vh_recent_queries";
-const short = (addr?: `0x${string}`) => (addr ? `${addr.slice(0, 6)}…${addr.slice(-4)}` : "");
+const short = (addr?: `0x${string}`) => (addr ? `${addr.slice(0, 6)}…${addr.slice(-4)}` : "-");
 
-/* =================== DB Avatar trigger =================== */
+/* ============== Hook: load profile dari DB ============== */
 type DbProfile = { abstract_id: string; username: string | null; avatar_url: string | null };
 
-function HeaderAvatar({ address }: { address?: `0x${string}` }) {
-  const [dbAvatar, setDbAvatar] = useState<string | null>(null);
-  const [useDb, setUseDb] = useState<boolean>(false);
-  const cacheBust = useRef<number>(Date.now()); // supaya ga kena cache lama
+function useDbProfile(address?: `0x${string}`) {
+  const [username, setUsername] = useState<string | null>(null);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
   const addrLower = useMemo(
     () => (address ? address.toLowerCase() : ""),
@@ -63,30 +61,25 @@ function HeaderAvatar({ address }: { address?: `0x${string}` }) {
     let alive = true;
     (async () => {
       if (!addrLower || !/^0x[a-f0-9]{40}$/.test(addrLower)) {
-        setUseDb(false);
-        setDbAvatar(null);
+        setUsername(null);
+        setAvatarUrl(null);
         return;
       }
       try {
         const r = await fetch(`/api/profiles/${addrLower}`, { cache: "no-store" });
         if (!r.ok) {
-          setUseDb(false);
-          setDbAvatar(null);
+          setUsername(null);
+          setAvatarUrl(null);
           return;
         }
-        const p: DbProfile = await r.json();
+        const p = (await r.json()) as DbProfile;
         if (!alive) return;
-        if (p?.avatar_url) {
-          setDbAvatar(`${p.avatar_url}?v=${cacheBust.current}`);
-          setUseDb(true);
-        } else {
-          setUseDb(false);
-          setDbAvatar(null);
-        }
+        setUsername(p?.username ?? null);
+        setAvatarUrl(p?.avatar_url ? `${p.avatar_url}?v=${Date.now()}` : null);
       } catch {
         if (!alive) return;
-        setUseDb(false);
-        setDbAvatar(null);
+        setUsername(null);
+        setAvatarUrl(null);
       }
     })();
     return () => {
@@ -94,15 +87,29 @@ function HeaderAvatar({ address }: { address?: `0x${string}` }) {
     };
   }, [addrLower]);
 
+  return { username, avatarUrl };
+}
+
+/* ============== Avatar kecil (trigger) ============== */
+function HeaderAvatar({
+  address,
+  avatarUrlOverride,
+}: {
+  address?: `0x${string}`;
+  avatarUrlOverride?: string | null;
+}) {
   return (
     <div className="rounded-full ring-2 ring-transparent hover:ring-[rgba(124,58,237,0.45)]">
-      {useDb && dbAvatar ? (
-        // pakai <img> biasa biar ga perlu whitelist domain tambahan (kamu sudah whitelist Supabase di next.config)
+      {avatarUrlOverride ? (
+        // pakai <img> biar simple; next.config sudah whitelist Supabase storage
         <img
-          src={dbAvatar}
+          src={avatarUrlOverride}
           alt="Avatar"
           className="block rounded-full object-cover h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10"
-          onError={() => setUseDb(false)} // fallback ke AbstractProfile kalau gagal load
+          onError={(e) => {
+            // kalau gagal load, sembunyikan (biar AbstractProfile takeover via CSS fallback)
+            (e.currentTarget as HTMLImageElement).style.display = "none";
+          }}
         />
       ) : (
         <AbstractProfile
@@ -114,13 +121,15 @@ function HeaderAvatar({ address }: { address?: `0x${string}` }) {
     </div>
   );
 }
-/* ======================================================== */
 
+/* =================== Header =================== */
 export default function Header() {
   const router = useRouter();
   const { address, status } = useAccount();
   const isConnected = status === "connected" && !!address;
   const { logout } = useLoginWithAbstract();
+
+  const { username: dbUsername, avatarUrl: dbAvatarUrl } = useDbProfile(address as `0x${string}` | undefined);
 
   /* ========= USDC.e balance (live per block) ========= */
   const client = usePublicClient();
@@ -369,7 +378,7 @@ export default function Header() {
           </form>
 
           {openSug && (filtered.length > 0 || q) && (
-            <div className="absolute left-0 right-0 top-[44px] mx-auto w-full max-w-[720px] rounded-xl border border-neutral-800 bg-neutral-900/95 backdrop-blur supports-[backdrop-filter]:bg-neutral-900/70">
+            <div className="absolute left-0 right-0 top-[44px] mx-auto w/full max-w-[720px] rounded-xl border border-neutral-800 bg-neutral-900/95 backdrop-blur supports-[backdrop-filter]:bg-neutral-900/70">
               {recent.length > 0 && (
                 <div className="flex items-center justify-between px-4 py-2 text-xs text-neutral-400">
                   <span>Recent searches</span>
@@ -441,7 +450,6 @@ export default function Header() {
           <>
             {/* Points + USDC.e */}
             <div className="hidden items-center gap-4 rounded-full bg-neutral-800 px-4 py-1.5 sm:flex">
-              {/* Points */}
               <div className="flex items-center gap-2">
                 <svg className="h-5 w-5 text-yellow-400" fill="currentColor" viewBox="0 0 256 256">
                   <path d="M239.2,97.41a16.4,16.4,0,0,0-14.21-10.06l-49.33-7.17L153.8,36.52a16.37,16.37,0,0,0-29.6,0L102.34,80.18,53,87.35A16.4,16.4,0,0,0,38.8,97.41a16.43,16.43,0,0,0,4.28,17.27l35.69,34.78-8.43,49.14a16.4,16.4,0,0,0,7.86,17.2,16.32,16.32,0,0,0,18.15,.11L128,193.07l44.13,23.2a16.32,16.32,0,0,0,18.15-.11,16.4,16.4,0,0,0,7.86-17.2l-8.43-49.14,35.69-34.78A16.43,16.43,0,0,0,239.2,97.41Z"></path>
@@ -451,39 +459,12 @@ export default function Header() {
 
               <div className="h-5 w-px bg-neutral-700" />
 
-              {/* USDC.e (bridged) */}
               <div className="flex items-center gap-2">
                 <svg className="h-5 w-5 text-[var(--primary-500)]" fill="currentColor" viewBox="0 0 256 256">
                   <path d="M224,72H48A24,24,0,0,0,24,96V192a24,24,0,0,0,24,24H200a24,24,0,0,0,24-24V160H192a8,8,0,0,1,0-16h32V96A24,24,0,0,0,224,72ZM40,96a8,8,0,0,1,8-8H224a8,8,0,0,1,8,8v48H192a24,24,0,0,0-24,24v16H48a8,8,0,0,1-8-8Z"></path>
                 </svg>
                 <span className="text-sm font-semibold text-neutral-50">USDC.e {usdceText}</span>
               </div>
-            </div>
-
-            {/* Tombol + */}
-            <div className="relative">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button
-                    className="flex size-10 cursor-pointer items-center justify-center rounded-full text-neutral-50 transition-colors hover:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-[var(--primary-500)]/40"
-                    aria-label="Tambah"
-                    title="Tambah"
-                  >
-                    <svg className="h-6 w-6" fill="currentColor" viewBox="0 0 20 20">
-                      <path
-                        fillRule="evenodd"
-                        clipRule="evenodd"
-                        d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z"
-                      />
-                    </svg>
-                  </button>
-                </DropdownMenuTrigger>
-
-                <DropdownMenuContent align="end" side="bottom" className="w-44">
-                  <DropdownMenuItem onClick={() => router.push("/ads")}>Create ads</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => router.push("/studio/upload")}>Upload video</DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
             </div>
 
             {/* Notifikasi */}
@@ -509,47 +490,68 @@ export default function Header() {
                     <h3 className="text-sm font-semibold text-neutral-100">Notifications</h3>
                   </div>
 
-                  {notifications.length === 0 ? (
-                    <div className="flex flex-col items-center px-6 py-8 text-center">
-                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-neutral-800/70">
-                        <svg viewBox="0 0 24 24" className="h-6 w-6 text-neutral-300" fill="currentColor">
-                          <path d="M18 16l1 2H5l1-2c.667-1.333 1-3.667 1-7a5 5 0 1110 0c0 3.333.333 5.667 1 7zM9 19a3 3 0 006 0H9z" />
-                        </svg>
-                      </div>
-                      <p className="mt-3 text-sm font-medium text-neutral-200">No notifications yet</p>
-                      <p className="mt-1 text-xs text-neutral-400">Notifications will appear here later.</p>
+                  <div className="flex flex-col items-center px-6 py-8 text-center">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-neutral-800/70">
+                      <svg viewBox="0 0 24 24" className="h-6 w-6 text-neutral-300" fill="currentColor">
+                        <path d="M18 16l1 2H5l1-2c.667-1.333 1-3.667 1-7a5 5 0 1110 0c0 3.333.333 5.667 1 7zM9 19a3 3 0 006 0H9z" />
+                      </svg>
                     </div>
-                  ) : (
-                    <ul className="max-h-80 divide-y divide-neutral-800 overflow-auto">
-                      {notifications.map((n) => (
-                        <li key={n.id} className="flex gap-3 px-4 py-3 hover:bg-neutral-800/60">
-                          <div
-                            className="mt-0.5 h-2 w-2 flex-shrink-0 rounded-full"
-                            style={{ backgroundColor: n.unread ? "var(--primary-500)" : "transparent" }}
-                          />
-                          <div className="min-w-0 flex-1">
-                            <p className="truncate text-sm font-medium text-neutral-100">{n.title}</p>
-                            {n.body && <p className="truncate text-xs text-neutral-400">{n.body}</p>}
-                          </div>
-                          {n.time && (
-                            <span className="ml-2 whitespace-nowrap text-xs text-neutral-500">{n.time}</span>
-                          )}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
+                    <p className="mt-3 text-sm font-medium text-neutral-200">No notifications yet</p>
+                    <p className="mt-1 text-xs text-neutral-400">Notifications will appear here later.</p>
+                  </div>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
 
-            {/* Avatar / Profile — cek DB dulu */}
+            {/* Avatar / Profile + dropdown kustom (pakai data DB) */}
             <div>
-              <ConnectWalletButton
-                customTrigger={<HeaderAvatar address={address as `0x${string}` | undefined} />}
-                dropdownAvatarSize="xs"
-                dropdownAvatarClassName="!h-7 !w-7 sm:!h-8 sm:!w-8"
-                customDropdownItems={walletDropdownItems}
-              />
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    className="flex items-center justify-center rounded-full focus:outline-none focus:ring-2 focus:ring-[var(--primary-500)]/40"
+                    aria-label="Open wallet menu"
+                    title="Open wallet menu"
+                  >
+                    <HeaderAvatar address={address as `0x${string}`} avatarUrlOverride={dbAvatarUrl} />
+                  </button>
+                </DropdownMenuTrigger>
+
+                <DropdownMenuContent align="end" side="bottom" className="w-72 p-0 overflow-hidden">
+                  {/* Header di dalam kotak: avatar dari DB + username dari DB */}
+                  <div className="flex items-center gap-3 px-4 py-3 border-b border-neutral-800">
+                    <div className="relative h-8 w-8 overflow-hidden rounded-full ring-2 ring-[var(--primary-500)]">
+                      {dbAvatarUrl ? (
+                        <img src={dbAvatarUrl} alt="Avatar" className="h-full w-full object-cover" />
+                      ) : (
+                        <AbstractProfile size="xs" showTooltip={false} className="!h-8 !w-8" />
+                      )}
+                    </div>
+                    <div className="min-w-0">
+                      <div className="truncate text-sm font-semibold text-neutral-100">
+                        {dbUsername ?? short(address)}
+                      </div>
+                      <div className="flex items-center gap-2 text-xs text-neutral-400">
+                        <span>{short(address as `0x${string}`)}</span>
+                        <button
+                          className="rounded p-1 hover:bg-neutral-800"
+                          aria-label="Copy address"
+                          onClick={() => {
+                            if (address) navigator.clipboard?.writeText(address);
+                          }}
+                          title="Copy address"
+                        >
+                          <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M16 1H4a2 2 0 00-2 2v12h2V3h12V1zm3 4H8a2 2 0 00-2 2v14a2 2 0 002 2h11a2 2 0 002-2V7a2 2 0 00-2-2zm0 16H8V7h11v14z" />
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Items */}
+                  <div className="py-1">{walletDropdownItems}</div>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </>
         )}
