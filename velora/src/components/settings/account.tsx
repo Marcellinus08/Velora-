@@ -3,6 +3,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useAccount } from "wagmi";
+import { AbstractProfile } from "@/components/abstract-profile";
 
 type DbProfile = {
   abstract_id: string;
@@ -10,6 +11,18 @@ type DbProfile = {
   avatar_url: string | null;
   avatar_path: string | null;
 };
+
+// SVG placeholder jika tidak ada apa-apa
+const PLACEHOLDER_SVG =
+  "data:image/svg+xml;utf8," +
+  encodeURIComponent(
+    `<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'>
+      <rect width='100%' height='100%' fill='#161616'/>
+      <circle cx='80' cy='80' r='72' fill='none' stroke='#7c3aed' stroke-width='4' />
+      <text x='50%' y='53%' dominant-baseline='middle' text-anchor='middle'
+            fill='#777' font-family='sans-serif' font-size='14'>Avatar</text>
+    </svg>`
+  );
 
 export default function SettingsAccount() {
   const { address } = useAccount();
@@ -22,17 +35,16 @@ export default function SettingsAccount() {
 
   // --- Data dari DB ---
   const [db, setDb] = useState<DbProfile | null>(null);
-  const originalUsernameRef = useRef<string>(""); // untuk banding perubahan username
-  const originalAvatarUrlRef = useRef<string | null>(null); // untuk banding perubahan avatar
+  const originalUsernameRef = useRef<string>("");
+  const originalAvatarUrlRef = useRef<string | null>(null);
 
   // --- Data yang muncul di UI ---
-  const [username, setUsername] = useState(""); // default kosong (DB tetap kosong)
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null); // avatar aktif di UI (DB atau preview)
-  const [abstractAvatar, setAbstractAvatar] = useState<string | null>(null); // fallback dari Abstract jika DB kosong
+  const [username, setUsername] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null); // bisa DB url atau preview blob
 
   // --- Upload avatar ditunda sampai Save ---
-  const [pendingAvatar, setPendingAvatar] = useState<File | null>(null); // file yang belum di-upload, menunggu Save
-  const [pendingPreviewUrl, setPendingPreviewUrl] = useState<string | null>(null); // blob: url untuk preview
+  const [pendingAvatar, setPendingAvatar] = useState<File | null>(null);
+  const [pendingPreviewUrl, setPendingPreviewUrl] = useState<string | null>(null);
 
   // ---- Username availability ----
   const [checking, setChecking] = useState(false);
@@ -42,7 +54,7 @@ export default function SettingsAccount() {
   const shortAddr = address ? `${address.slice(0, 6)}…${address.slice(-4)}` : "-";
   const isPreviewActive = !!pendingAvatar && !!pendingPreviewUrl;
 
-  // Utility untuk cleanup preview URL
+  // Cleanup preview blob
   useEffect(() => {
     return () => {
       if (pendingPreviewUrl?.startsWith("blob:")) {
@@ -51,7 +63,7 @@ export default function SettingsAccount() {
     };
   }, [pendingPreviewUrl]);
 
-  // ---- Load data profil dari DB + fallback avatar Abstract ----
+  // ---- Load profil dari DB ----
   useEffect(() => {
     let mounted = true;
     (async () => {
@@ -61,8 +73,7 @@ export default function SettingsAccount() {
       }
 
       try {
-        // DB profile
-        const r = await fetch(`/api/profiles/${address}`);
+        const r = await fetch(`/api/profiles/${address}`, { cache: "no-store" });
         const p = (await r.json()) as DbProfile | { error?: string };
         if (!mounted) return;
 
@@ -81,19 +92,8 @@ export default function SettingsAccount() {
 
           if (!isPreviewActive) {
             setUsername(p.username ?? "");
-            // tambahkan cache-busting hanya untuk tampilan
+            // cache-busting agar tidak ketahan cache lama
             setAvatarUrl(p.avatar_url ? `${p.avatar_url}?v=${Date.now()}` : null);
-          }
-        }
-
-        // fallback avatar dari Abstract jika DB belum punya
-        if (!p || "error" in p || !("avatar_url" in p) || !p.avatar_url) {
-          const a = await fetch(`/api/abstract/user/${address}`);
-          if (a.ok) {
-            const j = await a.json();
-            const portalAvatar =
-              j?.profilePicture || j?.avatar || j?.imageUrl || null;
-            if (mounted && portalAvatar && !isPreviewActive) setAbstractAvatar(portalAvatar);
           }
         }
       } catch (e) {
@@ -109,7 +109,7 @@ export default function SettingsAccount() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [address]);
 
-  // ---- Cek ketersediaan username dengan debounce ----
+  // ---- Cek ketersediaan username (debounce) ----
   useEffect(() => {
     if (!address) return;
 
@@ -120,11 +120,9 @@ export default function SettingsAccount() {
       return;
     }
 
-    // Validasi format sederhana (samakan dengan rule server)
+    // Validasi format sederhana
     if (!/^[a-z0-9_]{3,30}$/.test(u)) {
-      setFormatError(
-        "Only letters, numbers and '_' are allowed (min 3 characters)."
-      );
+      setFormatError("Only letters, numbers and '_' are allowed (min 3 characters).");
       setAvailable(false);
       return;
     }
@@ -137,9 +135,11 @@ export default function SettingsAccount() {
       try {
         const qs = new URLSearchParams({
           u,
-          exclude: address.toLowerCase(), // jangan anggap duplikat milik user sendiri
+          exclude: address.toLowerCase(),
         });
-        const r = await fetch(`/api/profiles/username/check?${qs.toString()}`);
+        const r = await fetch(`/api/profiles/username/check?${qs.toString()}`, {
+          cache: "no-store",
+        });
         const j = await r.json();
         setAvailable(j.available === true);
       } catch {
@@ -156,7 +156,7 @@ export default function SettingsAccount() {
     fileRef.current?.click();
   }
 
-  // Saat memilih file avatar → hanya simpan di state (pending), tidak upload
+  // Pilih file avatar → simpan ke state (belum upload)
   function onAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0];
     if (!f) return;
@@ -164,37 +164,30 @@ export default function SettingsAccount() {
     setHint(null);
     setPendingAvatar(f);
 
-    // Buat blob url untuk preview
     if (pendingPreviewUrl?.startsWith("blob:")) {
       URL.revokeObjectURL(pendingPreviewUrl);
     }
     const url = URL.createObjectURL(f);
     setPendingPreviewUrl(url);
     setAvatarUrl(url); // tampilkan preview
-
-    // reset input agar bisa memilih file yang sama lagi nanti
     e.currentTarget.value = "";
   }
 
-  // Simpan perubahan (username dan/atau avatar)
+  // Simpan username &/ avatar
   async function onSaveAll() {
     if (!address) {
       setHint("Please connect your wallet first.");
       return;
     }
 
-    const wantUpdateUsername =
-      username.trim() !== originalUsernameRef.current;
-
+    const wantUpdateUsername = username.trim() !== originalUsernameRef.current;
     const wantUpdateAvatar = !!pendingAvatar;
 
-    // Tidak ada perubahan
     if (!wantUpdateUsername && !wantUpdateAvatar) {
       setHint("Nothing to save.");
       return;
     }
 
-    // Jika ingin ganti username, pastikan available & format benar
     if (wantUpdateUsername) {
       if (!username.trim()) {
         setHint("Username cannot be empty.");
@@ -210,35 +203,30 @@ export default function SettingsAccount() {
       setSaving(true);
       setHint(null);
 
-      // 1) Simpan avatar kalau ada pending file
+      // 1) Upload avatar jika ada pending file
       if (wantUpdateAvatar && pendingAvatar) {
         const form = new FormData();
         form.append("address", address);
         form.append("avatar", pendingAvatar);
-        const r = await fetch("/api/profiles/avatar", {
-          method: "POST",
-          body: form,
-        });
 
+        const r = await fetch("/api/profiles/avatar", { method: "POST", body: form });
         const j = await r.json().catch(() => null);
+
         if (!r.ok || !j?.avatar_url) {
           throw new Error(j?.error || "Upload avatar failed.");
         }
 
-        // tampilkan dengan cache-busting agar tidak kena cache lama
         const displayUrl = j.display_url || `${j.avatar_url}?v=${Date.now()}`;
         setAvatarUrl(displayUrl);
         originalAvatarUrlRef.current = j.avatar_url;
 
         // bersihkan pending
         setPendingAvatar(null);
-        if (pendingPreviewUrl?.startsWith("blob:")) {
-          URL.revokeObjectURL(pendingPreviewUrl);
-        }
+        if (pendingPreviewUrl?.startsWith("blob:")) URL.revokeObjectURL(pendingPreviewUrl);
         setPendingPreviewUrl(null);
       }
 
-      // 2) Simpan username (upsert)
+      // 2) Upsert username jika berubah
       if (wantUpdateUsername) {
         const u = username.trim();
         const res = await fetch("/api/profiles/upsert", {
@@ -247,12 +235,9 @@ export default function SettingsAccount() {
           body: JSON.stringify({ abstractId: address, username: u }),
         });
 
-        if (res.status === 409) {
-          throw new Error("Username already taken.");
-        }
-        if (!res.ok) {
-          throw new Error("Failed to save username.");
-        }
+        if (res.status === 409) throw new Error("Username already taken.");
+        if (!res.ok) throw new Error("Failed to save username.");
+
         originalUsernameRef.current = u;
         setDb((prev) => (prev ? { ...prev, username: u } : prev));
       }
@@ -266,24 +251,11 @@ export default function SettingsAccount() {
     }
   }
 
-  const shownAvatar =
-    avatarUrl ??
-    abstractAvatar ??
-    "data:image/svg+xml;utf8," +
-      encodeURIComponent(
-        `<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'>
-          <rect width='100%' height='100%' fill='#161616'/>
-          <text x='50%' y='52%' dominant-baseline='middle' text-anchor='middle'
-                fill='#777' font-family='sans-serif' font-size='14'>Avatar</text>
-        </svg>`
-      );
-
-  const hasChanges =
-    (username.trim() !== originalUsernameRef.current) || !!pendingAvatar;
-
+  const hasChanges = (username.trim() !== originalUsernameRef.current) || !!pendingAvatar;
   const canSave =
-    !!address && !saving && hasChanges &&
-    // jika username berubah, harus available
+    !!address &&
+    !saving &&
+    hasChanges &&
     ((username.trim() === originalUsernameRef.current) ||
       (!!username.trim() && !formatError && available === true));
 
@@ -303,9 +275,31 @@ export default function SettingsAccount() {
       {/* Avatar */}
       <div className="mb-6 flex items-center gap-4">
         <div className="relative h-20 w-20 overflow-hidden rounded-full ring-2 ring-[var(--primary-500)]">
-          {/* pakai <img> agar tidak perlu konfigurasi domain next/image */}
-          <img src={shownAvatar} alt="Avatar" className="h-full w-full object-cover" />
+          {avatarUrl ? (
+            // DB avatar atau preview
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={avatarUrl}
+              alt="Avatar"
+              className="h-full w-full object-cover"
+              onError={(e) => {
+                (e.currentTarget as HTMLImageElement).src = PLACEHOLDER_SVG;
+              }}
+            />
+          ) : address ? (
+            // Fallback: avatar dari Abstract (sama seperti header)
+            <AbstractProfile
+              size="lg"
+              showTooltip={false}
+              className="!h-20 !w-20 !rounded-full object-cover"
+            />
+          ) : (
+            // Terakhir: placeholder
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={PLACEHOLDER_SVG} alt="Avatar placeholder" className="h-full w-full object-cover" />
+          )}
         </div>
+
         <div>
           <button
             onClick={onPickAvatar}
@@ -322,8 +316,7 @@ export default function SettingsAccount() {
             className="hidden"
           />
           <p className="mt-2 text-xs text-neutral-500">
-            PNG/JPG up to 5 MB. The image will be uploaded after you click{" "}
-            <b>Save</b>.
+            PNG/JPG up to 5 MB. The image will be uploaded after you click <b>Save</b>.
           </p>
         </div>
       </div>
@@ -338,22 +331,14 @@ export default function SettingsAccount() {
           placeholder={shortAddr}
           disabled={!address || saving}
         />
-        {formatError && (
-          <p className="text-xs text-red-400">{formatError}</p>
-        )}
+        {formatError && <p className="text-xs text-red-400">{formatError}</p>}
         {!formatError && (
           <p className="text-xs">
             {checking && <span className="text-neutral-400">Checking availability…</span>}
-            {available === true && (
-              <span className="text-emerald-400">Username is available ✓</span>
-            )}
-            {available === false && (
-              <span className="text-red-400">Username is taken ✕</span>
-            )}
+            {available === true && <span className="text-emerald-400">Username is available ✓</span>}
+            {available === false && <span className="text-red-400">Username is taken ✕</span>}
             {available === null && !checking && (
-              <span className="text-neutral-500">
-                Enter a username to check availability
-              </span>
+              <span className="text-neutral-500">Enter a username to check availability</span>
             )}
           </p>
         )}
