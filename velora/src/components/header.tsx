@@ -28,6 +28,7 @@ const ERC20_MIN_ABI = [
   { type: "function", name: "balanceOf", stateMutability: "view", inputs: [{ type: "address" }], outputs: [{ type: "uint256" }] },
 ] as const satisfies Abi;
 
+/* Format $ */
 function formatUSD(n: number) {
   if (!isFinite(n) || n <= 0) return "$0";
   if (n < 1) return `$${n.toFixed(4)}`;
@@ -101,13 +102,11 @@ function HeaderAvatar({
   return (
     <div className="rounded-full ring-2 ring-transparent hover:ring-[rgba(124,58,237,0.45)]">
       {avatarUrlOverride ? (
-        // pakai <img> biar simple; next.config sudah whitelist Supabase storage
         <img
           src={avatarUrlOverride}
           alt="Avatar"
           className="block rounded-full object-cover h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10"
           onError={(e) => {
-            // kalau gagal load, sembunyikan (biar AbstractProfile takeover via CSS fallback)
             (e.currentTarget as HTMLImageElement).style.display = "none";
           }}
         />
@@ -378,7 +377,7 @@ export default function Header() {
           </form>
 
           {openSug && (filtered.length > 0 || q) && (
-            <div className="absolute left-0 right-0 top-[44px] mx-auto w/full max-w-[720px] rounded-xl border border-neutral-800 bg-neutral-900/95 backdrop-blur supports-[backdrop-filter]:bg-neutral-900/70">
+            <div className="absolute left-0 right-0 top-[44px] mx-auto w-full max-w-[720px] rounded-xl border border-neutral-800 bg-neutral-900/95 backdrop-blur supports-[backdrop-filter]:bg-neutral-900/70">
               {recent.length > 0 && (
                 <div className="flex items-center justify-between px-4 py-2 text-xs text-neutral-400">
                   <span>Recent searches</span>
@@ -450,6 +449,7 @@ export default function Header() {
           <>
             {/* Points + USDC.e */}
             <div className="hidden items-center gap-4 rounded-full bg-neutral-800 px-4 py-1.5 sm:flex">
+              {/* Points */}
               <div className="flex items-center gap-2">
                 <svg className="h-5 w-5 text-yellow-400" fill="currentColor" viewBox="0 0 256 256">
                   <path d="M239.2,97.41a16.4,16.4,0,0,0-14.21-10.06l-49.33-7.17L153.8,36.52a16.37,16.37,0,0,0-29.6,0L102.34,80.18,53,87.35A16.4,16.4,0,0,0,38.8,97.41a16.43,16.43,0,0,0,4.28,17.27l35.69,34.78-8.43,49.14a16.4,16.4,0,0,0,7.86,17.2,16.32,16.32,0,0,0,18.15,.11L128,193.07l44.13,23.2a16.32,16.32,0,0,0,18.15-.11,16.4,16.4,0,0,0,7.86-17.2l-8.43-49.14,35.69-34.78A16.43,16.43,0,0,0,239.2,97.41Z"></path>
@@ -459,12 +459,39 @@ export default function Header() {
 
               <div className="h-5 w-px bg-neutral-700" />
 
+              {/* USDC.e (bridged) */}
               <div className="flex items-center gap-2">
                 <svg className="h-5 w-5 text-[var(--primary-500)]" fill="currentColor" viewBox="0 0 256 256">
                   <path d="M224,72H48A24,24,0,0,0,24,96V192a24,24,0,0,0,24,24H200a24,24,0,0,0,24-24V160H192a8,8,0,0,1,0-16h32V96A24,24,0,0,0,224,72ZM40,96a8,8,0,0,1,8-8H224a8,8,0,0,1,8,8v48H192a24,24,0,0,0-24,24v16H48a8,8,0,0,1-8-8Z"></path>
                 </svg>
                 <span className="text-sm font-semibold text-neutral-50">USDC.e {usdceText}</span>
               </div>
+            </div>
+
+            {/* Tombol + */}
+            <div className="relative">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    className="flex size-10 cursor-pointer items-center justify-center rounded-full text-neutral-50 transition-colors hover:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-[var(--primary-500)]/40"
+                    aria-label="Tambah"
+                    title="Tambah"
+                  >
+                    <svg className="h-6 w-6" fill="currentColor" viewBox="0 0 20 20">
+                      <path
+                        fillRule="evenodd"
+                        clipRule="evenodd"
+                        d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z"
+                      />
+                    </svg>
+                  </button>
+                </DropdownMenuTrigger>
+
+                <DropdownMenuContent align="end" side="bottom" className="w-44">
+                  <DropdownMenuItem onClick={() => router.push("/ads")}>Create ads</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => router.push("/upload")}>Upload video</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
 
             {/* Notifikasi */}
@@ -517,7 +544,7 @@ export default function Header() {
                 </DropdownMenuTrigger>
 
                 <DropdownMenuContent align="end" side="bottom" className="w-72 p-0 overflow-hidden">
-                  {/* Header di dalam kotak: avatar dari DB + username dari DB */}
+                  {/* Header di dalam kotak */}
                   <div className="flex items-center gap-3 px-4 py-3 border-b border-neutral-800">
                     <div className="relative h-8 w-8 overflow-hidden rounded-full ring-2 ring-[var(--primary-500)]">
                       {dbAvatarUrl ? (
@@ -528,7 +555,7 @@ export default function Header() {
                     </div>
                     <div className="min-w-0">
                       <div className="truncate text-sm font-semibold text-neutral-100">
-                        {dbUsername ?? short(address)}
+                        {dbUsername ?? short(address as `0x${string}`)}
                       </div>
                       <div className="flex items-center gap-2 text-xs text-neutral-400">
                         <span>{short(address as `0x${string}`)}</span>
