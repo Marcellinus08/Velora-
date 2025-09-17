@@ -4,7 +4,6 @@ import VideoInfoSection from "@/components/task/videoinfo";
 import Comments from "@/components/task/comments";
 import type { Comment, VideoInfo, RecommendedVideo } from "@/components/task/types";
 
-
 export const metadata = { title: "Task" };
 
 export default function TaskPage() {
@@ -23,24 +22,28 @@ export default function TaskPage() {
     },
   };
 
+  // ✅ Gambar HTTPS + domain yang diizinkan (images.unsplash.com)
   const recommendedVideos: RecommendedVideo[] = [
     {
       id: 1,
       title: "Seni Pastry dari Dasar",
       creator: "Cedric Grolet",
-      thumbnail: "http://googleusercontent.com/profile/picture/5",
+      thumbnail:
+        "https://images.unsplash.com/photo-1499636136210-6f4ee915583e?q=80&w=800&auto=format&fit=crop",
     },
     {
       id: 2,
       title: "Masakan Italia Otentik untuk Pemula",
       creator: "Massimo Bottura",
-      thumbnail: "http://googleusercontent.com/profile/picture/6",
+      thumbnail:
+        "https://images.unsplash.com/photo-1521389508051-d7ffb5dc8bbf?q=80&w=800&auto=format&fit=crop",
     },
     {
       id: 3,
       title: "Teknik Barbekyu Khas Texas",
       creator: "Aaron Franklin",
-      thumbnail: "http://googleusercontent.com/profile/picture/7",
+      thumbnail:
+        "https://images.unsplash.com/photo-1550547660-d9450f859349?q=80&w=800&auto=format&fit=crop",
     },
   ];
 

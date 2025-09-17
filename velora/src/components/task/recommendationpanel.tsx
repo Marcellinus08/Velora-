@@ -1,3 +1,4 @@
+// src/components/task/recommendation.tsx
 import Image from "next/image";
 import type { RecommendedVideo } from "./types";
 
@@ -11,6 +12,7 @@ function RecommendationItem({ video }: { video: RecommendedVideo }) {
           fill
           sizes="112px"
           className="object-cover"
+          // unoptimized // <- terakhir kalau benar-benar perlu melewati optimizer
         />
       </div>
       <div className="min-w-0">
@@ -25,7 +27,6 @@ function RecommendationItem({ video }: { video: RecommendedVideo }) {
 
 export default function RecommendationPanel({ items }: { items: RecommendedVideo[] }) {
   if (!items || items.length === 0) return null;
-
   return (
     <div>
       <h3 className="mb-2 px-2 text-base font-semibold text-neutral-200">

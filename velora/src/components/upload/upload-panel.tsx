@@ -1,3 +1,4 @@
+// src/components/upload/upload-panel.tsx
 "use client";
 
 type Props = {
@@ -38,6 +39,7 @@ export default function UploadActionPanel({
         <button
           onClick={onStartUpload}
           disabled={!canStart}
+          aria-disabled={!canStart}
           className="inline-flex items-center justify-center rounded-xl bg-[var(--primary-500)] px-4 py-2 text-sm font-semibold text-white transition hover:bg-opacity-90 disabled:cursor-not-allowed disabled:bg-neutral-700"
         >
           Start Upload
@@ -51,7 +53,8 @@ export default function UploadActionPanel({
       </div>
 
       <p className="mt-3 text-xs text-neutral-500">
-        Files are uploaded to Supabase Storage and metadata saved in Postgres.
+        Files are uploaded to Supabase Storage (bucket <code>studio</code>) and
+        metadata saved in Postgres.
       </p>
     </section>
   );

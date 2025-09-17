@@ -1,3 +1,4 @@
+// src/components/upload/create.tsx
 "use client";
 
 import { useEffect, useRef, useState } from "react";
@@ -26,19 +27,21 @@ const CATEGORIES = [
   "Lifestyle",
   "How-to & Style",
   "Film & Animation",
-];
+] as const;
 
-const VIDEO_BUCKET = "videos";
-const THUMB_BUCKET = "thumbnails";
+// Satu bucket: 'studio' (folder: videos/, thumbnails/)
+const STUDIO_BUCKET = "studio";
 /* -------------------------------- */
 
 const fmtBytes = (n: number) => {
   const units = ["B", "KB", "MB", "GB"];
   let i = 0;
-  while (n >= 1024 && i < units.length - 1) {
-    n /= 1024; i++;
+  let v = n;
+  while (v >= 1024 && i < units.length - 1) {
+    v /= 1024;
+    i++;
   }
-  return `${n.toFixed(i === 0 ? 0 : 1)} ${units[i]}`;
+  return `${v.toFixed(i === 0 ? 0 : 1)} ${units[i]}`;
 };
 
 export default function UploadCreate() {
@@ -64,10 +67,29 @@ export default function UploadCreate() {
   const [progress, setProgress] = useState(0);
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  // Abstract ID (ambil dari tabel profiles)
+  const [abstractId, setAbstractId] = useState<string | null>(null);
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("abstract_id")
+        .not("abstract_id", "is", null)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (!error && mounted && data?.abstract_id) setAbstractId(data.abstract_id);
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
   /* cleanup URLs/timer */
   useEffect(() => {
     return () => {
-      if (fileURL) URL.revokeObjectURL(fileURL);
+      if (fileURL?.startsWith("blob:")) URL.revokeObjectURL(fileURL);
       if (thumbURL?.startsWith("blob:")) URL.revokeObjectURL(thumbURL);
       if (timer.current) clearInterval(timer.current);
     };
@@ -77,8 +99,8 @@ export default function UploadCreate() {
   function setVideoFile(f?: File) {
     setError("");
     if (!f) return;
-    if (!f.type.startsWith("video/")) {
-      setError("Please select a video file.");
+    if (!f.type?.startsWith("video/")) {
+      setError("Please select a valid video file.");
       return;
     }
     if (f.size > MAX_SIZE_MB * 1024 * 1024) {
@@ -88,9 +110,10 @@ export default function UploadCreate() {
     setFile(f);
     const url = URL.createObjectURL(f);
     setFileURL((prev) => {
-      if (prev) URL.revokeObjectURL(prev);
+      if (prev?.startsWith("blob:")) URL.revokeObjectURL(prev);
       return url;
     });
+    if (thumbURL?.startsWith("blob:")) URL.revokeObjectURL(thumbURL);
     setThumbURL(null);
     setThumbBlob(null);
     setProgress(0);
@@ -118,7 +141,7 @@ export default function UploadCreate() {
     setDuration(`${mm}:${ss}`);
   }
 
-  /* capture thumbnail */
+  /* capture thumbnail dari current frame video */
   function captureThumb() {
     const vid = videoRef.current;
     if (!vid) return;
@@ -134,13 +157,30 @@ export default function UploadCreate() {
     if (!ctx) return;
 
     ctx.drawImage(vid, 0, 0, w, h);
-    canvas.toBlob((blob) => {
-      if (!blob) return;
-      const url = URL.createObjectURL(blob);
-      if (thumbURL?.startsWith("blob:")) URL.revokeObjectURL(thumbURL);
-      setThumbURL(url);
-      setThumbBlob(blob);
-    }, "image/jpeg", 0.9);
+    canvas.toBlob(
+      (blob) => {
+        if (!blob) return;
+        const url = URL.createObjectURL(blob);
+        if (thumbURL?.startsWith("blob:")) URL.revokeObjectURL(thumbURL);
+        setThumbURL(url);
+        setThumbBlob(blob);
+      },
+      "image/jpeg",
+      0.9
+    );
+  }
+
+  /* pilih file thumbnail manual (image/*) */
+  function onUploadThumb(file?: File) {
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      setError("Thumbnail must be an image.");
+      return;
+    }
+    const url = URL.createObjectURL(file);
+    if (thumbURL?.startsWith("blob:")) URL.revokeObjectURL(thumbURL);
+    setThumbURL(url);
+    setThumbBlob(file); // File adalah Blob, bisa langsung diupload
   }
 
   /* supabase storage helper */
@@ -150,6 +190,7 @@ export default function UploadCreate() {
     data: File | Blob,
     contentType?: string
   ) {
+    // path relatif, tanpa leading slash
     const { data: uploadRes, error: uploadErr } = await supabase.storage
       .from(bucket)
       .upload(path, data, {
@@ -167,6 +208,15 @@ export default function UploadCreate() {
     try {
       if (!file || !title.trim() || !category) return;
 
+      // Wajib ada abstract_id dari tabel profiles
+      const aid = abstractId?.trim();
+      if (!aid) {
+        setError(
+          "abstract_id tidak ditemukan di tabel profiles. Buat/isi profil dulu atau sesuaikan query pengambilan profil."
+        );
+        return;
+      }
+
       setError("");
       setUploading(true);
       setProgress(5);
@@ -175,34 +225,40 @@ export default function UploadCreate() {
         setProgress((p) => (p >= 95 ? p : p + 1));
       }, 150);
 
-      // 1) video
-      const fileExt = file.name.split(".").pop() || "mp4";
-      const videoNameSafe = file.name.replace(/\s+/g, "_");
-      const videoPath = `videos/${Date.now()}_${videoNameSafe}`;
+      // 1) video → studio/videos/...
+      const fileExt = (file.name.split(".").pop() || "mp4").toLowerCase();
+      const base = file.name.replace(/\s+/g, "_");
+      const stamp = Date.now();
+      const videoPath = `videos/${stamp}_${base}`;
       const videoRes = await uploadToSupabase(
-        VIDEO_BUCKET,
+        STUDIO_BUCKET,
         videoPath,
         file,
         file.type || `video/${fileExt}`
       );
 
-      // 2) thumbnail (optional)
+      // 2) thumbnail (opsional) → studio/thumbnails/...
       let thumbRes: { path: string; publicUrl: string } | null = null;
       if (thumbBlob) {
-        const thumbPath = `thumbs/${Date.now()}_${videoNameSafe}.jpg`;
+        // deteksi mime/ekstensi dari blob (jika hasil capture = image/jpeg)
+        const mime = (thumbBlob as any).type || "image/jpeg";
+        const ext =
+          mime === "image/png" ? "png" : mime === "image/webp" ? "webp" : "jpg";
+        const thumbPath = `thumbnails/${stamp}_${base}.${ext}`;
         thumbRes = await uploadToSupabase(
-          THUMB_BUCKET,
+          STUDIO_BUCKET,
           thumbPath,
           thumbBlob,
-          "image/jpeg"
+          mime
         );
       }
 
-      // 3) metadata
+      // 3) metadata → public.videos (sertakan abstract_id)
       const { error: insertErr } = await supabase.from("videos").insert({
+        abstract_id: aid, // FK ke profiles.abstract_id
         title,
         description,
-        category,
+        category, // enum video_category
         duration_seconds: durationSec,
         video_path: videoRes.path,
         video_url: videoRes.publicUrl,
@@ -234,23 +290,27 @@ export default function UploadCreate() {
       }
       setUploading(false);
       setProgress(0);
-      setError(e?.message || "Upload failed. Please try again.");
+      const msg = e?.message || "Upload failed. Please try again.";
+      setError(msg);
       Swal.fire({
         icon: "error",
         title: "Upload failed",
-        text: e?.message || "Please try again.",
+        text: msg,
         confirmButtonText: "OK",
       });
     }
   }
 
   function resetAll() {
-    setFile(null);
-    if (fileURL) URL.revokeObjectURL(fileURL);
+    setFile((prev) => {
+      if (fileURL?.startsWith("blob:")) URL.revokeObjectURL(fileURL);
+      return null;
+    });
     setFileURL(null);
     setTitle("");
     setDescription("");
     setCategory("");
+    if (thumbURL?.startsWith("blob:")) URL.revokeObjectURL(thumbURL);
     setThumbURL(null);
     setThumbBlob(null);
     setProgress(0);
@@ -271,7 +331,6 @@ export default function UploadCreate() {
     !!file && title.trim() !== "" && category !== "" && !uploading;
 
   return (
-    // TIDAK ADA PADDING DI SINI — padding diatur di page.tsx agar sama seperti Studio
     <div>
       <h1 className="text-2xl font-bold tracking-tight text-neutral-50">
         Upload Video
@@ -280,45 +339,44 @@ export default function UploadCreate() {
         Select a video file, fill the details, then start upload.
       </p>
 
-      <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-12">
-        <section className="lg:col-span-7">
-          <UploadFilePanel
-            ref={videoRef}
-            accept={ACCEPT}
-            file={file}
-            fileURL={fileURL}
-            duration={duration}
-            thumbURL={thumbURL}
-            error={error}
-            fmtBytes={fmtBytes}
-            onInputChange={onInputChange}
-            onDrop={onDrop}
-            onDragOver={onDragOver}
-            onLoadedMeta={onLoadedMeta}
-            onReplaceFile={() => setFile(null)}
-            onCaptureThumb={captureThumb}
-          />
-        </section>
+      {/* TOP: FILE + THUMBNAIL side-by-side */}
+      <section className="mt-6">
+        <UploadFilePanel
+          ref={videoRef}
+          accept={ACCEPT}
+          file={file}
+          fileURL={fileURL}
+          duration={duration}
+          thumbURL={thumbURL}
+          error={error}
+          fmtBytes={fmtBytes}
+          onInputChange={onInputChange}
+          onDrop={onDrop}
+          onDragOver={onDragOver}
+          onLoadedMeta={onLoadedMeta}
+          onCaptureThumb={captureThumb}
+          onUploadThumb={onUploadThumb}
+        />
+      </section>
 
-        <div className="lg:col-span-5 space-y-6">
-          <UploadDetailsPanel
-            title={title}
-            description={description}
-            category={category}
-            categories={CATEGORIES}
-            onChangeTitle={setTitle}
-            onChangeDescription={setDescription}
-            onChangeCategory={setCategory}
-          />
-
-          <UploadActionPanel
-            uploading={uploading}
-            progress={progress}
-            canStart={canStart}
-            onStartUpload={startUpload}
-            onReset={resetAll}
-          />
-        </div>
+      {/* BOTTOM: inputs stacked below */}
+      <div className="mt-6 space-y-6">
+        <UploadDetailsPanel
+          title={title}
+          description={description}
+          category={category}
+          categories={[...CATEGORIES]}
+          onChangeTitle={setTitle}
+          onChangeDescription={setDescription}
+          onChangeCategory={setCategory}
+        />
+        <UploadActionPanel
+          uploading={uploading}
+          progress={progress}
+          canStart={canStart}
+          onStartUpload={startUpload}
+          onReset={resetAll}
+        />
       </div>
     </div>
   );

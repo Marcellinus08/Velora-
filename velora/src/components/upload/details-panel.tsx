@@ -1,3 +1,4 @@
+// src/components/upload/details-panel.tsx
 "use client";
 
 type Props = {
@@ -30,17 +31,21 @@ export default function UploadDetailsPanel({
             value={title}
             onChange={(e) => onChangeTitle(e.target.value)}
             placeholder="Give your video a descriptive title"
+            aria-label="Video title"
             className="w-full rounded-lg border border-neutral-700 bg-neutral-950 px-3 py-2 text-neutral-100 placeholder:text-neutral-500 focus:border-neutral-500 focus:outline-none"
           />
         </div>
 
         <div>
-          <label className="mb-1 block text-sm text-neutral-300">Description</label>
+          <label className="mb-1 block text-sm text-neutral-300">
+            Description
+          </label>
           <textarea
             value={description}
             onChange={(e) => onChangeDescription(e.target.value)}
             rows={5}
             placeholder="Tell viewers about your video…"
+            aria-label="Video description"
             className="w-full resize-y rounded-lg border border-neutral-700 bg-neutral-950 px-3 py-2 text-neutral-100 placeholder:text-neutral-500 focus:border-neutral-500 focus:outline-none"
           />
         </div>
@@ -50,6 +55,7 @@ export default function UploadDetailsPanel({
           <select
             value={category}
             onChange={(e) => onChangeCategory(e.target.value)}
+            aria-label="Video category"
             className={`w-full rounded-lg border border-neutral-700 bg-neutral-950 px-3 py-2 focus:border-neutral-500 focus:outline-none ${
               category === "" ? "text-neutral-500" : "text-neutral-100"
             }`}
