@@ -4,7 +4,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { FormEvent, useEffect, useRef, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 
 import { useLoginWithAbstract } from "@abstract-foundation/agw-react";
 import { useAccount, usePublicClient, useWatchBlockNumber } from "wagmi";
@@ -28,7 +28,7 @@ const ERC20_MIN_ABI = [
   { type: "function", name: "balanceOf", stateMutability: "view", inputs: [{ type: "address" }], outputs: [{ type: "uint256" }] },
 ] as const satisfies Abi;
 
-/* Format $: 12.34 → $12.34, 12.3k/m/b utk besar, dan saldo kecil <1 ditulis sampai 4 desimal */
+/* Format $ */
 function formatUSD(n: number) {
   if (!isFinite(n) || n <= 0) return "$0";
   if (n < 1) return `$${n.toFixed(4)}`;
@@ -46,6 +46,76 @@ type Notif = { id: string; title: string; body?: string; time?: string; unread?:
 const RECENT_KEY = "vh_recent_queries";
 const short = (addr?: `0x${string}`) => (addr ? `${addr.slice(0, 6)}…${addr.slice(-4)}` : "");
 
+/* =================== DB Avatar trigger =================== */
+type DbProfile = { abstract_id: string; username: string | null; avatar_url: string | null };
+
+function HeaderAvatar({ address }: { address?: `0x${string}` }) {
+  const [dbAvatar, setDbAvatar] = useState<string | null>(null);
+  const [useDb, setUseDb] = useState<boolean>(false);
+  const cacheBust = useRef<number>(Date.now()); // supaya ga kena cache lama
+
+  const addrLower = useMemo(
+    () => (address ? address.toLowerCase() : ""),
+    [address]
+  );
+
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      if (!addrLower || !/^0x[a-f0-9]{40}$/.test(addrLower)) {
+        setUseDb(false);
+        setDbAvatar(null);
+        return;
+      }
+      try {
+        const r = await fetch(`/api/profiles/${addrLower}`, { cache: "no-store" });
+        if (!r.ok) {
+          setUseDb(false);
+          setDbAvatar(null);
+          return;
+        }
+        const p: DbProfile = await r.json();
+        if (!alive) return;
+        if (p?.avatar_url) {
+          setDbAvatar(`${p.avatar_url}?v=${cacheBust.current}`);
+          setUseDb(true);
+        } else {
+          setUseDb(false);
+          setDbAvatar(null);
+        }
+      } catch {
+        if (!alive) return;
+        setUseDb(false);
+        setDbAvatar(null);
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+  }, [addrLower]);
+
+  return (
+    <div className="rounded-full ring-2 ring-transparent hover:ring-[rgba(124,58,237,0.45)]">
+      {useDb && dbAvatar ? (
+        // pakai <img> biasa biar ga perlu whitelist domain tambahan (kamu sudah whitelist Supabase di next.config)
+        <img
+          src={dbAvatar}
+          alt="Avatar"
+          className="block rounded-full object-cover h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10"
+          onError={() => setUseDb(false)} // fallback ke AbstractProfile kalau gagal load
+        />
+      ) : (
+        <AbstractProfile
+          size="sm"
+          showTooltip={false}
+          className="!h-8 !w-8 sm:!h-9 sm:!w-9 md:!h-10 md:!w-10"
+        />
+      )}
+    </div>
+  );
+}
+/* ======================================================== */
+
 export default function Header() {
   const router = useRouter();
   const { address, status } = useAccount();
@@ -62,7 +132,6 @@ export default function Header() {
         setUsdceText("$0");
         return;
       }
-      // kontrak USDC.e dari config (alamat sesuai chain aktif)
       const usdce = getContractWithCurrentChain("usdce");
       const [dec, bal] = await Promise.all([
         client.readContract({
@@ -78,9 +147,8 @@ export default function Header() {
         }),
       ]);
       const amount = Number(formatUnits(bal as bigint, Number(dec)));
-      setUsdceText(formatUSD(amount)); // tampilkan sebagai USD-style singkat
+      setUsdceText(formatUSD(amount));
     } catch {
-      // kalau alamat usdce belum di-set di ENV / chain salah, tampilkan $0
       setUsdceText("$0");
     }
   }
@@ -474,18 +542,10 @@ export default function Header() {
               </DropdownMenu>
             </div>
 
-            {/* Avatar / Profile */}
+            {/* Avatar / Profile — cek DB dulu */}
             <div>
               <ConnectWalletButton
-                customTrigger={
-                  <div className="rounded-full ring-2 ring-transparent hover:ring-[rgba(124,58,237,0.45)]">
-                    <AbstractProfile
-                      size="sm"
-                      showTooltip={false}
-                      className="!h-8 !w-8 sm:!h-9 sm:!w-9 md:!h-10 md:!w-10"
-                    />
-                  </div>
-                }
+                customTrigger={<HeaderAvatar address={address as `0x${string}` | undefined} />}
                 dropdownAvatarSize="xs"
                 dropdownAvatarClassName="!h-7 !w-7 sm:!h-8 sm:!w-8"
                 customDropdownItems={walletDropdownItems}
@@ -495,7 +555,7 @@ export default function Header() {
         )}
       </div>
 
-      {/* Komponen boot agar upsert profile otomatis begitu user terhubung */}
+      {/* Boot: upsert profile otomatis saat connect */}
       <ProfileUpsertOnLogin />
     </header>
   );
