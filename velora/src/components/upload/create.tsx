@@ -44,7 +44,7 @@ const fmtBytes = (n: number) => {
 };
 
 /* ===== Pricing helpers (UI only) ===== */
-type PriceRule = {
+export type PriceRule = {
   min_cents: number;
   max_cents: number;
   step_cents: number;
@@ -80,6 +80,19 @@ function suggestPriceByDuration(durationSec: number, rule: PriceRule): number {
   return snapped;
 }
 
+/* ===== Tasks (quiz) ===== */
+export type TaskItem = {
+  question: string;
+  options: [string, string, string, string];
+  answerIndex: number; // opsional dipakai nanti
+};
+
+const emptyTask = (): TaskItem => ({
+  question: "",
+  options: ["", "", "", ""],
+  answerIndex: 0,
+});
+
 export default function UploadCreate() {
   // File & preview
   const [file, setFile] = useState<File | null>(null);
@@ -97,6 +110,9 @@ export default function UploadCreate() {
   // Pricing state
   const [priceRule, setPriceRule] = useState<PriceRule>(DEFAULT_PRICE_RULE);
   const [priceCents, setPriceCents] = useState<number>(DEFAULT_PRICE_RULE.default_cents);
+
+  // Tasks state (mulai langsung dengan Soal 1)
+  const [tasks, setTasks] = useState<TaskItem[]>([emptyTask()]);
 
   // Thumbnail
   const [thumbURL, setThumbURL] = useState<string | null>(null);
@@ -131,7 +147,6 @@ export default function UploadCreate() {
     const rule = getRuleForCategory(category);
     setPriceRule(rule);
     setPriceCents((prev) => {
-      // kalau user belum pilih harga, pakai saran; kalau sudah, clamp ke rule
       const chosen = prev || rule.default_cents;
       const suggested = suggestPriceByDuration(durationSec, rule);
       const target = prev ? chosen : suggested;
@@ -248,7 +263,6 @@ export default function UploadCreate() {
     data: File | Blob,
     contentType?: string
   ) {
-    // path relatif, tanpa leading slash
     const { data: uploadRes, error: uploadErr } = await supabase.storage
       .from(bucket)
       .upload(path, data, {
@@ -262,20 +276,30 @@ export default function UploadCreate() {
     return { path: uploadRes?.path ?? path, publicUrl: pub.publicUrl };
   }
 
-  // insert metadata (coba dengan price, kalau kolomnya tidak ada -> fallback tanpa price)
+  // insert metadata (coba dengan price & tasks, kalau kolomnya tidak ada -> fallback)
   async function insertVideoRow(payloadBase: Record<string, any>) {
-    // 1) coba dengan price
+    // 1) coba dengan price & tasks (tasks_json)
+    const withExtras = {
+      ...payloadBase,
+      price_cents: priceCents,
+      currency: "USD",
+      tasks_json: tasks, // jika kolom tidak ada, fallback
+    };
+    let { error: e1 } = await supabase.from("videos").insert(withExtras);
+    if (!e1) return;
+
+    // 2) fallback: hanya price
     const withPrice = {
       ...payloadBase,
       price_cents: priceCents,
       currency: "USD",
     };
-    let { error: e1 } = await supabase.from("videos").insert(withPrice);
-    if (!e1) return;
+    let { error: e2 } = await supabase.from("videos").insert(withPrice);
+    if (!e2) return;
 
-    // 2) fallback tanpa price (misal kolom tidak ada)
-    const { error: e2 } = await supabase.from("videos").insert(payloadBase);
-    if (e2) throw e2;
+    // 3) fallback: tanpa extras
+    const { error: e3 } = await supabase.from("videos").insert(payloadBase);
+    if (e3) throw e3;
   }
 
   async function startUpload() {
@@ -314,7 +338,6 @@ export default function UploadCreate() {
       // 2) thumbnail (opsional) → studio/thumbnails/...
       let thumbRes: { path: string; publicUrl: string } | null = null;
       if (thumbBlob) {
-        // deteksi mime/ekstensi dari blob (jika hasil capture = image/jpeg)
         const mime = (thumbBlob as any).type || "image/jpeg";
         const ext =
           mime === "image/png" ? "png" : mime === "image/webp" ? "webp" : "jpg";
@@ -387,6 +410,7 @@ export default function UploadCreate() {
     setCategory("");
     setPriceRule(DEFAULT_PRICE_RULE);
     setPriceCents(DEFAULT_PRICE_RULE.default_cents);
+    setTasks([emptyTask()]); // kembali ke Soal 1
     if (thumbURL?.startsWith("blob:")) URL.revokeObjectURL(thumbURL);
     setThumbURL(null);
     setThumbBlob(null);
@@ -446,6 +470,7 @@ export default function UploadCreate() {
           onChangeTitle={setTitle}
           onChangeDescription={setDescription}
           onChangeCategory={setCategory}
+
           /* pricing props */
           durationSec={durationSec}
           priceRule={priceRule}
@@ -453,6 +478,16 @@ export default function UploadCreate() {
           onChangePriceCents={setPriceCents}
           onUseSuggested={() =>
             setPriceCents(suggestPriceByDuration(durationSec, priceRule))
+          }
+
+          /* tasks props */
+          tasks={tasks}
+          onAddEmptyTask={() => setTasks((prev) => [...prev, emptyTask()])}
+          onChangeTask={(index, task) =>
+            setTasks((prev) => prev.map((t, i) => (i === index ? task : t)))
+          }
+          onRemoveTask={(index) =>
+            setTasks((prev) => prev.filter((_, i) => i !== index))
           }
         />
         <UploadActionPanel
