@@ -12,7 +12,8 @@ import { useAccount } from "wagmi";
 /* ---------- Config ---------- */
 const ACCEPT =
   "video/mp4,video/webm,video/ogg,video/quicktime,video/x-matroska";
-const MAX_SIZE_MB = 1024; // 1 GB
+// No max size limit
+const MAX_SIZE_MB = Infinity; // no size limit
 const CATEGORIES = [
   "Education",
   "Technology",
@@ -53,12 +54,12 @@ export type PriceRule = {
   default_cents: number;
 };
 
-// Range slider: $5 – $100 (step $1)
+// Range slider: $10 – $100 (step $1) — tidak diubah
 const DEFAULT_PRICE_RULE: PriceRule = {
-  min_cents: 500,
+  min_cents: 1000,
   max_cents: 10000,
   step_cents: 100,
-  default_cents: 999,
+  default_cents: 1999,
 };
 
 // bisa dipakai kalau suatu saat kamu mau beda per kategori
@@ -107,9 +108,7 @@ export default function UploadCreate() {
 
   // Pricing state
   const [priceRule, setPriceRule] = useState<PriceRule>(DEFAULT_PRICE_RULE);
-  const [priceCents, setPriceCents] = useState<number>(
-    DEFAULT_PRICE_RULE.default_cents
-  );
+  const [priceCents, setPriceCents] = useState<number>(DEFAULT_PRICE_RULE.default_cents);
 
   // Tasks state (mulai langsung dengan Soal 1)
   const [tasks, setTasks] = useState<TaskItem[]>([emptyTask()]);
@@ -123,13 +122,28 @@ export default function UploadCreate() {
   const [progress, setProgress] = useState(0);
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // ===== Abstract ID dari wallet yang sedang terkoneksi (PERBAIKAN) =====
+  // ====== AMBIL abstract_id dari WALLET TERHUBUNG (perbaikan utama) ======
   const { address, status } = useAccount();
   const [abstractId, setAbstractId] = useState<string | null>(null);
 
   useEffect(() => {
     if (status === "connected" && address) {
-      setAbstractId(address.toLowerCase());
+      const addrLower = address.toLowerCase() as `0x${string}`;
+      setAbstractId(addrLower);
+
+      // pastikan row profiles ada (jaga-jaga)
+      (async () => {
+        try {
+          await supabase
+            .from("profiles")
+            .upsert(
+              { abstract_id: addrLower },
+              { onConflict: "abstract_id", ignoreDuplicates: false }
+            );
+        } catch {
+          /* ignore */
+        }
+      })();
     } else {
       setAbstractId(null);
     }
@@ -168,6 +182,7 @@ export default function UploadCreate() {
       setError("Please select a valid video file.");
       return;
     }
+    // No size validation (MAX_SIZE_MB is Infinity)
     if (f.size > MAX_SIZE_MB * 1024 * 1024) {
       setError(`Maximum file size is ${MAX_SIZE_MB} MB.`);
       return;
@@ -255,7 +270,6 @@ export default function UploadCreate() {
     data: File | Blob,
     contentType?: string
   ) {
-    // path relatif, tanpa leading slash
     const { data: uploadRes, error: uploadErr } = await supabase.storage
       .from(bucket)
       .upload(path, data, {
@@ -299,9 +313,12 @@ export default function UploadCreate() {
     try {
       if (!file || !title.trim() || !category) return;
 
-      // Pastikan wallet terkoneksi
-      if (status !== "connected" || !abstractId) {
-        setError("Mohon koneksikan wallet terlebih dahulu.");
+      // Wajib ada abstract_id dari wallet terhubung (bukan "latest profile")
+      const aid = abstractId?.trim();
+      if (!aid) {
+        setError(
+          "No connected wallet. Please connect your wallet first so we can attach your abstract_id."
+        );
         return;
       }
 
@@ -328,7 +345,6 @@ export default function UploadCreate() {
       // 2) thumbnail (opsional) → studio/thumbnails/...
       let thumbRes: { path: string; publicUrl: string } | null = null;
       if (thumbBlob) {
-        // deteksi mime/ekstensi dari blob (jika hasil capture = image/jpeg)
         const mime = (thumbBlob as any).type || "image/jpeg";
         const ext =
           mime === "image/png" ? "png" : mime === "image/webp" ? "webp" : "jpg";
@@ -336,9 +352,9 @@ export default function UploadCreate() {
         thumbRes = await uploadToSupabase(STUDIO_BUCKET, thumbPath, thumbBlob, mime);
       }
 
-      // 3) metadata → public.videos (sertakan abstract_id wallet aktif)
+      // 3) metadata → public.videos (sertakan abstract_id dari wallet)
       const payload = {
-        abstract_id: abstractId, // FK ke profiles.abstract_id
+        abstract_id: aid, // FK ke profiles.abstract_id
         title,
         description,
         category, // enum video_category
@@ -418,9 +434,7 @@ export default function UploadCreate() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold tracking-tight text-neutral-50">
-        Upload Video
-      </h1>
+      <h1 className="text-2xl font-bold tracking-tight text-neutral-50">Upload Video</h1>
       <p className="mt-1 text-sm text-neutral-400">
         Select a video file, fill the details, then start upload.
       </p>

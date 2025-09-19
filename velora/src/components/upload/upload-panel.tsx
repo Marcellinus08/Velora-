@@ -51,11 +51,6 @@ export default function UploadActionPanel({
           Reset
         </button>
       </div>
-
-      <p className="mt-3 text-xs text-neutral-500">
-        Files are uploaded to Supabase Storage (bucket <code>studio</code>) and
-        metadata saved in Postgres.
-      </p>
     </section>
   );
 }
