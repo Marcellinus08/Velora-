@@ -51,12 +51,12 @@ export type PriceRule = {
   default_cents: number;
 };
 
-// Range slider: $10 – $100 (step $1)
+// Range slider: $5 – $100 (step $1)
 const DEFAULT_PRICE_RULE: PriceRule = {
-  min_cents: 1000,
+  min_cents: 500,
   max_cents: 10000,
   step_cents: 100,
-  default_cents: 1999,
+  default_cents: 599,
 };
 
 // bisa dipakai kalau suatu saat kamu mau beda per kategori
@@ -68,9 +68,9 @@ function getRuleForCategory(_category: string): PriceRule {
 function suggestPriceByDuration(durationSec: number, rule: PriceRule): number {
   const m = Math.max(1, Math.round(durationSec / 60));
   let usd =
-    m <= 10 ? 12 :
-    m <= 30 ? 19 :
-    m <= 60 ? 29 : 39;
+    m <= 10 ? 7 :
+    m <= 30 ? 12 :
+    m <= 60 ? 18 : 25;
   const cents = Math.round(usd * 100);
   const snapped =
     Math.min(
@@ -84,7 +84,7 @@ function suggestPriceByDuration(durationSec: number, rule: PriceRule): number {
 export type TaskItem = {
   question: string;
   options: [string, string, string, string];
-  answerIndex: number; // opsional dipakai nanti
+  answerIndex: number; // index jawaban benar
 };
 
 const emptyTask = (): TaskItem => ({
@@ -92,6 +92,9 @@ const emptyTask = (): TaskItem => ({
   options: ["", "", "", ""],
   answerIndex: 0,
 });
+
+// 1 soal = 5 poin
+const TASK_POINT_VALUE = 5;
 
 export default function UploadCreate() {
   // File & preview
@@ -431,6 +434,11 @@ export default function UploadCreate() {
   const canStart =
     !!file && title.trim() !== "" && category !== "" && !uploading;
 
+  // ===== Total points summary (sebelum Upload)
+  const pricePoints = Math.round(priceCents / 100); // 1 USD = 1 point
+  const taskPoints = tasks.length * TASK_POINT_VALUE; // 1 soal = 5 poin
+  const totalPoints = pricePoints + taskPoints;
+
   return (
     <div>
       <h1 className="text-2xl font-bold tracking-tight text-neutral-50">
@@ -470,7 +478,6 @@ export default function UploadCreate() {
           onChangeTitle={setTitle}
           onChangeDescription={setDescription}
           onChangeCategory={setCategory}
-
           /* pricing props */
           durationSec={durationSec}
           priceRule={priceRule}
@@ -479,7 +486,6 @@ export default function UploadCreate() {
           onUseSuggested={() =>
             setPriceCents(suggestPriceByDuration(durationSec, priceRule))
           }
-
           /* tasks props */
           tasks={tasks}
           onAddEmptyTask={() => setTasks((prev) => [...prev, emptyTask()])}
@@ -490,6 +496,29 @@ export default function UploadCreate() {
             setTasks((prev) => prev.filter((_, i) => i !== index))
           }
         />
+
+        {/* ===== TOTAL POINTS (sebelum tombol upload) ===== */}
+        <section className="rounded-2xl border border-neutral-800 bg-neutral-900 p-4 sm:p-5">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-semibold text-neutral-200">Total Points</h3>
+            <span className="text-lg font-bold text-neutral-50">{totalPoints} pts</span>
+          </div>
+          <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3 text-xs">
+            <div className="flex items-center justify-between rounded-lg border border-neutral-800 bg-neutral-950 px-3 py-2 text-neutral-400">
+              <span>From price</span>
+              <span className="text-neutral-100 font-semibold">+{pricePoints}</span>
+            </div>
+            <div className="flex items-center justify-between rounded-lg border border-neutral-800 bg-neutral-950 px-3 py-2 text-neutral-400">
+              <span>From tasks</span>
+              <span className="text-neutral-100 font-semibold">+{taskPoints}</span>
+            </div>
+            <div className="hidden sm:flex items-center justify-between rounded-lg border border-neutral-800 bg-neutral-950 px-3 py-2 text-neutral-400">
+              <span>Total</span>
+              <span className="text-neutral-100 font-semibold">{totalPoints}</span>
+            </div>
+          </div>
+        </section>
+
         <UploadActionPanel
           uploading={uploading}
           progress={progress}
