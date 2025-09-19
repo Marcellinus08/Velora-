@@ -1,3 +1,4 @@
+// src/components/upload/create.tsx
 "use client";
 
 import { useEffect, useRef, useState } from "react";
@@ -6,6 +7,7 @@ import { supabase } from "@/lib/supabase";
 import UploadFilePanel from "./file-panel";
 import UploadDetailsPanel from "./details-panel";
 import UploadActionPanel from "./upload-panel";
+import { useAccount } from "wagmi";
 
 /* ---------- Config ---------- */
 const ACCEPT =
@@ -56,7 +58,7 @@ const DEFAULT_PRICE_RULE: PriceRule = {
   min_cents: 500,
   max_cents: 10000,
   step_cents: 100,
-  default_cents: 599,
+  default_cents: 999,
 };
 
 // bisa dipakai kalau suatu saat kamu mau beda per kategori
@@ -67,16 +69,12 @@ function getRuleForCategory(_category: string): PriceRule {
 // saran harga sederhana berdasar durasi (tetap di-clamp ke rule)
 function suggestPriceByDuration(durationSec: number, rule: PriceRule): number {
   const m = Math.max(1, Math.round(durationSec / 60));
-  let usd =
-    m <= 10 ? 7 :
-    m <= 30 ? 12 :
-    m <= 60 ? 18 : 25;
+  let usd = m <= 10 ? 12 : m <= 30 ? 19 : m <= 60 ? 29 : 39;
   const cents = Math.round(usd * 100);
-  const snapped =
-    Math.min(
-      Math.max(Math.round(cents / rule.step_cents) * rule.step_cents, rule.min_cents),
-      rule.max_cents
-    );
+  const snapped = Math.min(
+    Math.max(Math.round(cents / rule.step_cents) * rule.step_cents, rule.min_cents),
+    rule.max_cents
+  );
   return snapped;
 }
 
@@ -84,7 +82,7 @@ function suggestPriceByDuration(durationSec: number, rule: PriceRule): number {
 export type TaskItem = {
   question: string;
   options: [string, string, string, string];
-  answerIndex: number; // index jawaban benar
+  answerIndex: number; // opsional dipakai nanti
 };
 
 const emptyTask = (): TaskItem => ({
@@ -92,9 +90,6 @@ const emptyTask = (): TaskItem => ({
   options: ["", "", "", ""],
   answerIndex: 0,
 });
-
-// 1 soal = 5 poin
-const TASK_POINT_VALUE = 5;
 
 export default function UploadCreate() {
   // File & preview
@@ -112,7 +107,9 @@ export default function UploadCreate() {
 
   // Pricing state
   const [priceRule, setPriceRule] = useState<PriceRule>(DEFAULT_PRICE_RULE);
-  const [priceCents, setPriceCents] = useState<number>(DEFAULT_PRICE_RULE.default_cents);
+  const [priceCents, setPriceCents] = useState<number>(
+    DEFAULT_PRICE_RULE.default_cents
+  );
 
   // Tasks state (mulai langsung dengan Soal 1)
   const [tasks, setTasks] = useState<TaskItem[]>([emptyTask()]);
@@ -126,24 +123,17 @@ export default function UploadCreate() {
   const [progress, setProgress] = useState(0);
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Abstract ID (ambil dari tabel profiles)
+  // ===== Abstract ID dari wallet yang sedang terkoneksi (PERBAIKAN) =====
+  const { address, status } = useAccount();
   const [abstractId, setAbstractId] = useState<string | null>(null);
+
   useEffect(() => {
-    let mounted = true;
-    (async () => {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("abstract_id")
-        .not("abstract_id", "is", null)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      if (!error && mounted && data?.abstract_id) setAbstractId(data.abstract_id);
-    })();
-    return () => {
-      mounted = false;
-    };
-  }, []);
+    if (status === "connected" && address) {
+      setAbstractId(address.toLowerCase());
+    } else {
+      setAbstractId(null);
+    }
+  }, [address, status]);
 
   // update rule & suggested price ketika kategori/durasi berubah
   useEffect(() => {
@@ -153,11 +143,10 @@ export default function UploadCreate() {
       const chosen = prev || rule.default_cents;
       const suggested = suggestPriceByDuration(durationSec, rule);
       const target = prev ? chosen : suggested;
-      const clamped =
-        Math.min(
-          Math.max(Math.round(target / rule.step_cents) * rule.step_cents, rule.min_cents),
-          rule.max_cents
-        );
+      const clamped = Math.min(
+        Math.max(Math.round(target / rule.step_cents) * rule.step_cents, rule.min_cents),
+        rule.max_cents
+      );
       return clamped;
     });
   }, [category, durationSec]);
@@ -266,6 +255,7 @@ export default function UploadCreate() {
     data: File | Blob,
     contentType?: string
   ) {
+    // path relatif, tanpa leading slash
     const { data: uploadRes, error: uploadErr } = await supabase.storage
       .from(bucket)
       .upload(path, data, {
@@ -309,12 +299,9 @@ export default function UploadCreate() {
     try {
       if (!file || !title.trim() || !category) return;
 
-      // Wajib ada abstract_id dari tabel profiles
-      const aid = abstractId?.trim();
-      if (!aid) {
-        setError(
-          "abstract_id tidak ditemukan di tabel profiles. Buat/isi profil dulu atau sesuaikan query pengambilan profil."
-        );
+      // Pastikan wallet terkoneksi
+      if (status !== "connected" || !abstractId) {
+        setError("Mohon koneksikan wallet terlebih dahulu.");
         return;
       }
 
@@ -341,21 +328,17 @@ export default function UploadCreate() {
       // 2) thumbnail (opsional) → studio/thumbnails/...
       let thumbRes: { path: string; publicUrl: string } | null = null;
       if (thumbBlob) {
+        // deteksi mime/ekstensi dari blob (jika hasil capture = image/jpeg)
         const mime = (thumbBlob as any).type || "image/jpeg";
         const ext =
           mime === "image/png" ? "png" : mime === "image/webp" ? "webp" : "jpg";
         const thumbPath = `thumbnails/${stamp}_${base}.${ext}`;
-        thumbRes = await uploadToSupabase(
-          STUDIO_BUCKET,
-          thumbPath,
-          thumbBlob,
-          mime
-        );
+        thumbRes = await uploadToSupabase(STUDIO_BUCKET, thumbPath, thumbBlob, mime);
       }
 
-      // 3) metadata → public.videos (sertakan abstract_id)
+      // 3) metadata → public.videos (sertakan abstract_id wallet aktif)
       const payload = {
-        abstract_id: aid, // FK ke profiles.abstract_id
+        abstract_id: abstractId, // FK ke profiles.abstract_id
         title,
         description,
         category, // enum video_category
@@ -431,13 +414,7 @@ export default function UploadCreate() {
     }
   }, [progress]);
 
-  const canStart =
-    !!file && title.trim() !== "" && category !== "" && !uploading;
-
-  // ===== Total points summary (sebelum Upload)
-  const pricePoints = Math.round(priceCents / 100); // 1 USD = 1 point
-  const taskPoints = tasks.length * TASK_POINT_VALUE; // 1 soal = 5 poin
-  const totalPoints = pricePoints + taskPoints;
+  const canStart = !!file && title.trim() !== "" && category !== "" && !uploading;
 
   return (
     <div>
@@ -496,29 +473,6 @@ export default function UploadCreate() {
             setTasks((prev) => prev.filter((_, i) => i !== index))
           }
         />
-
-        {/* ===== TOTAL POINTS (sebelum tombol upload) ===== */}
-        <section className="rounded-2xl border border-neutral-800 bg-neutral-900 p-4 sm:p-5">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-semibold text-neutral-200">Total Points</h3>
-            <span className="text-lg font-bold text-neutral-50">{totalPoints} pts</span>
-          </div>
-          <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3 text-xs">
-            <div className="flex items-center justify-between rounded-lg border border-neutral-800 bg-neutral-950 px-3 py-2 text-neutral-400">
-              <span>From price</span>
-              <span className="text-neutral-100 font-semibold">+{pricePoints}</span>
-            </div>
-            <div className="flex items-center justify-between rounded-lg border border-neutral-800 bg-neutral-950 px-3 py-2 text-neutral-400">
-              <span>From tasks</span>
-              <span className="text-neutral-100 font-semibold">+{taskPoints}</span>
-            </div>
-            <div className="hidden sm:flex items-center justify-between rounded-lg border border-neutral-800 bg-neutral-950 px-3 py-2 text-neutral-400">
-              <span>Total</span>
-              <span className="text-neutral-100 font-semibold">{totalPoints}</span>
-            </div>
-          </div>
-        </section>
-
         <UploadActionPanel
           uploading={uploading}
           progress={progress}

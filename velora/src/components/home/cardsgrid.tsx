@@ -11,6 +11,12 @@ type VideoRow = {
   description: string | null;
   category: string | null;
   thumb_url: string | null;
+
+  // ← ambil dari DB
+  price_cents?: number | null;
+  currency?: string | null;
+  points_total?: number | null; // total poin keseluruhan dari DB
+
   creator?: {
     username: string | null;
     abstract_id: string | null;
@@ -42,6 +48,19 @@ function writeCache(key: string, value: string) {
   } catch {}
 }
 
+/* Helpers */
+const fmtUSD = (cents?: number | null) =>
+  typeof cents === "number" && cents > 0 ? `$${(cents / 100).toFixed(2)}` : "Free";
+
+// fallback jika points_total null
+const calcTotalPointsFromPrice = (priceCents?: number | null) =>
+  Math.max(0, Math.round(((priceCents ?? 0) / 100) * 10));
+
+const resolveTotalPoints = (priceCents?: number | null, pointsTotal?: number | null) =>
+  typeof pointsTotal === "number" && pointsTotal > 0
+    ? pointsTotal
+    : calcTotalPointsFromPrice(priceCents);
+
 /* ================== Grid ================== */
 export default function CardsGrid() {
   const [items, setItems] = useState<VideoRow[]>([]);
@@ -51,7 +70,7 @@ export default function CardsGrid() {
   // peta addrLower -> avatarUrl (hasil fetch dari Abstract)
   const [absAvatars, setAbsAvatars] = useState<Record<string, string>>({});
 
-  // 1) Ambil video + join profile (TERMASUK avatar_url)
+  // 1) Ambil video + join profile (TERMASUK avatar_url, price_cents, points_total)
   useEffect(() => {
     let active = true;
 
@@ -68,6 +87,9 @@ export default function CardsGrid() {
             description,
             category,
             thumb_url,
+            price_cents,
+            currency,
+            points_total,
             creator:profiles!videos_abstract_id_fkey(
               username,
               abstract_id,
@@ -198,6 +220,9 @@ export default function CardsGrid() {
           "Unknown";
         const bg = v.thumb_url || "/placeholder-thumb.png";
 
+        const priceText = fmtUSD(v.price_cents);
+        const totalPoints = resolveTotalPoints(v.price_cents, v.points_total);
+
         return (
           <div
             key={v.id}
@@ -205,6 +230,16 @@ export default function CardsGrid() {
           >
             {/* Thumbnail */}
             <div className="relative w-full overflow-hidden rounded-xl">
+              {/* POINT BADGE on thumbnail (top-left) */}
+              {totalPoints > 0 && (
+                <div className="absolute left-2 top-2 z-10 flex items-center gap-1.5 rounded-full border border-neutral-700 bg-neutral-900/85 px-2.5 py-1 text-xs font-semibold text-neutral-100 backdrop-blur">
+                  <svg className="h-4 w-4 text-yellow-400" fill="currentColor" viewBox="0 0 256 256" aria-hidden="true">
+                    <path d="M239.2,97.41a16.4,16.4,0,0,0-14.21-10.06l-49.33-7.17L153.8,36.52a16.37,16.37,0,0,0-29.6,0L102.34,80.18,53,87.35A16.4,16.4,0,0,0,38.8,97.41a16.43,16.43,0,0,0,4.28,17.27l35.69,34.78-8.43,49.14a16.4,16.4,0,0,0,7.86,17.2,16.32,16.32,0,0,0,18.15,.11L128,193.07l44.13,23.2a16.32,16.32,0,0,0,18.15-.11,16.4,16.4,0,0,0,7.86-17.2l-8.43-49.14,35.69-34.78A16.43,16.43,0,0,0,239.2,97.41Z"></path>
+                  </svg>
+                  <span>{totalPoints}</span>
+                </div>
+              )}
+
               <div
                 className="aspect-video w-full cursor-pointer bg-cover bg-center bg-no-repeat transition-transform duration-300 group-hover:scale-105"
                 style={{ backgroundImage: `url("${bg}")` }}
@@ -230,14 +265,12 @@ export default function CardsGrid() {
                       crossOrigin="anonymous"
                       referrerPolicy="no-referrer"
                       onError={(e) => {
-                        // jika URL dari Abstract gagal, fallback ke komponen AbstractProfile
                         (e.currentTarget as HTMLImageElement).style.display = "none";
                       }}
                     />
                   ) : addrLower ? (
                     <AbstractProfile
-                      /* tampilkan avatar default Abstract untuk alamat creator */
-                      // @ts-expect-error: komponen ini menerima props generik; abaikan typing custom
+                      // @ts-expect-error generic props
                       address={addrLower}
                       size="xs"
                       showTooltip={false}
@@ -258,8 +291,9 @@ export default function CardsGrid() {
               </div>
 
               {/* Aksi */}
-              <div className="mt-auto flex items-center justify-between">
-                <p className="text-base font-bold text-neutral-50">Free</p>
+              <div className="mt-auto flex items-end justify-between">
+                <p className="text-base font-bold text-neutral-50">{priceText}</p>
+
                 <button
                   className="rounded-full bg-[var(--primary-500)] px-4 py-1.5 text-sm font-semibold text-white transition-colors hover:bg-opacity-80"
                   onClick={() => {
