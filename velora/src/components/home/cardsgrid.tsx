@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { AbstractProfile } from "@/components/abstract-profile";
 
@@ -12,15 +12,16 @@ type VideoRow = {
   category: string | null;
   thumb_url: string | null;
 
-  // ← ambil dari DB
   price_cents?: number | null;
   currency?: string | null;
-  points_total?: number | null; // total poin keseluruhan dari DB
+
+  points_total?: number | null;  // skema A
+  total_points?: number | null;  // skema B
 
   creator?: {
     username: string | null;
     abstract_id: string | null;
-    avatar_url: string | null; // ambil dari DB
+    avatar_url: string | null;
   } | null;
 };
 
@@ -31,20 +32,35 @@ function shortId(addr?: string | null) {
 
 /* ====== Session cache utk avatar Abstract (TTL 30m) ====== */
 const TTL_MS = 30 * 60 * 1000;
-function readCache(key: string): string | null {
+function readCacheUrl(key: string): string | null {
   try {
     const raw = sessionStorage.getItem(key);
     if (!raw) return null;
     const { t, v } = JSON.parse(raw);
     if (Date.now() - t > TTL_MS) return null;
-    return v as string;
+    return typeof v === "string" ? v : null;
   } catch {
     return null;
   }
 }
-function writeCache(key: string, value: string) {
+function writeCacheUrl(key: string, value: string) {
   try {
     sessionStorage.setItem(key, JSON.stringify({ t: Date.now(), v: value }));
+  } catch {}
+}
+function readCacheMiss(key: string): boolean {
+  try {
+    const raw = sessionStorage.getItem(key);
+    if (!raw) return false;
+    const { t } = JSON.parse(raw);
+    return Date.now() - t <= TTL_MS;
+  } catch {
+    return false;
+  }
+}
+function writeCacheMiss(key: string) {
+  try {
+    sessionStorage.setItem(key, JSON.stringify({ t: Date.now(), v: "MISS" }));
   } catch {}
 }
 
@@ -52,14 +68,14 @@ function writeCache(key: string, value: string) {
 const fmtUSD = (cents?: number | null) =>
   typeof cents === "number" && cents > 0 ? `$${(cents / 100).toFixed(2)}` : "Free";
 
-// fallback jika points_total null
 const calcTotalPointsFromPrice = (priceCents?: number | null) =>
   Math.max(0, Math.round(((priceCents ?? 0) / 100) * 10));
 
-const resolveTotalPoints = (priceCents?: number | null, pointsTotal?: number | null) =>
-  typeof pointsTotal === "number" && pointsTotal > 0
-    ? pointsTotal
-    : calcTotalPointsFromPrice(priceCents);
+const resolveTotalPoints = (row: VideoRow) => {
+  if (typeof row.points_total === "number" && row.points_total > 0) return row.points_total;
+  if (typeof row.total_points === "number" && row.total_points > 0) return row.total_points;
+  return calcTotalPointsFromPrice(row.price_cents);
+};
 
 /* ================== Grid ================== */
 export default function CardsGrid() {
@@ -67,10 +83,14 @@ export default function CardsGrid() {
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string>("");
 
-  // peta addrLower -> avatarUrl (hasil fetch dari Abstract)
+  // addrLower -> avatarUrl
   const [absAvatars, setAbsAvatars] = useState<Record<string, string>>({});
+  // negative cache (alamat yang sudah dicoba, sukses/gagal)
+  const [absTried, setAbsTried] = useState<Record<string, boolean>>({});
+  // guard untuk request yang sedang berjalan
+  const inFlight = useRef<Set<string>>(new Set());
 
-  // 1) Ambil video + join profile (TERMASUK avatar_url, price_cents, points_total)
+  // 1) Ambil video + join profile
   useEffect(() => {
     let active = true;
 
@@ -79,29 +99,44 @@ export default function CardsGrid() {
         setLoading(true);
         setErr("");
 
-        const { data, error } = await supabase
-          .from("videos")
-          .select(`
-            id,
-            title,
-            description,
-            category,
-            thumb_url,
-            price_cents,
-            currency,
-            points_total,
-            creator:profiles!videos_abstract_id_fkey(
-              username,
-              abstract_id,
-              avatar_url
-            )
-          `)
-          .order("created_at", { ascending: false })
-          .limit(24);
+        const selects = [
+          `
+            id, title, description, category, thumb_url,
+            price_cents, currency, points_total,
+            creator:profiles!videos_abstract_id_fkey(username, abstract_id, avatar_url)
+          `,
+          `
+            id, title, description, category, thumb_url,
+            price_cents, currency, total_points,
+            creator:profiles!videos_abstract_id_fkey(username, abstract_id, avatar_url)
+          `,
+          `
+            id, title, description, category, thumb_url,
+            price_cents, currency,
+            creator:profiles!videos_abstract_id_fkey(username, abstract_id, avatar_url)
+          `,
+        ];
 
-        if (error) throw error;
+        let data: any = null;
+        let lastError: any = null;
+
+        for (const sel of selects) {
+          const { data: d, error } = await supabase
+            .from("videos")
+            .select(sel)
+            .order("created_at", { ascending: false })
+            .limit(24);
+          if (!error) {
+            data = d;
+            break;
+          }
+          lastError = error;
+        }
+
         if (!active) return;
-        setItems(data ?? []);
+        if (!data) throw lastError ?? new Error("Unknown error fetching videos");
+
+        setItems(data as VideoRow[]);
       } catch (e: any) {
         if (!active) return;
         setErr(e?.message || "Failed to load videos.");
@@ -115,49 +150,78 @@ export default function CardsGrid() {
     };
   }, []);
 
-  // 2) Untuk yang avatar_url DB-nya kosong, fetch avatar dari Abstract 1x
+  // 2) Fetch avatar Abstract untuk yang belum punya avatar_url di DB, sekali saja
   useEffect(() => {
     let alive = true;
 
     (async () => {
-      const need = Array.from(
+      const candidates = Array.from(
         new Set(
           items
             .filter((it) => !it.creator?.avatar_url)
             .map((it) => it.creator?.abstract_id?.toLowerCase() || "")
             .filter((addr): addr is string => !!addr)
-            .filter((addr) => !absAvatars[addr])
         )
       );
+
+      const need = candidates.filter((addr) => {
+        if (absTried[addr]) return false; // sudah dicoba (sukses/gagal)
+        if (absAvatars[addr]) return false; // sudah punya url
+        if (inFlight.current.has(addr)) return false; // sedang berjalan
+        // cek cache session (sukses/gagal)
+        const urlCached = readCacheUrl(`absavatar:${addr}`);
+        const missCached = readCacheMiss(`absavatar-miss:${addr}`);
+        if (urlCached) {
+          setAbsAvatars((p) => ({ ...p, [addr]: urlCached }));
+          setAbsTried((p) => ({ ...p, [addr]: true }));
+          return false;
+        }
+        if (missCached) {
+          setAbsTried((p) => ({ ...p, [addr]: true }));
+          return false;
+        }
+        return true;
+      });
+
       if (need.length === 0) return;
+
+      // tandai in-flight
+      need.forEach((a) => inFlight.current.add(a));
 
       const results = await Promise.all(
         need.map(async (addr) => {
-          const key = `absavatar:${addr}`;
-          const cached = readCache(key);
-          if (cached) return [addr, cached] as const;
-
           try {
-            const r = await fetch(`/api/abstract/user/${addr}`, {
-              cache: "force-cache",
-            });
+            const r = await fetch(`/api/abstract/user/${addr}`, { cache: "force-cache" });
             if (r.ok) {
               const j = await r.json();
               const url: string | null =
                 j?.profilePicture || j?.avatar || j?.imageUrl || null;
               if (url) {
-                writeCache(key, url);
+                writeCacheUrl(`absavatar:${addr}`, url);
                 return [addr, url] as const;
               }
             }
           } catch {
             /* ignore */
           }
-          return [addr, ""] as const; // gagal—biar tidak diulang-ulang
+          writeCacheMiss(`absavatar-miss:${addr}`);
+          return [addr, ""] as const; // gagal
         })
       );
 
       if (!alive) return;
+
+      // lepas in-flight
+      need.forEach((a) => inFlight.current.delete(a));
+
+      // update tried (semua)
+      setAbsTried((prev) => {
+        const next = { ...prev };
+        for (const [addr] of results) next[addr] = true;
+        return next;
+      });
+
+      // update avatar map hanya yang sukses
       setAbsAvatars((prev) => {
         const next = { ...prev };
         for (const [addr, url] of results) if (url) next[addr] = url;
@@ -168,7 +232,8 @@ export default function CardsGrid() {
     return () => {
       alive = false;
     };
-  }, [items, absAvatars]);
+    // tergantung pada daftar item & map tried; tidak perlu tergantung absAvatars
+  }, [items, absTried]);
 
   /* ================== UI ================== */
   if (loading) {
@@ -211,7 +276,6 @@ export default function CardsGrid() {
     <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-x-4 gap-y-8 pt-6">
       {items.map((v) => {
         const addrLower = v.creator?.abstract_id?.toLowerCase() || "";
-        // urutan fallback: DB -> Abstract (fetched) -> AbstractProfile component
         const fetchedAbstract = addrLower ? absAvatars[addrLower] : "";
         const avatarSrc = v.creator?.avatar_url || fetchedAbstract || "";
         const author =
@@ -221,16 +285,12 @@ export default function CardsGrid() {
         const bg = v.thumb_url || "/placeholder-thumb.png";
 
         const priceText = fmtUSD(v.price_cents);
-        const totalPoints = resolveTotalPoints(v.price_cents, v.points_total);
+        const totalPoints = resolveTotalPoints(v);
 
         return (
-          <div
-            key={v.id}
-            className="group flex flex-col rounded-xl bg-neutral-900"
-          >
+          <div key={v.id} className="group flex flex-col rounded-xl bg-neutral-900">
             {/* Thumbnail */}
             <div className="relative w-full overflow-hidden rounded-xl">
-              {/* POINT BADGE on thumbnail (top-left) */}
               {totalPoints > 0 && (
                 <div className="absolute left-2 top-2 z-10 flex items-center gap-1.5 rounded-full border border-neutral-700 bg-neutral-900/85 px-2.5 py-1 text-xs font-semibold text-neutral-100 backdrop-blur">
                   <svg className="h-4 w-4 text-yellow-400" fill="currentColor" viewBox="0 0 256 256" aria-hidden="true">
@@ -253,7 +313,6 @@ export default function CardsGrid() {
                 {v.title}
               </h3>
 
-              {/* Avatar + author */}
               <div className="flex items-center gap-2 text-sm text-neutral-400">
                 <div className="h-6 w-6 overflow-hidden rounded-full bg-neutral-800 ring-1 ring-neutral-700">
                   {avatarSrc ? (
@@ -290,10 +349,8 @@ export default function CardsGrid() {
                 <span className="cursor-pointer">{author}</span>
               </div>
 
-              {/* Aksi */}
               <div className="mt-auto flex items-end justify-between">
                 <p className="text-base font-bold text-neutral-50">{priceText}</p>
-
                 <button
                   className="rounded-full bg-[var(--primary-500)] px-4 py-1.5 text-sm font-semibold text-white transition-colors hover:bg-opacity-80"
                   onClick={() => {
