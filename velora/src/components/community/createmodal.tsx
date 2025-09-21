@@ -31,13 +31,11 @@ export default function CreatePostModal({
       aria-modal="true"
       onKeyDown={(e) => e.key === "Escape" && onClose()}
     >
-      {/* Backdrop */}
       <button
         aria-label="Close modal"
         className="absolute inset-0 bg-black/60 backdrop-blur-sm"
         onClick={onClose}
       />
-      {/* Panel */}
       <div className="relative z-10 w-full max-w-lg rounded-2xl border border-neutral-800 bg-neutral-900 p-5 shadow-xl">
         <div className="mb-4 flex items-center justify-between">
           <h3 className="text-lg font-semibold text-neutral-50">Create New Post</h3>
