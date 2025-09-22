@@ -1,131 +1,27 @@
+// src/components/community/replies.tsx
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
 import { useAccount } from "wagmi";
-import type { CommunityReply } from "./types";
+import { useEffect, useMemo, useState } from "react";
 
-/* ====== utils & cache ====== */
-const TTL = 5 * 60_000;
-const readCache = <T,>(k: string): T | null => {
-  try {
-    const raw = sessionStorage.getItem(k);
-    if (!raw) return null;
-    const { t, v } = JSON.parse(raw);
-    if (Date.now() - t > TTL) return null;
-    return v as T;
-  } catch { return null; }
+type ReplyNode = {
+  id: string;
+  postId: string;
+  authorAddress: string;
+  authorName: string | null;
+  authorAvatar: string | null;
+  content: string;
+  createdAt: string;
+  parentId: string | null;
+  likes: number;
+  replies: number;
+  liked: boolean;
+  children: ReplyNode[];
 };
-const writeCache = <T,>(k: string, v: T) => {
-  try { sessionStorage.setItem(k, JSON.stringify({ t: Date.now(), v })); } catch {}
-};
+
 const isAddr = (a?: string) => !!a && /^0x[a-f0-9]{40}$/.test(a.toLowerCase());
-const isPlaceholder = (u?: string | null) =>
-  !u || u.toLowerCase().includes("dicebear.com") || u.toLowerCase().includes("placeholder");
-const short = (a?: string) =>
-  a && a.startsWith("0x") && a.length >= 10 ? `${a.slice(0, 6)}…${a.slice(-4)}` : a || "-";
+const short = (a: string) => `${a.slice(0, 6)}…${a.slice(-4)}`;
 
-async function safeJson(res: Response) {
-  const ct = res.headers.get("content-type") || "";
-  if (ct.includes("application/json")) return await res.json();
-  const text = await res.text().catch(() => "");
-  throw new Error(`Unexpected response (${res.status}).${text ? ` Body: ${text.slice(0, 150)}` : ""}`);
-}
-
-/* ====== hook avatar (DB → Abstract → identicon) ====== */
-function useAddressAvatar(address?: string, initial?: string | null) {
-  const addr = useMemo(() => (address ? address.toLowerCase() : ""), [address]);
-  const [src, setSrc] = useState<string | null>(initial && !isPlaceholder(initial) ? initial : null);
-
-  useEffect(() => {
-    let alive = true;
-    (async () => {
-      if (!isAddr(addr)) return;
-      if (src && !isPlaceholder(src)) return;
-
-      const ckProf = `dbprof:${addr}`;
-      let prof = readCache<{ username: string | null; avatar_url: string | null }>(ckProf);
-      if (!prof) {
-        try {
-          const r = await fetch(`/api/profiles/${addr}`, { cache: "force-cache" });
-          if (r.ok) {
-            const j = await r.json();
-            prof = { username: j?.username ?? null, avatar_url: j?.avatar_url ?? null };
-            writeCache(ckProf, prof);
-          }
-        } catch {}
-      }
-      if (alive && prof?.avatar_url && !isPlaceholder(prof.avatar_url)) {
-        setSrc(`${prof.avatar_url}`);
-        return;
-      }
-
-      const ckAbs = `absavatar:${addr}`;
-      let abs = readCache<string>(ckAbs);
-      if (!abs) {
-        try {
-          const r = await fetch(`/api/abstract/user/${addr}`, { cache: "force-cache" });
-          if (r.ok) {
-            const j = await r.json();
-            abs =
-              j?.profilePicture ||
-              j?.avatar ||
-              j?.imageUrl ||
-              j?.image ||
-              j?.pfp ||
-              j?.pfpUrl ||
-              j?.photoURL ||
-              null;
-            if (abs) writeCache(ckAbs, abs);
-          }
-        } catch {}
-      }
-      if (alive && abs && !isPlaceholder(abs)) {
-        setSrc(abs);
-        return;
-      }
-
-      if (alive) setSrc(`https://api.dicebear.com/7.x/identicon/svg?seed=${addr || "anon"}`);
-    })();
-    return () => { alive = false; };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [addr, initial]);
-
-  return src;
-}
-
-/* ====== item reply (agar hook tidak dipakai di dalam map langsung) ====== */
-function ReplyItem({ r }: { r: CommunityReply }) {
-  const avatar = useAddressAvatar(r.authorAddress, r.authorAvatar || null);
-  const addrLower = (r.authorAddress || "").toLowerCase();
-  const identicon = `https://api.dicebear.com/7.x/identicon/svg?seed=${addrLower || "anon"}`;
-
-  return (
-    <li className="flex items-start gap-3">
-      <img
-        src={avatar ?? identicon}
-        alt="avatar"
-        className="size-8 rounded-full object-cover mt-1"
-        onError={(e) => {
-          const el = e.currentTarget as HTMLImageElement;
-          if (el.src !== identicon) el.src = identicon;
-        }}
-      />
-      <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-semibold text-neutral-100">
-            {r.authorName?.trim() || short(r.authorAddress)}
-          </span>
-          <span className="text-xs text-neutral-400">
-            {new Date(r.createdAt).toLocaleString()}
-          </span>
-        </div>
-        <p className="text-sm text-neutral-200 whitespace-pre-wrap">{r.content}</p>
-      </div>
-    </li>
-  );
-}
-
-/* ====== list replies ====== */
 export default function Replies({
   postId,
   onPosted,
@@ -134,88 +30,224 @@ export default function Replies({
   onPosted?: () => void;
 }) {
   const { address } = useAccount();
-  const me = (address ?? "").toLowerCase();
+  const me = useMemo(() => (address ? address.toLowerCase() : ""), [address]);
 
-  const [replies, setReplies] = useState<CommunityReply[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [err, setErr] = useState<string | null>(null);
-  const [text, setText] = useState("");
+  const [tree, setTree] = useState<ReplyNode[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [draftTop, setDraftTop] = useState("");
 
   async function load() {
     setLoading(true);
-    setErr(null);
+    setError(null);
     try {
-      const r = await fetch(`/api/community/posts/${postId}/replies?limit=50`, { cache: "no-store" });
-      const j = await safeJson(r);
-      if (!r.ok) throw new Error(j?.error || `HTTP ${r.status}`);
-      setReplies(j.replies as CommunityReply[]);
+      const r = await fetch(`/api/community/${postId}/replies?me=${me}`, { cache: "no-store" });
+      const j = await r.json();
+      if (!r.ok) throw new Error(j?.error || "Failed to load replies");
+      setTree(j.items || []);
     } catch (e: any) {
-      setErr(e?.message || "Failed to load replies");
-      setReplies([]);
+      setError(e?.message || "Failed");
     } finally {
       setLoading(false);
     }
   }
 
-  useEffect(() => { void load(); }, [postId]);
+  useEffect(() => {
+    void load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [postId, me]);
 
-  async function submit() {
-    if (!me) { alert("Connect wallet dulu."); return; }
-    const content = text.trim();
-    if (!content) return;
-    setText("");
+  async function submit(content: string, parentId: string | null) {
+    if (!isAddr(me)) return alert("Connect wallet dulu.");
+    const text = content.trim();
+    if (!text) return;
+
+    const body = { abstractId: me, content: text, parentId };
+    const r = await fetch(`/api/community/${postId}/replies`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    const j = await r.json();
+    if (!r.ok) {
+      alert(j?.error || "Failed to post reply");
+      return;
+    }
+    setDraftTop("");
+    await load();
+    onPosted?.();
+  }
+
+  return (
+    <div className="mt-4 border-t border-neutral-800 pt-4">
+      {/* form reply top-level */}
+      <div className="flex items-start gap-3 mb-4">
+        <img
+          src={`https://api.dicebear.com/7.x/identicon/svg?seed=${me || "anon"}`}
+          className="h-8 w-8 rounded-full object-cover"
+          alt=""
+        />
+        <div className="flex-1 flex gap-2">
+          <textarea
+            value={draftTop}
+            onChange={(e) => setDraftTop(e.target.value)}
+            className="h-10 w-full min-h-10 rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm text-neutral-100 placeholder:text-neutral-500 focus:outline-none focus:ring-0 focus:border-[var(--primary-500)]"
+            placeholder="Write a reply…"
+          />
+          <button
+            onClick={() => submit(draftTop, null)}
+            className="rounded-md bg-[var(--primary-500)] px-4 py-2 text-sm font-semibold text-white hover:bg-opacity-90"
+          >
+            Reply
+          </button>
+        </div>
+      </div>
+
+      {loading && <p className="text-sm text-neutral-400">Loading replies…</p>}
+      {error && <p className="text-sm text-red-400">{error}</p>}
+
+      <div className="flex flex-col gap-5">
+        {tree.map((n) => (
+          <ReplyItem key={n.id} node={n} me={me} onReply={(txt) => submit(txt, n.id)} onReload={load} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ReplyItem({
+  node,
+  me,
+  onReply,
+  onReload,
+  depth = 0,
+}: {
+  node: ReplyNode;
+  me: string;
+  onReply: (text: string) => void;
+  onReload: () => Promise<void>;
+  depth?: number;
+}) {
+  const [open, setOpen] = useState(false);
+  const [draft, setDraft] = useState("");
+  const [liked, setLiked] = useState(node.liked);
+  const [likes, setLikes] = useState(node.likes);
+
+  async function toggleLike() {
+    if (!isAddr(me)) return alert("Connect wallet dulu.");
+    const willLike = !liked;
+    // optimistik
+    setLiked(willLike);
+    setLikes((c) => c + (willLike ? 1 : -1));
     try {
-      const r = await fetch(`/api/community/posts/${postId}/replies`, {
+      await fetch("/api/community/replies/like", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ abstractId: me, content }),
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ replyId: node.id, abstractId: me, like: willLike }),
       });
-      const j = await safeJson(r);
-      if (!r.ok) throw new Error(j?.error || `HTTP ${r.status}`);
-      await load();
-      onPosted?.();
-    } catch (e: any) {
-      alert(e?.message || "Gagal kirim reply");
+    } catch {
+      // rollback kalau gagal
+      setLiked(!willLike);
+      setLikes((c) => c - (willLike ? 1 : -1));
     }
   }
 
   return (
-    <div className="mt-3 rounded-lg border border-neutral-800 bg-neutral-900">
-      {/* composer */}
-      <div className="flex gap-2 p-3">
-        <textarea
-          className="w-full resize-y rounded-md border border-neutral-700 bg-neutral-800 p-2 text-sm text-neutral-50 placeholder:text-neutral-400 focus:border-[var(--primary-500)] focus:ring-0"
-          rows={2}
-          placeholder="Write a reply…"
-          value={text}
-          onChange={(e) => setText(e.target.value)}
+    <div>
+      <div className="flex items-start gap-3">
+        <img
+          src={node.authorAvatar || `https://api.dicebear.com/7.x/identicon/svg?seed=${node.authorAddress}`}
+          className="h-8 w-8 rounded-full object-cover"
+          alt=""
+          onError={(e) => {
+            const el = e.currentTarget as HTMLImageElement;
+            el.src = `https://api.dicebear.com/7.x/identicon/svg?seed=${node.authorAddress}`;
+          }}
         />
-        <button
-          onClick={submit}
-          className="self-end rounded-md bg-[var(--primary-500)] px-3 py-2 text-sm font-semibold text-white hover:bg-opacity-90"
-        >
-          Reply
-        </button>
+        <div className="flex-1">
+          <div className="flex items-center gap-2 text-sm">
+            <span className="font-semibold text-neutral-100">
+              {node.authorName?.trim() || short(node.authorAddress)}
+            </span>
+            <span className="text-neutral-500">
+              {new Date(node.createdAt).toLocaleString()}
+            </span>
+          </div>
+          <div className="mt-1 whitespace-pre-wrap text-neutral-200">{node.content}</div>
+
+          <div className="mt-2 flex items-center gap-4 text-xs text-neutral-400">
+            <button
+              onClick={toggleLike}
+              className={
+                "flex items-center gap-1 hover:text-neutral-100 " +
+                (liked ? "text-[var(--primary-500)] hover:text-[var(--primary-500)]/80" : "")
+              }
+            >
+              <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden>
+                <path d="M2 10.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6zM6 10.333v5.43a2 2 0 001.106 1.787l.25.125a2 2 0 002.29-1.787v-5.43M14 10.333v5.43a2 2 0 001.106 1.787l.25.125a2 2 0 002.29-1.787v-5.43M10 4.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6z" />
+              </svg>
+              <span>{likes} Likes</span>
+            </button>
+
+            <span className="flex items-center gap-1">
+              <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden>
+                <path
+                  fillRule="evenodd"
+                  d="M18 5v8a2 2 0 01-2 2h-5l-5 4v-4H4a2 2 0 01-2-2V5a2 2 0 012-2h12a2 2 0 012 2zM7 8H5v2h2V8zm2 0h2v2H9V8zm6 0h-2v2h2V8z"
+                  clipRule="evenodd"
+                />
+              </svg>
+              {node.replies} Replies
+            </span>
+
+            <button className="hover:text-neutral-100" onClick={() => setOpen((v) => !v)}>
+              Reply
+            </button>
+          </div>
+
+          {open && (
+            <div className="mt-2 flex gap-2">
+              <textarea
+                value={draft}
+                onChange={(e) => setDraft(e.target.value)}
+                className="h-9 w-full min-h-9 rounded-md border border-neutral-700 bg-neutral-900 px-3 py-1.5 text-sm text-neutral-100 placeholder:text-neutral-500 focus:outline-none focus:ring-0 focus:border-[var(--primary-500)]"
+                placeholder="Write a reply…"
+              />
+              <button
+                onClick={async () => {
+                  await onReply(draft);
+                  setDraft("");
+                  setOpen(false);
+                }}
+                className="rounded-md bg-[var(--primary-500)] px-3 py-1.5 text-sm font-semibold text-white hover:bg-opacity-90"
+              >
+                Reply
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
-      <div className="h-px w-full bg-neutral-800" />
-
-      {/* list */}
-      <div className="p-3">
-        {loading ? (
-          <p className="text-sm text-neutral-400">Loading replies…</p>
-        ) : err ? (
-          <p className="text-sm text-red-300">{err}</p>
-        ) : replies.length === 0 ? (
-          <p className="text-sm text-neutral-400">No replies yet.</p>
-        ) : (
-          <ul className="flex flex-col gap-3">
-            {replies.map((r) => (
-              <ReplyItem key={r.id} r={r} />
-            ))}
-          </ul>
-        )}
-      </div>
+      {/* children */}
+      {node.children?.length > 0 && (
+        <div className="mt-3 ml-10 flex flex-col gap-4">
+          {node.children.map((c) => (
+            <ReplyItem
+              key={c.id}
+              node={c}
+              me={me}
+              onReply={(txt) => onReplyChild(txt, c.id, onReply)}
+              onReload={onReload}
+              depth={depth + 1}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
+}
+
+// helper supaya reply ke anak tetap lewat handler parent (submit dengan parentId)
+async function onReplyChild(text: string, _parentId: string, parentSubmit: (t: string) => void) {
+  await parentSubmit(text);
 }

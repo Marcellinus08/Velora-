@@ -3,8 +3,9 @@
 import { useEffect, useMemo, useState } from "react";
 import Replies from "./replies";
 import type { CommunityPost } from "./types";
+import { AbstractProfile } from "@/components/abstract-profile";
 
-/* ========== utils & cache kecil (5 menit) ========== */
+/* ===== cache kecil (5 menit) ===== */
 const TTL = 5 * 60_000;
 const readCache = <T,>(k: string): T | null => {
   try {
@@ -22,71 +23,41 @@ const writeCache = <T,>(k: string, v: T) => {
     sessionStorage.setItem(k, JSON.stringify({ t: Date.now(), v }));
   } catch {}
 };
+
 const short = (a?: string) =>
   a && a.startsWith("0x") && a.length >= 10 ? `${a.slice(0, 6)}…${a.slice(-4)}` : a || "-";
-const isAddr = (a?: string) => !!a && /^0x[a-f0-9]{40}$/.test(a.toLowerCase());
-const isPlaceholder = (u?: string | null) =>
-  !u || u.toLowerCase().includes("dicebear.com") || u.toLowerCase().includes("placeholder");
+const ETH_RE = /^0x[a-f0-9]{40}$/;
+const isPlaceholder = (u?: string | null) => !u || /dicebear\.com/i.test(u);
 
-/* ========== hook: ambil avatar by address (DB → Abstract → identicon) ========== */
-function useAddressAvatar(address?: string, initial?: string | null) {
+/** Ambil avatar dari DB saja. Abstract dipakai lewat komponen, bukan fetch */
+function useDbAvatar(address?: string, initial?: string | null) {
   const addr = useMemo(() => (address ? address.toLowerCase() : ""), [address]);
-  const [src, setSrc] = useState<string | null>(initial && !isPlaceholder(initial) ? initial : null);
+  const [src, setSrc] = useState<string | null>(
+    initial && !isPlaceholder(initial) ? initial : null
+  );
 
   useEffect(() => {
     let alive = true;
     (async () => {
-      if (!isAddr(addr)) return;
+      if (!ETH_RE.test(addr)) return;
 
-      // 1) jika sudah punya src valid, stop
-      if (src && !isPlaceholder(src)) return;
-
-      // 2) coba profile DB (cached)
-      const ckProf = `dbprof:${addr}`;
-      let prof = readCache<{ username: string | null; avatar_url: string | null }>(ckProf);
-      if (!prof) {
-        try {
-          const r = await fetch(`/api/profiles/${addr}`, { cache: "force-cache" });
-          if (r.ok) {
-            const j = await r.json();
-            prof = { username: j?.username ?? null, avatar_url: j?.avatar_url ?? null };
-            writeCache(ckProf, prof);
-          }
-        } catch {}
+      if (!src || isPlaceholder(src)) {
+        const ck = `dbprof:${addr}`;
+        let prof = readCache<{ username: string | null; avatar_url: string | null }>(ck);
+        if (!prof) {
+          try {
+            const r = await fetch(`/api/profiles/${addr}`, { cache: "force-cache" });
+            if (r.ok) {
+              const j = await r.json();
+              prof = { username: j?.username ?? null, avatar_url: j?.avatar_url ?? null };
+              writeCache(ck, prof);
+            }
+          } catch {}
+        }
+        if (alive && prof?.avatar_url && !isPlaceholder(prof.avatar_url)) {
+          setSrc(prof.avatar_url);
+        }
       }
-      if (alive && prof?.avatar_url && !isPlaceholder(prof.avatar_url)) {
-        setSrc(`${prof.avatar_url}`); // tambahkan `?v=${Date.now()}` bila perlu bypass cache
-        return;
-      }
-
-      // 3) fallback ke Abstract (cached)
-      const ckAbs = `absavatar:${addr}`;
-      let abs = readCache<string>(ckAbs);
-      if (!abs) {
-        try {
-          const r = await fetch(`/api/abstract/user/${addr}`, { cache: "force-cache" });
-          if (r.ok) {
-            const j = await r.json();
-            abs =
-              j?.profilePicture ||
-              j?.avatar ||
-              j?.imageUrl ||
-              j?.image ||
-              j?.pfp ||
-              j?.pfpUrl ||
-              j?.photoURL ||
-              null;
-            if (abs) writeCache(ckAbs, abs);
-          }
-        } catch {}
-      }
-      if (alive && abs && !isPlaceholder(abs)) {
-        setSrc(abs);
-        return;
-      }
-
-      // 4) terakhir: identicon
-      if (alive) setSrc(`https://api.dicebear.com/7.x/identicon/svg?seed=${addr || "anon"}`);
     })();
 
     return () => {
@@ -98,7 +69,6 @@ function useAddressAvatar(address?: string, initial?: string | null) {
   return src;
 }
 
-/* ========== UI ========== */
 export default function CommunityPostRow({
   post,
   onLike,
@@ -112,24 +82,44 @@ export default function CommunityPostRow({
 
   const displayName =
     (post.authorName && post.authorName.trim()) || short(post.authorAddress);
-  const avatarSrc = useAddressAvatar(post.authorAddress, post.authorAvatar || null);
 
-  const showReadMore = (post.content ?? post.excerpt ?? "").length > 220;
+  const dbAvatar = useDbAvatar(post.authorAddress, post.authorAvatar || null);
   const addrLower = (post.authorAddress || "").toLowerCase();
   const identicon = `https://api.dicebear.com/7.x/identicon/svg?seed=${addrLower || "anon"}`;
+
+  const contentText = post.content || post.excerpt || "";
+  const showReadMore = contentText.length > 220;
 
   return (
     <div className="rounded-lg border border-neutral-800 bg-neutral-900 p-4 transition-colors hover:bg-neutral-800">
       <div className="flex items-start gap-4">
-        <img
-          src={avatarSrc ?? identicon} // ← tidak pernah kosong
-          alt="author avatar"
-          className="size-10 rounded-full object-cover"
-          onError={(e) => {
-            const el = e.currentTarget as HTMLImageElement;
-            if (el.src !== identicon) el.src = identicon; // hindari loop
-          }}
-        />
+        {/* Avatar area:
+            1) pakai avatar DB kalau ada
+            2) kalau tidak, render AbstractProfile untuk address author (default avatar Abstract)
+            3) terakhir, identicon */}
+        {dbAvatar ? (
+          <img
+            src={dbAvatar}
+            alt="author avatar"
+            className="size-10 rounded-full object-cover"
+            onError={(e) => {
+              const el = e.currentTarget as HTMLImageElement;
+              el.src = identicon;
+            }}
+          />
+        ) : ETH_RE.test(addrLower) ? (
+          <div className="size-10 overflow-hidden rounded-full">
+            {/* asumsi komponen ini menerima prop address; kalau tidak, tetap tampilkan connected user */}
+            <AbstractProfile
+              address={addrLower as `0x${string}`}
+              size="sm"
+              showTooltip={false}
+              className="!h-10 !w-10 !rounded-full"
+            />
+          </div>
+        ) : (
+          <img src={identicon} alt="author avatar" className="size-10 rounded-full object-cover" />
+        )}
 
         <div className="flex-1">
           <div className="flex items-center justify-between">
@@ -147,7 +137,8 @@ export default function CommunityPostRow({
           <div className="mt-1 text-neutral-400">
             {!expanded ? (
               <>
-                {post.excerpt ?? (post.content || "")}{" "}
+                {contentText.slice(0, 220)}
+                {contentText.length > 220 ? "…" : ""}
                 {showReadMore && (
                   <button
                     className="ml-1 inline text-[var(--primary-500)] hover:underline"
@@ -159,7 +150,7 @@ export default function CommunityPostRow({
               </>
             ) : (
               <>
-                <span className="whitespace-pre-wrap">{post.content || post.excerpt}</span>{" "}
+                <span className="whitespace-pre-wrap">{contentText}</span>{" "}
                 <button
                   className="ml-1 inline text-[var(--primary-500)] hover:underline"
                   onClick={() => setExpanded(false)}
@@ -200,7 +191,7 @@ export default function CommunityPostRow({
 
             <button className="flex items-center gap-1.5 hover:text-neutral-50" disabled>
               <svg className="size-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden>
-                <path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.74l4.94-2.47C13.456 7.68 14.19 8 15 8z" />
+                <path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.74l4.94-2.47C13.456 7.68 14.19 8 15 8z" />
               </svg>
               <span>Share</span>
             </button>
