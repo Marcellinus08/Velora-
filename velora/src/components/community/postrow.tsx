@@ -1,3 +1,4 @@
+// src/components/community/postrow.tsx
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
@@ -69,6 +70,25 @@ function useDbAvatar(address?: string, initial?: string | null) {
   return src;
 }
 
+function MediaGrid({ media }: { media?: { url: string; mime?: string | null }[] }) {
+  if (!media || !media.length) return null;
+  const list = media.slice(0, 4);
+  return (
+    <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4">
+      {list.map((m, i) => (
+        <div key={`${m.url}-${i}`} className="relative overflow-hidden rounded-lg border border-neutral-800">
+          {m.mime?.startsWith?.("video/") ? (
+            <video src={m.url} className="h-40 w-full object-cover" controls playsInline />
+          ) : (
+            <img src={m.url} className="h-40 w-full object-cover" alt="" />
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* ====== UI ====== */
 export default function CommunityPostRow({
   post,
   onLike,
@@ -109,7 +129,6 @@ export default function CommunityPostRow({
           />
         ) : ETH_RE.test(addrLower) ? (
           <div className="size-10 overflow-hidden rounded-full">
-            {/* asumsi komponen ini menerima prop address; kalau tidak, tetap tampilkan connected user */}
             <AbstractProfile
               address={addrLower as `0x${string}`}
               size="sm"
@@ -161,6 +180,9 @@ export default function CommunityPostRow({
             )}
           </div>
 
+          {/* Media (jika ada) */}
+          <MediaGrid media={post.media} />
+
           <div className="mt-4 flex items-center gap-6 text-sm text-neutral-400">
             <button
               onClick={onLike}
@@ -191,7 +213,7 @@ export default function CommunityPostRow({
 
             <button className="flex items-center gap-1.5 hover:text-neutral-50" disabled>
               <svg className="size-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden>
-                <path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.74l4.94-2.47C13.456 7.68 14.19 8 15 8z" />
+                <path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 10.895-1.789l-4.94 2.47a3.027 3.027 0 000-.74l-4.94-2.47C13.456 7.68 14.19 8 15 8z" />
               </svg>
               <span>Share</span>
             </button>
