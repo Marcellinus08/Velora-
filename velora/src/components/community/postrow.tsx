@@ -1,4 +1,3 @@
-// src/components/community/postrow.tsx
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
@@ -6,7 +5,6 @@ import Replies from "./replies";
 import type { CommunityPost } from "./types";
 import { AbstractProfile } from "@/components/abstract-profile";
 
-/* ===== cache kecil (5 menit) ===== */
 const TTL = 5 * 60_000;
 const readCache = <T,>(k: string): T | null => {
   try {
@@ -33,9 +31,7 @@ const isPlaceholder = (u?: string | null) => !u || /dicebear\.com/i.test(u);
 /** Ambil avatar dari DB saja. Abstract dipakai lewat komponen, bukan fetch */
 function useDbAvatar(address?: string, initial?: string | null) {
   const addr = useMemo(() => (address ? address.toLowerCase() : ""), [address]);
-  const [src, setSrc] = useState<string | null>(
-    initial && !isPlaceholder(initial) ? initial : null
-  );
+  const [src, setSrc] = useState<string | null>(initial && !isPlaceholder(initial) ? initial : null);
 
   useEffect(() => {
     let alive = true;
@@ -64,7 +60,6 @@ function useDbAvatar(address?: string, initial?: string | null) {
     return () => {
       alive = false;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [addr, initial]);
 
   return src;
@@ -72,10 +67,37 @@ function useDbAvatar(address?: string, initial?: string | null) {
 
 function MediaGrid({ media }: { media?: { url: string; mime?: string | null }[] }) {
   if (!media || !media.length) return null;
-  const list = media.slice(0, 4);
+
+  // Cek apakah file valid
+  async function checkFileExists(url: string): Promise<boolean> {
+    try {
+      const response = await fetch(url, { method: "HEAD" });
+      return response.ok;
+    } catch (error) {
+      console.error("Error checking file existence:", error);
+      return false;
+    }
+  }
+
+  const [validMedia, setValidMedia] = useState<{ url: string; mime?: string | null }[]>([]);
+
+  useEffect(() => {
+    // Cek validitas media ketika list media berubah
+    Promise.all(
+      media.map(async (item) => {
+        const exists = await checkFileExists(item.url);
+        return exists ? item : null;
+      })
+    ).then((result) => {
+      setValidMedia(result.filter((item) => item !== null) as { url: string; mime?: string | null }[]);
+    });
+  }, [media]);
+
+  if (!validMedia.length) return null;
+
   return (
     <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4">
-      {list.map((m, i) => (
+      {validMedia.map((m, i) => (
         <div key={`${m.url}-${i}`} className="relative overflow-hidden rounded-lg border border-neutral-800">
           {m.mime?.startsWith?.("video/") ? (
             <video src={m.url} className="h-40 w-full object-cover" controls playsInline />
@@ -110,13 +132,28 @@ export default function CommunityPostRow({
   const contentText = post.content || post.excerpt || "";
   const showReadMore = contentText.length > 220;
 
+  // Handle Share Button
+  const handleShare = () => {
+    const tweetText = `${post.title}\n\n${contentText.slice(0, 100)}\n`;
+    const tweetUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}&url=${encodeURIComponent(window.location.href)}`;
+
+    // Jika ada media (file), tambahkan media URL
+    if (post.media && post.media.length > 0) {
+      const mediaUrl = post.media[0].url;
+      const mediaText = `${tweetText} ${mediaUrl}`; // Tambahkan media URL
+      const mediaShareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(mediaText)}`;
+      window.open(mediaShareUrl, '_blank');
+    } else {
+      // Jika tidak ada media, kirim hanya text (title dan description)
+      const tweetUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}`;
+      window.open(tweetUrl, '_blank'); // Bagikan tanpa media
+    }
+  };
+
   return (
     <div className="rounded-lg border border-neutral-800 bg-neutral-900 p-4 transition-colors hover:bg-neutral-800">
       <div className="flex items-start gap-4">
-        {/* Avatar area:
-            1) pakai avatar DB kalau ada
-            2) kalau tidak, render AbstractProfile untuk address author (default avatar Abstract)
-            3) terakhir, identicon */}
+        {/* Avatar area */}
         {dbAvatar ? (
           <img
             src={dbAvatar}
@@ -211,7 +248,10 @@ export default function CommunityPostRow({
               <span>{replyCount} Replies</span>
             </button>
 
-            <button className="flex items-center gap-1.5 hover:text-neutral-50" disabled>
+            <button
+              onClick={handleShare} // Share Button
+              className="flex items-center gap-1.5 hover:text-neutral-50"
+            >
               <svg className="size-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden>
                 <path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 10.895-1.789l-4.94 2.47a3.027 3.027 0 000-.74l-4.94-2.47C13.456 7.68 14.19 8 15 8z" />
               </svg>
