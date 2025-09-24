@@ -1,3 +1,4 @@
+// src/components/community-post-row.tsx
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
@@ -110,8 +111,8 @@ function MediaGrid({ media }: { media?: { url: string; mime?: string | null }[] 
 export default function CommunityPostRow({
   post,
   onLike,
-  currentAddress,      // alamat wallet user yang login
-  onDelete,            // callback hapus post (parent yang konfirmasi)
+  currentAddress, // alamat wallet user yang login
+  onDelete, // callback hapus post (parent yang konfirmasi)
 }: {
   post: CommunityPost;
   onLike?: () => void;
@@ -134,14 +135,10 @@ export default function CommunityPostRow({
   /* ===== Share ke X ===== */
   const handleShare = () => {
     const text = `${post.title}\n\n${contentText.slice(0, 100)}\n`;
-    if (post.media?.length) {
-      const mediaUrl = post.media[0].url;
-      const intent = `https://twitter.com/intent/tweet?text=${encodeURIComponent(`${text}${mediaUrl}`)}`;
-      window.open(intent, "_blank");
-    } else {
-      const intent = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
-      window.open(intent, "_blank");
-    }
+    const intent = `https://twitter.com/intent/tweet?text=${encodeURIComponent(
+      text + (post.media?.[0]?.url ? post.media[0].url : "")
+    )}`;
+    window.open(intent, "_blank");
   };
 
   /* ===== Delete visibility: hanya pemilik ===== */
@@ -150,10 +147,22 @@ export default function CommunityPostRow({
   const authorByAbstract = toLowerSafe((post as any).abstractId || (post as any).abstract_id);
   const canDelete = !!me && (me === authorByAddr || me === authorByAbstract);
 
-  // ⛔️ Tidak ada confirm() di sini — biar parent (SweetAlert) yang handle.
   const requestDelete = () => {
     if (onDelete) onDelete(post.id);
   };
+
+  // helper ikon Material (Round) — 12px dan rapi baseline
+  const MI = ({ name, className = "" }: { name: string; className?: string }) => (
+    <span
+      className={`material-icons-round text-[6px] leading-none align-middle relative top-[1px] ${className}`}
+      aria-hidden="true"
+    >
+      {name}
+    </span>
+  );
+
+  // pilih ikon Like tergantung status (outline vs filled heart)
+  const likeIcon = post.liked ? "favorite" : "favorite_border";
 
   return (
     <div className="rounded-lg border border-neutral-800 bg-neutral-900 p-4 transition-colors hover:bg-neutral-800">
@@ -234,9 +243,7 @@ export default function CommunityPostRow({
                 (post.liked ? "text-[var(--primary-500)] hover:text-opacity-80" : "")
               }
             >
-              <svg className="size-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden>
-                <path d="M2 10.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6zM6 10.333v5.43a2 2 0 001.106 1.787l.25.125a2 2 0 002.29-1.787v-5.43M14 10.333v5.43a2 2 0 001.106 1.787l.25.125a2 2 0 002.29-1.787v-5.43M10 4.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6z" />
-              </svg>
+              <MI name={likeIcon} />
               <span>{post.likes} Likes</span>
             </button>
 
@@ -244,20 +251,12 @@ export default function CommunityPostRow({
               onClick={() => setOpenReplies((v) => !v)}
               className="flex items-center gap-1.5 hover:text-neutral-50"
             >
-              <svg className="size-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden>
-                <path
-                  fillRule="evenodd"
-                  d="M18 5v8a2 2 0 01-2 2h-5l-5 4v-4H4a2 2 0 01-2-2V5a2 2 0 012-2h12a2 2 0 012 2zM7 8H5v2h2V8zm2 0h2v2H9V8zm6 0h-2v2h2V8z"
-                  clipRule="evenodd"
-                />
-              </svg>
+              <MI name="chat_bubble_outline" />
               <span>{replyCount} Replies</span>
             </button>
 
             <button onClick={handleShare} className="flex items-center gap-1.5 hover:text-neutral-50">
-              <svg className="size-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden>
-                <path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 10.895-1.789l-4.94 2.47a3.027 3.027 0 000-.74l-4.94-2.47C13.456 7.68 14.19 8 15 8z" />
-              </svg>
+              <MI name="share" />
               <span>Share</span>
             </button>
 
@@ -267,9 +266,7 @@ export default function CommunityPostRow({
                 className="flex items-center gap-1.5 text-red-500 hover:text-red-400"
                 title="Delete this post"
               >
-                <svg className="size-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-                  <path d="M9 3h6a1 1 0 011 1v1h4a1 1 0 110 2h-1.1l-1.2 12.1A3 3 0 0114.72 22H9.28a3 3 0 01-2.98-2.9L5.1 7H4a1 1 0 110-2h4V4a1 1 0 011-1zm-1.9 4l1.1 11.1A1 1 0 009.28 19h5.44a1 1 0 001-.9L16.9 7H7.1z" />
-                </svg>
+                <MI name="delete" />
                 <span>Delete</span>
               </button>
             )}

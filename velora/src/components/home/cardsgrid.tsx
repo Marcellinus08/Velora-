@@ -1,3 +1,4 @@
+// src/components/cards-grid.tsx
 "use client";
 
 import { useEffect, useRef, useState } from "react";
@@ -15,8 +16,8 @@ type VideoRow = {
   price_cents?: number | null;
   currency?: string | null;
 
-  points_total?: number | null;  // skema A
-  total_points?: number | null;  // skema B
+  points_total?: number | null; // skema A
+  total_points?: number | null; // skema B
 
   creator?: {
     username: string | null;
@@ -293,9 +294,14 @@ export default function CardsGrid() {
             <div className="relative w-full overflow-hidden rounded-xl">
               {totalPoints > 0 && (
                 <div className="absolute left-2 top-2 z-10 flex items-center gap-1.5 rounded-full border border-neutral-700 bg-neutral-900/85 px-2.5 py-1 text-xs font-semibold text-neutral-100 backdrop-blur">
-                  <svg className="h-4 w-4 text-yellow-400" fill="currentColor" viewBox="0 0 256 256" aria-hidden="true">
-                    <path d="M239.2,97.41a16.4,16.4,0,0,0-14.21-10.06l-49.33-7.17L153.8,36.52a16.37,16.37,0,0,0-29.6,0L102.34,80.18,53,87.35A16.4,16.4,0,0,0,38.8,97.41a16.43,16.43,0,0,0,4.28,17.27l35.69,34.78-8.43,49.14a16.4,16.4,0,0,0,7.86,17.2,16.32,16.32,0,0,0,18.15,.11L128,193.07l44.13,23.2a16.32,16.32,0,0,0,18.15-.11,16.4,16.4,0,0,0,7.86-17.2l-8.43-49.14,35.69-34.78A16.43,16.43,0,0,0,239.2,97.41Z"></path>
-                  </svg>
+                  {/* Ikon bintang pakai Material Icons Round */}
+                  <span
+                    className="material-icons-round text-yellow-400 align-middle"
+                    style={{ fontSize: "16px" }}
+                    aria-hidden="true"
+                  >
+                    star
+                  </span>
                   <span>{totalPoints}</span>
                 </div>
               )}

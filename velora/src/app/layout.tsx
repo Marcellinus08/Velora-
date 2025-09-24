@@ -4,15 +4,47 @@ import Header from "@/components/header";
 import { NextAbstractWalletProvider } from "@/components/agw-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import ProfileUpsertOnLogin from "@/components/auth/profile-upsert-on-login";
+import type { ReactNode } from "react";
 
 export const metadata = {
   title: "Velora",
   description: "Platform video dengan poin & tugas",
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="id">
+      <head>
+        {/* Material Icons Round (ligature-based) */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
+        <link
+          href="https://fonts.googleapis.com/icon?family=Material+Icons+Round"
+          rel="stylesheet"
+        />
+        {/* CSS helper untuk memastikan ligature aktif & mengalahkan preflight */}
+        <style
+          // eslint-disable-next-line react/no-danger
+          dangerouslySetInnerHTML={{
+            __html: `
+              .material-icons-round{
+                font-family:'Material Icons Round' !important;
+                font-weight:normal !important;
+                font-style:normal !important;
+                display:inline-block;
+                line-height:1;
+                text-transform:none !important;
+                letter-spacing:normal !important;
+                white-space:nowrap;
+                direction:ltr;
+                -webkit-font-smoothing:antialiased;
+                -moz-osx-font-smoothing:grayscale;
+                -webkit-font-feature-settings:'liga';
+                        font-feature-settings:'liga';
+              }`,
+          }}
+        />
+      </head>
       <body
         className="relative flex min-h-screen flex-col overflow-x-hidden bg-neutral-900"
         style={{ fontFamily: `"Be Vietnam Pro", "Noto Sans", sans-serif` }}
