@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useAccount } from "wagmi";
+import Swal from "sweetalert2";
+
 import Sidebar from "@/components/sidebar";
 import CommunityTabs from "@/components/community/tabs";
 import CommunityPostRow from "@/components/community/postrow";
@@ -87,6 +89,44 @@ export default function CommunityPage() {
     }
   }
 
+  // HANYA SweetAlert di sini — tidak ada confirm() lain
+  async function handleDelete(id: string) {
+    if (!me) return;
+
+    const { isConfirmed } = await Swal.fire({
+      icon: "warning",
+      title: "Delete this post?",
+      text: "Aksi ini tidak bisa dibatalkan.",
+      showCancelButton: true,
+      confirmButtonText: "Yes, delete",
+      cancelButtonText: "Cancel",
+      reverseButtons: true,
+      confirmButtonColor: "#ef4444",
+    });
+
+    if (!isConfirmed) return;
+
+    // Optimistic UI
+    const prev = posts;
+    setPosts((p) => p.filter((x) => x.id !== id));
+
+    try {
+      const res = await fetch(`/api/community/posts/${id}`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ abstractId: me }),
+      });
+      const json = await safeJson(res);
+      if (!res.ok) throw new Error(json?.error || res.statusText);
+
+      await Swal.fire({ icon: "success", title: "Deleted", timer: 1200, showConfirmButton: false });
+    } catch (e: any) {
+      console.error("Delete failed:", e);
+      setPosts(prev); // rollback
+      await Swal.fire({ icon: "error", title: "Gagal menghapus", text: e?.message || "Unknown error" });
+    }
+  }
+
   return (
     <div className="flex h-full grow flex-row">
       <Sidebar />
@@ -115,7 +155,13 @@ export default function CommunityPage() {
           ) : (
             <div className="flex flex-col gap-4">
               {posts.map((p) => (
-                <CommunityPostRow key={p.id} post={p} onLike={() => toggleLike(p.id)} />
+                <CommunityPostRow
+                  key={p.id}
+                  post={p}
+                  onLike={() => toggleLike(p.id)}
+                  currentAddress={me}
+                  onDelete={handleDelete}       // hanya parent yang konfirmasi (SweetAlert)
+                />
               ))}
               {!posts.length && !error && <p className="text-neutral-400">Belum ada post untuk kategori ini.</p>}
             </div>

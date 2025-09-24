@@ -5,6 +5,7 @@ import Replies from "./replies";
 import type { CommunityPost } from "./types";
 import { AbstractProfile } from "@/components/abstract-profile";
 
+/* ===== utils kecil ===== */
 const TTL = 5 * 60_000;
 const readCache = <T,>(k: string): T | null => {
   try {
@@ -22,22 +23,21 @@ const writeCache = <T,>(k: string, v: T) => {
     sessionStorage.setItem(k, JSON.stringify({ t: Date.now(), v }));
   } catch {}
 };
-
 const short = (a?: string) =>
   a && a.startsWith("0x") && a.length >= 10 ? `${a.slice(0, 6)}…${a.slice(-4)}` : a || "-";
 const ETH_RE = /^0x[a-f0-9]{40}$/;
 const isPlaceholder = (u?: string | null) => !u || /dicebear\.com/i.test(u);
+const toLowerSafe = (s?: string | null) => (typeof s === "string" ? s.toLowerCase() : "");
 
-/** Ambil avatar dari DB saja. Abstract dipakai lewat komponen, bukan fetch */
+/** Ambil avatar dari DB; Abstract dipakai via komponen */
 function useDbAvatar(address?: string, initial?: string | null) {
-  const addr = useMemo(() => (address ? address.toLowerCase() : ""), [address]);
+  const addr = useMemo(() => toLowerSafe(address), [address]);
   const [src, setSrc] = useState<string | null>(initial && !isPlaceholder(initial) ? initial : null);
 
   useEffect(() => {
     let alive = true;
     (async () => {
       if (!ETH_RE.test(addr)) return;
-
       if (!src || isPlaceholder(src)) {
         const ck = `dbprof:${addr}`;
         let prof = readCache<{ username: string | null; avatar_url: string | null }>(ck);
@@ -56,48 +56,44 @@ function useDbAvatar(address?: string, initial?: string | null) {
         }
       }
     })();
-
     return () => {
       alive = false;
     };
-  }, [addr, initial]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [addr, initial, src]);
 
   return src;
 }
 
+/* ===== Grid media, skip yang 404 ===== */
 function MediaGrid({ media }: { media?: { url: string; mime?: string | null }[] }) {
   if (!media || !media.length) return null;
 
-  // Cek apakah file valid
-  async function checkFileExists(url: string): Promise<boolean> {
+  async function headOk(url: string) {
     try {
-      const response = await fetch(url, { method: "HEAD" });
-      return response.ok;
-    } catch (error) {
-      console.error("Error checking file existence:", error);
+      const r = await fetch(url, { method: "HEAD" });
+      return r.ok;
+    } catch {
       return false;
     }
   }
 
-  const [validMedia, setValidMedia] = useState<{ url: string; mime?: string | null }[]>([]);
-
+  const [valid, setValid] = useState<{ url: string; mime?: string | null }[]>([]);
   useEffect(() => {
-    // Cek validitas media ketika list media berubah
-    Promise.all(
-      media.map(async (item) => {
-        const exists = await checkFileExists(item.url);
-        return exists ? item : null;
-      })
-    ).then((result) => {
-      setValidMedia(result.filter((item) => item !== null) as { url: string; mime?: string | null }[]);
+    let alive = true;
+    Promise.all(media.map(async (m) => ((await headOk(m.url)) ? m : null))).then((arr) => {
+      if (!alive) return;
+      setValid(arr.filter(Boolean) as { url: string; mime?: string | null }[]);
     });
+    return () => {
+      alive = false;
+    };
   }, [media]);
 
-  if (!validMedia.length) return null;
-
+  if (!valid.length) return null;
   return (
     <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4">
-      {validMedia.map((m, i) => (
+      {valid.map((m, i) => (
         <div key={`${m.url}-${i}`} className="relative overflow-hidden rounded-lg border border-neutral-800">
           {m.mime?.startsWith?.("video/") ? (
             <video src={m.url} className="h-40 w-full object-cover" controls playsInline />
@@ -110,58 +106,66 @@ function MediaGrid({ media }: { media?: { url: string; mime?: string | null }[] 
   );
 }
 
-/* ====== UI ====== */
+/* ===== Komponen utama ===== */
 export default function CommunityPostRow({
   post,
   onLike,
+  currentAddress,      // alamat wallet user yang login
+  onDelete,            // callback hapus post (parent yang konfirmasi)
 }: {
   post: CommunityPost;
   onLike?: () => void;
+  currentAddress?: string;
+  onDelete?: (postId: string) => void;
 }) {
   const [expanded, setExpanded] = useState(false);
   const [openReplies, setOpenReplies] = useState(false);
   const [replyCount, setReplyCount] = useState<number>(post.replies ?? 0);
 
-  const displayName =
-    (post.authorName && post.authorName.trim()) || short(post.authorAddress);
+  const displayName = (post.authorName && post.authorName.trim()) || short(post.authorAddress);
 
   const dbAvatar = useDbAvatar(post.authorAddress, post.authorAvatar || null);
-  const addrLower = (post.authorAddress || "").toLowerCase();
+  const addrLower = toLowerSafe(post.authorAddress);
   const identicon = `https://api.dicebear.com/7.x/identicon/svg?seed=${addrLower || "anon"}`;
 
   const contentText = post.content || post.excerpt || "";
   const showReadMore = contentText.length > 220;
 
-  // Handle Share Button
+  /* ===== Share ke X ===== */
   const handleShare = () => {
-    const tweetText = `${post.title}\n\n${contentText.slice(0, 100)}\n`;
-    const tweetUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}&url=${encodeURIComponent(window.location.href)}`;
-
-    // Jika ada media (file), tambahkan media URL
-    if (post.media && post.media.length > 0) {
+    const text = `${post.title}\n\n${contentText.slice(0, 100)}\n`;
+    if (post.media?.length) {
       const mediaUrl = post.media[0].url;
-      const mediaText = `${tweetText} ${mediaUrl}`; // Tambahkan media URL
-      const mediaShareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(mediaText)}`;
-      window.open(mediaShareUrl, '_blank');
+      const intent = `https://twitter.com/intent/tweet?text=${encodeURIComponent(`${text}${mediaUrl}`)}`;
+      window.open(intent, "_blank");
     } else {
-      // Jika tidak ada media, kirim hanya text (title dan description)
-      const tweetUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}`;
-      window.open(tweetUrl, '_blank'); // Bagikan tanpa media
+      const intent = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
+      window.open(intent, "_blank");
     }
+  };
+
+  /* ===== Delete visibility: hanya pemilik ===== */
+  const me = toLowerSafe(currentAddress);
+  const authorByAddr = toLowerSafe(post.authorAddress);
+  const authorByAbstract = toLowerSafe((post as any).abstractId || (post as any).abstract_id);
+  const canDelete = !!me && (me === authorByAddr || me === authorByAbstract);
+
+  // ⛔️ Tidak ada confirm() di sini — biar parent (SweetAlert) yang handle.
+  const requestDelete = () => {
+    if (onDelete) onDelete(post.id);
   };
 
   return (
     <div className="rounded-lg border border-neutral-800 bg-neutral-900 p-4 transition-colors hover:bg-neutral-800">
       <div className="flex items-start gap-4">
-        {/* Avatar area */}
+        {/* Avatar */}
         {dbAvatar ? (
           <img
             src={dbAvatar}
             alt="author avatar"
             className="size-10 rounded-full object-cover"
             onError={(e) => {
-              const el = e.currentTarget as HTMLImageElement;
-              el.src = identicon;
+              (e.currentTarget as HTMLImageElement).src = identicon;
             }}
           />
         ) : ETH_RE.test(addrLower) ? (
@@ -177,6 +181,7 @@ export default function CommunityPostRow({
           <img src={identicon} alt="author avatar" className="size-10 rounded-full object-cover" />
         )}
 
+        {/* Body */}
         <div className="flex-1">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -217,10 +222,11 @@ export default function CommunityPostRow({
             )}
           </div>
 
-          {/* Media (jika ada) */}
+          {/* Media */}
           <MediaGrid media={post.media} />
 
-          <div className="mt-4 flex items-center gap-6 text-sm text-neutral-400">
+          {/* Actions */}
+          <div className="mt-4 flex flex-wrap items-center gap-6 text-sm text-neutral-400">
             <button
               onClick={onLike}
               className={
@@ -248,20 +254,28 @@ export default function CommunityPostRow({
               <span>{replyCount} Replies</span>
             </button>
 
-            <button
-              onClick={handleShare} // Share Button
-              className="flex items-center gap-1.5 hover:text-neutral-50"
-            >
+            <button onClick={handleShare} className="flex items-center gap-1.5 hover:text-neutral-50">
               <svg className="size-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden>
                 <path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 10.895-1.789l-4.94 2.47a3.027 3.027 0 000-.74l-4.94-2.47C13.456 7.68 14.19 8 15 8z" />
               </svg>
               <span>Share</span>
             </button>
+
+            {canDelete && onDelete && (
+              <button
+                onClick={requestDelete}
+                className="flex items-center gap-1.5 text-red-500 hover:text-red-400"
+                title="Delete this post"
+              >
+                <svg className="size-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+                  <path d="M9 3h6a1 1 0 011 1v1h4a1 1 0 110 2h-1.1l-1.2 12.1A3 3 0 0114.72 22H9.28a3 3 0 01-2.98-2.9L5.1 7H4a1 1 0 110-2h4V4a1 1 0 011-1zm-1.9 4l1.1 11.1A1 1 0 009.28 19h5.44a1 1 0 001-.9L16.9 7H7.1z" />
+                </svg>
+                <span>Delete</span>
+              </button>
+            )}
           </div>
 
-          {openReplies && (
-            <Replies postId={post.id} onPosted={() => setReplyCount((c) => c + 1)} />
-          )}
+          {openReplies && <Replies postId={post.id} onPosted={() => setReplyCount((c) => c + 1)} />}
         </div>
       </div>
     </div>
