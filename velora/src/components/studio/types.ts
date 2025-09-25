@@ -6,6 +6,10 @@ export type StudioVideo = {
   views: number;         // raw number
   date: string;          // "2d ago"
   description?: string;  // optional
+
+  // NEW (opsional)
+  buyers?: number;       // total pembeli video
+  revenueUsd?: number;   // total pendapatan USD
 };
 
 export type StudioAd = {

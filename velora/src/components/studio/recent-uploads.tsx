@@ -1,10 +1,26 @@
-// src/components/studio/recent-uploads.tsx
 "use client";
 
 import Image from "next/image";
 import { useState } from "react";
 import type { StudioVideo } from "./types";
 
+/* ===== Helpers ===== */
+const MI = ({ name, className = "" }: { name: string; className?: string }) => (
+  <span className={`material-icons-round ${className}`} aria-hidden="true">
+    {name}
+  </span>
+);
+
+const nf = new Intl.NumberFormat("en-US");
+function formatUSD(n?: number) {
+  if (n == null || !isFinite(n)) return "$0";
+  if (n < 1) return `$${n.toFixed(4)}`;
+  if (n < 1000) return `$${n.toFixed(2)}`;
+  if (n < 1_000_000) return `$${(n / 1_000).toFixed(1)}k`;
+  return `$${(n / 1_000_000).toFixed(1)}m`;
+}
+
+/* ===== CRUD menu kecil ===== */
 function CrudMenu({
   onEdit,
   onDuplicate,
@@ -15,13 +31,6 @@ function CrudMenu({
   onDelete: () => void;
 }) {
   const [open, setOpen] = useState(false);
-
-  // Helper Material Icon (Round)
-  const MI = ({ name, className = "" }: { name: string; className?: string }) => (
-    <span className={`material-icons-round ${className}`} aria-hidden="true">
-      {name}
-    </span>
-  );
 
   return (
     <div className="relative">
@@ -68,6 +77,7 @@ function CrudMenu({
   );
 }
 
+/* ===== Recent uploads list ===== */
 export default function StudioRecentUploads({
   items = [],
   showCount = 3,
@@ -75,8 +85,6 @@ export default function StudioRecentUploads({
   items?: StudioVideo[];
   showCount?: number;
 }) {
-  const fmt = new Intl.NumberFormat("en-US");
-
   if (items.length === 0) {
     return (
       <div className="rounded-2xl border border-neutral-800 bg-neutral-900/60 p-6 text-neutral-400">
@@ -100,7 +108,8 @@ export default function StudioRecentUploads({
                 className="object-cover"
                 priority={false}
               />
-              <span className="absolute bottom-1 right-1 rounded bg-black/70 px-1.5 py-0.5 text-xs text-neutral-100">
+              {/* Kanan-bawah: durasi */}
+              <span className="absolute bottom-1 right-1 rounded bg-black/70 px-1.5 py-0.5 text-[11px] leading-none text-neutral-100">
                 {v.duration}
               </span>
             </div>
@@ -116,16 +125,41 @@ export default function StudioRecentUploads({
                 </p>
               )}
               <div className="mt-1 text-sm text-neutral-400">
-                {fmt.format(v.views)} views • {v.date}
+                {nf.format(v.views)} views • {v.date}
               </div>
             </div>
 
-            {/* CRUD menu */}
-            <CrudMenu
-              onEdit={() => console.log("Edit", v.id)}
-              onDuplicate={() => console.log("Duplicate", v.id)}
-              onDelete={() => console.log("Delete", v.id)}
-            />
+            {/* Kanan atas: ikon kecil (di kiri ⋮) + menu */}
+            <div className="ml-auto flex items-start gap-1 pt-1">
+              <div className="flex items-center gap-1 pr-1">
+                {v.buyers != null && (
+                  <button
+                    type="button"
+                    className="rounded-full p-1 text-neutral-300 hover:bg-neutral-800 hover:text-neutral-100"
+                    title={`${nf.format(v.buyers)} buyers`}
+                    aria-label="Buyers"
+                  >
+                    <MI name="shopping_bag" className="text-[12px]" />
+                  </button>
+                )}
+                {v.revenueUsd != null && (
+                  <button
+                    type="button"
+                    className="rounded-full p-1 text-neutral-300 hover:bg-neutral-800 hover:text-neutral-100"
+                    title={`${formatUSD(v.revenueUsd)} revenue`}
+                    aria-label="Revenue"
+                  >
+                    <MI name="attach_money" className="text-[12px]" />
+                  </button>
+                )}
+              </div>
+
+              <CrudMenu
+                onEdit={() => console.log("Edit", v.id)}
+                onDuplicate={() => console.log("Duplicate", v.id)}
+                onDelete={() => console.log("Delete", v.id)}
+              />
+            </div>
           </li>
         ))}
       </ul>

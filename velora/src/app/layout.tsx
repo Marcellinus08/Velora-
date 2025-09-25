@@ -7,7 +7,7 @@ import ProfileUpsertOnLogin from "@/components/auth/profile-upsert-on-login";
 import type { ReactNode } from "react";
 
 export const metadata = {
-  title: "Velora",
+  title: "Glonic",
   description: "Platform video dengan poin & tugas",
 };
 
