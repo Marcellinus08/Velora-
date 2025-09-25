@@ -42,7 +42,7 @@ function CrudMenu({
         aria-expanded={open}
         type="button"
       >
-        <MI name="more_vert" className="text-[10px] leading-none align-middle" />
+        <MI name="more_vert" className="text-[14px] leading-none align-middle" />
       </button>
 
       {open && (
@@ -56,7 +56,7 @@ function CrudMenu({
             }}
             className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-neutral-200 hover:bg-neutral-800/70"
           >
-            <MI name="edit" className="text-[10px] leading-none align-middle" />
+            <MI name="edit" className="text-[14px] leading-none align-middle" />
             <span>Edit</span>
           </button>
           <button
@@ -68,7 +68,7 @@ function CrudMenu({
             }}
             className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-red-300 hover:bg-red-900/30"
           >
-            <MI name="delete" className="text-[10px] leading-none align-middle" />
+            <MI name="delete" className="text-[14px] leading-none align-middle" />
             <span>Delete</span>
           </button>
         </div>
@@ -129,36 +129,40 @@ export default function StudioRecentUploads({
               </div>
             </div>
 
-            {/* Kanan atas: ikon kecil (di kiri ⋮) + menu */}
+            {/* Kanan atas: ikon kecil + angka (kiri tombol ⋮) */}
             <div className="ml-auto flex items-start gap-1 pt-1">
-              <div className="flex items-center gap-1 pr-1">
+              {/* Tinggi seragam supaya sejajar */}
+              <div className="flex h-6 items-center gap-3 pr-1">
                 {v.buyers != null && (
-                  <button
-                    type="button"
-                    className="rounded-full p-1 text-neutral-300 hover:bg-neutral-800 hover:text-neutral-100"
+                  <div
+                    className="inline-flex items-center gap-1 text-[11px] text-neutral-300"
+                    aria-label={`${nf.format(v.buyers)} buyers`}
                     title={`${nf.format(v.buyers)} buyers`}
-                    aria-label="Buyers"
                   >
-                    <MI name="shopping_bag" className="text-[12px]" />
-                  </button>
+                    <MI name="shopping_bag" className="text-[12px] leading-none -mt-px" />
+                    <span className="leading-none">{nf.format(v.buyers)}</span>
+                  </div>
                 )}
                 {v.revenueUsd != null && (
-                  <button
-                    type="button"
-                    className="rounded-full p-1 text-neutral-300 hover:bg-neutral-800 hover:text-neutral-100"
+                  <div
+                    className="inline-flex items-center gap-1 text-[11px] text-neutral-300 tabular-nums"
+                    aria-label={`${formatUSD(v.revenueUsd)} revenue`}
                     title={`${formatUSD(v.revenueUsd)} revenue`}
-                    aria-label="Revenue"
                   >
-                    <MI name="attach_money" className="text-[12px]" />
-                  </button>
+                    <MI name="attach_money" className="text-[12px] leading-none -mt-px" />
+                    <span className="leading-none">{formatUSD(v.revenueUsd)}</span>
+                  </div>
                 )}
               </div>
 
-              <CrudMenu
-                onEdit={() => console.log("Edit", v.id)}
-                onDuplicate={() => console.log("Duplicate", v.id)}
-                onDelete={() => console.log("Delete", v.id)}
-              />
+              {/* Tombol ⋮ disamakan tinggi-nya agar rata */}
+              <div className="flex h-6 items-center">
+                <CrudMenu
+                  onEdit={() => console.log("Edit", v.id)}
+                  onDuplicate={() => console.log("Duplicate", v.id)}
+                  onDelete={() => console.log("Delete", v.id)}
+                />
+              </div>
             </div>
           </li>
         ))}

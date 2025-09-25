@@ -26,23 +26,26 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <style
           // eslint-disable-next-line react/no-danger
           dangerouslySetInnerHTML={{
-            __html: `
-              .material-icons-round{
-                font-family:'Material Icons Round' !important;
-                font-weight:normal !important;
-                font-style:normal !important;
-                display:inline-block;
-                line-height:1;
-                text-transform:none !important;
-                letter-spacing:normal !important;
-                white-space:nowrap;
-                direction:ltr;
-                -webkit-font-smoothing:antialiased;
-                -moz-osx-font-smoothing:grayscale;
-                -webkit-font-feature-settings:'liga';
-                        font-feature-settings:'liga';
-              }`,
-          }}
+  __html: `
+    .material-icons-round{
+      font-family:'Material Icons Round' !important;
+      font-weight:normal !important;
+      font-style:normal !important;
+      display:inline-block;
+      line-height:1;
+      text-transform:none !important;
+      letter-spacing:normal !important;
+      white-space:nowrap;
+      direction:ltr;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+      -webkit-font-feature-settings:'liga';
+              font-feature-settings:'liga';
+      /* ↓ tambahkan ini */
+      font-size: inherit !important;  /* atau 1em */
+    }
+  `,
+}}
         />
       </head>
       <body
