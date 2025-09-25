@@ -43,111 +43,70 @@ function formatUSD(n: number) {
 }
 const short = (addr?: `0x${string}`) => (addr ? `${addr.slice(0, 6)}…${addr.slice(-4)}` : "-");
 
-/* ========= Simple client cache (sessionStorage) ========= */
-const TTL_MS = 30_000;
-function readCache<T>(key: string): T | null {
-  try {
-    const raw = sessionStorage.getItem(key);
-    if (!raw) return null;
-    const { ts, value } = JSON.parse(raw);
-    if (Date.now() - ts > TTL_MS) return null;
-    return value as T;
-  } catch {
-    return null;
-  }
-}
-function writeCache<T>(key: string, value: T) {
-  try {
-    sessionStorage.setItem(key, JSON.stringify({ ts: Date.now(), value }));
-  } catch {}
-}
-
-/* ============== Hook: DB profile (cached) ============== */
+/* ============== Hook terpadu: DB-first, fallback Abstract ============== */
 type DbProfile = { abstract_id: string; username: string | null; avatar_url: string | null };
 
-function useDbProfile(address?: `0x${string}`) {
+function useProfileAvatar(address?: `0x${string}`) {
+  const addr = useMemo(() => (address ? address.toLowerCase() : ""), [address]);
   const [username, setUsername] = useState<string | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
-  const addrLower = useMemo(() => (address ? address.toLowerCase() : ""), [address]);
 
   useEffect(() => {
     let alive = true;
+
     (async () => {
-      if (!addrLower || !/^0x[a-f0-9]{40}$/.test(addrLower)) {
-        setUsername(null);
-        setAvatarUrl(null);
-        return;
-      }
-      const key = `dbprof:${addrLower}`;
-      const cached = readCache<DbProfile>(key);
-      if (cached) {
-        if (!alive) return;
-        setUsername(cached.username ?? null);
-        setAvatarUrl(cached.avatar_url ? `${cached.avatar_url}?v=${Date.now()}` : null);
-        return;
-      }
-      try {
-        const r = await fetch(`/api/profiles/${addrLower}`, { cache: "force-cache" });
-        if (!r.ok) {
+      if (!addr || !/^0x[a-f0-9]{40}$/.test(addr)) {
+        if (alive) {
           setUsername(null);
           setAvatarUrl(null);
+        }
+        return;
+      }
+
+      try {
+        // 1) DB dulu (tanpa cache + cache buster)
+        const r = await fetch(`/api/profiles/${addr}?t=${Date.now()}`, { cache: "no-store" });
+        let db: DbProfile | null = null;
+        if (r.ok) db = (await r.json()) as DbProfile;
+
+        const dbUser = db?.username ?? null;
+        const dbAvatar = db?.avatar_url ?? null;
+
+        if (alive) setUsername(dbUser);
+
+        if (dbAvatar) {
+          // pakai avatar upload user
+          if (alive) setAvatarUrl(`${dbAvatar}?v=${Date.now()}`);
           return;
         }
-        const p = (await r.json()) as DbProfile;
-        writeCache(key, p);
-        if (!alive) return;
-        setUsername(p?.username ?? null);
-        setAvatarUrl(p?.avatar_url ? `${p.avatar_url}?v=${Date.now()}` : null);
+
+        // 2) fallback ke Abstract jika DB tidak punya avatar
+        try {
+          const ra = await fetch(`/api/abstract/user/${addr}`, { cache: "force-cache" });
+          if (ra.ok) {
+            const j = await ra.json();
+            const abs: string | null = j?.profilePicture || j?.avatar || j?.imageUrl || null;
+            if (alive) setAvatarUrl(abs ?? null);
+          } else if (alive) {
+            setAvatarUrl(null);
+          }
+        } catch {
+          if (alive) setAvatarUrl(null);
+        }
       } catch {
-        if (!alive) return;
-        setUsername(null);
-        setAvatarUrl(null);
+        if (alive) {
+          setUsername(null);
+          setAvatarUrl(null);
+        }
       }
     })();
+
     return () => {
       alive = false;
     };
-  }, [addrLower]);
+  }, [addr]);
 
   return { username, avatarUrl };
-}
-
-/* ============== Hook: Abstract avatar (cached) ============== */
-function useAbstractAvatar(address?: `0x${string}`, enabled = true) {
-  const [absAvatar, setAbsAvatar] = useState<string | null>(null);
-  const addrLower = useMemo(() => (address ? address.toLowerCase() : ""), [address]);
-
-  useEffect(() => {
-    let alive = true;
-    (async () => {
-      if (!enabled || !addrLower || !/^0x[a-f0-9]{40}$/.test(addrLower)) {
-        setAbsAvatar(null);
-        return;
-      }
-      const key = `absavatar:${addrLower}`;
-      const cached = readCache<string>(key);
-      if (cached) {
-        if (alive) setAbsAvatar(cached);
-        return;
-      }
-      try {
-        const r = await fetch(`/api/abstract/user/${addrLower}`, { cache: "force-cache" });
-        if (!r.ok) return;
-        const j = await r.json();
-        const url: string | null =
-          j?.profilePicture || j?.avatar || j?.imageUrl || null;
-        if (url) {
-          writeCache(key, url);
-          if (alive) setAbsAvatar(url);
-        }
-      } catch {}
-    })();
-    return () => {
-      alive = false;
-    };
-  }, [addrLower, enabled]);
-
-  return absAvatar;
 }
 
 /* ============== Avatar kecil (trigger) ============== */
@@ -198,8 +157,8 @@ export default function Header() {
   const isConnected = status === "connected" && !!address;
   const { logout } = useLoginWithAbstract();
 
-  const { username: dbUsername, avatarUrl: dbAvatarUrl } = useDbProfile(address as `0x${string}` | undefined);
-  const abstractAvatar = useAbstractAvatar(address as `0x${string}` | undefined, !dbAvatarUrl);
+  // === gunakan hook terpadu (DB-first, fallback Abstract) ===
+  const { username: dbUsername, avatarUrl } = useProfileAvatar(address as `0x${string}` | undefined);
 
   /* ========= USDC.e balance ========= */
   const client = usePublicClient();
@@ -320,15 +279,6 @@ export default function Header() {
   const [notifications] = useState<Notif[]>([]);
   const unreadCount = notifications.filter((n) => n.unread).length;
 
-  // Quick suggestions hanya saat user mengetik
-  const quick = ["tutorial", "olahraga", "crypto", "masak", "pendidikan", "fotografi"];
-  const quickWhenTyping = q
-    ? quick.filter((s) => s.toLowerCase().includes(q.toLowerCase()))
-    : [];
-  const filtered = [...recent, ...quickWhenTyping]
-    .filter((s, i, a) => a.indexOf(s) === i)
-    .slice(0, 7);
-
   const itemCls = "px-3 py-2 text-[13px]";
   const walletDropdownItems = [
     <DropdownMenuItem key="profile" className={itemCls} onClick={() => router.push("/profile")}>
@@ -350,7 +300,6 @@ export default function Header() {
     </DropdownMenuItem>,
   ];
 
-  // Voice search handler
   function handleVoice() {
     const w = window as any;
     const SR = w.SpeechRecognition || w.webkitSpeechRecognition;
@@ -428,7 +377,7 @@ export default function Header() {
                 <MI name="search" className="text-[14px] text-neutral-400" />
               </span>
 
-              {/* Ganti type dari 'search' -> 'text' supaya tidak ada native clear (X) bawaan */}
+              {/* type=text supaya tidak ada tombol clear bawaan */}
               <input
                 ref={inputRef}
                 type="text"
@@ -494,7 +443,7 @@ export default function Header() {
               )}
 
               <ul className="py-2">
-                {[...new Set([...recent, ...(q ? quick.filter(s=>s.toLowerCase().includes(q.toLowerCase())):[])])]
+                {[...new Set([...recent, ...(q ? ["tutorial","olahraga","crypto","masak","pendidikan","fotografi"].filter(s=>s.toLowerCase().includes(q.toLowerCase())):[])])]
                   .slice(0,7)
                   .map((s) => {
                     const isRecent = recent.includes(s);
@@ -619,7 +568,7 @@ export default function Header() {
                   >
                     <HeaderAvatar
                       address={address as `0x${string}`}
-                      avatarUrlOverride={dbAvatarUrl || abstractAvatar || null}
+                      avatarUrlOverride={avatarUrl}
                     />
                   </button>
                 </DropdownMenuTrigger>
@@ -627,8 +576,8 @@ export default function Header() {
                 <DropdownMenuContent align="end" side="bottom" className="w-72 p-0 overflow-hidden">
                   <div className="flex items-center gap-3 px-4 py-3 border-b border-neutral-800">
                     <div className="relative h-8 w-8 overflow-hidden rounded-full ring-2 ring-[var(--primary-500)]">
-                      {dbAvatarUrl || abstractAvatar ? (
-                        <img src={(dbAvatarUrl || abstractAvatar)!} alt="Avatar" className="h-full w-full object-cover" />
+                      {avatarUrl ? (
+                        <img src={avatarUrl} alt="Avatar" className="h-full w-full object-cover" />
                       ) : (
                         <AbstractProfile size="xs" showTooltip={false} className="!h-8 !w-8" />
                       )}
