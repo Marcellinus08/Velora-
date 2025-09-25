@@ -4,6 +4,13 @@
 import Link from "next/link";
 
 export default function StudioActions() {
+  // Helper Material Icon (Round)
+  const MI = ({ name, className = "" }: { name: string; className?: string }) => (
+    <span className={`material-icons-round ${className}`} aria-hidden="true">
+      {name}
+    </span>
+  );
+
   return (
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
       {/* Upload Video */}
@@ -16,9 +23,7 @@ export default function StudioActions() {
             </p>
           </div>
           <div className="rounded-xl bg-neutral-800 p-2 text-neutral-300">
-            <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-              <path d="M4 3a2 2 0 00-2 2v10l3-2 3 2 3-2 3 2V5a2 2 0 00-2-2H4z" />
-            </svg>
+            <MI name="video_library" className="text-[18px] leading-none align-middle" />
           </div>
         </div>
 
@@ -28,9 +33,10 @@ export default function StudioActions() {
           className="mt-4 inline-flex items-center gap-2 rounded-full bg-[var(--primary-500)] px-4 py-2 text-sm font-semibold text-white transition hover:bg-opacity-90"
         >
           Go to Uploader
-          <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-            <path d="M5 10h8l-3-3 1.4-1.4L17.8 12l-6.4 6.4L10 17l3-3H5v-4z" />
-          </svg>
+          <MI
+            name="arrow_forward"
+            className="text-[16px] leading-none align-middle transition-transform duration-200 group-hover:translate-x-0.5 group-hover:scale-110"
+          />
         </Link>
       </div>
 
@@ -44,9 +50,7 @@ export default function StudioActions() {
             </p>
           </div>
           <div className="rounded-xl bg-neutral-800 p-2 text-neutral-300">
-            <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-              <path d="M3 3h14v2H3V3zm0 6h14v2H3V9zm0 6h14v2H3v-2z" />
-            </svg>
+            <MI name="ads_click" className="text-[18px] leading-none align-middle" />
           </div>
         </div>
 
@@ -56,9 +60,10 @@ export default function StudioActions() {
           className="mt-4 inline-flex items-center gap-2 rounded-full bg-[var(--primary-500)] px-4 py-2 text-sm font-semibold text-white transition hover:bg-opacity-90"
         >
           New Campaign
-          <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-            <path d="M5 10h8l-3-3 1.4-1.4L17.8 12l-6.4 6.4L10 17l3-3H5v-4z" />
-          </svg>
+          <MI
+            name="arrow_forward"
+            className="text-[16px] leading-none align-middle transition-transform duration-200 group-hover:translate-x-0.5 group-hover:scale-110"
+          />
         </Link>
       </div>
     </div>

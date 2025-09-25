@@ -44,7 +44,7 @@ function formatUSD(n: number) {
 const short = (addr?: `0x${string}`) => (addr ? `${addr.slice(0, 6)}…${addr.slice(-4)}` : "-");
 
 /* ========= Simple client cache (sessionStorage) ========= */
-const TTL_MS = 30_000; // 30s cache
+const TTL_MS = 30_000;
 function readCache<T>(key: string): T | null {
   try {
     const raw = sessionStorage.getItem(key);
@@ -62,13 +62,12 @@ function writeCache<T>(key: string, value: T) {
   } catch {}
 }
 
-/* ============== Hook: load profile dari DB (cached) ============== */
+/* ============== Hook: DB profile (cached) ============== */
 type DbProfile = { abstract_id: string; username: string | null; avatar_url: string | null };
 
 function useDbProfile(address?: `0x${string}`) {
   const [username, setUsername] = useState<string | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
-
   const addrLower = useMemo(() => (address ? address.toLowerCase() : ""), [address]);
 
   useEffect(() => {
@@ -113,7 +112,7 @@ function useDbProfile(address?: `0x${string}`) {
   return { username, avatarUrl };
 }
 
-/* ============== Hook: load avatar dari Abstract (cached) ============== */
+/* ============== Hook: Abstract avatar (cached) ============== */
 function useAbstractAvatar(address?: `0x${string}`, enabled = true) {
   const [absAvatar, setAbsAvatar] = useState<string | null>(null);
   const addrLower = useMemo(() => (address ? address.toLowerCase() : ""), [address]);
@@ -132,10 +131,7 @@ function useAbstractAvatar(address?: `0x${string}`, enabled = true) {
         return;
       }
       try {
-        const r = await fetch(`/api/abstract/user/${addrLower}`, {
-          // route ini sudah pakai revalidate di server; di client tetap cache-kan lokal
-          cache: "force-cache",
-        });
+        const r = await fetch(`/api/abstract/user/${addrLower}`, { cache: "force-cache" });
         if (!r.ok) return;
         const j = await r.json();
         const url: string | null =
@@ -184,10 +180,17 @@ function HeaderAvatar({
   );
 }
 
+/* ===== Helper Material Icon (Round) ===== */
+const MI = ({ name, className = "" }: { name: string; className?: string }) => (
+  <span className={`material-icons-round ${className}`} aria-hidden="true">
+    {name}
+  </span>
+);
+
 /* =================== Header =================== */
 type Notif = { id: string; title: string; body?: string; time?: string; unread?: boolean };
 const RECENT_KEY = "vh_recent_queries";
-const POLL_MS = 60_000; // refresh USDC.e tiap 60 detik, pause saat tab hidden
+const POLL_MS = 60_000;
 
 export default function Header() {
   const router = useRouter();
@@ -195,11 +198,10 @@ export default function Header() {
   const isConnected = status === "connected" && !!address;
   const { logout } = useLoginWithAbstract();
 
-  // DB profile & Abstract fallback (cached)
   const { username: dbUsername, avatarUrl: dbAvatarUrl } = useDbProfile(address as `0x${string}` | undefined);
   const abstractAvatar = useAbstractAvatar(address as `0x${string}` | undefined, !dbAvatarUrl);
 
-  /* ========= USDC.e balance (interval, no per-block) ========= */
+  /* ========= USDC.e balance ========= */
   const client = usePublicClient();
   const [usdceText, setUsdceText] = useState<string>("$0");
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -231,17 +233,13 @@ export default function Header() {
     }
   }
 
-  // start/stop polling on connect + page visibility
   useEffect(() => {
-    // initial fetch
     void refreshUsdce();
 
     function start() {
       if (pollRef.current) clearInterval(pollRef.current);
       pollRef.current = setInterval(() => {
-        if (document.visibilityState === "visible") {
-          void refreshUsdce();
-        }
+        if (document.visibilityState === "visible") void refreshUsdce();
       }, POLL_MS);
     }
     function stop() {
@@ -254,11 +252,9 @@ export default function Header() {
     else stop();
 
     const onVis = () => {
-      // refresh sekali saat tab kembali aktif
       if (document.visibilityState === "visible") void refreshUsdce();
     };
     document.addEventListener("visibilitychange", onVis);
-
     return () => {
       document.removeEventListener("visibilitychange", onVis);
       stop();
@@ -266,7 +262,7 @@ export default function Header() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [client, address, isConnected]);
 
-  /* ========= Search state ========= */
+  /* ========= Search ========= */
   const [q, setQ] = useState("");
   const [openSug, setOpenSug] = useState(false);
   const [recent, setRecent] = useState<string[]>([]);
@@ -324,10 +320,13 @@ export default function Header() {
   const [notifications] = useState<Notif[]>([]);
   const unreadCount = notifications.filter((n) => n.unread).length;
 
+  // Quick suggestions hanya saat user mengetik
   const quick = ["tutorial", "olahraga", "crypto", "masak", "pendidikan", "fotografi"];
-  const filtered = [...recent, ...quick]
+  const quickWhenTyping = q
+    ? quick.filter((s) => s.toLowerCase().includes(q.toLowerCase()))
+    : [];
+  const filtered = [...recent, ...quickWhenTyping]
     .filter((s, i, a) => a.indexOf(s) === i)
-    .filter((s) => (q ? s.toLowerCase().includes(q.toLowerCase()) : true))
     .slice(0, 7);
 
   const itemCls = "px-3 py-2 text-[13px]";
@@ -351,6 +350,49 @@ export default function Header() {
     </DropdownMenuItem>,
   ];
 
+  // Voice search handler
+  function handleVoice() {
+    const w = window as any;
+    const SR = w.SpeechRecognition || w.webkitSpeechRecognition;
+    if (!SR) {
+      alert("Voice search tidak didukung oleh browser ini. Coba Chrome/Edge desktop.");
+      return;
+    }
+    const isSecure = location.protocol === "https:" || location.hostname === "localhost";
+    if (!isSecure) {
+      alert("Voice search memerlukan HTTPS (kecuali di localhost).");
+      return;
+    }
+    try {
+      const rec = new SR();
+      rec.lang = "id-ID";
+      rec.interimResults = false;
+      rec.maxAlternatives = 1;
+      rec.onresult = (e: any) => {
+        const text = e.results?.[0]?.[0]?.transcript as string;
+        if (!text) return;
+        setQ(text);
+        saveRecent(text);
+        router.push(`/search?q=${encodeURIComponent(text)}`);
+      };
+      rec.onerror = (e: any) => {
+        const type = e?.error;
+        if (type === "not-allowed" || type === "service-not-allowed") {
+          alert("Izin mikrofon ditolak. Cek permission di browser.");
+        } else if (type === "no-speech") {
+          alert("Tidak ada suara terdeteksi. Coba lagi.");
+        } else if (type === "audio-capture") {
+          alert("Mikrofon tidak terdeteksi.");
+        } else {
+          alert("Voice search gagal. Coba lagi.");
+        }
+      };
+      rec.start();
+    } catch {
+      alert("Voice search gagal diinisialisasi.");
+    }
+  }
+
   return (
     <header
       className="sticky top-0 z-20 grid w-full items-center gap-4 border-b border-neutral-800 bg-neutral-900 px-4 py-2 sm:px-6 lg:px-8
@@ -362,9 +404,7 @@ export default function Header() {
           className="flex items-center justify-center rounded-full p-2 text-neutral-50 hover:bg-neutral-800 md:hidden"
           aria-label="Buka menu"
         >
-          <svg className="size-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"></path>
-          </svg>
+          <MI name="menu" className="text-[14px] leading-none" />
         </button>
 
         <Link href="/" aria-label="Home">
@@ -382,34 +422,25 @@ export default function Header() {
       {/* Kolom 2: Search */}
       <div className="flex justify-start">
         <div ref={containerRef} className="relative w-full max-w-[720px]">
-          <form onSubmit={onSubmit} className="flex w-full items-center">
+          <form onSubmit={onSubmit} className="flex w-full items-center" role="search">
             <div className="relative flex min-w-0 flex-1">
               <span className="pointer-events-none absolute inset-y-0 left-4 flex items-center">
-                <svg
-                  className="h-5 w-5 text-neutral-400"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                  aria-hidden="true"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M12.9 14.32a8 8 0 111.414-1.414l3.39 3.39a1 1 0 01-1.414 1.415l-3.39-3.39zM14 8a6 6 0 11-12 0 6 6 0 0112 0z"
-                    clipRule="evenodd"
-                  />
-                </svg>
+                <MI name="search" className="text-[14px] text-neutral-400" />
               </span>
 
+              {/* Ganti type dari 'search' -> 'text' supaya tidak ada native clear (X) bawaan */}
               <input
                 ref={inputRef}
-                type="search"
+                type="text"
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
                 onFocus={() => setOpenSug(true)}
                 className="h-10 w-full rounded-l-full border border-neutral-700 bg-neutral-950 pl-11 pr-[3.5rem] text-base text-neutral-50 placeholder:text-neutral-400 outline-none focus:border-neutral-500"
                 placeholder="Search"
                 aria-label="Search"
-                autoComplete="off"
+                inputMode="search"
                 enterKeyHint="search"
+                role="searchbox"
               />
 
               {q && (
@@ -417,15 +448,10 @@ export default function Header() {
                   type="button"
                   onClick={clear}
                   className="absolute inset-y-0 right-16 my-1 flex h-8 w-8 items-center justify-center rounded-full text-neutral-400 hover:bg-neutral-800 hover:text-neutral-200"
-                  aria-label="Bersihkan"
+                  aria-label="Clear text"
+                  title="Clear"
                 >
-                  <svg viewBox="0 0 20 20" className="h-4 w-4" fill="currentColor" aria-hidden="true">
-                    <path
-                      fillRule="evenodd"
-                      d="M10 8.586l3.536-3.536a1 1 0 111.415 1.415L11.414 10l3.536 3.536a1 1 0 11-1.415 1.414L10 11.414l-3.536 3.536a1 1 0 01-1.415-1.415L8.586 10 5.05 6.464A1 1 0 016.464 5.05L10 8.586z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
+                  <MI name="close" className="text-[12px]" />
                 </button>
               )}
 
@@ -435,43 +461,24 @@ export default function Header() {
                 aria-label="Cari"
                 title="Cari"
               >
-                <svg className="mx-auto h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                  <path
-                    fillRule="evenodd"
-                    d="M12.9 14.32a8 8 0 111.414-1.414l3.39 3.39a1 1 0 01-1.414 1.415l-3.39-3.39zM14 8a6 6 0 11-12 0 6 6 0 0112 0z"
-                    clipRule="evenodd"
-                  />
-                </svg>
+                <MI name="search" className="text-[14px]" />
               </button>
             </div>
 
             {/* Voice button */}
             <button
               type="button"
-              onClick={() => {
-                const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-                if (!SR) return alert("Voice search tidak didukung di browser ini.");
-                const rec = new SR();
-                rec.lang = "id-ID";
-                rec.onresult = (e: any) => {
-                  const text = e.results[0][0].transcript as string;
-                  setQ(text);
-                  saveRecent(text);
-                  router.push(`/search?q=${encodeURIComponent(text)}`);
-                };
-                rec.start();
-              }}
+              onClick={handleVoice}
               className="ml-3 flex h-10 w-10 items-center justify-center rounded-full bg-neutral-800 text-neutral-200 hover:bg-neutral-700"
               aria-label="Pencarian suara"
               title="Pencarian suara"
             >
-              <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor">
-                <path d="M12 14a3 3 0 003-3V6a3 3 0 10-6 0v5a3 3 0 003 3zm5-3a5 5 0 01-10 0H5a7 7 0 0013.9 1H19a7 7 0 00-2-1zM11 19.93V22h2v-2.07A8.001 8.001 0 0020 12h-2a6 6 0 11-12 0H4a8.001 8.001 0 007 7.93z" />
-              </svg>
+              <MI name="keyboard_voice" className="text-[14px]" />
             </button>
           </form>
 
-          {openSug && (filtered.length > 0 || q) && (
+          {/* Suggestion */}
+          {openSug && ((recent.length > 0) || q) && (
             <div className="absolute left-0 right-0 top-[44px] mx-auto w-full max-w-[720px] rounded-xl border border-neutral-800 bg-neutral-900/95 backdrop-blur supports-[backdrop-filter]:bg-neutral-900/70">
               {recent.length > 0 && (
                 <div className="flex items-center justify-between px-4 py-2 text-xs text-neutral-400">
@@ -487,46 +494,42 @@ export default function Header() {
               )}
 
               <ul className="py-2">
-                {filtered.map((s) => {
-                  const isRecent = recent.includes(s);
-                  return (
-                    <li key={s} className="group relative">
-                      <button
-                        onMouseDown={(e) => e.preventDefault()}
-                        onClick={() => {
-                          setQ(s);
-                          saveRecent(s);
-                          router.push(`/search?q=${encodeURIComponent(s)}`);
-                          setOpenSug(false);
-                        }}
-                        className="flex w-full items-center gap-3 px-4 py-2 pr-12 text-left text-sm text-neutral-200 hover:bg-neutral-800"
-                      >
-                        <span className="truncate">{s}</span>
-                      </button>
-
-                      {isRecent && (
+                {[...new Set([...recent, ...(q ? quick.filter(s=>s.toLowerCase().includes(q.toLowerCase())):[])])]
+                  .slice(0,7)
+                  .map((s) => {
+                    const isRecent = recent.includes(s);
+                    return (
+                      <li key={s} className="group relative">
                         <button
                           onMouseDown={(e) => e.preventDefault()}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            removeRecent(s);
+                          onClick={() => {
+                            setQ(s);
+                            saveRecent(s);
+                            router.push(`/search?q=${encodeURIComponent(s)}`);
+                            setOpenSug(false);
                           }}
-                          aria-label="Remove from history"
-                          title="Remove from history"
-                          className="absolute right-2 top-1/2 hidden h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full text-neutral-400 hover:bg-neutral-700 hover:text-neutral-100 group-hover:flex"
+                          className="flex w-full items-center gap-3 px-4 py-2 pr-12 text-left text-sm text-neutral-200 hover:bg-neutral-800"
                         >
-                          <svg viewBox="0 0 20 20" className="h-4 w-4" fill="currentColor">
-                            <path
-                              fillRule="evenodd"
-                              d="M11.414 10l3.536-3.536a1 1 0 10-1.414-1.414L10 8.586 6.464 5.05A1 1 0 105.05 6.464L8.586 10l-3.536 3.536a1 1 0 001.414-1.414L11.414 10z"
-                              clipRule="evenodd"
-                            />
-                          </svg>
+                          <span className="truncate">{s}</span>
                         </button>
-                      )}
-                    </li>
-                  );
-                })}
+
+                        {isRecent && (
+                          <button
+                            onMouseDown={(e) => e.preventDefault()}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              removeRecent(s);
+                            }}
+                            aria-label="Remove from history"
+                            title="Remove from history"
+                            className="absolute right-2 top-1/2 hidden h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full text-neutral-400 hover:bg-neutral-700 hover:text-neutral-100 group-hover:flex"
+                          >
+                            <MI name="close" className="text-[12px]" />
+                          </button>
+                        )}
+                      </li>
+                    );
+                  })}
                 {q && <li className="px-4 pt-1 text-xs text-neutral-500">Press Enter to search “{q}”.</li>}
               </ul>
             </div>
@@ -542,28 +545,20 @@ export default function Header() {
           </div>
         ) : (
           <>
-            {/* Points + USDC.e */}
             <div className="hidden items-center gap-4 rounded-full bg-neutral-800 px-4 py-1.5 sm:flex">
-              {/* Points */}
               <div className="flex items-center gap-2">
-                <svg className="h-5 w-5 text-yellow-400" fill="currentColor" viewBox="0 0 256 256">
-                  <path d="M239.2,97.41a16.4,16.4,0,0,0-14.21-10.06l-49.33-7.17L153.8,36.52a16.37,16.37,0,0,0-29.6,0L102.34,80.18,53,87.35A16.4,16.4,0,0,0,38.8,97.41a16.43,16.43,0,0,0,4.28,17.27l35.69,34.78-8.43,49.14a16.4,16.4,0,0,0,7.86,17.2,16.32,16.32,0,0,0,18.15,.11L128,193.07l44.13,23.2a16.32,16.32,0,0,0,18.15-.11,16.4,16.4,0,0,0,7.86-17.2l-8.43-49.14,35.69-34.78A16.43,16.43,0,0,0,239.2,97.41Z"></path>
-                </svg>
+                <MI name="star" className="text-[14px] text-yellow-400" />
                 <span className="text-sm font-semibold text-neutral-50">2.500</span>
               </div>
 
               <div className="h-5 w-px bg-neutral-700" />
 
-              {/* USDC.e (bridged) */}
               <div className="flex items-center gap-2">
-                <svg className="h-5 w-5 text-[var(--primary-500)]" fill="currentColor" viewBox="0 0 256 256">
-                  <path d="M224,72H48A24,24,0,0,0,24,96V192a24,24,0,0,0,24,24H200a24,24,0,0,0,24-24V160H192a8,8,0,0,1,0-16h32V96A24,24,0,0,0,224,72ZM40,96a8,8,0,0,1,8-8H224a8,8,0,0,1,8,8v48H192a24,24,0,0,0-24,24v16H48a8,8,0,0,1-8-8Z"></path>
-                </svg>
+                <MI name="account_balance_wallet" className="text-[14px] text-[var(--primary-500)]" />
                 <span className="text-sm font-semibold text-neutral-50">USDC.e {usdceText}</span>
               </div>
             </div>
 
-            {/* Tombol + */}
             <div className="relative">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -572,13 +567,7 @@ export default function Header() {
                     aria-label="Tambah"
                     title="Tambah"
                   >
-                    <svg className="h-6 w-6" fill="currentColor" viewBox="0 0 20 20">
-                      <path
-                        fillRule="evenodd"
-                        clipRule="evenodd"
-                        d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z"
-                      />
-                    </svg>
+                    <MI name="add" className="text-[14px]" />
                   </button>
                 </DropdownMenuTrigger>
 
@@ -589,7 +578,6 @@ export default function Header() {
               </DropdownMenu>
             </div>
 
-            {/* Notifikasi */}
             <div className="relative">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -598,9 +586,7 @@ export default function Header() {
                     aria-label="Notification"
                     title="Notification"
                   >
-                    <svg fill="currentColor" height="20" width="20" viewBox="0 0 256 256">
-                      <path d="M221.8,175.94C216.25,166.38,208,139.33,208,104a80,80,0,1,0-160,0c0,35.34-8.26,62.38-13.81,71.94A16,16,0,0,0,48,200H88.81a40,40,0,0,0,78.38,0H208a16,16,0,0,0,13.8-24.06ZM128,216a24,24,0,0,1-22.62-16h45.24A24,24,0,0,1,128,216ZM48,184c7.7-13.24,16-43.92,16-80a64,64,0,1,1,128,0c0,36.05,8.28,66.73,16,80Z"></path>
-                    </svg>
+                    <MI name="notifications" className="text-[14px]" />
                     {unreadCount > 0 && (
                       <span className="absolute right-1 top-1 block h-2 w-2 rounded-full bg-[var(--primary-500)]" />
                     )}
@@ -614,9 +600,7 @@ export default function Header() {
 
                   <div className="flex flex-col items-center px-6 py-8 text-center">
                     <div className="flex h-12 w-12 items-center justify-center rounded-full bg-neutral-800/70">
-                      <svg viewBox="0 0 24 24" className="h-6 w-6 text-neutral-300" fill="currentColor">
-                        <path d="M18 16l1 2H5l1-2c.667-1.333 1-3.667 1-7a5 5 0 1110 0c0 3.333.333 5.667 1 7zM9 19a3 3 0 006 0H9z" />
-                      </svg>
+                      <MI name="notifications_none" className="text-[22px] text-neutral-300" />
                     </div>
                     <p className="mt-3 text-sm font-medium text-neutral-200">No notifications yet</p>
                     <p className="mt-1 text-xs text-neutral-400">Notifications will appear here later.</p>
@@ -625,7 +609,6 @@ export default function Header() {
               </DropdownMenu>
             </div>
 
-            {/* Avatar / Profile + dropdown kustom (pakai data DB/Abstract cached) */}
             <div>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -642,7 +625,6 @@ export default function Header() {
                 </DropdownMenuTrigger>
 
                 <DropdownMenuContent align="end" side="bottom" className="w-72 p-0 overflow-hidden">
-                  {/* Header di dalam kotak */}
                   <div className="flex items-center gap-3 px-4 py-3 border-b border-neutral-800">
                     <div className="relative h-8 w-8 overflow-hidden rounded-full ring-2 ring-[var(--primary-500)]">
                       {dbAvatarUrl || abstractAvatar ? (
@@ -665,15 +647,12 @@ export default function Header() {
                           }}
                           title="Copy address"
                         >
-                          <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M16 1H4a2 2 0 00-2 2v12h2V3h12V1zm3 4H8a2 2 0 00-2 2v14a2 2 0 002 2h11a2 2 0 002-2V7a2 2 0 00-2-2zm0 16H8V7h11v14z" />
-                          </svg>
+                          <MI name="content_copy" className="text-[12px]" />
                         </button>
                       </div>
                     </div>
                   </div>
 
-                  {/* Items */}
                   <div className="py-1">{walletDropdownItems}</div>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -682,7 +661,6 @@ export default function Header() {
         )}
       </div>
 
-      {/* Boot: upsert profile otomatis saat connect */}
       <ProfileUpsertOnLogin />
     </header>
   );

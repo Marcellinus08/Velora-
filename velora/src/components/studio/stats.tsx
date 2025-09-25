@@ -32,7 +32,6 @@ function InfoHint({ text }: { text: string }) {
                    [--gutter:16px] 
                    [transform-origin:top_center]"
         style={{
-          // Pastikan tidak nabrak sisi kiri/kanan container outer
           insetInlineStart: "50%",
           translate: "-50% 0",
         } as React.CSSProperties}
@@ -43,6 +42,16 @@ function InfoHint({ text }: { text: string }) {
     </span>
   );
 }
+
+/** Helper Material Icon (Round) kecil & rapi baseline */
+const MI = ({ name, className = "" }: { name: string; className?: string }) => (
+  <span
+    className={`material-icons-round text-neutral-500 text-[14px] leading-none align-middle ${className}`}
+    aria-hidden="true"
+  >
+    {name}
+  </span>
+);
 
 function StatCard({
   label,
@@ -76,11 +85,7 @@ export default function StudioStats({ totals }: { totals: Totals }) {
           </span>
         }
         value={fmtInt(totals.videos)}
-        rightIcon={
-          <svg className="h-5 w-5 text-neutral-500" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-            <path d="M4 4h8a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6a2 2 0 012-2zm12 3l3-2v10l-3-2V7z" />
-          </svg>
-        }
+        rightIcon={<MI name="video_library" />}
       />
 
       {/* Campaigns */}
@@ -92,11 +97,7 @@ export default function StudioStats({ totals }: { totals: Totals }) {
           </span>
         }
         value={fmtInt(totals.campaigns)}
-        rightIcon={
-          <svg className="h-5 w-5 text-neutral-500" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-            <path d="M3 4h14v2H3V4zm0 5h10v2H3V9zm0 5h14v2H3v-2z" />
-          </svg>
-        }
+        rightIcon={<MI name="campaign" />}
       />
 
       {/* Points */}
@@ -108,11 +109,7 @@ export default function StudioStats({ totals }: { totals: Totals }) {
           </span>
         }
         value={fmtInt(totals.points)}
-        rightIcon={
-          <svg className="h-5 w-5 text-neutral-500" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-            <path d="M10 2l2.39 4.84L18 8l-4 3.89L15.18 18 10 15.27 4.82 18 6 11.89 2 8l5.61-1.16L10 2z" />
-          </svg>
-        }
+        rightIcon={<MI name="star" />}
       />
 
       {/* Earnings */}
@@ -124,11 +121,7 @@ export default function StudioStats({ totals }: { totals: Totals }) {
           </span>
         }
         value={fmtUsd(totals.earningsUsd)}
-        rightIcon={
-          <svg className="h-5 w-5 text-neutral-500" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-            <path d="M4 10a6 6 0 1112 0A6 6 0 014 10zm7-3H9a2 2 0 100 4h2a2 2 0 110 4H9" />
-          </svg>
-        }
+        rightIcon={<MI name="paid" />}
       />
     </div>
   );

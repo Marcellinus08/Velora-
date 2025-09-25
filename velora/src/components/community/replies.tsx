@@ -1,3 +1,4 @@
+// src/components/community/replies.tsx
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
@@ -22,25 +23,7 @@ type ReplyNode = {
 const short = (a?: string) =>
   a && a.startsWith("0x") && a.length >= 10 ? `${a.slice(0, 6)}…${a.slice(-4)}` : a || "-";
 
-function LikeSvg() {
-  return (
-    <svg className="size-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden>
-      <path d="M2 10.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6zM6 10.333v5.43a2 2 0 001.106 1.787l.25.125a2 2 0 002.29-1.787v-5.43M14 10.333v5.43a2 2 0 001.106 1.787l.25.125a2 2 0 002.29-1.787v-5.43M10 4.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6z" />
-    </svg>
-  );
-}
-function RepliesSvg() {
-  return (
-    <svg className="size-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden>
-      <path
-        fillRule="evenodd"
-        d="M18 5v8a2 2 0 01-2 2h-5l-5 4v-4H4a2 2 0 01-2-2V5a2 2 0 012-2h12a2 2 0 012 2zM7 8H5v2h2V8zm2 0h2v2H9V8zm6 0h-2v2h2V8z"
-        clipRule="evenodd"
-      />
-    </svg>
-  );
-}
-
+/* ===== Avatar util ===== */
 function Avatar({ address, url }: { address: string; url: string | null }) {
   if (url && url.trim() !== "") {
     const fallback = `https://api.dicebear.com/7.x/identicon/svg?seed=${address || "anon"}`;
@@ -66,6 +49,16 @@ function Avatar({ address, url }: { address: string; url: string | null }) {
     />
   );
 }
+
+/* ===== Material Icon helper (Round) – kecil & rapi baseline ===== */
+const MI = ({ name, className = "" }: { name: string; className?: string }) => (
+  <span
+    className={`material-icons-round text-[12px] leading-none align-middle relative top-[1px] ${className}`}
+    aria-hidden="true"
+  >
+    {name}
+  </span>
+);
 
 export default function Replies({ postId, onPosted }: { postId: string; onPosted?: () => void }) {
   const { address } = useAccount();
@@ -105,7 +98,7 @@ export default function Replies({ postId, onPosted }: { postId: string; onPosted
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ abstractId: me, content: text.trim(), parentId: parentId ?? null }),
       });
-      const j = await r.json().catch(() => ({}));
+      const j = await r.json().catch(() => ({} as any));
       if (!r.ok) throw new Error(j?.error || "Failed");
       setText("");
       onPosted?.();
@@ -127,13 +120,13 @@ export default function Replies({ postId, onPosted }: { postId: string; onPosted
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ replyId: id, abstractId: me }),
       });
-      const j = await r.json().catch(() => ({}));
+      const j = await r.json().catch(() => ({} as any));
       if (!r.ok) throw new Error(j?.error || "Failed");
       const liked = !!j?.liked;
       const likes = Number(j?.likes ?? 0);
       setItems((prev) => prev.map((n) => updateNode(n, id, (node) => ({ ...node, liked, likes }))));
-    } catch (e) {
-      // biarkan silent; DB tetap aman oleh PK
+    } catch {
+      // silent
     } finally {
       setPendingLikeId(null);
     }
@@ -157,7 +150,7 @@ export default function Replies({ postId, onPosted }: { postId: string; onPosted
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ abstractId: me, content: childText.trim(), parentId: node.id }),
         });
-        const j = await r.json().catch(() => ({}));
+        const j = await r.json().catch(() => ({} as any));
         if (!r.ok) throw new Error(j?.error || "Failed");
         setChildText("");
         setOpenReplyBox(false);
@@ -166,6 +159,8 @@ export default function Replies({ postId, onPosted }: { postId: string; onPosted
         setShowChildren(true);
       } catch {}
     }
+
+    const likeIcon = node.liked ? "favorite" : "favorite_border";
 
     return (
       <div className="mt-6">
@@ -194,7 +189,7 @@ export default function Replies({ postId, onPosted }: { postId: string; onPosted
                 }
                 aria-pressed={!!node.liked}
               >
-                <LikeSvg />
+                <MI name={likeIcon} />
                 <span>{node.likes} Likes</span>
               </button>
 
@@ -203,7 +198,7 @@ export default function Replies({ postId, onPosted }: { postId: string; onPosted
                   onClick={() => setShowChildren((v) => !v)}
                   className="flex items-center gap-1.5 hover:text-neutral-50"
                 >
-                  <RepliesSvg />
+                  <MI name="chat_bubble_outline" />
                   <span>{showChildren ? "Hide" : `${node.replies} Replies`}</span>
                 </button>
               )}

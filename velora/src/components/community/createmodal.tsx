@@ -1,10 +1,30 @@
 // src/components/community/createmodal.tsx
 "use client";
 
-import React, { useMemo, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import type { NewPostPayload } from "./types";
 
 type LocalFile = { id: string; file: File; url: string };
+
+/* Helper ikon Material (Round) */
+const MI = ({ name, className = "" }: { name: string; className?: string }) => (
+  <span className={`material-icons-round ${className}`} aria-hidden="true">
+    {name}
+  </span>
+);
+
+/** Safe random id: gunakan crypto.randomUUID jika tersedia, fallback ke string acak */
+function uid() {
+  const c = (globalThis as any)?.crypto;
+  if (c && typeof c.randomUUID === "function") return c.randomUUID();
+  // fallback
+  return (
+    "id-" +
+    Math.random().toString(36).slice(2, 10) +
+    "-" +
+    Date.now().toString(36)
+  );
+}
 
 export default function CreatePostModal({
   open,
@@ -16,21 +36,45 @@ export default function CreatePostModal({
   onSubmit: (data: NewPostPayload) => void;
 }) {
   const [items, setItems] = useState<LocalFile[]>([]);
+  const [submitting, setSubmitting] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  // Revoke semua ObjectURL ketika modal ditutup/unmount
+  useEffect(() => {
+    if (!open) return;
+    return () => {
+      setItems((prev) => {
+        prev.forEach((i) => URL.revokeObjectURL(i.url));
+        return [];
+      });
+    };
+  }, [open]);
 
   if (!open) return null;
 
   function addFiles(list: FileList | null) {
     if (!list) return;
     const arr = Array.from(list).slice(0, 8);
-    setItems((prev) => [
-      ...prev,
-      ...arr.map((f) => ({ id: crypto.randomUUID(), file: f, url: URL.createObjectURL(f) })),
-    ]);
+    const next: LocalFile[] = arr.map((f) => ({
+      id: uid(),
+      file: f,
+      url: URL.createObjectURL(f),
+    }));
+    setItems((prev) => [...prev, ...next]);
+  }
+
+  function removeItem(id: string) {
+    setItems((prev) => {
+      const it = prev.find((x) => x.id === id);
+      if (it) URL.revokeObjectURL(it.url);
+      return prev.filter((x) => x.id !== id);
+    });
   }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (submitting) return;
+
     const fd = new FormData(e.currentTarget);
     const base: NewPostPayload = {
       title: String(fd.get("title") || ""),
@@ -38,21 +82,32 @@ export default function CreatePostModal({
       content: String(fd.get("content") || ""),
     };
 
-    let mediaPaths: string[] = [];
-    if (items.length) {
-      const uf = new FormData();
-      items.forEach((i) => uf.append("files", i.file));
-      const r = await fetch("/api/community/upload", { method: "POST", body: uf });
-      if (!r.ok) {
-        const j = await r.json().catch(() => ({}));
-        alert(j?.error || "Upload failed");
-        return;
-      }
-      const j = await r.json();
-      mediaPaths = (j.items || []).map((x: any) => x.path);
-    }
+    setSubmitting(true);
+    try {
+      let mediaPaths: string[] = [];
 
-    onSubmit({ ...base, mediaPaths });
+      if (items.length) {
+        const uf = new FormData();
+        items.forEach((i) => uf.append("files", i.file));
+        const r = await fetch("/api/community/upload", { method: "POST", body: uf });
+        if (!r.ok) {
+          const j = await r.json().catch(() => ({}));
+          throw new Error(j?.error || "Upload failed");
+        }
+        const j = await r.json();
+        mediaPaths = (j.items || []).map((x: any) => x.path);
+      }
+
+      onSubmit({ ...base, mediaPaths });
+
+      // bersihkan object URLs setelah submit sukses
+      items.forEach((i) => URL.revokeObjectURL(i.url));
+      setItems([]);
+    } catch (err: any) {
+      alert(err?.message || "Failed to publish");
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -63,7 +118,7 @@ export default function CreatePostModal({
       onKeyDown={(e) => e.key === "Escape" && onClose()}
     >
       <button
-        aria-label="Close modal"
+        aria-label="Close modal backdrop"
         className="absolute inset-0 bg-black/60 backdrop-blur-sm"
         onClick={onClose}
       />
@@ -74,14 +129,9 @@ export default function CreatePostModal({
             onClick={onClose}
             className="rounded-full p-2 text-neutral-400 hover:bg-neutral-800 hover:text-neutral-50"
             aria-label="Close"
+            type="button"
           >
-            <svg className="size-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden>
-              <path
-                fillRule="evenodd"
-                d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                clipRule="evenodd"
-              />
-            </svg>
+            <MI name="close" className="text-[16px] leading-none align-middle" />
           </button>
         </div>
 
@@ -138,11 +188,10 @@ export default function CreatePostModal({
                 className="flex cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed border-neutral-700 bg-neutral-900/60 py-7 text-center hover:border-neutral-500"
                 onClick={() => fileRef.current?.click()}
               >
-                <svg className="mb-2 h-8 w-8 opacity-70" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 16a4 4 0 100-8 4 4 0 000 8zm0 2a6 6 0 110-12 6 6 0 010 12zm7-6a1 1 0 110-2 1 1 0 010 2z" />
-                </svg>
+                <MI name="cloud_upload" className="mb-2 text-[24px] opacity-70" />
                 <div className="text-sm text-neutral-300">
-                  Drag &amp; drop file di sini, atau <span className="text-[var(--primary-500)]">pilih file</span>
+                  Drag &amp; drop file di sini, atau{" "}
+                  <span className="text-[var(--primary-500)]">pilih file</span>
                 </div>
                 <div className="mt-1 text-xs text-neutral-500">PNG, JPG, GIF, MP4, WebM (maks 25MB)</div>
               </div>
@@ -159,19 +208,23 @@ export default function CreatePostModal({
               {!!items.length && (
                 <div className="mt-3 grid grid-cols-2 gap-3 md:grid-cols-3">
                   {items.map((it) => (
-                    <div key={it.id} className="group relative overflow-hidden rounded-xl border border-neutral-800">
+                    <div
+                      key={it.id}
+                      className="group relative overflow-hidden rounded-xl border border-neutral-800"
+                    >
                       {it.file.type.startsWith("video/") ? (
                         <video src={it.url} className="h-40 w-full object-cover" muted loop playsInline />
                       ) : (
+                        // eslint-disable-next-line @next/next/no-img-element
                         <img src={it.url} className="h-40 w-full object-cover" alt="" />
                       )}
                       <button
                         type="button"
-                        onClick={() => setItems((prev) => prev.filter((x) => x.id !== it.id))}
-                        className="absolute right-1 top-1 hidden rounded-full bg-black/60 px-2 py-1 text-sm text-white group-hover:block"
+                        onClick={() => removeItem(it.id)}
+                        className="absolute right-1 top-1 hidden rounded-full bg-black/60 p-1 text-white group-hover:block"
                         aria-label="Remove"
                       >
-                        ✕
+                        <MI name="close" className="text-[14px] leading-none" />
                       </button>
                     </div>
                   ))}
@@ -182,16 +235,23 @@ export default function CreatePostModal({
             <div className="flex items-center justify-end gap-2 pb-1">
               <button
                 type="button"
-                onClick={onClose}
+                onClick={() => {
+                  // bersih-bersih url saat cancel
+                  items.forEach((i) => URL.revokeObjectURL(i.url));
+                  setItems([]);
+                  onClose();
+                }}
                 className="rounded-full px-4 py-2 text-sm font-semibold text-neutral-300 hover:bg-neutral-800"
+                disabled={submitting}
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="rounded-full bg-[var(--primary-500)] px-4 py-2 text-sm font-semibold text-white hover:bg-opacity-90"
+                className="rounded-full bg-[var(--primary-500)] px-4 py-2 text-sm font-semibold text-white hover:bg-opacity-90 disabled:opacity-60"
+                disabled={submitting}
               >
-                Publish
+                {submitting ? "Publishing…" : "Publish"}
               </button>
             </div>
           </div>

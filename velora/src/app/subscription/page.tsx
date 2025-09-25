@@ -2,7 +2,6 @@ import Sidebar from "@/components/sidebar";
 import { SubscriptionSection as Section } from "@/components/subscription/section";
 import { SubscriptionVideoRow as VideoRow } from "@/components/subscription/videorow";
 
-
 const available = [
   {
     title: "Cooking Masterclass: The Art of Modern Cuisine",
@@ -44,31 +43,38 @@ export default function Subcription() {
     <div className="flex h-full grow flex-row">
       <Sidebar />
       <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8">
-        <h1 className="text-3xl font-bold text-neutral-50">Subscription Management</h1>
+        {/* === Konsisten dengan Community: container & header === */}
+        <div className="flex flex-col gap-6">
+          <div className="flex flex-col items-start gap-4 md:flex-row md:items-center md:justify-between">
+            <h2 className="text-2xl font-bold text-neutral-50">Subscription Management</h2>
+          </div>
 
-        <Section title="Available Videos" className="mt-6">
-          {available.map((v) => (
-            <VideoRow
-              key={v.title}
-              title={v.title}
-              thumb={v.thumb}
-              subtext={v.subtext}
-              primaryAction={{ label: "Watch" }}
-            />
-          ))}
-        </Section>
+          {/* Seksi 1 */}
+          <Section title="Available Videos">
+            {available.map((v) => (
+              <VideoRow
+                key={v.title}
+                title={v.title}
+                thumb={v.thumb}
+                subtext={v.subtext}
+                primaryAction={{ label: "Watch" }}
+              />
+            ))}
+          </Section>
 
-        <Section title="Completed Videos" className="mt-8">
-          {completed.map((v) => (
-            <VideoRow
-              key={v.title}
-              title={v.title}
-              thumb={v.thumb}
-              subtext={v.subtext}
-              primaryAction={{ label: "Rewatch", variant: "secondary" }}
-            />
-          ))}
-        </Section>
+          {/* Seksi 2 */}
+          <Section title="Completed Videos">
+            {completed.map((v) => (
+              <VideoRow
+                key={v.title}
+                title={v.title}
+                thumb={v.thumb}
+                subtext={v.subtext}
+                primaryAction={{ label: "Rewatch", variant: "secondary" }}
+              />
+            ))}
+          </Section>
+        </div>
       </main>
     </div>
   );

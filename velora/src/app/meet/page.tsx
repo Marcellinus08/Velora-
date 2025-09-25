@@ -94,26 +94,32 @@ export default function MeetPage() {
     <div className="flex h-full grow flex-row">
       <Sidebar />
       <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8">
-        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <h2 className="text-2xl font-bold text-neutral-50">Sedang Berlangsung</h2>
-          <div className="flex items-center gap-2">
-            <button className="flex items-center gap-2 rounded-lg bg-neutral-800 px-4 py-2 text-sm font-medium text-neutral-50 hover:bg-neutral-700">
-              <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden>
-                <path
-                  fillRule="evenodd"
-                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.414-1.414L11 9.586V6z"
-                  clipRule="evenodd"
-                />
-              </svg>
-              <span>Jadwalkan Rapat</span>
-            </button>
-            <button className="rounded-lg bg-[var(--primary-500)] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-opacity-80">
-              Mulai Rapat Baru
-            </button>
-          </div>
-        </div>
+        {/* === Konsisten dengan Community: container & header === */}
+        <div className="flex flex-col gap-6">
+          <div className="flex flex-col items-start gap-4 md:flex-row md:items-center md:justify-between">
+            <h2 className="text-2xl font-bold text-neutral-50">Sedang Berlangsung</h2>
 
-        <MeetingGrid items={meetings} />
+            <div className="flex items-center gap-2">
+              <button className="flex items-center gap-2 rounded-lg bg-neutral-800 px-4 py-2 text-sm font-medium text-neutral-50 hover:bg-neutral-700">
+                <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden>
+                  <path
+                    fillRule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.414-1.414L11 9.586V6z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                <span>Jadwalkan Rapat</span>
+              </button>
+
+              <button className="rounded-lg bg-[var(--primary-500)] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-opacity-80">
+                Mulai Rapat Baru
+              </button>
+            </div>
+          </div>
+
+          {/* Grid meet */}
+          <MeetingGrid items={meetings} />
+        </div>
       </main>
     </div>
   );

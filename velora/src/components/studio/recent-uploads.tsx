@@ -1,3 +1,4 @@
+// src/components/studio/recent-uploads.tsx
 "use client";
 
 import Image from "next/image";
@@ -15,40 +16,51 @@ function CrudMenu({
 }) {
   const [open, setOpen] = useState(false);
 
+  // Helper Material Icon (Round)
+  const MI = ({ name, className = "" }: { name: string; className?: string }) => (
+    <span className={`material-icons-round ${className}`} aria-hidden="true">
+      {name}
+    </span>
+  );
+
   return (
     <div className="relative">
       <button
         onClick={() => setOpen((v) => !v)}
         onBlur={() => setOpen(false)}
-        className="rounded-full p-2 text-neutral-300 hover:bg-neutral-800 hover:text-neutral-100"
+        className="rounded-full p-1.5 text-neutral-300 hover:bg-neutral-800 hover:text-neutral-100"
         aria-label="Open menu"
+        aria-expanded={open}
+        type="button"
       >
-        <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-          <path d="M10 3a2 2 0 110 4 2 2 0 010-4zm0 5a2 2 0 110 4 2 2 0 010-4zm0 5a2 2 0 110 4 2 2 0 010-4z" />
-        </svg>
+        <MI name="more_vert" className="text-[10px] leading-none align-middle" />
       </button>
 
       {open && (
         <div className="absolute right-0 z-10 mt-2 w-40 overflow-hidden rounded-xl border border-neutral-800 bg-neutral-900/95 backdrop-blur">
           <button
+            type="button"
             onMouseDown={(e) => e.preventDefault()}
             onClick={() => {
               setOpen(false);
               onEdit();
             }}
-            className="block w-full px-3 py-2 text-left text-sm text-neutral-200 hover:bg-neutral-800/70"
+            className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-neutral-200 hover:bg-neutral-800/70"
           >
-            Edit
+            <MI name="edit" className="text-[10px] leading-none align-middle" />
+            <span>Edit</span>
           </button>
           <button
+            type="button"
             onMouseDown={(e) => e.preventDefault()}
             onClick={() => {
               setOpen(false);
               onDelete();
             }}
-            className="block w-full px-3 py-2 text-left text-sm text-red-300 hover:bg-red-900/30"
+            className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-red-300 hover:bg-red-900/30"
           >
-            Delete
+            <MI name="delete" className="text-[10px] leading-none align-middle" />
+            <span>Delete</span>
           </button>
         </div>
       )}
@@ -108,7 +120,7 @@ export default function StudioRecentUploads({
               </div>
             </div>
 
-            {/* CRUD menu (replaces Public/Unlisted/Draft badge) */}
+            {/* CRUD menu */}
             <CrudMenu
               onEdit={() => console.log("Edit", v.id)}
               onDuplicate={() => console.log("Duplicate", v.id)}
