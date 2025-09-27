@@ -24,8 +24,20 @@ import { getContractWithCurrentChain } from "@/lib/chain-utils";
 
 /* ===== Minimal ERC20 ABI (read-only) ===== */
 const ERC20_MIN_ABI = [
-  { type: "function", name: "decimals", stateMutability: "view", inputs: [], outputs: [{ type: "uint8" }] },
-  { type: "function", name: "balanceOf", stateMutability: "view", inputs: [{ type: "address" }], outputs: [{ type: "uint256" }] },
+  {
+    type: "function",
+    name: "decimals",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ type: "uint8" }],
+  },
+  {
+    type: "function",
+    name: "balanceOf",
+    stateMutability: "view",
+    inputs: [{ type: "address" }],
+    outputs: [{ type: "uint256" }],
+  },
 ] as const satisfies Abi;
 
 /* ===== Helpers ===== */
@@ -41,10 +53,15 @@ function formatUSD(n: number) {
   for (const u of units) if (n >= u.v) return `$${(n / u.v).toFixed(1)}${u.s}`;
   return `$${n.toFixed(0)}`;
 }
-const short = (addr?: `0x${string}`) => (addr ? `${addr.slice(0, 6)}…${addr.slice(-4)}` : "-");
+const short = (addr?: `0x${string}`) =>
+  addr ? `${addr.slice(0, 6)}…${addr.slice(-4)}` : "-";
 
 /* ============== Hook terpadu: DB-first, fallback Abstract ============== */
-type DbProfile = { abstract_id: string; username: string | null; avatar_url: string | null };
+type DbProfile = {
+  abstract_id: string;
+  username: string | null;
+  avatar_url: string | null;
+};
 
 function useProfileAvatar(address?: `0x${string}`) {
   const addr = useMemo(() => (address ? address.toLowerCase() : ""), [address]);
@@ -65,7 +82,9 @@ function useProfileAvatar(address?: `0x${string}`) {
 
       try {
         // 1) DB dulu (tanpa cache + cache buster)
-        const r = await fetch(`/api/profiles/${addr}?t=${Date.now()}`, { cache: "no-store" });
+        const r = await fetch(`/api/profiles/${addr}?t=${Date.now()}`, {
+          cache: "no-store",
+        });
         let db: DbProfile | null = null;
         if (r.ok) db = (await r.json()) as DbProfile;
 
@@ -82,10 +101,13 @@ function useProfileAvatar(address?: `0x${string}`) {
 
         // 2) fallback ke Abstract jika DB tidak punya avatar
         try {
-          const ra = await fetch(`/api/abstract/user/${addr}`, { cache: "force-cache" });
+          const ra = await fetch(`/api/abstract/user/${addr}`, {
+            cache: "force-cache",
+          });
           if (ra.ok) {
             const j = await ra.json();
-            const abs: string | null = j?.profilePicture || j?.avatar || j?.imageUrl || null;
+            const abs: string | null =
+              j?.profilePicture || j?.avatar || j?.imageUrl || null;
             if (alive) setAvatarUrl(abs ?? null);
           } else if (alive) {
             setAvatarUrl(null);
@@ -147,7 +169,13 @@ const MI = ({ name, className = "" }: { name: string; className?: string }) => (
 );
 
 /* =================== Header =================== */
-type Notif = { id: string; title: string; body?: string; time?: string; unread?: boolean };
+type Notif = {
+  id: string;
+  title: string;
+  body?: string;
+  time?: string;
+  unread?: boolean;
+};
 const RECENT_KEY = "vh_recent_queries";
 const POLL_MS = 60_000;
 
@@ -158,7 +186,9 @@ export default function Header() {
   const { logout } = useLoginWithAbstract();
 
   // === gunakan hook terpadu (DB-first, fallback Abstract) ===
-  const { username: dbUsername, avatarUrl } = useProfileAvatar(address as `0x${string}` | undefined);
+  const { username: dbUsername, avatarUrl } = useProfileAvatar(
+    address as `0x${string}` | undefined
+  );
 
   /* ========= USDC.e balance ========= */
   const client = usePublicClient();
@@ -248,6 +278,26 @@ export default function Header() {
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
+  useEffect(() => {
+    // Fungsi untuk menangani klik di luar area pencarian
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(event.target as Node)
+      ) {
+        setOpenSug(false); // Menutup saran pencarian
+      }
+    };
+
+    // Menambahkan event listener untuk klik di luar
+    document.addEventListener("click", handleClickOutside);
+
+    // Membersihkan event listener ketika komponen dilepas
+    return () => {
+      document.removeEventListener("click", handleClickOutside);
+    };
+  }, []);
+
   function saveRecent(query: string) {
     const list = [query, ...recent.filter((x) => x !== query)].slice(0, 8);
     setRecent(list);
@@ -281,13 +331,25 @@ export default function Header() {
 
   const itemCls = "px-3 py-2 text-[13px]";
   const walletDropdownItems = [
-    <DropdownMenuItem key="profile" className={itemCls} onClick={() => router.push("/profile")}>
+    <DropdownMenuItem
+      key="profile"
+      className={itemCls}
+      onClick={() => router.push("/profile")}
+    >
       Profile
     </DropdownMenuItem>,
-    <DropdownMenuItem key="studio" className={itemCls} onClick={() => router.push("/studio")}>
+    <DropdownMenuItem
+      key="studio"
+      className={itemCls}
+      onClick={() => router.push("/studio")}
+    >
       Studio
     </DropdownMenuItem>,
-    <DropdownMenuItem key="setting" className={itemCls} onClick={() => router.push("/settings")}>
+    <DropdownMenuItem
+      key="setting"
+      className={itemCls}
+      onClick={() => router.push("/settings")}
+    >
       Setting
     </DropdownMenuItem>,
     <div key="sep" className="h-px my-0.5 bg-neutral-800" />,
@@ -304,10 +366,13 @@ export default function Header() {
     const w = window as any;
     const SR = w.SpeechRecognition || w.webkitSpeechRecognition;
     if (!SR) {
-      alert("Voice search tidak didukung oleh browser ini. Coba Chrome/Edge desktop.");
+      alert(
+        "Voice search tidak didukung oleh browser ini. Coba Chrome/Edge desktop."
+      );
       return;
     }
-    const isSecure = location.protocol === "https:" || location.hostname === "localhost";
+    const isSecure =
+      location.protocol === "https:" || location.hostname === "localhost";
     if (!isSecure) {
       alert("Voice search memerlukan HTTPS (kecuali di localhost).");
       return;
@@ -353,7 +418,7 @@ export default function Header() {
           className="flex items-center justify-center rounded-full p-2 text-neutral-50 hover:bg-neutral-800 md:hidden"
           aria-label="Buka menu"
         >
-          <MI name="menu" className="text-[14px] leading-none" />
+          <MI name="menu" className="text-[18px] leading-none" />
         </button>
 
         <Link href="/" aria-label="Home">
@@ -371,10 +436,14 @@ export default function Header() {
       {/* Kolom 2: Search */}
       <div className="flex justify-start">
         <div ref={containerRef} className="relative w-full max-w-[720px]">
-          <form onSubmit={onSubmit} className="flex w-full items-center" role="search">
+          <form
+            onSubmit={onSubmit}
+            className="flex w-full items-center"
+            role="search"
+          >
             <div className="relative flex min-w-0 flex-1">
               <span className="pointer-events-none absolute inset-y-0 left-4 flex items-center">
-                <MI name="search" className="text-[14px] text-neutral-400" />
+                <MI name="search" className="text-[18px] text-neutral-400" />
               </span>
 
               {/* type=text supaya tidak ada tombol clear bawaan */}
@@ -400,17 +469,17 @@ export default function Header() {
                   aria-label="Clear text"
                   title="Clear"
                 >
-                  <MI name="close" className="text-[12px]" />
+                  <MI name="close" className="text-[16px]" />
                 </button>
               )}
 
               <button
                 type="submit"
-                className="h-10 w-16 rounded-r-full border border-l-0 border-neutral-700 bg-neutral-800 text-neutral-200 hover:bg-neutral-700"
+                className="h-10 w-16 rounded-r-full border border-l-0 border-neutral-700 bg-neutral-800 text-neutral-200 hover:bg-neutral-700 flex items-center justify-center"
                 aria-label="Cari"
                 title="Cari"
               >
-                <MI name="search" className="text-[14px]" />
+                <MI name="search" className="text-[18px]" />
               </button>
             </div>
 
@@ -422,12 +491,12 @@ export default function Header() {
               aria-label="Pencarian suara"
               title="Pencarian suara"
             >
-              <MI name="keyboard_voice" className="text-[14px]" />
+              <MI name="keyboard_voice" className="text-[18px]" />
             </button>
           </form>
 
           {/* Suggestion */}
-          {openSug && ((recent.length > 0) || q) && (
+          {openSug && (recent.length > 0 || q) && (
             <div className="absolute left-0 right-0 top-[44px] mx-auto w-full max-w-[720px] rounded-xl border border-neutral-800 bg-neutral-900/95 backdrop-blur supports-[backdrop-filter]:bg-neutral-900/70">
               {recent.length > 0 && (
                 <div className="flex items-center justify-between px-4 py-2 text-xs text-neutral-400">
@@ -443,8 +512,24 @@ export default function Header() {
               )}
 
               <ul className="py-2">
-                {[...new Set([...recent, ...(q ? ["tutorial","olahraga","crypto","masak","pendidikan","fotografi"].filter(s=>s.toLowerCase().includes(q.toLowerCase())):[])])]
-                  .slice(0,7)
+                {[
+                  ...new Set([
+                    ...recent,
+                    ...(q
+                      ? [
+                          "tutorial",
+                          "olahraga",
+                          "crypto",
+                          "masak",
+                          "pendidikan",
+                          "fotografi",
+                        ].filter((s) =>
+                          s.toLowerCase().includes(q.toLowerCase())
+                        )
+                      : []),
+                  ]),
+                ]
+                  .slice(0, 7)
                   .map((s) => {
                     const isRecent = recent.includes(s);
                     return (
@@ -473,13 +558,17 @@ export default function Header() {
                             title="Remove from history"
                             className="absolute right-2 top-1/2 hidden h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full text-neutral-400 hover:bg-neutral-700 hover:text-neutral-100 group-hover:flex"
                           >
-                            <MI name="close" className="text-[12px]" />
+                            <MI name="close" className="text-[16px]" />
                           </button>
                         )}
                       </li>
                     );
                   })}
-                {q && <li className="px-4 pt-1 text-xs text-neutral-500">Press Enter to search “{q}”.</li>}
+                {q && (
+                  <li className="px-4 pt-1 text-xs text-neutral-500">
+                    Press Enter to search “{q}”.
+                  </li>
+                )}
               </ul>
             </div>
           )}
@@ -496,15 +585,22 @@ export default function Header() {
           <>
             <div className="hidden items-center gap-4 rounded-full bg-neutral-800 px-4 py-1.5 sm:flex">
               <div className="flex items-center gap-2">
-                <MI name="star" className="text-[14px] text-yellow-400" />
-                <span className="text-sm font-semibold text-neutral-50">2.500</span>
+                <MI name="star" className="text-[18px] text-yellow-400" />
+                <span className="text-sm font-semibold text-neutral-50">
+                  2.500
+                </span>
               </div>
 
               <div className="h-5 w-px bg-neutral-700" />
 
               <div className="flex items-center gap-2">
-                <MI name="account_balance_wallet" className="text-[14px] text-[var(--primary-500)]" />
-                <span className="text-sm font-semibold text-neutral-50">USDC.e {usdceText}</span>
+                <MI
+                  name="account_balance_wallet"
+                  className="text-[18px] text-[var(--primary-500)]"
+                />
+                <span className="text-sm font-semibold text-neutral-50">
+                  USDC.e {usdceText}
+                </span>
               </div>
             </div>
 
@@ -512,17 +608,32 @@ export default function Header() {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button
-                    className="flex size-10 cursor-pointer items-center justify-center rounded-full text-neutral-50 transition-colors hover:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-[var(--primary-500)]/40"
-                    aria-label="Tambah"
-                    title="Tambah"
+                    className="flex size-10 cursor-pointer border border-[var(--primary-500)] items-center justify-center rounded-full text-neutral-50 transition-colors hover:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-[var(--primary-500)]/40"
+                    aria-label="Add"
+                    title="Add"
                   >
-                    <MI name="add" className="text-[14px]" />
+                    <MI name="add" className="text-[18px]" />
                   </button>
                 </DropdownMenuTrigger>
 
                 <DropdownMenuContent align="end" side="bottom" className="w-44">
-                  <DropdownMenuItem onClick={() => router.push("/ads")}>Create ads</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => router.push("/upload")}>Upload video</DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => router.push("/ads")}
+                    className="cursor-pointer hover:text-purple-600"
+                  >
+                    <MI name="ads_click" className="text-[16px]" />
+                    {/* Ikon untuk Create Ads */}
+                    Create ads
+                  </DropdownMenuItem>
+
+                  <DropdownMenuItem
+                    onClick={() => router.push("/upload")}
+                    className="cursor-pointer hover:text-purple-600"
+                  >
+                    <MI name="file_upload" className="text-[16px]" />
+                    {/* Ikon untuk Upload Video */}
+                    Upload video
+                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
@@ -531,11 +642,11 @@ export default function Header() {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button
-                    className="relative flex size-10 cursor-pointer items-center justify-center overflow-hidden rounded-full text-neutral-50 transition-colors hover:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-[var(--primary-500)]/40"
+                    className="relative flex size-10 cursor-pointer border border-[var(--primary-500)] items-center justify-center overflow-hidden rounded-full text-neutral-50 transition-colors hover:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-[var(--primary-500)]/40"
                     aria-label="Notification"
                     title="Notification"
                   >
-                    <MI name="notifications" className="text-[14px]" />
+                    <MI name="notifications" className="text-[18px]" />
                     {unreadCount > 0 && (
                       <span className="absolute right-1 top-1 block h-2 w-2 rounded-full bg-[var(--primary-500)]" />
                     )}
@@ -544,15 +655,24 @@ export default function Header() {
 
                 <DropdownMenuContent align="end" side="bottom" className="w-80">
                   <div className="px-4 py-3 border-b border-neutral-800">
-                    <h3 className="text-sm font-semibold text-neutral-100">Notifications</h3>
+                    <h3 className="text-sm font-semibold text-neutral-100">
+                      Notifications
+                    </h3>
                   </div>
 
                   <div className="flex flex-col items-center px-6 py-8 text-center">
                     <div className="flex h-12 w-12 items-center justify-center rounded-full bg-neutral-800/70">
-                      <MI name="notifications_none" className="text-[22px] text-neutral-300" />
+                      <MI
+                        name="notifications_none"
+                        className="text-[22px] text-neutral-300"
+                      />
                     </div>
-                    <p className="mt-3 text-sm font-medium text-neutral-200">No notifications yet</p>
-                    <p className="mt-1 text-xs text-neutral-400">Notifications will appear here later.</p>
+                    <p className="mt-3 text-sm font-medium text-neutral-200">
+                      No notifications yet
+                    </p>
+                    <p className="mt-1 text-xs text-neutral-400">
+                      Notifications will appear here later.
+                    </p>
                   </div>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -573,13 +693,25 @@ export default function Header() {
                   </button>
                 </DropdownMenuTrigger>
 
-                <DropdownMenuContent align="end" side="bottom" className="w-72 p-0 overflow-hidden">
+                <DropdownMenuContent
+                  align="end"
+                  side="bottom"
+                  className="w-72 p-0 overflow-hidden"
+                >
                   <div className="flex items-center gap-3 px-4 py-3 border-b border-neutral-800">
                     <div className="relative h-8 w-8 overflow-hidden rounded-full ring-2 ring-[var(--primary-500)]">
                       {avatarUrl ? (
-                        <img src={avatarUrl} alt="Avatar" className="h-full w-full object-cover" />
+                        <img
+                          src={avatarUrl}
+                          alt="Avatar"
+                          className="h-full w-full object-cover"
+                        />
                       ) : (
-                        <AbstractProfile size="xs" showTooltip={false} className="!h-8 !w-8" />
+                        <AbstractProfile
+                          size="xs"
+                          showTooltip={false}
+                          className="!h-8 !w-8"
+                        />
                       )}
                     </div>
                     <div className="min-w-0">
@@ -592,11 +724,12 @@ export default function Header() {
                           className="rounded p-1 hover:bg-neutral-800"
                           aria-label="Copy address"
                           onClick={() => {
-                            if (address) navigator.clipboard?.writeText(address);
+                            if (address)
+                              navigator.clipboard?.writeText(address);
                           }}
                           title="Copy address"
                         >
-                          <MI name="content_copy" className="text-[12px]" />
+                          <MI name="content_copy" className="text-[16px]" />
                         </button>
                       </div>
                     </div>

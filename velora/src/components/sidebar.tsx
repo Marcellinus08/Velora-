@@ -1,4 +1,3 @@
-// src/components/sidebar.tsx
 "use client";
 
 import Link from "next/link";
@@ -14,14 +13,18 @@ export default function Sidebar() {
   };
 
   const base =
-    "flex items-center gap-4 rounded-lg px-3 py-2 text-sm font-medium transition-colors";
-  const activeCls = "bg-neutral-800 text-neutral-50";
-  const inactiveCls = "text-neutral-50 hover:bg-neutral-700";
+    "flex items-center gap-4 rounded-lg px-3 py-3 text-base font-medium transition-all duration-300 ease-out"; // Meningkatkan padding dan ukuran font
+
+  // Menggunakan warna ungu untuk teks aktif dan background ungu saat aktif
+  const activeCls =
+    "text-[#8a2be2] font-semibold bg-neutral-800 border-l-4 border-[#8a2be2]"; // Teks aktif dengan background dan border
+  const inactiveCls =
+    "text-neutral-50 hover:bg-neutral-700 hover:text-neutral-50 hover:scale-105 hover:shadow-lg";
 
   // util ikon (Material Icons Round)
   const Icon = ({ name }: { name: string }) => (
     <span
-      className="material-icons-round text-[24px] leading-none"
+      className="material-icons-round text-[28px] leading-none transition-transform duration-200 group-hover:scale-110" // Meningkatkan ukuran ikon
       aria-hidden="true"
     >
       {name}
@@ -43,7 +46,7 @@ export default function Sidebar() {
 
         {/* Subscription */}
         <Link
-          href="/subscription" // ganti jika route kamu ejaannya lain
+          href="/subscription"
           aria-current={isActive("/subscription") ? "page" : undefined}
           className={`${base} ${isActive("/subscription") ? activeCls : inactiveCls}`}
         >

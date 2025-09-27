@@ -1,4 +1,3 @@
-// src/components/cards-grid.tsx
 "use client";
 
 import { useEffect, useRef, useState } from "react";
@@ -67,14 +66,18 @@ function writeCacheMiss(key: string) {
 
 /* Helpers */
 const fmtUSD = (cents?: number | null) =>
-  typeof cents === "number" && cents > 0 ? `$${(cents / 100).toFixed(2)}` : "Free";
+  typeof cents === "number" && cents > 0
+    ? `$${(cents / 100).toFixed(2)}`
+    : "Free";
 
 const calcTotalPointsFromPrice = (priceCents?: number | null) =>
   Math.max(0, Math.round(((priceCents ?? 0) / 100) * 10));
 
 const resolveTotalPoints = (row: VideoRow) => {
-  if (typeof row.points_total === "number" && row.points_total > 0) return row.points_total;
-  if (typeof row.total_points === "number" && row.total_points > 0) return row.total_points;
+  if (typeof row.points_total === "number" && row.points_total > 0)
+    return row.points_total;
+  if (typeof row.total_points === "number" && row.total_points > 0)
+    return row.total_points;
   return calcTotalPointsFromPrice(row.price_cents);
 };
 
@@ -135,7 +138,8 @@ export default function CardsGrid() {
         }
 
         if (!active) return;
-        if (!data) throw lastError ?? new Error("Unknown error fetching videos");
+        if (!data)
+          throw lastError ?? new Error("Unknown error fetching videos");
 
         setItems(data as VideoRow[]);
       } catch (e: any) {
@@ -192,7 +196,9 @@ export default function CardsGrid() {
       const results = await Promise.all(
         need.map(async (addr) => {
           try {
-            const r = await fetch(`/api/abstract/user/${addr}`, { cache: "force-cache" });
+            const r = await fetch(`/api/abstract/user/${addr}`, {
+              cache: "force-cache",
+            });
             if (r.ok) {
               const j = await r.json();
               const url: string | null =
@@ -233,7 +239,6 @@ export default function CardsGrid() {
     return () => {
       alive = false;
     };
-    // tergantung pada daftar item & map tried; tidak perlu tergantung absAvatars
   }, [items, absTried]);
 
   /* ================== UI ================== */
@@ -289,12 +294,14 @@ export default function CardsGrid() {
         const totalPoints = resolveTotalPoints(v);
 
         return (
-          <div key={v.id} className="group flex flex-col rounded-xl bg-neutral-900">
+          <div
+            key={v.id}
+            className="group flex flex-col rounded-xl bg-neutral-900 transition-all duration-300 hover:shadow-lg hover:scale-105 transform"
+          >
             {/* Thumbnail */}
-            <div className="relative w-full overflow-hidden rounded-xl">
+            <div className="relative w-full overflow-hidden rounded-xl group-hover:opacity-90">
               {totalPoints > 0 && (
                 <div className="absolute left-2 top-2 z-10 flex items-center gap-1.5 rounded-full border border-neutral-700 bg-neutral-900/85 px-2.5 py-1 text-xs font-semibold text-neutral-100 backdrop-blur">
-                  {/* Ikon bintang pakai Material Icons Round */}
                   <span
                     className="material-icons-round text-yellow-400 align-middle"
                     style={{ fontSize: "16px" }}
@@ -307,22 +314,21 @@ export default function CardsGrid() {
               )}
 
               <div
-                className="aspect-video w-full cursor-pointer bg-cover bg-center bg-no-repeat transition-transform duration-300 group-hover:scale-105"
+                className="aspect-video w-full bg-cover bg-center bg-no-repeat transition-transform duration-300 group-hover:scale-105"
                 style={{ backgroundImage: `url("${bg}")` }}
                 aria-label={v.title}
               />
             </div>
 
             {/* Info */}
-            <div className="flex flex-1 flex-col gap-2 p-2">
-              <h3 className="cursor-pointer text-base font-semibold leading-snug text-neutral-50">
+            <div className="flex flex-1 flex-col gap-2 p-2 group-hover:text-[var(--primary-500)] transition-colors">
+              <h3 className=" text-base font-semibold leading-snug text-neutral-50 group-hover:text-[var(--primary-500)]">
                 {v.title}
               </h3>
 
               <div className="flex items-center gap-2 text-sm text-neutral-400">
                 <div className="h-6 w-6 overflow-hidden rounded-full bg-neutral-800 ring-1 ring-neutral-700">
                   {avatarSrc ? (
-                    // eslint-disable-next-line @next/next/no-img-element
                     <img
                       src={avatarSrc}
                       alt="Avatar"
@@ -330,12 +336,12 @@ export default function CardsGrid() {
                       crossOrigin="anonymous"
                       referrerPolicy="no-referrer"
                       onError={(e) => {
-                        (e.currentTarget as HTMLImageElement).style.display = "none";
+                        (e.currentTarget as HTMLImageElement).style.display =
+                          "none";
                       }}
                     />
                   ) : addrLower ? (
                     <AbstractProfile
-                      // @ts-expect-error generic props
                       address={addrLower}
                       size="xs"
                       showTooltip={false}
@@ -352,18 +358,26 @@ export default function CardsGrid() {
                     </svg>
                   )}
                 </div>
-                <span className="cursor-pointer">{author}</span>
+                <span>{author}</span>
               </div>
 
               <div className="mt-auto flex items-end justify-between">
-                <p className="text-base font-bold text-neutral-50">{priceText}</p>
+                <p className="text-base font-bold text-neutral-50">
+                  {priceText}
+                </p>
                 <button
-                  className="rounded-full bg-[var(--primary-500)] px-4 py-1.5 text-sm font-semibold text-white transition-colors hover:bg-opacity-80"
+                  type="button"
+                  className="group relative cursor-pointer inline-flex items-center gap-2 rounded-full bg-[var(--primary-500)] px-4 py-2 text-sm font-semibold text-white transition-all duration-200 ease-out hover:scale-105 hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[var(--primary-500)] focus-visible:ring-offset-neutral-900"
                   onClick={() => {
                     window.location.href = `/studio/video/${v.id}`;
                   }}
                 >
-                  Buy
+                  {/* shimmer sweep */}
+                  <span className="pointer-events-none absolute inset-0 overflow-hidden rounded-full">
+                    <span className="absolute -left-10 top-0 h-full w-8 skew-x-[-20deg] bg-white/20 opacity-0 transition-all duration-500 group-hover:left-[110%] group-hover:opacity-100" />
+                  </span>
+
+                  <span>Buy</span>
                 </button>
               </div>
             </div>

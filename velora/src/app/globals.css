@@ -99,7 +99,14 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
-@layer base {
-  
+/* Menghilangkan tampilan scroll bar */
+::-webkit-scrollbar {
+  display: none;
 }
+
+/* Pastikan konten masih bisa discroll */
+body {
+  overflow: scroll;
+}
+
 
