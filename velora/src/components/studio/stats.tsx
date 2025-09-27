@@ -6,7 +6,8 @@ import { fmtInt, fmtUsd } from "@/lib/format";
 type Totals = {
   videos: number;
   campaigns: number;
-  points: number;
+  /** Total unique buyers across all your paid videos */
+  buyers: number;
   /** Earnings from paid video purchases (USD) */
   earningsUsd: number;
 };
@@ -28,13 +29,8 @@ function InfoHint({ text }: { text: string }) {
         className="pointer-events-none absolute top-full z-20 mt-2 hidden max-w-[420px] -translate-x-1/2 rounded-lg border border-neutral-800
                    bg-neutral-900/90 px-3 py-2 text-xs text-neutral-200 shadow-lg backdrop-blur
                    group-hover:block group-focus-within:block
-                   left-1/2 ltr:[--pad:16px] rtl:[--pad:16px] 
-                   [--gutter:16px] 
-                   [transform-origin:top_center]"
-        style={{
-          insetInlineStart: "50%",
-          translate: "-50% 0",
-        } as React.CSSProperties}
+                   left-1/2"
+        style={{ insetInlineStart: "50%", translate: "-50% 0" } as React.CSSProperties}
         role="tooltip"
       >
         {text}
@@ -43,7 +39,7 @@ function InfoHint({ text }: { text: string }) {
   );
 }
 
-/** Helper Material Icon (Round) kecil & rapi baseline */
+/** Material Icon (Round) kecil */
 const MI = ({ name, className = "" }: { name: string; className?: string }) => (
   <span
     className={`material-icons-round text-neutral-500 text-[14px] leading-none align-middle ${className}`}
@@ -100,16 +96,16 @@ export default function StudioStats({ totals }: { totals: Totals }) {
         rightIcon={<MI name="campaign" />}
       />
 
-      {/* Points */}
+      {/* Buyers (replaces Points) */}
       <StatCard
         label={
           <span className="inline-flex items-center">
-            Points
-            <InfoHint text="Total points earned from your uploaded videos. Points are awarded based on your content activity (e.g., uploads, views, or milestones)." />
+            Buyers
+            <InfoHint text="Total number of buyers across all your paid videos." />
           </span>
         }
-        value={fmtInt(totals.points)}
-        rightIcon={<MI name="star" />}
+        value={fmtInt(totals.buyers)}
+        rightIcon={<MI name="shopping_bag" />}
       />
 
       {/* Earnings */}

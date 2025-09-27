@@ -1,4 +1,3 @@
-// src/components/upload/create.tsx
 "use client";
 
 import { useEffect, useRef, useState } from "react";
@@ -379,6 +378,11 @@ export default function UploadCreate() {
         title: "Upload complete!",
         text: "Your video was uploaded successfully.",
         confirmButtonText: "OK",
+        position: "top-end",
+        toast: true,
+        timer: 3000,
+        timerProgressBar: true,
+        showConfirmButton: false,
       });
 
       resetAll();
@@ -397,6 +401,11 @@ export default function UploadCreate() {
         title: "Upload failed",
         text: msg,
         confirmButtonText: "OK",
+        position: "top-end",
+        toast: true,
+        timer: 3000,
+        timerProgressBar: true,
+        showConfirmButton: false,
       });
     }
   }

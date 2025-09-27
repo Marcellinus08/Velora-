@@ -1,19 +1,19 @@
-// src/components/community/createmodal.tsx
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
 import type { NewPostPayload } from "./types";
+import Swal from "sweetalert2";
 
 type LocalFile = { id: string; file: File; url: string };
 
-/* Helper ikon Material (Round) */
+/* Helper icon Material (Round) */
 const MI = ({ name, className = "" }: { name: string; className?: string }) => (
   <span className={`material-icons-round ${className}`} aria-hidden="true">
     {name}
   </span>
 );
 
-/** Safe random id: gunakan crypto.randomUUID jika tersedia, fallback ke string acak */
+/** Safe random id: use crypto.randomUUID if available, fallback to random string */
 function uid() {
   const c = (globalThis as any)?.crypto;
   if (c && typeof c.randomUUID === "function") return c.randomUUID();
@@ -39,7 +39,7 @@ export default function CreatePostModal({
   const [submitting, setSubmitting] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  // Revoke semua ObjectURL ketika modal ditutup/unmount
+  // Revoke all ObjectURLs when modal closes/unmounts
   useEffect(() => {
     if (!open) return;
     return () => {
@@ -86,6 +86,7 @@ export default function CreatePostModal({
     try {
       let mediaPaths: string[] = [];
 
+      // Handle file uploads if there are any
       if (items.length) {
         const uf = new FormData();
         items.forEach((i) => uf.append("files", i.file));
@@ -98,11 +99,25 @@ export default function CreatePostModal({
         mediaPaths = (j.items || []).map((x: any) => x.path);
       }
 
+      // Submit the post data including the file paths
       onSubmit({ ...base, mediaPaths });
 
-      // bersihkan object URLs setelah submit sukses
+      // Clean up object URLs after successful submit
       items.forEach((i) => URL.revokeObjectURL(i.url));
       setItems([]);
+
+      // Show success alert with Toast
+      Swal.fire({
+        icon: "success",
+        title: "Post Created!",
+        text: "Your post was published successfully.",
+        position: "top-end",
+        toast: true,
+        timer: 3000,
+        timerProgressBar: true,
+        showConfirmButton: false,
+      });
+
     } catch (err: any) {
       alert(err?.message || "Failed to publish");
     } finally {
@@ -190,10 +205,10 @@ export default function CreatePostModal({
               >
                 <MI name="cloud_upload" className="mb-2 text-[24px] opacity-70" />
                 <div className="text-sm text-neutral-300">
-                  Drag &amp; drop file di sini, atau{" "}
-                  <span className="text-[var(--primary-500)]">pilih file</span>
+                  Drag &amp; drop file here, or{" "}
+                  <span className="text-[var(--primary-500)]">choose a file</span>
                 </div>
-                <div className="mt-1 text-xs text-neutral-500">PNG, JPG, GIF, MP4, WebM (maks 25MB)</div>
+                <div className="mt-1 text-xs text-neutral-500">PNG, JPG, GIF, MP4, WebM (max 25MB)</div>
               </div>
 
               <input
@@ -236,7 +251,7 @@ export default function CreatePostModal({
               <button
                 type="button"
                 onClick={() => {
-                  // bersih-bersih url saat cancel
+                  // Clean up URL on cancel
                   items.forEach((i) => URL.revokeObjectURL(i.url));
                   setItems([]);
                   onClose();

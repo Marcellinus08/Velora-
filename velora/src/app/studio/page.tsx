@@ -1,76 +1,111 @@
-// src/app/studio/page.tsx
-import Sidebar from "@/components/sidebar";
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+import { useAccount } from "wagmi";
+
 import StudioHeader from "@/components/studio/header";
 import StudioStats from "@/components/studio/stats";
 import StudioActions from "@/components/studio/actions";
 import StudioRecentPanel from "@/components/studio/recent";
-import type { StudioVideo, StudioAd } from "@/components/studio/types";
+import type { StudioVideo } from "@/components/studio/types";
 
-export const metadata = {
-  title: "Studio",
+/* ===== Helpers kecil ===== */
+function secondsToDuration(sec?: number | null) {
+  if (!sec || sec <= 0) return "00:00";
+  const m = Math.floor(sec / 60);
+  const s = Math.floor(sec % 60);
+  return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+}
+function timeAgo(iso?: string) {
+  if (!iso) return "";
+  const d = new Date(iso);
+  const diff = Date.now() - d.getTime();
+  const s = Math.max(1, Math.floor(diff / 1000));
+  if (s < 60) return `${s}s ago`;
+  const m = Math.floor(s / 60);
+  if (m < 60) return `${m}m ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h ago`;
+  const d2 = Math.floor(h / 24);
+  if (d2 < 30) return `${d2}d ago`;
+  const mo = Math.floor(d2 / 30);
+  if (mo < 12) return `${mo}mo ago`;
+  const y = Math.floor(mo / 12);
+  return `${y}y ago`;
+}
+
+type ApiVideo = {
+  id: string;
+  created_at: string;
+  title: string;
+  description: string | null;
+  duration_seconds: number | null;
+  video_url: string | null;
+  thumb_url: string | null;
+  price_cents: number | null;
+  currency: string | null;
+  points_total: number | null;
 };
 
 export default function StudioPage() {
-  // Dummy data (buyers & revenueUsd opsional; bila tak ada, barisnya tak akan tampil)
-  const videos: StudioVideo[] = [
-    {
-      id: "v1",
-      title: "Cooking Masterclass: Knife Skills",
-      thumb:
-        "https://lh3.googleusercontent.com/aida-public/AB6AXuAoJxTecPhE_PaHpo4ZMSRgsJyjjbygHj90EAayCOOo8Z61pIDLDKnANPpOPMRJmq9pRh3GMZuQ6uk1F3nKNawraJTtfehJfC_EZ7qgQX7ktNINJtTTaNVMIDSty3QfcJigHJbB3XiHQiekgePmLgzhWdD4qqrOg1SkYCaulR27KioxNtGqHocE0ZH5NdikY51LvDifBXYWb0FaNbVIWW5BUhX2AyI6Nya7Aw0kimRjnIV-d2QKl-v9HkNwdMBubIFjjRe9LfWk-bXH",
-      views: 12500,
-      duration: "12:34",
-      date: "2d ago",
-      description: "Fundamental grips, safety, and precision techniques to speed up your prep.",
-      buyers: 320,            // <-- opsional
-      revenueUsd: 6400,       // <-- opsional
-    },
-    {
-      id: "v2",
-      title: "Portrait Photography: Natural Light",
-      thumb:
-        "https://lh3.googleusercontent.com/aida-public/AB6AXuAHrvuNync_nTfcbA8iztllr7QKztBcoVpacwu54RVKBswSfbItkTVJlz3hT84f_fPd19JQbWdWflKUR5QZhd8dnNvJ9PbUD467CPGDlp32MM7J2zKjZGdvNcFnBnUSg769Z3vxEf62UlUqigg401KvZvlTFSSHmkqrf6s3avv9qjWvIxYKX5cP8AMXFIbF6THqs5CLCJ66iZ9y9vN6xDJi6RYXOdodIArH96v7OdGhL42jSmFEiKnMxg0BQ2A_M4g3wW6O0qXmMdU-",
-      views: 8800,
-      duration: "08:10",
-      date: "5d ago",
-      description: "Find flattering angles and soft light using windows and simple reflectors.",
-      buyers: 210,
-      revenueUsd: 3150,
-    },
-    {
-      id: "v3",
-      title: "Food Styling for Beginners",
-      thumb:
-        "https://lh3.googleusercontent.com/aida-public/AB6AXuCFe4gqN3yVnS3U4O9JHjQXJfO6Gqz6o4z0H5yKkq2J8m3G5s2Bx0GtqVx7oLwG0kq9QjY2xJ4-",
-      views: 5400,
-      duration: "06:22",
-      date: "1w ago",
-      description: "Step-by-step plating and styling tricks to make dishes look irresistible.",
-      buyers: 95,
-      revenueUsd: 950,
-    },
-  ];
+  const { address, status } = useAccount();
+  const me = useMemo(() => (address ?? "").toLowerCase(), [address]);
 
-  const ads: StudioAd[] = [
-    { id: "a1", name: "Cooking Course Launch", status: "Active", budget: "$150", spend: "$64", ctr: 3.4, date: "Running" },
-    { id: "a2", name: "Portrait Workshop Promo", status: "Paused", budget: "$200", spend: "$120", ctr: 2.1, date: "Paused yesterday" },
-    { id: "a3", name: "Cooking Course Launch", status: "Paused", budget: "$150", spend: "$64", ctr: 3.4, date: "Paused yesterday" },
-    { id: "a4", name: "Cooking Course Launch", status: "Active", budget: "$150", spend: "$64", ctr: 3.4, date: "Running" },
-    { id: "a5", name: "Portrait Workshop Promo", status: "Paused", budget: "$200", spend: "$120", ctr: 2.1, date: "Paused yesterday" },
-  ];
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [videos, setVideos] = useState<StudioVideo[]>([]);
+
+  async function load() {
+    if (!me) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/studio/videos?me=${me}`, { cache: "no-store" });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json?.error || res.statusText);
+
+      const items = (json.items as ApiVideo[]).map<StudioVideo>((v) => ({
+        id: v.id,
+        title: v.title,
+        thumb: v.thumb_url || "/placeholder-thumb.jpg",
+        duration: secondsToDuration(v.duration_seconds ?? 0),
+        views: 0, // belum ada kolom views di skema
+        date: timeAgo(v.created_at),
+        description: v.description ?? undefined,
+        points: v.points_total ?? undefined,
+
+        // buyers & revenue: belum ada tabel orders di skema contoh -> biarkan undefined
+        buyers: undefined,
+        revenueUsd: undefined,
+      }));
+
+      setVideos(items);
+    } catch (e: any) {
+      console.error("[studio page] load videos failed:", e);
+      setError(e?.message || "Failed to load videos");
+      setVideos([]);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    if (status === "connected" && me) void load();
+  }, [status, me]);
 
   return (
     <div className="flex h-full grow flex-row">
       <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8">
         <StudioHeader />
 
+        {/* Stats — contoh agregasi sederhana dari data yang ada */}
         <div className="mt-6">
           <StudioStats
             totals={{
-              videos: 42,
-              campaigns: 6,
-              points: 2500,
-              earningsUsd: 356.2,
+              videos: videos.length,
+              campaigns: 0,                 // belum ada data campaign di contoh
+              buyersTotal: videos.reduce((a, b) => a + (b.buyers ?? 0), 0),
+              earningsUsd: videos.reduce((a, b) => a + (b.revenueUsd ?? 0), 0),
             }}
           />
         </div>
@@ -80,7 +115,22 @@ export default function StudioPage() {
         </div>
 
         <div className="mt-8">
-          <StudioRecentPanel videos={videos} ads={ads} />
+          {error && (
+            <div className="rounded-md border border-red-700 bg-red-900/30 p-3 text-sm text-red-200">
+              {error}
+            </div>
+          )}
+          {loading ? (
+            <div className="rounded-2xl border border-neutral-800 bg-neutral-900/40 p-6 text-neutral-400">
+              Loading…
+            </div>
+          ) : (
+            <StudioRecentPanel
+              // panelmu sudah menerima prop "videos" dan akan meneruskan ke StudioRecentUploads
+              videos={videos}
+              ads={[]} // belum ada
+            />
+          )}
         </div>
       </main>
     </div>

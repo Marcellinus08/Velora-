@@ -7,9 +7,10 @@ export type StudioVideo = {
   date: string;          // "2d ago"
   description?: string;  // optional
 
-  // NEW (opsional)
+  // baru
   buyers?: number;       // total pembeli video
   revenueUsd?: number;   // total pendapatan USD
+  points?: number;       // poin yang ditampilkan di badge thumbnail
 };
 
 export type StudioAd = {
