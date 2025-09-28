@@ -1,6 +1,6 @@
 // src/app/layout.tsx
 import "./globals.css";
-import Header from "@/components/header";
+import SiteHeader from "@/components/header/index";
 import { NextAbstractWalletProvider } from "@/components/agw-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import ProfileUpsertOnLogin from "@/components/auth/profile-upsert-on-login";
@@ -56,7 +56,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           <ProfileUpsertOnLogin />
 
           <TooltipProvider delayDuration={150}>
-            <Header />
+            <SiteHeader />
             {children}
           </TooltipProvider>
         </NextAbstractWalletProvider>

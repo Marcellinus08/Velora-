@@ -24,7 +24,11 @@ export default function CommunityPage() {
     const ct = res.headers.get("content-type") || "";
     if (ct.includes("application/json")) return await res.json();
     const text = await res.text().catch(() => "");
-    throw new Error(`Unexpected response (${res.status}).${text ? ` Body: ${text.slice(0, 200)}` : ""}`);
+    throw new Error(
+      `Unexpected response (${res.status}).${
+        text ? ` Body: ${text.slice(0, 200)}` : ""
+      }`
+    );
   }
 
   async function load() {
@@ -32,9 +36,13 @@ export default function CommunityPage() {
     setError(null);
     try {
       const qs: string[] = [];
-      if (category !== "All Topics") qs.push(`category=${encodeURIComponent(category)}`);
+      if (category !== "All Topics")
+        qs.push(`category=${encodeURIComponent(category)}`);
       if (me) qs.push(`me=${me}`);
-      const res = await fetch(`/api/community/posts${qs.length ? `?${qs.join("&")}` : ""}`, { cache: "no-store" });
+      const res = await fetch(
+        `/api/community/posts${qs.length ? `?${qs.join("&")}` : ""}`,
+        { cache: "no-store" }
+      );
       const json = await safeJson(res);
       if (!res.ok) throw new Error(json?.error || `HTTP ${res.status}`);
       setPosts((json.posts || []) as CommunityPost[]);
@@ -47,7 +55,9 @@ export default function CommunityPage() {
     }
   }
 
-  useEffect(() => { void load(); }, [category, me]);
+  useEffect(() => {
+    void load();
+  }, [category, me]);
 
   async function handleCreate(data: NewPostPayload) {
     if (!me) return alert("Connect wallet dulu.");
@@ -71,7 +81,15 @@ export default function CommunityPage() {
   async function toggleLike(id: string) {
     if (!me) return alert("Connect wallet dulu.");
     setPosts((prev) =>
-      prev.map((p) => (p.id === id ? { ...p, liked: !p.liked, likes: p.liked ? p.likes - 1 : p.likes + 1 } : p))
+      prev.map((p) =>
+        p.id === id
+          ? {
+              ...p,
+              liked: !p.liked,
+              likes: p.liked ? p.likes - 1 : p.likes + 1,
+            }
+          : p
+      )
     );
     try {
       const res = await fetch(`/api/community/posts/${id}/like`, {
@@ -83,7 +101,15 @@ export default function CommunityPage() {
       if (!res.ok) throw new Error(json?.error || res.statusText);
     } catch (e) {
       setPosts((prev) =>
-        prev.map((p) => (p.id === id ? { ...p, liked: !p.liked, likes: p.liked ? p.likes - 1 : p.likes + 1 } : p))
+        prev.map((p) =>
+          p.id === id
+            ? {
+                ...p,
+                liked: !p.liked,
+                likes: p.liked ? p.likes - 1 : p.likes + 1,
+              }
+            : p
+        )
       );
       setError("Gagal menyimpan like. Coba lagi.");
     }
@@ -119,11 +145,20 @@ export default function CommunityPage() {
       const json = await safeJson(res);
       if (!res.ok) throw new Error(json?.error || res.statusText);
 
-      await Swal.fire({ icon: "success", title: "Deleted", timer: 1200, showConfirmButton: false });
+      await Swal.fire({
+        icon: "success",
+        title: "Deleted",
+        timer: 1200,
+        showConfirmButton: false,
+      });
     } catch (e: any) {
       console.error("Delete failed:", e);
       setPosts(prev); // rollback
-      await Swal.fire({ icon: "error", title: "Gagal menghapus", text: e?.message || "Unknown error" });
+      await Swal.fire({
+        icon: "error",
+        title: "Gagal menghapus",
+        text: e?.message || "Unknown error",
+      });
     }
   }
 
@@ -133,14 +168,33 @@ export default function CommunityPage() {
       <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8">
         <div className="flex flex-col gap-6">
           <div className="flex flex-col items-start gap-4 md:flex-row md:items-center md:justify-between">
-            <h2 className="text-2xl font-bold text-neutral-50">Community Discussions</h2>
+            <h2 className="text-2xl font-bold text-neutral-50">
+              Community Discussions
+            </h2>
 
             <button
               onClick={() => setOpen(true)}
-              className="flex items-center gap-2 rounded-full bg-[var(--primary-500)] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-opacity-80"
+              className="
+    cursor-pointer group relative flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold
+    text-white bg-[var(--primary-500)]
+    transition-all duration-200
+    hover:bg-opacity-85
+    hover:ring-2 hover:ring-[rgba(124,58,237,0.85)] hover:ring-offset-2 hover:ring-offset-neutral-900
+    hover:shadow-[0_0_14px_7px_rgba(124,58,237,0.55)]
+    focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary-500)]/40
+  "
             >
-              <svg className="size-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden>
-                <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd"/>
+              <svg
+                className="size-5"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                aria-hidden
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z"
+                  clipRule="evenodd"
+                />
               </svg>
               <span>Create New Post</span>
             </button>
@@ -148,7 +202,11 @@ export default function CommunityPage() {
 
           <CommunityTabs value={category} onChange={setCategory} />
 
-          {error && <div className="rounded-md border border-red-700 bg-red-900/30 p-3 text-sm text-red-200">{error}</div>}
+          {error && (
+            <div className="rounded-md border border-red-700 bg-red-900/30 p-3 text-sm text-red-200">
+              {error}
+            </div>
+          )}
 
           {loading ? (
             <p className="text-neutral-400">Loading…</p>
@@ -160,16 +218,24 @@ export default function CommunityPage() {
                   post={p}
                   onLike={() => toggleLike(p.id)}
                   currentAddress={me}
-                  onDelete={handleDelete}       // hanya parent yang konfirmasi (SweetAlert)
+                  onDelete={handleDelete} // hanya parent yang konfirmasi (SweetAlert)
                 />
               ))}
-              {!posts.length && !error && <p className="text-neutral-400">Belum ada post untuk kategori ini.</p>}
+              {!posts.length && !error && (
+                <p className="text-neutral-400">
+                  Belum ada post untuk kategori ini.
+                </p>
+              )}
             </div>
           )}
         </div>
       </main>
 
-      <CreatePostModal open={open} onClose={() => setOpen(false)} onSubmit={handleCreate} />
+      <CreatePostModal
+        open={open}
+        onClose={() => setOpen(false)}
+        onSubmit={handleCreate}
+      />
     </div>
   );
 }

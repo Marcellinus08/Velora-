@@ -90,7 +90,10 @@ export default function CreatePostModal({
       if (items.length) {
         const uf = new FormData();
         items.forEach((i) => uf.append("files", i.file));
-        const r = await fetch("/api/community/upload", { method: "POST", body: uf });
+        const r = await fetch("/api/community/upload", {
+          method: "POST",
+          body: uf,
+        });
         if (!r.ok) {
           const j = await r.json().catch(() => ({}));
           throw new Error(j?.error || "Upload failed");
@@ -117,7 +120,6 @@ export default function CreatePostModal({
         timerProgressBar: true,
         showConfirmButton: false,
       });
-
     } catch (err: any) {
       alert(err?.message || "Failed to publish");
     } finally {
@@ -139,21 +141,28 @@ export default function CreatePostModal({
       />
       <div className="relative z-10 w-full max-w-2xl rounded-2xl border border-neutral-800 bg-neutral-900 p-5 shadow-xl">
         <div className="mb-4 flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-neutral-50">Create New Post</h3>
+          <h3 className="text-lg font-semibold text-neutral-50">
+            Create New Post
+          </h3>
           <button
             onClick={onClose}
             className="rounded-full p-2 text-neutral-400 hover:bg-neutral-800 hover:text-neutral-50"
             aria-label="Close"
             type="button"
           >
-            <MI name="close" className="text-[16px] leading-none align-middle" />
+            <MI
+              name="close"
+              className="text-[16px] leading-none align-middle"
+            />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid max-h-[75vh] grid-rows-[auto_auto_1fr_auto_auto] gap-4 overflow-y-auto pr-1">
             <div>
-              <label className="mb-1 block text-sm text-neutral-300">Title</label>
+              <label className="mb-1 block text-sm text-neutral-300">
+                Title
+              </label>
               <input
                 name="title"
                 required
@@ -163,7 +172,9 @@ export default function CreatePostModal({
             </div>
 
             <div>
-              <label className="mb-1 block text-sm text-neutral-300">Category</label>
+              <label className="mb-1 block text-sm text-neutral-300">
+                Category
+              </label>
               <select
                 name="category"
                 className="form-select w-full rounded-lg border border-neutral-700 bg-neutral-800 text-neutral-50 focus:border-[var(--primary-500)] focus:ring-0"
@@ -181,7 +192,9 @@ export default function CreatePostModal({
             </div>
 
             <div>
-              <label className="mb-1 block text-sm text-neutral-300">Content</label>
+              <label className="mb-1 block text-sm text-neutral-300">
+                Content
+              </label>
               <textarea
                 name="content"
                 rows={5}
@@ -192,7 +205,9 @@ export default function CreatePostModal({
             </div>
 
             <div>
-              <label className="mb-1 block text-sm text-neutral-300">Attachments (optional)</label>
+              <label className="mb-1 block text-sm text-neutral-300">
+                Attachments (optional)
+              </label>
 
               <div
                 onDragOver={(e) => e.preventDefault()}
@@ -203,12 +218,19 @@ export default function CreatePostModal({
                 className="flex cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed border-neutral-700 bg-neutral-900/60 py-7 text-center hover:border-neutral-500"
                 onClick={() => fileRef.current?.click()}
               >
-                <MI name="cloud_upload" className="mb-2 text-[24px] opacity-70" />
+                <MI
+                  name="cloud_upload"
+                  className="mb-2 text-[24px] opacity-70"
+                />
                 <div className="text-sm text-neutral-300">
                   Drag &amp; drop file here, or{" "}
-                  <span className="text-[var(--primary-500)]">choose a file</span>
+                  <span className="text-[var(--primary-500)]">
+                    choose a file
+                  </span>
                 </div>
-                <div className="mt-1 text-xs text-neutral-500">PNG, JPG, GIF, MP4, WebM (max 25MB)</div>
+                <div className="mt-1 text-xs text-neutral-500">
+                  PNG, JPG, GIF, MP4, WebM (max 25MB)
+                </div>
               </div>
 
               <input
@@ -228,10 +250,20 @@ export default function CreatePostModal({
                       className="group relative overflow-hidden rounded-xl border border-neutral-800"
                     >
                       {it.file.type.startsWith("video/") ? (
-                        <video src={it.url} className="h-40 w-full object-cover" muted loop playsInline />
+                        <video
+                          src={it.url}
+                          className="h-40 w-full object-cover"
+                          muted
+                          loop
+                          playsInline
+                        />
                       ) : (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={it.url} className="h-40 w-full object-cover" alt="" />
+                        <img
+                          src={it.url}
+                          className="h-40 w-full object-cover"
+                          alt=""
+                        />
                       )}
                       <button
                         type="button"
@@ -256,16 +288,45 @@ export default function CreatePostModal({
                   setItems([]);
                   onClose();
                 }}
-                className="rounded-full px-4 py-2 text-sm font-semibold text-neutral-300 hover:bg-neutral-800"
                 disabled={submitting}
+                className={[
+                  "group relative inline-flex items-center gap-2 rounded-full px-4 py-2",
+                  "text-sm font-semibold transition-all duration-200 ease-out",
+                  "text-neutral-200 bg-neutral-700 hover:bg-neutral-600",
+                  "hover:-translate-y-0.5 active:translate-y-0",
+                  "hover:shadow-[0_12px_24px_-6px_rgba(0,0,0,0.35)]",
+                  "before:content-[''] before:absolute before:inset-0 before:rounded-full before:opacity-0 before:transition-opacity before:duration-200",
+                  "before:bg-[radial-gradient(120px_80px_at_10%_10%,rgba(255,255,255,0.15),transparent)] group-hover:before:opacity-100",
+                  "focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[var(--primary-500)] focus-visible:ring-offset-neutral-900",
+                  "disabled:opacity-60 disabled:pointer-events-none cursor-pointer",
+                ].join(" ")}
               >
+                {/* shimmer sweep */}
+                <span className="pointer-events-none absolute inset-0 overflow-hidden rounded-full">
+                  <span className="absolute -left-10 top-0 h-full w-8 skew-x-[-20deg] bg-white/15 opacity-0 transition-all duration-300 group-hover:left-[110%] group-hover:opacity-100" />
+                </span>
                 Cancel
               </button>
+
               <button
                 type="submit"
-                className="rounded-full bg-[var(--primary-500)] px-4 py-2 text-sm font-semibold text-white hover:bg-opacity-90 disabled:opacity-60"
                 disabled={submitting}
+                className={[
+                  "group relative inline-flex items-center gap-2 rounded-full px-4 py-2",
+                  "text-sm font-semibold text-white transition-all duration-200 ease-out",
+                  "focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[var(--primary-500)] focus-visible:ring-offset-neutral-900",
+                  "hover:-translate-y-0.5 active:translate-y-0",
+                  "bg-[var(--primary-500)] hover:bg-[var(--primary-500)]/90",
+                  "hover:shadow-[0_12px_24px_-6px_rgba(168,85,247,0.45)]",
+                  "before:content-[''] before:absolute before:inset-0 before:rounded-full before:opacity-0 before:transition-opacity before:duration-200",
+                  "before:bg-[radial-gradient(120px_80px_at_10%_10%,rgba(255,255,255,0.25),transparent)] group-hover:before:opacity-100",
+                  "disabled:opacity-60 disabled:pointer-events-none cursor-pointer",
+                ].join(" ")}
               >
+                {/* shimmer sweep */}
+                <span className="pointer-events-none absolute inset-0 overflow-hidden rounded-full">
+                  <span className="absolute -left-10 top-0 h-full w-8 skew-x-[-20deg] bg-white/20 opacity-0 transition-all duration-300 group-hover:left-[110%] group-hover:opacity-100" />
+                </span>
                 {submitting ? "Publishing…" : "Publish"}
               </button>
             </div>

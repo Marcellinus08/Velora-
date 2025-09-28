@@ -49,7 +49,7 @@ export function SubscriptionVideoRow({
                 "group relative inline-flex items-center gap-2 rounded-md px-4 py-2",
                 "text-sm font-semibold text-white transition-all duration-200 ease-out",
                 "focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[var(--primary-500)] focus-visible:ring-offset-neutral-900",
-                "hover:-translate-y-0.5 active:translate-y-0",
+                "hover:-translate-y-0.5 active:translate-y-0 cursor-pointer",
                 isPrimary
                   ? [
                       "bg-[var(--primary-500)] hover:bg-[var(--primary-500)]/90",
