@@ -18,7 +18,9 @@ export default function SiteHeader() {
   const { address, status } = useAccount();
   const isConnected = status === "connected" && !!address;
 
-  const { username, avatarUrl } = useProfileAvatar(address as `0x${string}` | undefined);
+  const { username, avatarUrl } = useProfileAvatar(
+    address as `0x${string}` | undefined
+  );
   const usdceText = useUsdceBalance();
 
   return (
@@ -28,6 +30,7 @@ export default function SiteHeader() {
     >
       {/* Column 1: Logo */}
       <div className="flex items-center gap-4">
+        {/* Mobile menu (tetap) */}
         <button
           className="flex items-center justify-center rounded-full p-2 text-neutral-50 hover:bg-neutral-800 md:hidden"
           aria-label="Open menu"
@@ -36,16 +39,23 @@ export default function SiteHeader() {
           <MI name="menu" className="text-[18px] leading-none" />
         </button>
 
-        <Link href="/" aria-label="Home">
-          <Image
-            src="/logo.png"
-            alt="Velora Logo"
-            width={512}
-            height={128}
-            priority
-            className="h-[44px] w-auto sm:h-[42px] lg:h-[46px]"
-          />
-        </Link>
+        {/* Logo + brand text */}
+        <Link href="/" aria-label="Home" className="flex items-center gap-2 select-none">
+  <Image
+    src="/glonic_logo.png"
+    alt="Glonic Logo"
+    priority
+    width={200}
+    height={60}
+    className="h-10 w-auto sm:h-11 lg:h-12 bg-blue-100"
+  />
+  <span className="text-xl sm:text-2xl font-extrabold tracking-tight leading-none text-neutral-50">
+    GLONIC
+  </span>
+</Link>
+
+
+
       </div>
 
       {/* Column 2: Search */}
@@ -62,18 +72,29 @@ export default function SiteHeader() {
             <div className="hidden items-center gap-4 rounded-full bg-neutral-800 px-4 py-1.5 sm:flex">
               <div className="flex items-center gap-2">
                 <MI name="star" className="text-[18px] text-yellow-400" />
-                <span className="text-sm font-semibold text-neutral-50">2.500</span>
+                <span className="text-sm font-semibold text-neutral-50">
+                  2.500
+                </span>
               </div>
               <div className="h-5 w-px bg-neutral-700" />
               <div className="flex items-center gap-2">
-                <MI name="account_balance_wallet" className="text-[18px] text-[var(--primary-500)]" />
-                <span className="text-sm font-semibold text-neutral-50">USDC.e {usdceText}</span>
+                <MI
+                  name="account_balance_wallet"
+                  className="text-[18px] text-[var(--primary-500)]"
+                />
+                <span className="text-sm font-semibold text-neutral-50">
+                  USDC.e {usdceText}
+                </span>
               </div>
             </div>
 
             <AddMenu />
             <NotificationsMenu unreadCount={0} />
-            <WalletDropdown address={address as `0x${string}`} avatarUrl={avatarUrl} username={username} />
+            <WalletDropdown
+              address={address as `0x${string}`}
+              avatarUrl={avatarUrl}
+              username={username}
+            />
           </>
         )}
       </div>
