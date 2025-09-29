@@ -1,3 +1,4 @@
+// src/components/header/index.tsx
 "use client";
 
 import Image from "next/image";
@@ -13,6 +14,9 @@ import NotificationsMenu from "./notificationsmenu";
 import WalletDropdown from "./walletdropdown";
 import { useProfileAvatar } from "./useprofileavatar";
 import { useUsdceBalance } from "./useusdcebalance";
+import { PointsSheet, WalletSheet } from "./wallet-panels"; 
+
+import React from "react";
 
 export default function SiteHeader() {
   const { address, status } = useAccount();
@@ -20,6 +24,10 @@ export default function SiteHeader() {
 
   const { username, avatarUrl } = useProfileAvatar(address as `0x${string}` | undefined);
   const usdceText = useUsdceBalance();
+
+  // ⬇️ NEW: modal states
+  const [openWallet, setOpenWallet] = React.useState(false);
+  const [openPoints, setOpenPoints] = React.useState(false);
 
   return (
     <header
@@ -59,16 +67,31 @@ export default function SiteHeader() {
           </div>
         ) : (
           <>
+            {/* Badge  ⭐ Points  +  USDC.e   */}
             <div className="hidden items-center gap-4 rounded-full bg-neutral-800 px-4 py-1.5 sm:flex">
-              <div className="flex items-center gap-2">
-                <MI name="star" className="text-[18px] text-yellow-400" />
-                <span className="text-sm font-semibold text-neutral-50">2.500</span>
-              </div>
+              {/* Points */}
+              <button
+                onClick={() => setOpenPoints(true)}
+                className="group flex items-center gap-2 rounded-full px-2 py-1 outline-none transition hover:bg-neutral-700"
+                aria-label="Open points"
+                title="Open points"
+              >
+                <MI name="star" className="text-[18px] text-yellow-400 group-hover:scale-110 transition-transform" />
+                <span className="text-sm font-semibold text-neutral-50">2,500</span>
+              </button>
+
               <div className="h-5 w-px bg-neutral-700" />
-              <div className="flex items-center gap-2">
-                <MI name="account_balance_wallet" className="text-[18px] text-[var(--primary-500)]" />
+
+              {/* USDC.e */}
+              <button
+                onClick={() => setOpenWallet(true)}
+                className="group flex items-center gap-2 rounded-full px-2 py-1 outline-none transition hover:bg-neutral-700"
+                aria-label="Open wallet"
+                title="Open wallet"
+              >
+                <MI name="account_balance_wallet" className="text-[18px] text-[var(--primary-500)] group-hover:scale-110 transition-transform" />
                 <span className="text-sm font-semibold text-neutral-50">USDC.e {usdceText}</span>
-              </div>
+              </button>
             </div>
 
             <AddMenu />
@@ -78,7 +101,26 @@ export default function SiteHeader() {
         )}
       </div>
 
+      {/* keep it */}
       <ProfileUpsertOnLogin />
+
+      {/* ---------- MODALS (NEW) ---------- */}
+      <PointsSheet
+        open={openPoints}
+        onClose={() => setOpenPoints(false)}
+        points={2500}
+        level="Bronze"
+        nextTarget={5000}
+        portfolioPts={0}
+        plPts={0}
+      />
+      <WalletSheet
+        open={openWallet}
+        onClose={() => setOpenWallet(false)}
+        balanceText={usdceText}
+        portfolioUsd={0}
+        plUsd={0}
+      />
     </header>
   );
 }
