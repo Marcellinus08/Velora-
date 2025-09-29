@@ -4,9 +4,14 @@
 import React, { useEffect, useMemo, useState } from "react";
 import Sidebar from "@/components/sidebar";
 
+/* =====================================
+   Types
+===================================== */
 type ProductKind = "voice" | "video";
 
-/* ===== Utilities ===== */
+/* =====================================
+   Utils
+===================================== */
 function formatUsd(n: number) {
   return new Intl.NumberFormat("id-ID", {
     style: "currency",
@@ -18,7 +23,9 @@ function formatUsd(n: number) {
     .replace("US$", "$");
 }
 
-/* ===== Icons (warna ikut currentColor) ===== */
+/* =====================================
+   Icons (ikut currentColor)
+===================================== */
 const MicIcon = () => (
   <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8">
     <path d="M12 3a3 3 0 0 0-3 3v4a3 3 0 1 0 6 0V6a3 3 0 0 0-3-3Z" />
@@ -34,7 +41,9 @@ const CamIcon = () => (
   </svg>
 );
 
-/* ===== Pricing Sheet ===== */
+/* =====================================
+   Pricing Sheet
+===================================== */
 function PricingModal({
   open,
   onClose,
@@ -57,7 +66,12 @@ function PricingModal({
 
   return (
     <div className={`fixed inset-0 z-[80] ${open ? "pointer-events-auto" : "pointer-events-none"}`} aria-hidden={!open}>
-      <div onClick={onClose} className={`absolute inset-0 bg-black/60 transition-opacity ${open ? "opacity-100" : "opacity-0"}`} />
+      {/* Backdrop */}
+      <div
+        onClick={onClose}
+        className={`absolute inset-0 bg-black/60 transition-opacity ${open ? "opacity-100" : "opacity-0"}`}
+      />
+      {/* Panel */}
       <div
         className={`absolute right-0 top-0 h-full w-full sm:w-[560px] bg-neutral-950 border-l border-neutral-800 transition-transform duration-300 ${
           open ? "translate-x-0" : "translate-x-full"
@@ -67,7 +81,11 @@ function PricingModal({
       >
         {/* Header */}
         <div className="flex items-center gap-3 border-b border-neutral-800 px-4 py-4">
-          <button onClick={onClose} className="rounded-xl p-2 text-neutral-300 hover:bg-neutral-800/60" aria-label="Close">
+          <button
+            onClick={onClose}
+            className="rounded-xl p-2 text-neutral-300 hover:bg-neutral-800/60"
+            aria-label="Close"
+          >
             <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M18 6 6 18M6 6l12 12" />
             </svg>
@@ -121,7 +139,13 @@ function PricingModal({
 
         {/* Footer */}
         <div className="border-t border-neutral-800 p-6">
-          <button className="h-12 w-full rounded-2xl bg-violet-600 font-semibold text-white hover:bg-violet-500" onClick={() => { onConfirm(perMinute); onClose(); }}>
+          <button
+            className="h-12 w-full rounded-2xl bg-violet-600 font-semibold text-white hover:bg-violet-500"
+            onClick={() => {
+              onConfirm(perMinute);
+              onClose();
+            }}
+          >
             Confirm
           </button>
         </div>
@@ -139,7 +163,9 @@ function Row({ label, value }: { label: string; value: string }) {
   );
 }
 
-/* ===== Product Card (font & warna diseragamkan) ===== */
+/* =====================================
+   Product Card
+===================================== */
 function ProductCard({
   icon,
   title,
@@ -175,12 +201,30 @@ function ProductCard({
   );
 }
 
-/* ===== Page ===== */
+/* =====================================
+   Page
+===================================== */
 export default function MeetPage() {
   const [pricingOpen, setPricingOpen] = useState(false);
   const [activeKind, setActiveKind] = useState<ProductKind>("voice");
-  const [voicePerMinute, setVoicePerMinute] = useState<number>(() => (typeof window === "undefined" ? 0 : Number(localStorage.getItem("velora.pricing.voice") ?? 0)));
-  const [videoPerMinute, setVideoPerMinute] = useState<number>(() => (typeof window === "undefined" ? 0 : Number(localStorage.getItem("velora.pricing.video") ?? 0)));
+
+  const [voicePerMinute, setVoicePerMinute] = useState<number>(0);
+  const [videoPerMinute, setVideoPerMinute] = useState<number>(0);
+
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    try {
+      const v = window.localStorage.getItem("velora.pricing.voice");
+      const vv = window.localStorage.getItem("velora.pricing.video");
+      if (v) setVoicePerMinute(Number(v) || 0);
+      if (vv) setVideoPerMinute(Number(vv) || 0);
+    } catch {
+      // abaikan jika storage tidak tersedia
+    } finally {
+      setMounted(true);
+    }
+  }, []);
 
   const openPricing = (k: ProductKind) => {
     setActiveKind(k);
@@ -188,8 +232,12 @@ export default function MeetPage() {
   };
 
   async function handleConfirm(kind: ProductKind, val: number) {
-    const key = kind === "voice" ? "velora.pricing.voice" : "velora.pricing.video";
-    localStorage.setItem(key, String(val));
+    try {
+      const key = kind === "voice" ? "velora.pricing.voice" : "velora.pricing.video";
+      window.localStorage.setItem(key, String(val));
+    } catch {
+      // ignore
+    }
     if (kind === "voice") setVoicePerMinute(val);
     else setVideoPerMinute(val);
   }
@@ -204,6 +252,7 @@ export default function MeetPage() {
             <h2 className="text-2xl font-bold text-neutral-50">Set Your Call Rates</h2>
           </div>
 
+          {/* Product cards */}
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             <ProductCard
               icon={<MicIcon />}
@@ -221,23 +270,29 @@ export default function MeetPage() {
             />
           </div>
 
-          {/* Ringkasan harga dengan font & warna sama */}
+          {/* Price summary */}
           <div className="grid grid-cols-1 gap-4 text-sm md:grid-cols-2">
             <div className="flex h-14 items-center rounded-2xl border border-neutral-800 bg-neutral-900 px-4">
               <div className="flex w-full items-center justify-between">
                 <span className="text-neutral-300">Voice per minute</span>
-                <span className="font-semibold text-neutral-100">{formatUsd(voicePerMinute)}</span>
+                {/* suppressHydrationWarning opsional jika kamu masih melihat mismatch dari ekstensi */}
+                <span className="font-semibold text-neutral-100" suppressHydrationWarning>
+                  {mounted ? formatUsd(voicePerMinute) : "$0,00"}
+                </span>
               </div>
             </div>
             <div className="flex h-14 items-center rounded-2xl border border-neutral-800 bg-neutral-900 px-4">
               <div className="flex w-full items-center justify-between">
                 <span className="text-neutral-300">Video per minute</span>
-                <span className="font-semibold text-neutral-100">{formatUsd(videoPerMinute)}</span>
+                <span className="font-semibold text-neutral-100" suppressHydrationWarning>
+                  {mounted ? formatUsd(videoPerMinute) : "$0,00"}
+                </span>
               </div>
             </div>
           </div>
         </div>
 
+        {/* Modal */}
         <PricingModal
           open={pricingOpen}
           onClose={() => setPricingOpen(false)}
