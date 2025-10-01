@@ -1,305 +1,201 @@
-// src/app/meet/page.tsx
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React from "react";
 import Sidebar from "@/components/sidebar";
+import MeetCard, { MeetCreator } from "@/components/meet/MeetCard";
 
-/* =====================================
-   Types
-===================================== */
-type ProductKind = "voice" | "video";
+type Booking = {
+  id: string;
+  creator: MeetCreator;
+  kind: "voice" | "video";
+  startAt: string; // ISO
+  minutes: number;
+  pricePerMinute: number;
+  status: "upcoming" | "pending" | "history";
+};
 
-/* =====================================
-   Utils
-===================================== */
-function formatUsd(n: number) {
-  return new Intl.NumberFormat("id-ID", {
-    style: "currency",
-    currency: "USD",
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })
-    .format(n)
-    .replace("US$", "$");
-}
-
-/* =====================================
-   Icons (ikut currentColor)
-===================================== */
-const MicIcon = () => (
-  <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8">
-    <path d="M12 3a3 3 0 0 0-3 3v4a3 3 0 1 0 6 0V6a3 3 0 0 0-3-3Z" />
-    <path d="M19 10a7 7 0 0 1-14 0" />
-    <path d="M12 19v3M8 22h8" />
-  </svg>
-);
-
-const CamIcon = () => (
-  <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8">
-    <rect x="3" y="6" width="12" height="12" rx="2" />
-    <path d="M15 9l6-3v12l-6-3z" />
-  </svg>
-);
-
-/* =====================================
-   Pricing Sheet
-===================================== */
-function PricingModal({
-  open,
-  onClose,
-  kind,
-  initialPerMinute,
-  onConfirm,
-}: {
-  open: boolean;
-  onClose: () => void;
-  kind: ProductKind;
-  initialPerMinute: number;
-  onConfirm: (perMinute: number) => void;
-}) {
-  const [perMinute, setPerMinute] = useState(initialPerMinute);
-  useEffect(() => setPerMinute(initialPerMinute), [initialPerMinute]);
-
-  const price15 = useMemo(() => perMinute * 15, [perMinute]);
-  const price30 = useMemo(() => perMinute * 30, [perMinute]);
-  const price60 = useMemo(() => perMinute * 60, [perMinute]);
-
-  return (
-    <div className={`fixed inset-0 z-[80] ${open ? "pointer-events-auto" : "pointer-events-none"}`} aria-hidden={!open}>
-      {/* Backdrop */}
-      <div
-        onClick={onClose}
-        className={`absolute inset-0 bg-black/60 transition-opacity ${open ? "opacity-100" : "opacity-0"}`}
-      />
-      {/* Panel */}
-      <div
-        className={`absolute right-0 top-0 h-full w-full sm:w-[560px] bg-neutral-950 border-l border-neutral-800 transition-transform duration-300 ${
-          open ? "translate-x-0" : "translate-x-full"
-        }`}
-        role="dialog"
-        aria-modal="true"
-      >
-        {/* Header */}
-        <div className="flex items-center gap-3 border-b border-neutral-800 px-4 py-4">
-          <button
-            onClick={onClose}
-            className="rounded-xl p-2 text-neutral-300 hover:bg-neutral-800/60"
-            aria-label="Close"
-          >
-            <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M18 6 6 18M6 6l12 12" />
-            </svg>
-          </button>
-          <h3 className="text-[20px] font-semibold text-neutral-50">
-            Set your price ({kind === "voice" ? "Voice" : "Video"})
-          </h3>
-        </div>
-
-        {/* Body */}
-        <div className="space-y-6 p-6">
-          <div className="space-y-2">
-            <p className="text-sm text-neutral-300">Set your price per minute for all calls</p>
-
-            <div className="relative">
-              <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500">$</span>
-              <input
-                inputMode="decimal"
-                value={perMinute || ""}
-                onChange={(e) => setPerMinute(Number(e.target.value) || 0)}
-                placeholder="0"
-                className="h-12 w-full rounded-2xl border border-neutral-800 bg-neutral-900 pl-6 pr-16 text-neutral-100 placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-violet-500/60"
-              />
-              <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-neutral-500">
-                / minute
-              </span>
-            </div>
-
-            <div className="flex items-center gap-3 pt-2">
-              {[5, 10, 25].map((v) => (
-                <button
-                  key={v}
-                  onClick={() => setPerMinute(v)}
-                  className="h-11 rounded-2xl border border-neutral-700 bg-neutral-900 px-5 text-sm text-neutral-200 hover:bg-neutral-800"
-                >
-                  ${v}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="space-y-3">
-            <p className="text-sm font-medium text-neutral-50">Price per call</p>
-            <div className="space-y-2 text-neutral-100">
-              <Row label="15 minutes" value={formatUsd(price15)} />
-              <Row label="30 minutes" value={formatUsd(price30)} />
-              <Row label="60 minutes" value={formatUsd(price60)} />
-            </div>
-          </div>
-        </div>
-
-        {/* Footer */}
-        <div className="border-t border-neutral-800 p-6">
-          <button
-            className="h-12 w-full rounded-2xl bg-violet-600 font-semibold text-white hover:bg-violet-500"
-            onClick={() => {
-              onConfirm(perMinute);
-              onClose();
-            }}
-          >
-            Confirm
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function Row({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex items-center justify-between text-sm">
-      <span className="text-neutral-300">{label}</span>
-      <span className="font-medium text-neutral-100">{value}</span>
-    </div>
-  );
-}
-
-/* =====================================
-   Product Card
-===================================== */
-function ProductCard({
-  icon,
-  title,
-  description,
-  cta,
+function TabButton({
+  active,
+  children,
   onClick,
 }: {
-  icon: React.ReactNode;
-  title: string;
-  description: string;
-  cta: string;
+  active: boolean;
+  children: React.ReactNode;
   onClick: () => void;
 }) {
   return (
-    <div className="group relative h-full min-h-[220px] rounded-[22px] border border-neutral-800 bg-gradient-to-b from-neutral-800/40 to-neutral-800/10 p-6 transition-colors hover:border-neutral-700">
-      <div className="mb-4 grid h-12 w-12 place-items-center rounded-2xl border border-neutral-700 bg-neutral-800/70 text-neutral-200">
-        {icon}
-      </div>
-
-      <h4 className="text-[22px] font-semibold leading-tight text-neutral-50">{title}</h4>
-      <p className="mt-2 max-w-[42ch] text-[15px] leading-relaxed text-neutral-300">{description}</p>
-
-      <button
-        onClick={onClick}
-        className="mt-5 inline-flex items-center gap-2 text-[15px] font-medium text-violet-400 hover:text-violet-300"
-      >
-        {cta}
-        <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
-          <path d="M5 12h14M13 5l7 7-7 7" />
-        </svg>
-      </button>
-    </div>
+    <button
+      className={`px-3 py-3 text-sm font-medium ${
+        active
+          ? "border-b-2 border-[var(--primary-500)] text-neutral-50"
+          : "text-neutral-400 hover:text-neutral-200"
+      }`}
+      onClick={onClick}
+    >
+      {children}
+    </button>
   );
 }
 
-/* =====================================
-   Page
-===================================== */
 export default function MeetPage() {
-  const [pricingOpen, setPricingOpen] = useState(false);
-  const [activeKind, setActiveKind] = useState<ProductKind>("voice");
+  const [tab, setTab] = React.useState<"upcoming" | "pending" | "history">("upcoming");
+  const [list, setList] = React.useState<Booking[]>([]);
+  const [discover, setDiscover] = React.useState<MeetCreator[]>([]);
+  const topRef = React.useRef<HTMLDivElement | null>(null);
 
-  const [voicePerMinute, setVoicePerMinute] = useState<number>(0);
-  const [videoPerMinute, setVideoPerMinute] = useState<number>(0);
+  React.useEffect(() => {
+    (async () => {
+      const res = await fetch(`/api/meet/bookings?status=${tab}`, { cache: "no-store" });
+      const data = (await res.json()) as Booking[];
+      setList(data);
+    })();
+  }, [tab]);
 
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    try {
-      const v = window.localStorage.getItem("velora.pricing.voice");
-      const vv = window.localStorage.getItem("velora.pricing.video");
-      if (v) setVoicePerMinute(Number(v) || 0);
-      if (vv) setVideoPerMinute(Number(vv) || 0);
-    } catch {
-      // abaikan jika storage tidak tersedia
-    } finally {
-      setMounted(true);
-    }
+  React.useEffect(() => {
+    (async () => {
+      const res = await fetch("/api/meet/discover", { cache: "no-store" });
+      const data = (await res.json()) as MeetCreator[];
+      setDiscover(data);
+    })();
   }, []);
-
-  const openPricing = (k: ProductKind) => {
-    setActiveKind(k);
-    setPricingOpen(true);
-  };
-
-  async function handleConfirm(kind: ProductKind, val: number) {
-    try {
-      const key = kind === "voice" ? "velora.pricing.voice" : "velora.pricing.video";
-      window.localStorage.setItem(key, String(val));
-    } catch {
-      // ignore
-    }
-    if (kind === "voice") setVoicePerMinute(val);
-    else setVideoPerMinute(val);
-  }
 
   return (
     <div className="flex h-full grow flex-row">
       <Sidebar />
 
       <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8">
-        <div className="flex flex-col gap-6">
-          <div className="flex flex-col items-start gap-4 md:flex-row md:items-center md:justify-between">
-            <h2 className="text-2xl font-bold text-neutral-50">Set Your Call Rates</h2>
-          </div>
-
-          {/* Product cards */}
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-            <ProductCard
-              icon={<MicIcon />}
-              title="Voice Calls"
-              description="Get paid by the minute for every voice call."
-              cta="Setup pricing"
-              onClick={() => openPricing("voice")}
-            />
-            <ProductCard
-              icon={<CamIcon />}
-              title="Video Calls"
-              description="Get paid by the minute for every video call."
-              cta="Setup pricing"
-              onClick={() => openPricing("video")}
-            />
-          </div>
-
-          {/* Price summary */}
-          <div className="grid grid-cols-1 gap-4 text-sm md:grid-cols-2">
-            <div className="flex h-14 items-center rounded-2xl border border-neutral-800 bg-neutral-900 px-4">
-              <div className="flex w-full items-center justify-between">
-                <span className="text-neutral-300">Voice per minute</span>
-                {/* suppressHydrationWarning opsional jika kamu masih melihat mismatch dari ekstensi */}
-                <span className="font-semibold text-neutral-100" suppressHydrationWarning>
-                  {mounted ? formatUsd(voicePerMinute) : "$0,00"}
-                </span>
-              </div>
-            </div>
-            <div className="flex h-14 items-center rounded-2xl border border-neutral-800 bg-neutral-900 px-4">
-              <div className="flex w-full items-center justify-between">
-                <span className="text-neutral-300">Video per minute</span>
-                <span className="font-semibold text-neutral-100" suppressHydrationWarning>
-                  {mounted ? formatUsd(videoPerMinute) : "$0,00"}
-                </span>
-              </div>
-            </div>
-          </div>
+        {/* Page Title + quick action */}
+        <div ref={topRef} className="mb-3 flex items-center justify-between">
+          <h2 className="text-2xl font-bold text-neutral-50">Meet</h2>
+          <button
+            className="rounded-full border border-neutral-700 bg-neutral-900 px-3 py-1.5 text-sm text-neutral-200 hover:bg-neutral-800"
+            onClick={() => {
+              const el = document.getElementById("discover");
+              el?.scrollIntoView({ behavior: "smooth", block: "start" });
+            }}
+          >
+            Explore creators
+          </button>
         </div>
 
-        {/* Modal */}
-        <PricingModal
-          open={pricingOpen}
-          onClose={() => setPricingOpen(false)}
-          kind={activeKind}
-          initialPerMinute={activeKind === "voice" ? voicePerMinute : videoPerMinute}
-          onConfirm={(val) => handleConfirm(activeKind, val)}
-        />
+        {/* Sticky tabs – stays under your site header */}
+        <div
+          className="
+            sticky top-[64px] z-[5] 
+            mb-6 flex items-center gap-6 border-b border-neutral-800 
+            bg-neutral-900/80 backdrop-blur supports-[backdrop-filter]:bg-neutral-900/60
+          "
+        >
+          <TabButton active={tab === "upcoming"} onClick={() => setTab("upcoming")}>
+            Upcoming
+          </TabButton>
+          <TabButton active={tab === "pending"} onClick={() => setTab("pending")}>
+            Pending
+          </TabButton>
+          <TabButton active={tab === "history"} onClick={() => setTab("history")}>
+            History
+          </TabButton>
+        </div>
+
+        {/* Bookings for the selected tab */}
+        {list.length === 0 ? (
+          <div className="mb-10 grid place-items-center rounded-xl border border-neutral-800 bg-neutral-900 py-16 text-center">
+            <div className="text-lg font-semibold text-neutral-200">No items</div>
+            <div className="mt-1 text-sm text-neutral-400">
+              Book a voice or video call from creators below.
+            </div>
+            <button
+              className="mt-4 rounded-full bg-[var(--primary-500)] px-4 py-2 text-sm font-semibold text-white hover:opacity-90"
+              onClick={() => {
+                const el = document.getElementById("discover");
+                el?.scrollIntoView({ behavior: "smooth", block: "start" });
+              }}
+            >
+              Discover creators
+            </button>
+          </div>
+        ) : (
+          <ul className="mb-10 space-y-3">
+            {list.map((b) => (
+              <li
+                key={b.id}
+                className="flex items-center justify-between rounded-xl border border-neutral-800 bg-neutral-900 p-4"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 overflow-hidden rounded-full bg-neutral-800 ring-1 ring-neutral-700">
+                    {b.creator.avatarUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        className="h-full w-full object-cover"
+                        src={b.creator.avatarUrl}
+                        alt={b.creator.name}
+                      />
+                    ) : (
+                      <div className="grid h-full w-full place-items-center text-neutral-400">👤</div>
+                    )}
+                  </div>
+                  <div>
+                    <div className="font-semibold text-neutral-50">{b.creator.name}</div>
+                    <div className="text-xs text-neutral-400">@{b.creator.handle}</div>
+                  </div>
+                </div>
+
+                <div className="hidden text-sm text-neutral-300 md:block">
+                  <div className="font-medium capitalize">{b.kind} call</div>
+                  <div className="text-neutral-400">
+                    {new Date(b.startAt).toLocaleString()}
+                  </div>
+                </div>
+
+                <div className="text-right">
+                  <div className="text-sm text-neutral-300">
+                    {b.minutes} min × ${b.pricePerMinute.toFixed(2)}
+                  </div>
+                  <div className="text-base font-semibold text-neutral-50">
+                    ${(b.minutes * b.pricePerMinute).toFixed(2)}
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        {/* Discover creators – placed AFTER the bookings so tabs are close to the top */}
+        <section id="discover" className="scroll-mt-20">
+          <div className="mb-3 flex items-center justify-between">
+            <h3 className="text-lg font-semibold text-neutral-50">Discover creators</h3>
+            {topRef.current && (
+              <button
+                className="rounded-full border border-neutral-700 bg-neutral-900 px-3 py-1.5 text-sm text-neutral-200 hover:bg-neutral-800"
+                onClick={() =>
+                  topRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
+                }
+              >
+                Back to top
+              </button>
+            )}
+          </div>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            {discover.map((d) => (
+              <MeetCard
+                key={d.id}
+                data={d}
+                onCall={(creator, kind) => {
+                  // quick book - 15 minutes sample
+                  fetch("/api/meet/book", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                      creatorId: creator.id,
+                      kind,
+                      minutes: 15,
+                    }),
+                  }).then(() => setTab("pending"));
+                }}
+              />
+            ))}
+          </div>
+        </section>
       </main>
     </div>
   );

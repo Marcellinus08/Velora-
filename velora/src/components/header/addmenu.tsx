@@ -1,3 +1,4 @@
+// src/components/header/addmenu.tsx
 "use client";
 
 import { useRouter } from "next/navigation";
@@ -21,11 +22,17 @@ export default function AddMenu() {
           </button>
         </DropdownMenuTrigger>
 
-        <DropdownMenuContent align="end" side="bottom" className="w-44">
+        <DropdownMenuContent align="end" side="bottom" className="w-48">
+          <DropdownMenuItem onClick={() => router.push("/call-rates")} className="cursor-pointer hover:text-purple-600">
+            <MI name="call" className="text-[16px]" />
+            Set call rates
+          </DropdownMenuItem>
+
           <DropdownMenuItem onClick={() => router.push("/ads")} className="cursor-pointer hover:text-purple-600">
             <MI name="ads_click" className="text-[16px]" />
             Create ads
           </DropdownMenuItem>
+
           <DropdownMenuItem onClick={() => router.push("/upload")} className="cursor-pointer hover:text-purple-600">
             <MI name="file_upload" className="text-[16px]" />
             Upload video
