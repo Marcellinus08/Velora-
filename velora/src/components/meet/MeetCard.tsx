@@ -8,8 +8,8 @@ export type MeetCreator = {
   name: string;
   handle: string;
   avatarUrl?: string | null;
-  tags?: string[];
-  pricing: { voice?: number; video?: number }; // USD/min
+  tags?: string[]; // -> tidak dipakai untuk render
+  pricing?: { voice?: number; video?: number }; // <- optional dan aman
 };
 
 export default function MeetCard({
@@ -21,7 +21,14 @@ export default function MeetCard({
   onCall?: (creator: MeetCreator, kind: Kind) => void;
   className?: string;
 }) {
-  const { name, handle, avatarUrl, tags = [], pricing } = data;
+  const { name, handle, avatarUrl } = data;
+
+  // --- GUARD: jadikan objek kosong kalau tidak ada pricing
+  const pricingObj = data.pricing ?? {};
+  const voiceText =
+    typeof pricingObj.voice === "number" ? `$${pricingObj.voice.toFixed(2)}/min` : "—";
+  const videoText =
+    typeof pricingObj.video === "number" ? `$${pricingObj.video.toFixed(2)}/min` : "—";
 
   return (
     <div className={`rounded-xl border border-neutral-800 bg-neutral-900 p-4 ${className}`}>
@@ -40,31 +47,16 @@ export default function MeetCard({
         </div>
       </div>
 
-      {!!tags.length && (
-        <div className="mt-3 flex flex-wrap gap-2">
-          {tags.map((t) => (
-            <span
-              key={t}
-              className="rounded-md border border-neutral-700 bg-neutral-800 px-2 py-0.5 text-xs text-neutral-300"
-            >
-              {t}
-            </span>
-          ))}
-        </div>
-      )}
+      {/* Tag chips DIHAPUS sesuai permintaan */}
 
       <div className="mt-3 grid grid-cols-2 gap-2">
         <div className="rounded-lg border border-neutral-800 bg-neutral-900 px-3 py-2">
           <div className="text-xs text-neutral-400">Voice</div>
-          <div className="text-sm font-semibold text-neutral-50">
-            {pricing.voice != null ? `$${pricing.voice.toFixed(2)}/min` : "—"}
-          </div>
+          <div className="text-sm font-semibold text-neutral-50">{voiceText}</div>
         </div>
         <div className="rounded-lg border border-neutral-800 bg-neutral-900 px-3 py-2">
           <div className="text-xs text-neutral-400">Video</div>
-          <div className="text-sm font-semibold text-neutral-50">
-            {pricing.video != null ? `$${pricing.video.toFixed(2)}/min` : "—"}
-          </div>
+          <div className="text-sm font-semibold text-neutral-50">{videoText}</div>
         </div>
       </div>
 

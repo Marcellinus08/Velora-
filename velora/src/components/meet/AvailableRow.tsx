@@ -3,6 +3,26 @@
 import React from "react";
 import MeetCard, { MeetCreator } from "./MeetCard";
 
+// Normalisasi ke bentuk MeetCreator (selalu ada pricing object)
+function toCreator(x: any): MeetCreator {
+  return {
+    id: String(x?.id ?? ""),
+    name: String(x?.name ?? "Unknown"),
+    handle: String(x?.handle ?? "unknown"),
+    avatarUrl: x?.avatarUrl ?? null,
+    pricing: {
+      voice:
+        x?.pricing?.voice ??
+        x?.voicePerMinute ??
+        (typeof x?.voice === "number" ? x.voice : undefined),
+      video:
+        x?.pricing?.video ??
+        x?.videoPerMinute ??
+        (typeof x?.video === "number" ? x.video : undefined),
+    },
+  };
+}
+
 export default function AvailableRow() {
   const [creators, setCreators] = React.useState<MeetCreator[]>([]);
   const [loading, setLoading] = React.useState(true);
@@ -13,8 +33,9 @@ export default function AvailableRow() {
       try {
         setLoading(true);
         const res = await fetch("/api/meet/discover", { cache: "no-store" });
-        const json = (await res.json()) as MeetCreator[];
-        if (alive) setCreators(json.slice(0, 4));
+        const raw = (await res.json()) as any[];
+        const norm = (raw || []).map(toCreator).slice(0, 4);
+        if (alive) setCreators(norm);
       } catch {
         if (alive) setCreators([]);
       } finally {
@@ -46,7 +67,6 @@ export default function AvailableRow() {
             key={c.id}
             data={c}
             onCall={(creator, kind) => {
-              // For now just go to Meet hub and preselect creator
               const qs = new URLSearchParams({ creator: creator.id, kind });
               window.location.assign(`/meet?${qs.toString()}`);
             }}
