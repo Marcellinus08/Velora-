@@ -48,22 +48,24 @@ export default function SiteHeader() {
         </button>
 
         {/* Logo + brand text */}
-        <Link href="/" aria-label="Home" className="flex items-center gap-2 select-none">
-  <Image
-    src="/glonic_logo.png"
-    alt="Glonic Logo"
-    priority
-    width={200}
-    height={60}
-    className="h-10 w-auto sm:h-11 lg:h-12 bg-blue-100"
-  />
-  <span className="text-xl sm:text-2xl font-extrabold tracking-tight leading-none text-neutral-50">
-    GLONIC
-  </span>
-</Link>
-
-
-
+        <Link
+          href="/"
+          aria-label="Home"
+          className="flex items-center gap-2 select-none"
+        >
+          {/* <Image
+            src="/glonic_logo.png"
+            alt="Glonic Logo"
+            priority
+            width={200}
+            height={60}
+            className="h-10 w-auto sm:h-11 lg:h-12"
+          /> */}
+          <span className="text-xs sm:text-2xl font-bold tracking-tight leading-none text-neutral-50">
+            GLO
+            <span className="text-[var(--primary-500)]">N</span>IC
+          </span>
+        </Link>
       </div>
 
       {/* Column 2: Search */}
