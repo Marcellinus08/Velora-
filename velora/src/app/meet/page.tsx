@@ -1,125 +1,254 @@
-// src/app/meet/page.tsx
-import Sidebar from "@/components/sidebar";
-import { Meeting, MeetingGrid } from "@/components/meet/meetgrid";
+"use client";
 
-/* =========================
-   Mock data (sesuai contoh)
-========================= */
-const meetings: Meeting[] = [
+import React from "react";
+import Link from "next/link";
+import Sidebar from "@/components/sidebar";
+import MeetCard, { MeetCreator } from "@/components/meet/MeetCard";
+
+type Booking = {
+  id: string;
+  creator: MeetCreator;
+  kind: "voice" | "video";
+  startAt: string;
+  minutes: number;
+  pricePerMinute: number;
+  status: "upcoming" | "pending" | "history";
+};
+
+type Tab = "creators" | "upcoming" | "pending" | "history";
+
+// helper normalisasi
+function toCreator(x: any): MeetCreator {
+  return {
+    id: String(x?.id ?? ""),
+    name: String(x?.name ?? "Unknown"),
+    handle: String(x?.handle ?? "unknown"),
+    avatarUrl: x?.avatarUrl ?? null,
+    pricing: {
+      voice:
+        x?.pricing?.voice ??
+        x?.voicePerMinute ??
+        (typeof x?.voice === "number" ? x.voice : undefined),
+      video:
+        x?.pricing?.video ??
+        x?.videoPerMinute ??
+        (typeof x?.video === "number" ? x.video : undefined),
+    },
+  };
+}
+
+// Dummy creators (sudah pakai pricing)
+const DUMMY_CREATORS: MeetCreator[] = [
   {
-    id: "1",
-    title: "Tren Pemasaran Digital pada tahun 2024",
-    host: "MarketingPro",
-    viewers: "2.3K menonton",
-    live: true,
-    thumb:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuA2owiVIGhtxkLnP5mDs0b1iT-Avb7c0wDhB6q9punioADtlpYh6kScErOxyYD6v9iF_v-PbC2Inuw-4M2eLgRdlj2CThibZK2t7Joo8cTp1pxBtYDcQvFgvxnnhSmateYOem8aYuOoeHc3rOymiq3g0kSqOrdi1076Olzi2GlDZJ1_wIN3RZPkNU-7eZEhNsJoOke2JUMu2JTNpjKPXpPT3yQbvhkz9WsmJEMWpCYdjL0hJslIsfGmZ7cxCXpp-5Q-NSKoWZYZDHX0",
+    id: "c_maria",
+    name: "Maria",
+    handle: "maria",
+    avatarUrl:
+      "https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=256&auto=format&fit=crop",
+    pricing: { voice: 1, video: 5 },
   },
   {
-    id: "2",
-    title: "Lokakarya Desain UI/UX",
-    host: "DesignHub",
-    viewers: "1.8K menonton",
-    live: true,
-    thumb:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuAsIPpY-CSFfo1IFVM03EomWmN9z7Ty0FCZCGyBR_nS4SYNqqKMDb1GkgKVF3CxXG8S6Rw97bZBXkE_RIwU2dmAMFn9Frd4D0bkUnZvZueV1iMQN2P04E7NAetbCuxbHC7n973vlQbk7gHckczY5XmN7gAJBVGOaUXvmKQbot6m3Deyxva6_6_ig8HXAcjaeOuCVF-GyFbyiM-tOJWAFvcmXQEIL7p4Q8gd35NiHxRizltadLrKjg1Oq02CMALWRaJAvfkp2tCpQE8_",
+    id: "c_arif",
+    name: "Arif",
+    handle: "arif",
+    avatarUrl:
+      "https://images.unsplash.com/photo-1607746882042-944635dfe10e?q=80&w=256&auto=format&fit=crop",
+    pricing: { voice: 3, video: 7 },
   },
   {
-    id: "3",
-    title: "Perencanaan Keuangan 101",
-    host: "FinanceExperts",
-    viewers: "980 menonton",
-    live: true,
-    thumb:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuAkv0eI0vfcb3H4nhTUrv4LdEPmT6mRexzIJW0ShZBQVm-g4-PH_qX8p0jdfDDilmTyB6OUpSuZcgOIm0-rurKlSUzS-xBOb0Elqvcwv4JWcy-k7q2XdIra79G70pjV9nK7J_T1Uc8TrlNWbi21ET_NWG_X374js8FAU1u6mTAo9s8TK8IKE9l3I5_xxFEfJLrRdkaPhz5qjzUFlzSpDkwJbcm-RKSQpNyJEfnzii9y-13c46H75l-FJKXJ7xHV1u4zg27j7Iw7hJGS",
-  },
-  {
-    id: "4",
-    title: "Tanya Jawab Kesehatan dan Kebugaran",
-    host: "WellnessGurus",
-    viewers: "3.2K menonton",
-    live: true,
-    thumb:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuBodFWMD_7noUS2oEy-s1CcrbSATnFshXdvplQn0WEvTZucrPl1t7gX3YiHlBRpFn_g0kgKfdBh_fbbMZFq3gXCAlr4PDJilb8l9BJILGXUjhUSPhPJjukVo6Ihjeux4Evm0n2dntE00E4q8nhgfRV0yt7tXreRhNb1NTkeEOGUhjGyVwDSfN0fg3Iy2Lx8oM9_T5qMjwfMzUlaGosfCvULfe_UVdAlpOCx_SqLU9o3c5Fr33JOHiLtawp9dInwoi-O9PLuxLeJh_gg",
-  },
-  {
-    id: "5",
-    title: "Sesi Pitch Startup",
-    host: "InnovateHub",
-    viewers: "1.1K menonton",
-    live: true,
-    thumb:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuBXh-6t72KRdzS4W3NCXx9bIf0HZGi_R0ZbLcDEJxUfdGOsQoUFr_XlGT2GRfbsWBJib21UeCJcPKq0zohaXeRKUNR14Bmt_AOxxQg5XXlGaeCcJrzWocIYaghCD6vGtIA-Trm9MhaFy2QmDNSMjqR1aggyvTf807g85yOJfkCoB_-oEipGmYjkfJNvr_H4YB8x0I9B5XkFi74mkp8-jHqcGRDnRygopLIql8X7mPNX0bBsDysY-Vr2e40N6jeFegk6l1Yyp8FefD_F",
-  },
-  {
-    id: "6",
-    title: "Tantangan Pengkodean Langsung",
-    host: "CodeMasters",
-    viewers: "5.6K menonton",
-    live: true,
-    thumb:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuDZflwGXLm2cwPbQaYFm2UpbFFstdhww1gtCM68KEaH6IExo4dtz6cdNFbk22HhFJZErC1QfHCmZrj-yOBGiZNaF-hof74tmWJpVIj0Prw6_r3KTWGk6odVCy2CzRVCJpfAGWbOkcBqD4CoaKhEjS9hviXIQGJqO4fGrfGkJFeJ1Yt4jrBrvTp9o0L0XI3TrLDHpGIMs1Cz388fiHM_dbJJKJbelXR4MpFm7orTBJ73MevriuNywkbozud9RTmrs9oEEDilBl85ONLi",
-  },
-  {
-    id: "7",
-    title: "Kelas Master Produksi Musik",
-    host: "SoundWave Academy",
-    viewers: "890 menonton",
-    live: true,
-    thumb:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuC_kgHXV0rs4XhgxO7FZ6ctWhl08R4jerqqz1Ya0w2zOuKjHBfWVD_SIins5as4KixM5f7P7cAP6n0pUMgLJaQraCugzrIaMGcq2KY2dBH5qECAPlzTRe9u-xfptYOnkxz-Qr2q8rUsShVmsYM6w4bnL_Rpgk6dSdloD-a_4u_l0aqh1UjWcEmMiVgMFc3t9Py_P9oQBgwsziuRsDA_vYWKsWEBixlh6fOEtCxmJgkKeJH3d6hUId5MUUayqmvmB5pPyu63fnZl92Ux",
-  },
-  {
-    id: "8",
-    title: "Lingkaran Menulis Kreatif",
-    host: "The Writer's Block",
-    viewers: "2.1K menonton",
-    live: true,
-    thumb:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuBYmA9oJE5c6DLeAleQ98K6S6mUybgKduYHSHRhUh4xm8zpLXhbMpMH0_5fS1GPkVSZ3v8G-RLSclZ2wkoJRKXRNdBCz43E1thcX3zi7Ez4x-wDDNXdG_kpe_7rfy2xIPP2mNwUYZRKsH36ZTFfCW-VMKKv6YjWsrHCoIsool2dwi-Hpx4tIpT8uuyB1dHjnX9NPQmTRkvWYc5nBYALt72mphBeqVbBCrmU_-6OlNLICUeYhnjJ-FJ0VGsW4beiijWrGFSZaMoflyw6",
-  },
-  {
-    id: "9",
-    title: "Tanya Jawab Kesehatan dan Kebugaran",
-    host: "WellnessGurus",
-    viewers: "3.2K menonton",
-    live: true,
-    thumb:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuBodFWMD_7noUS2oEy-s1CcrbSATnFshXdvplQn0WEvTZucrPl1t7gX3YiHlBRpFn_g0kgKfdBh_fbbMZFq3gXCAlr4PDJilb8l9BJILGXUjhUSPhPJjukVo6Ihjeux4Evm0n2dntE00E4q8nhgfRV0yt7tXreRhNb1NTkeEOGUhjGyVwDSfN0fg3Iy2Lx8oM9_T5qMjwfMzUlaGosfCvULfe_UVdAlpOCx_SqLU9o3c5Fr33JOHiLtawp9dInwoi-O9PLuxLeJh_gg",
+    id: "c_sinta",
+    name: "Sinta",
+    handle: "sinta",
+    avatarUrl:
+      "https://images.unsplash.com/photo-1547425260-76bcadfb4f2c?q=80&w=256&auto=format&fit=crop",
+    pricing: { voice: 1.5, video: 4 },
   },
 ];
 
+function TabButton({
+  active,
+  children,
+  onClick,
+}: {
+  active: boolean;
+  children: React.ReactNode;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={`px-3 py-3 text-sm font-medium -mb-px border-b-2 transition-colors ${
+        active
+          ? "border-[var(--primary-500)] text-neutral-50"
+          : "border-transparent text-neutral-400 hover:text-neutral-200"
+      }`}
+    >
+      {children}
+    </button>
+  );
+}
+
 export default function MeetPage() {
+  const [tab, setTab] = React.useState<Tab>("creators");
+  const [bookings, setBookings] = React.useState<Booking[]>([]);
+  const [creators, setCreators] = React.useState<MeetCreator[] | null>(null);
+
+  // load creators
+  React.useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/meet/discover", { cache: "no-store" });
+        if (!res.ok) throw new Error("fetch fail");
+        const raw = (await res.json()) as any[];
+        const norm = (raw || []).map(toCreator);
+
+        const filtered = norm.filter((c) => {
+          const v = typeof c.pricing?.voice === "number" ? c.pricing!.voice! : 0;
+          const vv = typeof c.pricing?.video === "number" ? c.pricing!.video! : 0;
+          return v > 0 || vv > 0;
+        });
+
+        if (!cancelled) setCreators(filtered.length ? filtered : DUMMY_CREATORS);
+      } catch {
+        if (!cancelled) setCreators(DUMMY_CREATORS);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // load bookings untuk tab selain creators
+  React.useEffect(() => {
+    if (tab === "creators") return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(`/api/meet/bookings?status=${tab}`, { cache: "no-store" });
+        const data = (await res.json()) as Booking[];
+        if (!cancelled) setBookings(data);
+      } catch {
+        if (!cancelled) setBookings([]);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [tab]);
+
   return (
     <div className="flex h-full grow flex-row">
       <Sidebar />
+
       <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8">
-        {/* === Konsisten dengan Community: container & header === */}
-        <div className="flex flex-col gap-6">
-          <div className="flex flex-col items-start gap-4 md:flex-row md:items-center md:justify-between">
-            <h2 className="text-2xl font-bold text-neutral-50">Sedang Berlangsung</h2>
-
-            <div className="flex items-center gap-2">
-              <button className="flex items-center gap-2 rounded-lg bg-neutral-800 px-4 py-2 text-sm font-medium text-neutral-50 hover:bg-neutral-700">
-                <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden>
-                  <path
-                    fillRule="evenodd"
-                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.414-1.414L11 9.586V6z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-                <span>Jadwalkan Rapat</span>
-              </button>
-
-              <button className="rounded-lg bg-[var(--primary-500)] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-opacity-80">
-                Mulai Rapat Baru
-              </button>
-            </div>
-          </div>
-
-          {/* Grid meet */}
-          <MeetingGrid items={meetings} />
+        {/* Header */}
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="text-2xl font-bold text-neutral-50">Meet</h2>
+          <Link
+            href="/call-rates"
+            className="rounded-full border border-neutral-700 bg-neutral-900 px-3 py-1.5 text-sm text-neutral-200 hover:bg-neutral-800"
+          >
+            Set call rates
+          </Link>
         </div>
+
+        {/* Tabs */}
+        <div className="sticky top-[64px] z-[5] mb-6 flex items-center gap-6 border-b border-neutral-800 bg-neutral-900/80 backdrop-blur supports-[backdrop-filter]:bg-neutral-900/60">
+          <TabButton active={tab === "creators"} onClick={() => setTab("creators")}>
+            Creators
+          </TabButton>
+          <TabButton active={tab === "upcoming"} onClick={() => setTab("upcoming")}>
+            Upcoming
+          </TabButton>
+          <TabButton active={tab === "pending"} onClick={() => setTab("pending")}>
+            Pending
+          </TabButton>
+          <TabButton active={tab === "history"} onClick={() => setTab("history")}>
+            History
+          </TabButton>
+        </div>
+
+        {/* Content */}
+        {tab === "creators" && (
+          <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            {creators === null ? (
+              <>
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <div
+                    key={i}
+                    className="h-[220px] animate-pulse rounded-xl border border-neutral-800 bg-neutral-900/60"
+                  />
+                ))}
+              </>
+            ) : (
+              creators.map((d) => (
+                <MeetCard
+                  key={d.id}
+                  data={d}
+                  onCall={(creator, kind) => {
+                    fetch("/api/meet/book", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ creatorId: creator.id, kind, minutes: 15 }),
+                    }).then(() => setTab("pending"));
+                  }}
+                />
+              ))
+            )}
+          </section>
+        )}
+
+        {tab !== "creators" && (
+          <>
+            {bookings.length === 0 ? (
+              <div className="mb-10 grid place-items-center rounded-xl border border-neutral-800 bg-neutral-900 py-16 text-center">
+                <div className="text-lg font-semibold text-neutral-200">No items</div>
+                <div className="mt-1 text-sm text-neutral-400">
+                  Book a voice or video call from creators in the Creators tab.
+                </div>
+              </div>
+            ) : (
+              <ul className="mb-10 space-y-3">
+                {bookings.map((b) => (
+                  <li
+                    key={b.id}
+                    className="flex items-center justify-between rounded-xl border border-neutral-800 bg-neutral-900 p-4"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 overflow-hidden rounded-full bg-neutral-800 ring-1 ring-neutral-700">
+                        {b.creator.avatarUrl ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img className="h-full w-full object-cover" src={b.creator.avatarUrl} alt={b.creator.name} />
+                        ) : (
+                          <div className="grid h-full w-full place-items-center text-neutral-400">👤</div>
+                        )}
+                      </div>
+                      <div>
+                        <div className="font-semibold text-neutral-50">{b.creator.name}</div>
+                        <div className="text-xs text-neutral-400">@{b.creator.handle}</div>
+                      </div>
+                    </div>
+
+                    <div className="hidden text-sm text-neutral-300 md:block">
+                      <div className="font-medium capitalize">{b.kind} call</div>
+                      <div className="text-neutral-400">{new Date(b.startAt).toLocaleString()}</div>
+                    </div>
+
+                    <div className="text-right">
+                      <div className="text-sm text-neutral-300">
+                        {b.minutes} min × ${b.pricePerMinute.toFixed(2)}
+                      </div>
+                      <div className="text-base font-semibold text-neutral-50">
+                        ${(b.minutes * b.pricePerMinute).toFixed(2)}
+                      </div>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </>
+        )}
       </main>
     </div>
   );
