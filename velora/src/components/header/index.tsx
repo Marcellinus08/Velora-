@@ -82,7 +82,6 @@ export default function SiteHeader() {
             {/* Badge ⭐ Points + USDC.e */}
             <div className="hidden items-center gap-4 rounded-full bg-neutral-800 px-4 py-1.5 sm:flex">
 
-=======
               {/* Points */}
               <button
                 onClick={() => setOpenPoints(true)}
