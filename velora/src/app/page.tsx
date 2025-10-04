@@ -1,9 +1,8 @@
-// app/page.tsx
 import Sidebar from "@/components/sidebar";
 import Carousel from "@/components/home/carousel";
 import Categories from "@/components/home/categories";
 import CardsGrid from "@/components/home/cardsgrid";
-import AvailableRow from "@/components/meet/AvailableRow";  
+import HomeMeetRibbon from "@/components/home/meet"; // ⬅️ ini
 
 export default function Home() {
   return (
@@ -14,8 +13,8 @@ export default function Home() {
           <Carousel size="h-[500px]" interval={7000} />
         </div>
 
-        {/* === Discover Meet section === */}
-        <AvailableRow />
+        {/* Meet yang lebih simple & elegan */}
+        <HomeMeetRibbon />
 
         <Categories />
         <CardsGrid />

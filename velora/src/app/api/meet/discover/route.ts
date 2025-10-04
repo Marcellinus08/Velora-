@@ -35,6 +35,7 @@ export async function GET() {
       tags: ["Photography"],
       pricing: { voice: 2, video: 6 },
     },
+    
   ];
   return NextResponse.json(data);
 }
