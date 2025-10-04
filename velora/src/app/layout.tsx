@@ -9,6 +9,9 @@ import type { ReactNode } from "react";
 export const metadata = {
   title: "Glonic",
   description: "Platform video dengan poin & tugas",
+   icons: {
+    icon: [{ url: "/glonic_logo_main.png", type: "image/png" }],
+  },
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
@@ -16,7 +19,6 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <html lang="id">
       <head>
         {/* Material Icons Round (ligature-based) */}
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
         <link
           href="https://fonts.googleapis.com/icon?family=Material+Icons+Round"
