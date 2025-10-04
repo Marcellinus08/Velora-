@@ -54,12 +54,12 @@ export default function SiteHeader() {
           className="flex items-center gap-2 select-none"
         >
           <Image
-            src="/glonic_logo_no_bg.png"
+            src="/glonic_logo_main.png"
             alt="Glonic Logo"
             priority
             width={200}
             height={60}
-            className="h-10 w-auto sm:h-11 lg:h-12"
+            className="h-10 w-auto sm:h-11 lg:h-8"
           />
           <span className="text-xs sm:text-2xl font-bold tracking-tight leading-none text-neutral-50">
             GLO
