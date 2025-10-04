@@ -107,18 +107,71 @@ function MediaGrid({ media }: { media?: { url: string; mime?: string | null }[] 
   );
 }
 
+/* ===== Skeleton loading (sesuai gaya CardsGrid: animate-pulse kotak abu) ===== */
+function PostSkeleton() {
+  return (
+    <div className="rounded-lg border border-neutral-800 bg-neutral-900 p-4">
+      <div className="flex items-start gap-4 animate-pulse">
+        {/* avatar */}
+        <div className="size-10 rounded-full bg-neutral-800/60" />
+
+        {/* body */}
+        <div className="flex-1">
+          {/* header row */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="h-4 w-28 rounded bg-neutral-800/60" />
+              <div className="h-3 w-24 rounded bg-neutral-800/60" />
+            </div>
+            <div className="h-3 w-20 rounded bg-neutral-800/60" />
+          </div>
+
+          {/* title */}
+          <div className="mt-2 h-5 w-2/3 rounded bg-neutral-800/60" />
+
+          {/* content lines */}
+          <div className="mt-2 space-y-2">
+            <div className="h-3 w-full rounded bg-neutral-800/60" />
+            <div className="h-3 w-5/6 rounded bg-neutral-800/60" />
+            <div className="h-3 w-4/6 rounded bg-neutral-800/60" />
+          </div>
+
+          {/* media thumb placeholders (opsional) */}
+          <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="h-40 w-full rounded-lg bg-neutral-800/60" />
+            ))}
+          </div>
+
+          {/* actions */}
+          <div className="mt-4 flex flex-wrap items-center gap-6">
+            <div className="h-4 w-20 rounded bg-neutral-800/60" />
+            <div className="h-4 w-24 rounded bg-neutral-800/60" />
+            <div className="h-4 w-16 rounded bg-neutral-800/60" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ===== Komponen utama ===== */
 export default function CommunityPostRow({
   post,
   onLike,
   currentAddress, // alamat wallet user yang login
   onDelete, // callback hapus post (parent yang konfirmasi)
+  loading = false, // <<— PROP BARU
 }: {
   post: CommunityPost;
   onLike?: () => void;
   currentAddress?: string;
   onDelete?: (postId: string) => void;
+  loading?: boolean;
 }) {
+  // Tampilkan skeleton ketika loading
+  if (loading) return <PostSkeleton />;
+
   const [expanded, setExpanded] = useState(false);
   const [openReplies, setOpenReplies] = useState(false);
   const [replyCount, setReplyCount] = useState<number>(post.replies ?? 0);
@@ -151,7 +204,7 @@ export default function CommunityPostRow({
     if (onDelete) onDelete(post.id);
   };
 
-  // helper ikon Material (Round) — 12px dan rapi baseline
+  // helper ikon Material (Round) — kecil & rapi baseline
   const MI = ({ name, className = "" }: { name: string; className?: string }) => (
     <span
       className={`material-icons-round text-[6px] leading-none align-middle relative top-[1px] ${className}`}

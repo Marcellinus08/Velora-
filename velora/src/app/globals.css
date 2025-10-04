@@ -109,4 +109,8 @@ body {
   overflow: scroll;
 }
 
+@keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+.skel{position:relative;overflow:hidden;background-color:rgba(38,38,38,.6)}
+.skel::after{content:"";position:absolute;inset:0;background-image:linear-gradient(90deg,transparent,rgba(255,255,255,.06),transparent);background-size:200% 100%;animation:shimmer 1.25s infinite linear}
+
 
