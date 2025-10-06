@@ -13,21 +13,17 @@ import AddMenu from "./addmenu";
 import NotificationsMenu from "./notificationsmenu";
 import WalletDropdown from "./walletdropdown";
 import { useProfileAvatar } from "./useprofileavatar";
-import { useUsdceBalance } from "./useusdcebalance";
+import { useUsdceBalance } from "./useusdcebalance"; // <-- ini hook baru
 import { PointsSheet, WalletSheet } from "./wallet-panels";
-
 import React from "react";
 
 export default function SiteHeader() {
   const { address, status } = useAccount();
   const isConnected = status === "connected" && !!address;
 
-  const { username, avatarUrl } = useProfileAvatar(
-    address as `0x${string}` | undefined
-  );
+  const { username, avatarUrl } = useProfileAvatar(address as `0x${string}` | undefined);
   const usdceText = useUsdceBalance();
 
-  // modal states
   const [openWallet, setOpenWallet] = React.useState(false);
   const [openPoints, setOpenPoints] = React.useState(false);
 
@@ -38,7 +34,6 @@ export default function SiteHeader() {
     >
       {/* Column 1: Logo */}
       <div className="flex items-center gap-4">
-        {/* Mobile menu (tetap) */}
         <button
           className="flex items-center justify-center rounded-full p-2 text-neutral-50 hover:bg-neutral-800 md:hidden"
           aria-label="Open menu"
@@ -47,12 +42,7 @@ export default function SiteHeader() {
           <MI name="menu" className="text-[18px] leading-none" />
         </button>
 
-        {/* Logo + brand text */}
-        <Link
-          href="/"
-          aria-label="Home"
-          className="flex items-center gap-2 select-none"
-        >
+        <Link href="/" aria-label="Home" className="flex items-center gap-2 select-none">
           <Image
             src="/glonic_logo_main.png"
             alt="Glonic Logo"
@@ -62,8 +52,7 @@ export default function SiteHeader() {
             className="h-10 w-auto sm:h-11 lg:h-8"
           />
           <span className="text-xs sm:text-2xl font-bold tracking-tight leading-none text-neutral-50">
-            GLO
-            <span className="text-[var(--primary-500)]">N</span>IC
+            GLO<span className="text-[var(--primary-500)]">N</span>IC
           </span>
         </Link>
       </div>
@@ -71,7 +60,7 @@ export default function SiteHeader() {
       {/* Column 2: Search */}
       <SearchBar />
 
-      {/* Column 3: Right side */}
+      {/* Column 3: Right */}
       <div className="flex items-center gap-2 sm:gap-4">
         {!isConnected ? (
           <div className="flex items-center gap-2">
@@ -79,10 +68,7 @@ export default function SiteHeader() {
           </div>
         ) : (
           <>
-            {/* Badge ⭐ Points + USDC.e */}
             <div className="hidden items-center gap-4 rounded-full bg-neutral-800 px-4 py-1.5 sm:flex">
-
-              {/* Points */}
               <button
                 onClick={() => setOpenPoints(true)}
                 className="group flex items-center gap-2 rounded-full px-2 py-1 outline-none transition hover:bg-neutral-700"
@@ -95,7 +81,6 @@ export default function SiteHeader() {
 
               <div className="h-5 w-px bg-neutral-700" />
 
-              {/* USDC.e */}
               <button
                 onClick={() => setOpenWallet(true)}
                 className="group flex items-center gap-2 rounded-full px-2 py-1 outline-none transition hover:bg-neutral-700"
@@ -107,22 +92,16 @@ export default function SiteHeader() {
               </button>
             </div>
 
-            {/* Add menu (Create Ads, Upload, Set Call Rates → /call-rates) */}
             <AddMenu />
-
             <NotificationsMenu unreadCount={0} />
-            <WalletDropdown
-              address={address as `0x${string}`}
-              avatarUrl={avatarUrl}
-              username={username}
-            />
+            <WalletDropdown address={address as `0x${string}`} avatarUrl={avatarUrl} username={username} />
           </>
         )}
       </div>
 
       <ProfileUpsertOnLogin />
 
-      {/* ---------- Modals ---------- */}
+      {/* Modals */}
       <PointsSheet
         open={openPoints}
         onClose={() => setOpenPoints(false)}

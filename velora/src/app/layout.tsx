@@ -5,6 +5,7 @@ import { NextAbstractWalletProvider } from "@/components/agw-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import ProfileUpsertOnLogin from "@/components/auth/profile-upsert-on-login";
 import type { ReactNode } from "react";
+// import Header from "@/components/header";
 
 export const metadata = {
   title: "Glonic",
@@ -59,6 +60,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
 
           <TooltipProvider delayDuration={150}>
             <SiteHeader />
+            {/* <Header/> */}
             {children}
           </TooltipProvider>
         </NextAbstractWalletProvider>
