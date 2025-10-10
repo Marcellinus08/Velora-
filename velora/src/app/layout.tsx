@@ -13,7 +13,6 @@ export const metadata = {
     icon: [{ url: "/glonic_logo_main.png", type: "image/png" }],
   },
 };
-
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="id">
