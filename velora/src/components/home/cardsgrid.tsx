@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { AbstractProfile } from "@/components/abstract-profile";
+import { BuyVideoButton } from "@/components/payments/TreasuryButtons";
 
 /* ================== Types ================== */
 type VideoRow = {
@@ -20,7 +21,7 @@ type VideoRow = {
 
   creator?: {
     username: string | null;
-    abstract_id: string | null;
+    abstract_id: string | null; // EOA 0x...
     avatar_url: string | null;
   } | null;
 };
@@ -212,7 +213,7 @@ export default function CardsGrid() {
             /* ignore */
           }
           writeCacheMiss(`absavatar-miss:${addr}`);
-          return [addr, ""] as const; // gagal
+          return [addr, "" ] as const; // gagal
         })
       );
 
@@ -239,7 +240,7 @@ export default function CardsGrid() {
     return () => {
       alive = false;
     };
-  }, [items, absTried]);
+  }, [items, absTried, absAvatars]);
 
   /* ================== UI ================== */
   if (loading) {
@@ -292,6 +293,17 @@ export default function CardsGrid() {
 
         const priceText = fmtUSD(v.price_cents);
         const totalPoints = resolveTotalPoints(v);
+
+        // ====== Payment props ======
+        const priceUsd =
+          Math.max(0, Number(((v.price_cents ?? 0) / 100).toFixed(2))) || 0;
+
+        const creatorAddress =
+          addrLower && addrLower.startsWith("0x") && addrLower.length === 42
+            ? (addrLower as `0x${string}`)
+            : ("" as unknown as `0x${string}`);
+
+        const canBuy = priceUsd > 0 && !!creatorAddress;
 
         return (
           <div
@@ -365,20 +377,31 @@ export default function CardsGrid() {
                 <p className="text-base font-bold text-neutral-50">
                   {priceText}
                 </p>
-                <button
-                  type="button"
-                  className="group relative cursor-pointer inline-flex items-center gap-2 rounded-full bg-[var(--primary-500)] px-4 py-2 text-sm font-semibold text-white transition-all duration-200 ease-out hover:scale-105 hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[var(--primary-500)] focus-visible:ring-offset-neutral-900"
-                  onClick={() => {
-                    window.location.href = `/studio/video/${v.id}`;
-                  }}
-                >
-                  {/* shimmer sweep */}
-                  <span className="pointer-events-none absolute inset-0 overflow-hidden rounded-full">
-                    <span className="absolute -left-10 top-0 h-full w-8 skew-x-[-20deg] bg-white/20 opacity-0 transition-all duration-500 group-hover:left-[110%] group-hover:opacity-100" />
-                  </span>
 
-                  <span>Buy</span>
-                </button>
+                {/* ====== BUY BUTTON (panggil kontrak) ====== */}
+                {canBuy ? (
+                  <BuyVideoButton
+                    videoId={v.id}
+                    creator={creatorAddress}
+                    priceUsd={priceUsd}
+                    className="group relative cursor-pointer inline-flex items-center gap-2 rounded-full bg-[var(--primary-500)] px-4 py-2 text-sm font-semibold text-white transition-all duration-200 ease-out hover:scale-105 hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[var(--primary-500)] focus-visible:ring-offset-neutral-900"
+                  >
+                    Buy
+                  </BuyVideoButton>
+                ) : (
+                  <button
+                    type="button"
+                    disabled
+                    className="inline-flex items-center gap-2 rounded-full bg-neutral-700 px-4 py-2 text-sm font-semibold text-white opacity-60"
+                    title={
+                      priceUsd <= 0
+                        ? "Video gratis"
+                        : "Alamat kreator tidak valid"
+                    }
+                  >
+                    {priceUsd <= 0 ? "Free" : "Buy"}
+                  </button>
+                )}
               </div>
             </div>
           </div>

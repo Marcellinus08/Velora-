@@ -1,9 +1,10 @@
+// src/components/ui/connect-wallet-button.tsx
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { useLoginWithAbstract } from "@abstract-foundation/agw-react";
 import { Button } from "@/components/ui/button";
-import { useAccount, useBalance } from "wagmi";
+import { useAccount } from "wagmi";
 import { cn } from "@/lib/utils";
 import { type ClassValue } from "clsx";
 import {
@@ -17,14 +18,27 @@ import { AbstractProfile } from "@/components/abstract-profile";
 import { useAbstractProfile } from "@/hooks/use-abstract-profile";
 import { getDisplayName } from "@/lib/address-utils";
 
+import {
+  publicClient,
+  getWalletClient,
+  rememberAGWProvider,
+} from "@/config/viem-clients";
+import { chain as abstractChain } from "@/config/chain";
+
+/* --------------------------------- utils --------------------------------- */
 const shortAddr = (addr?: `0x${string}`) =>
   addr ? `${addr.slice(0, 6)}...${addr.slice(-4)}` : "";
+
+const fmtEth = (wei?: bigint) => {
+  if (!wei) return "0.0000 ETH";
+  const eth = Number(wei) / 1e18;
+  return `${eth.toFixed(4)} ETH`;
+};
 
 interface ConnectWalletButtonProps {
   className?: ClassValue;
   customDropdownItems?: React.ReactNode[];
   customTrigger?: React.ReactNode;
-
   dropdownAvatarSize?: "xs" | "sm" | "md" | "lg";
   dropdownAvatarClassName?: ClassValue;
 }
@@ -39,23 +53,100 @@ export function ConnectWalletButton({
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
+  // Wagmi untuk status/addr (boleh tetap pakai wagmi)
   const { isConnected, status, address } = useAccount();
-  const { data: balance, isLoading: isBalanceLoading } = useBalance({ address });
+  const isConnecting = status === "connecting" || status === "reconnecting";
+
+  // AGW auth
   const { login, logout } = useLoginWithAbstract();
   const { data: ap } = useAbstractProfile();
 
-  const isConnecting = status === "connecting" || status === "reconnecting";
-  const [copied, setCopied] = useState(false);
+  // Native balance via viem (supaya tidak ikut Coinbase/Metamask)
+  const [nativeBal, setNativeBal] = useState<bigint | undefined>(undefined);
+  const [balLoading, setBalLoading] = useState(false);
 
+  const fetchBalance = useCallback(async (addr?: `0x${string}`) => {
+    if (!addr) {
+      setNativeBal(undefined);
+      return;
+    }
+    try {
+      setBalLoading(true);
+      const wei = await publicClient.getBalance({ address: addr, blockTag: "latest" });
+      setNativeBal(wei);
+    } finally {
+      setBalLoading(false);
+    }
+  }, []);
+
+  // Setelah connected → lock provider ke AGW + switch chain + fetch balance
+  useEffect(() => {
+    if (!isConnected) return;
+
+    try {
+      const w: any = window as any;
+      const prov =
+        w?.privy?.abstractProvider ||
+        w?.abstract?.provider ||
+        w?.ethereum?.providerMap?.get?.("abstract");
+      if (prov) {
+        rememberAGWProvider(prov);
+        // usahakan switch ke Abstract
+        getWalletClient().switchChain?.({ id: abstractChain.id }).catch(() => {});
+      }
+    } catch {
+      /* no-op */
+    }
+
+    fetchBalance(address as `0x${string}`);
+  }, [isConnected, address, fetchBalance]);
+
+  // Copy address
+  const [copied, setCopied] = useState(false);
   const copyAddress = async () => {
-    if (address) {
-      await navigator.clipboard.writeText(address);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1800);
+    if (!address) return;
+    await navigator.clipboard.writeText(address);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1800);
+  };
+
+  // Handler login agar langsung lock provider setelah modal Privy selesai
+  const handleLogin = async () => {
+    try {
+      await login();
+      // beri sedikit jeda agar provider AGW terpasang oleh Privy
+      setTimeout(() => {
+        try {
+          const w: any = window as any;
+          const prov =
+            w?.privy?.abstractProvider ||
+            w?.abstract?.provider ||
+            w?.ethereum?.providerMap?.get?.("abstract");
+          if (prov) {
+            rememberAGWProvider(prov);
+            getWalletClient().switchChain?.({ id: abstractChain.id }).catch(() => {});
+          }
+        } catch {}
+      }, 0);
+    } catch (e) {
+      console.error("AGW login failed:", e);
     }
   };
 
-  // SSR placeholder
+  // Handler logout → bersihkan preferensi provider
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } finally {
+      try {
+        localStorage.removeItem("glonic:wallet-preferred");
+        const w: any = window as any;
+        delete w.__GLONIC_AGW_PROVIDER__;
+      } catch {}
+    }
+  };
+
+  /* ------------------------------ SSR placeholder ----------------------------- */
   if (!mounted) {
     return (
       <button
@@ -72,11 +163,11 @@ export function ConnectWalletButton({
     );
   }
 
-  // Not connected / connecting
+  /* ------------------------------ Not connected ------------------------------ */
   if (!isConnected || isConnecting) {
     return (
       <button
-        onClick={isConnecting ? undefined : login}
+        onClick={isConnecting ? undefined : handleLogin}
         disabled={isConnecting}
         className={cn(
           "inline-flex h-9 items-center justify-center gap-2 rounded-full bg-white px-5",
@@ -91,27 +182,11 @@ export function ConnectWalletButton({
     );
   }
 
-  // Balance loading
-  if (isBalanceLoading) {
-    return (
-      <button
-        disabled
-        className={cn(
-          "inline-flex h-9 items-center justify-center gap-2 rounded-full bg-neutral-800 px-4",
-          "text-sm font-semibold text-neutral-100"
-        )}
-      >
-        <WalletIcon className="h-4 w-4" />
-        Loading…
-        <AbstractLogo className="h-4 w-4 animate-spin" />
-      </button>
-    );
-  }
-
-  // Connected
-  const formattedBalance = balance
-    ? `${parseFloat(balance.formatted).toFixed(4)} ${balance.symbol}`
-    : "0.0000 ETH";
+  /* --------------------------------- Connected -------------------------------- */
+  const formattedBalance = useMemo(
+    () => (balLoading ? "Loading…" : fmtEth(nativeBal)),
+    [nativeBal, balLoading]
+  );
 
   const username =
     ap?.user?.name?.trim()
@@ -188,7 +263,7 @@ export function ConnectWalletButton({
         ) : (
           <>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={logout} className="text-destructive">
+            <DropdownMenuItem onClick={handleLogout} className="text-destructive">
               Disconnect
             </DropdownMenuItem>
           </>
