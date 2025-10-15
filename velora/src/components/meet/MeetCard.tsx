@@ -50,7 +50,7 @@ export const MeetCard: React.FC<MeetCardProps> = ({ creator, onCall }) => {
           <div className="text-base font-semibold text-neutral-50">{creator.name}</div>
           <div className="mt-1 text-[11px]">
             {displayAddr ? (
-              <span className="text-neutral-400" title={fullAddr}>
+              <span className="text-neutral-400">
                 {displayAddr}
               </span>
             ) : (
