@@ -1,3 +1,4 @@
+// src/components/home/cardsgrid.tsx
 "use client";
 
 import { useEffect, useRef, useState } from "react";
@@ -26,10 +27,11 @@ type VideoRow = {
   } | null;
 };
 
-function shortId(addr?: string | null) {
-  if (!addr) return "Unknown";
-  return addr.length > 10 ? `${addr.slice(0, 6)}…${addr.slice(-4)}` : addr;
-}
+const isAddressLike = (s?: string | null): s is `0x${string}` =>
+  !!s && /^0x[a-fA-F0-9]{40}$/.test(s);
+
+const shortId = (addr?: string | null) =>
+  !addr ? "Unknown" : addr.length > 10 ? `${addr.slice(0, 6)}…${addr.slice(-4)}` : addr;
 
 /* ====== Session cache utk avatar Abstract (TTL 30m) ====== */
 const TTL_MS = 30 * 60 * 1000;
@@ -67,18 +69,14 @@ function writeCacheMiss(key: string) {
 
 /* Helpers */
 const fmtUSD = (cents?: number | null) =>
-  typeof cents === "number" && cents > 0
-    ? `$${(cents / 100).toFixed(2)}`
-    : "Free";
+  typeof cents === "number" && cents > 0 ? `$${(cents / 100).toFixed(2)}` : "Free";
 
 const calcTotalPointsFromPrice = (priceCents?: number | null) =>
   Math.max(0, Math.round(((priceCents ?? 0) / 100) * 10));
 
 const resolveTotalPoints = (row: VideoRow) => {
-  if (typeof row.points_total === "number" && row.points_total > 0)
-    return row.points_total;
-  if (typeof row.total_points === "number" && row.total_points > 0)
-    return row.total_points;
+  if (typeof row.points_total === "number" && row.points_total > 0) return row.points_total;
+  if (typeof row.total_points === "number" && row.total_points > 0) return row.total_points;
   return calcTotalPointsFromPrice(row.price_cents);
 };
 
@@ -139,9 +137,7 @@ export default function CardsGrid() {
         }
 
         if (!active) return;
-        if (!data)
-          throw lastError ?? new Error("Unknown error fetching videos");
-
+        if (!data) throw lastError ?? new Error("Unknown error fetching videos");
         setItems(data as VideoRow[]);
       } catch (e: any) {
         if (!active) return;
@@ -174,6 +170,7 @@ export default function CardsGrid() {
         if (absTried[addr]) return false; // sudah dicoba (sukses/gagal)
         if (absAvatars[addr]) return false; // sudah punya url
         if (inFlight.current.has(addr)) return false; // sedang berjalan
+
         // cek cache session (sukses/gagal)
         const urlCached = readCacheUrl(`absavatar:${addr}`);
         const missCached = readCacheMiss(`absavatar-miss:${addr}`);
@@ -197,13 +194,10 @@ export default function CardsGrid() {
       const results = await Promise.all(
         need.map(async (addr) => {
           try {
-            const r = await fetch(`/api/abstract/user/${addr}`, {
-              cache: "force-cache",
-            });
+            const r = await fetch(`/api/abstract/user/${addr}`, { cache: "force-cache" });
             if (r.ok) {
               const j = await r.json();
-              const url: string | null =
-                j?.profilePicture || j?.avatar || j?.imageUrl || null;
+              const url: string | null = j?.profilePicture || j?.avatar || j?.imageUrl || null;
               if (url) {
                 writeCacheUrl(`absavatar:${addr}`, url);
                 return [addr, url] as const;
@@ -213,7 +207,7 @@ export default function CardsGrid() {
             /* ignore */
           }
           writeCacheMiss(`absavatar-miss:${addr}`);
-          return [addr, "" ] as const; // gagal
+          return [addr, ""] as const; // gagal
         })
       );
 
@@ -240,17 +234,16 @@ export default function CardsGrid() {
     return () => {
       alive = false;
     };
-  }, [items, absTried, absAvatars]);
+    // ⚠ jangan masukkan absAvatars ke deps untuk menghindari loop saat setAbsAvatars
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [items, absTried]);
 
   /* ================== UI ================== */
   if (loading) {
     return (
       <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-x-4 gap-y-8 pt-6">
         {Array.from({ length: 8 }).map((_, i) => (
-          <div
-            key={i}
-            className="animate-pulse rounded-xl border border-neutral-800 bg-neutral-900"
-          >
+          <div key={i} className="animate-pulse rounded-xl border border-neutral-800 bg-neutral-900">
             <div className="aspect-video w-full rounded-t-xl bg-neutral-800/60" />
             <div className="space-y-2 p-3">
               <div className="h-4 w-3/4 rounded bg-neutral-800/60" />
@@ -264,19 +257,11 @@ export default function CardsGrid() {
   }
 
   if (err) {
-    return (
-      <div className="pt-6 text-sm text-red-300">
-        Failed to load videos: {err}
-      </div>
-    );
+    return <div className="pt-6 text-sm text-red-300">Failed to load videos: {err}</div>;
   }
 
   if (!items.length) {
-    return (
-      <div className="pt-6 text-sm text-neutral-400">
-        Belum ada video yang diupload.
-      </div>
-    );
+    return <div className="pt-6 text-sm text-neutral-400">Belum ada video yang diupload.</div>;
   }
 
   return (
@@ -286,23 +271,15 @@ export default function CardsGrid() {
         const fetchedAbstract = addrLower ? absAvatars[addrLower] : "";
         const avatarSrc = v.creator?.avatar_url || fetchedAbstract || "";
         const author =
-          v.creator?.username?.trim() ||
-          shortId(v.creator?.abstract_id) ||
-          "Unknown";
+          v.creator?.username?.trim() || shortId(v.creator?.abstract_id) || "Unknown";
         const bg = v.thumb_url || "/placeholder-thumb.png";
 
         const priceText = fmtUSD(v.price_cents);
         const totalPoints = resolveTotalPoints(v);
 
         // ====== Payment props ======
-        const priceUsd =
-          Math.max(0, Number(((v.price_cents ?? 0) / 100).toFixed(2))) || 0;
-
-        const creatorAddress =
-          addrLower && addrLower.startsWith("0x") && addrLower.length === 42
-            ? (addrLower as `0x${string}`)
-            : ("" as unknown as `0x${string}`);
-
+        const priceUsd = Math.max(0, Number(((v.price_cents ?? 0) / 100).toFixed(2))) || 0;
+        const creatorAddress = isAddressLike(addrLower) ? (addrLower as `0x${string}`) : undefined;
         const canBuy = priceUsd > 0 && !!creatorAddress;
 
         return (
@@ -334,7 +311,7 @@ export default function CardsGrid() {
 
             {/* Info */}
             <div className="flex flex-1 flex-col gap-2 p-2 group-hover:text-[var(--primary-500)] transition-colors">
-              <h3 className=" text-base font-semibold leading-snug text-neutral-50 group-hover:text-[var(--primary-500)]">
+              <h3 className="text-base font-semibold leading-snug text-neutral-50 group-hover:text-[var(--primary-500)]">
                 {v.title}
               </h3>
 
@@ -348,24 +325,13 @@ export default function CardsGrid() {
                       crossOrigin="anonymous"
                       referrerPolicy="no-referrer"
                       onError={(e) => {
-                        (e.currentTarget as HTMLImageElement).style.display =
-                          "none";
+                        (e.currentTarget as HTMLImageElement).style.display = "none";
                       }}
                     />
                   ) : addrLower ? (
-                    <AbstractProfile
-                      address={addrLower}
-                      size="xs"
-                      showTooltip={false}
-                      className="!h-6 !w-6"
-                    />
+                    <AbstractProfile address={addrLower} size="xs" showTooltip={false} className="!h-6 !w-6" />
                   ) : (
-                    <svg
-                      viewBox="0 0 24 24"
-                      className="h-6 w-6 text-neutral-500"
-                      fill="currentColor"
-                      aria-hidden="true"
-                    >
+                    <svg viewBox="0 0 24 24" className="h-6 w-6 text-neutral-500" fill="currentColor" aria-hidden="true">
                       <path d="M12 12a5 5 0 100-10 5 5 0 000 10zm0 2c-4.418 0-8 2.239-8 5v1h16v-1c0-2.761-3.582-5-8-5z" />
                     </svg>
                   )}
@@ -374,17 +340,15 @@ export default function CardsGrid() {
               </div>
 
               <div className="mt-auto flex items-end justify-between">
-                <p className="text-base font-bold text-neutral-50">
-                  {priceText}
-                </p>
+                <p className="text-base font-bold text-neutral-50">{priceText}</p>
 
                 {/* ====== BUY BUTTON (panggil kontrak) ====== */}
                 {canBuy ? (
                   <BuyVideoButton
-                    videoId={v.id}
+                    videoId={v.id}                 // ← biarkan UUID, hook akan mengubah ke uint256
                     creator={creatorAddress}
                     priceUsd={priceUsd}
-                    className="group relative cursor-pointer inline-flex items-center gap-2 rounded-full bg-[var(--primary-500)] px-4 py-2 text-sm font-semibold text-white transition-all duration-200 ease-out hover:scale-105 hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[var(--primary-500)] focus-visible:ring-offset-neutral-900"
+                    className="group relative inline-flex items-center gap-2 rounded-full bg-[var(--primary-500)] px-4 py-2 text-sm font-semibold text-white transition-all duration-200 ease-out hover:scale-105 hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[var(--primary-500)] focus-visible:ring-offset-neutral-900"
                   >
                     Buy
                   </BuyVideoButton>
@@ -393,11 +357,7 @@ export default function CardsGrid() {
                     type="button"
                     disabled
                     className="inline-flex items-center gap-2 rounded-full bg-neutral-700 px-4 py-2 text-sm font-semibold text-white opacity-60"
-                    title={
-                      priceUsd <= 0
-                        ? "Video gratis"
-                        : "Alamat kreator tidak valid"
-                    }
+                    title={priceUsd <= 0 ? "Video gratis" : "Alamat kreator tidak valid"}
                   >
                     {priceUsd <= 0 ? "Free" : "Buy"}
                   </button>
