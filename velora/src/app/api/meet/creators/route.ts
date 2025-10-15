@@ -3,23 +3,19 @@ import { supabaseAdmin } from "@/lib/supabase-admin";
 
 /**
  * GET /api/meet/creators
- * Mengembalikan daftar creator + rate per menit untuk voice & video.
- * Sumber data: public.call_schedules (price_cents per session, slot_minutes ~10).
+ * Output pricing per minute (USD). DB menyimpan price_cents per session.
  */
 export async function GET(_req: NextRequest) {
-  // 1) Ambil semua schedule (field yang dibutuhkan saja)
   const { data: rows, error } = await supabaseAdmin
     .from("call_schedules")
-    .select(
-      `
+    .select(`
       abstract_id,
       kind,
       price_cents,
       slot_minutes,
       currency,
       created_at
-    `
-    )
+    `)
     .order("created_at", { ascending: false });
 
   if (error) {
@@ -27,11 +23,10 @@ export async function GET(_req: NextRequest) {
     return NextResponse.json({ error: "DB error" }, { status: 500 });
   }
 
-  if (!rows || rows.length === 0) {
+  if (!rows?.length) {
     return NextResponse.json({ creators: [] }, { headers: { "Cache-Control": "no-store" } });
   }
 
-  // 2) Pilih 1 baris "terbaru" per (abstract_id, kind)
   type SRow = {
     abstract_id: string;
     kind: "voice" | "video";
@@ -41,18 +36,19 @@ export async function GET(_req: NextRequest) {
     created_at: string;
   };
 
-  const latestByKind = new Map<string, SRow>(); // key = `${abstract_id}:${kind}`
+  const latestByKind = new Map<string, SRow>();      // key = `${aid}:${kind}`
   const ids = new Set<string>();
 
   for (const r of rows as SRow[]) {
     if (!r.abstract_id) continue;
-    const key = `${r.abstract_id}:${r.kind}`;
+    const aid = r.abstract_id.toLowerCase();
+    const key = `${aid}:${r.kind}`;
     if (!latestByKind.has(key)) latestByKind.set(key, r);
-    ids.add(r.abstract_id);
+    ids.add(aid);
   }
 
   const idList = Array.from(ids);
-  // 3) Ambil profil untuk display
+
   const { data: profiles, error: perr } = await supabaseAdmin
     .from("profiles")
     .select("abstract_id, username, avatar_url")
@@ -66,9 +62,8 @@ export async function GET(_req: NextRequest) {
   const pmap = new Map<string, { username: string | null; avatar_url: string | null }>();
   (profiles ?? []).forEach((p) => pmap.set(String(p.abstract_id).toLowerCase(), p as any));
 
-  // 4) Bentuk list creators dengan per-minute rate
   type Creator = {
-    id: string;                // abstract_id
+    id: string;
     name: string;
     handle: string;
     avatarUrl?: string;
@@ -76,45 +71,34 @@ export async function GET(_req: NextRequest) {
   };
 
   const creators: Creator[] = [];
-  for (const abstractId of idList) {
-    const aid = abstractId.toLowerCase();
 
-    const vKey = `${aid}:voice`;
-    const viKey = `${aid}:video`;
+  for (const aid of idList) {
+    const v  = latestByKind.get(`${aid}:voice`);
+    const vi = latestByKind.get(`${aid}:video`);
 
-    const v = latestByKind.get(vKey);
-    const vi = latestByKind.get(viKey);
+    const voicePerSession = v  ? Number(v.price_cents || 0) / 100 : undefined;
+    const videoPerSession = vi ? Number(vi.price_cents || 0) / 100 : undefined;
 
-    // price per session (USD)
-    const voicePerSession = v ? (Number(v.price_cents || 0) / 100) : undefined;
-    const videoPerSession = vi ? (Number(vi.price_cents || 0) / 100) : undefined;
+    const voiceSlot = v?.slot_minutes && v.slot_minutes > 0 ? v.slot_minutes : 10;
+    const videoSlot = vi?.slot_minutes && vi.slot_minutes > 0 ? vi.slot_minutes : 10;
 
-    const voiceSlot = v?.slot_minutes || 10;
-    const videoSlot = vi?.slot_minutes || 10;
-
-    // per minute = per session / slot_minutes
     const pricing = {
       voice: typeof voicePerSession === "number" ? +(voicePerSession / voiceSlot).toFixed(4) : undefined,
       video: typeof videoPerSession === "number" ? +(videoPerSession / videoSlot).toFixed(4) : undefined,
     };
 
     const prof = pmap.get(aid);
-    const username = prof?.username || `${aid.slice(0, 6)}…${aid.slice(-4)}`;
+    const username = prof?.username || `${aid.slice(0,6)}…${aid.slice(-4)}`;
 
     creators.push({
       id: aid,
       name: username,
-      handle: username.replace(/^@?/, ""), // tanpa @
+      handle: username.replace(/^@?/, ""),
       avatarUrl: prof?.avatar_url || undefined,
       pricing,
     });
   }
 
-  // urutkan alfabetis
   creators.sort((a, b) => a.handle.localeCompare(b.handle));
-
-  return NextResponse.json(
-    { creators },
-    { headers: { "Cache-Control": "no-store" } }
-  );
+  return NextResponse.json({ creators }, { headers: { "Cache-Control": "no-store" } });
 }

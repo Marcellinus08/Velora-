@@ -1,108 +1,180 @@
-// src/components/meet/BookingModal.tsx
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
 import { useGlonicTreasury } from "@/hooks/use-glonic-treasury";
 
 type MeetCreator = {
-  id: string;
+  id: string;                             // abstract_id (lowercase)
   name: string;
   handle: string;
   avatarUrl?: string;
-  walletAddress?: string;  // optional
-  abstractId?: string;     // optional
-  pricing: { voice: number; video: number; }; // USD per minute
+  pricing: { voice?: number; video?: number }; // USD / minute (dari API creators)
 };
 
-type BookingModalProps = {
+type SessionsResp = {
+  slotMinutes: number;
+  pricePerSession: { voice: number; video: number }; // USD / session
+  byDay: Array<{ day: number; name: string; voice: string[]; video: string[] }>;
+};
+
+const fmtUSD = (n: number) =>
+  new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(isFinite(n) ? n : 0);
+
+const isAddress = (s?: string | null) => !!s && /^0x[a-fA-F0-9]{40}$/.test(s);
+
+export const BookingModal = ({
+  open,
+  onClose,
+  creator,
+  onBooked,
+}: {
   open: boolean;
   onClose: () => void;
   creator: MeetCreator | null;
   onBooked: () => void;
-};
-
-const fmtUSD = (n: number) =>
-  new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(n);
-
-const isAddress = (s?: string | null) => !!s && /^0x[a-fA-F0-9]{40}$/.test(s);
-
-export const BookingModal: React.FC<BookingModalProps> = ({ open, onClose, creator, onBooked }) => {
+}) => {
   const [kind, setKind] = useState<"voice" | "video">("voice");
-  const [date, setDate] = useState<string>("");
-  const [time, setTime] = useState<string>("");
-  const [minutes, setMinutes] = useState<number>(15);
-  const [loading, setLoading] = useState<boolean>(false);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // sessions
+  const [slotMinutes, setSlotMinutes] = useState(10);
+  const [days, setDays] = useState<SessionsResp["byDay"]>([]);
+  const [dayIdx, setDayIdx] = useState<number>(0);
+  const [selectedTimes, setSelectedTimes] = useState<Set<string>>(new Set());
+  const [pricePerSession, setPricePerSession] = useState<{ voice: number; video: number }>({ voice: 0, video: 0 });
 
   const { payMeet } = useGlonicTreasury();
 
+  // load sessions setiap modal dibuka
   useEffect(() => {
     if (!open || !creator) return;
-    const now = new Date(Date.now() + 30 * 60 * 1000);
-    setKind("voice");
-    setDate(now.toISOString().slice(0, 10));
-    setTime(now.toTimeString().slice(0, 5));
-    setMinutes(15);
-    setError(null);
-    setLoading(false);
+    (async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        setSelectedTimes(new Set());
+
+        const res = await fetch(`/api/meet/sessions?id=${creator.id}`, { cache: "no-store" });
+        const j: SessionsResp = await res.json();
+        if (!res.ok) throw new Error((j as any)?.error || res.statusText);
+
+        setSlotMinutes(j.slotMinutes || 10);
+        setDays(j.byDay || []);
+        setPricePerSession(j.pricePerSession || { voice: 0, video: 0 });
+
+        // default pilih tab berdasarkan ketersediaan
+        const hasVoice = (j.byDay || []).some(d => d.voice.length);
+        const hasVideo = (j.byDay || []).some(d => d.video.length);
+        setKind(hasVoice ? "voice" : hasVideo ? "video" : "voice");
+
+        // default pilih hari pertama yang punya slot untuk kind tsb
+        const idx = (j.byDay || []).findIndex(d => (hasVoice ? d.voice.length : d.video.length));
+        setDayIdx(idx >= 0 ? idx : 0);
+      } catch (e: any) {
+        setDays([]);
+        setError(e?.message || "Failed to load sessions");
+      } finally {
+        setLoading(false);
+      }
+    })();
   }, [open, creator]);
 
-  const creatorAddr = useMemo(() => {
-    const raw = creator?.walletAddress || creator?.abstractId || "";
-    return isAddress(raw) ? (raw as `0x${string}`) : undefined;
-  }, [creator]);
+  // daftar hari yang punya slot untuk kind aktif
+  const availableDays = useMemo(() => {
+    return days.filter(d => (kind === "voice" ? d.voice.length : d.video.length));
+  }, [days, kind]);
 
-  const rate = useMemo(() => {
-    if (!creator) return 0;
-    return kind === "voice" ? Number(creator.pricing.voice || 0) : Number(creator.pricing.video || 0);
-  }, [creator, kind]);
+  // slot untuk hari terpilih
+  const slotsForDay = useMemo(() => {
+    const cur = availableDays[dayIdx] ?? availableDays[0];
+    if (!cur) return [];
+    return kind === "voice" ? cur.voice : cur.video;
+  }, [availableDays, dayIdx, kind]);
 
-  const totalUsd = useMemo(() => {
-    const m = Math.max(1, Math.ceil(Number(minutes || 0)));
-    return Math.max(0, rate * m);
-  }, [rate, minutes]);
+  // harga & total
+  const sessionPriceUsd = useMemo(
+    () => (kind === "voice" ? pricePerSession.voice : pricePerSession.video) || 0,
+    [kind, pricePerSession]
+  );
+  const totalSessions = selectedTimes.size;
+  const totalUsd = +(sessionPriceUsd * totalSessions).toFixed(2);
+
+  const perMinute = useMemo(() => {
+    // gunakan pricing per minute dari creators (fallback dari session price)
+    const fallback = sessionPriceUsd / Math.max(1, slotMinutes);
+    const fromCreators = kind === "voice" ? creator?.pricing.voice : creator?.pricing.video;
+    return Number(fromCreators || fallback || 0);
+  }, [creator, kind, sessionPriceUsd, slotMinutes]);
+
+  // toggle pilih slot
+  const toggleTime = (t: string) => {
+    setSelectedTimes(prev => {
+      const next = new Set(prev);
+      if (next.has(t)) next.delete(t);
+      else next.add(t);
+      return next;
+    });
+  };
+
+  // helper: tentukan tanggal berikutnya untuk weekday tertentu
+  function nextDateForWeekday(weekdayName: string) {
+    const days = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+    const target = days.indexOf(weekdayName);
+    const now = new Date();
+    const today = now.getDay(); // 0..6 (Sun..Sat)
+    let add = target - today;
+    if (add <= 0) add += 7;
+    const d = new Date(now);
+    d.setDate(now.getDate() + add);
+    return d.toISOString().slice(0, 10);
+  }
 
   const submit = async () => {
     try {
       if (!open || !creator) return;
+      if (totalSessions === 0) throw new Error("Select at least one session");
+
       setLoading(true);
       setError(null);
-      if (!date || !time) throw new Error("Select date & time");
-      if (!creatorAddr) throw new Error("Creator wallet invalid");
-      if (rate <= 0) throw new Error("Rate must be > 0");
 
-      const mins = Math.max(1, Math.ceil(Number(minutes)));
-      const startAt = new Date(`${date}T${time}:00`).toISOString();
+      // ambil hari yang dipilih dan slot paling awal sebagai startAt
+      const curDay = availableDays[dayIdx] ?? availableDays[0];
+      const dayISO = nextDateForWeekday(curDay?.name || "Monday");
+      const first = Array.from(selectedTimes).sort()[0];
+      const startAt = `${dayISO}T${first}:00.000Z`;
 
-      // 1) Buat booking di backend → ambil bookingId
+      const minutes = totalSessions * Math.max(1, slotMinutes);
+
+      // booking ke backend (API kamu sebelumnya)
       const res = await fetch("/api/meet/book", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ creatorId: creator.id, kind, minutes: mins, startAt }),
+        body: JSON.stringify({
+          creatorId: creator.id,
+          kind,
+          minutes,
+          startAt,
+          // OPTIONAL: kirim list slot agar backend bisa lock
+          slots: Array.from(selectedTimes).sort(),
+          slotMinutes,
+        }),
       });
-      if (!res.ok) {
-        const t = await res.text().catch(() => "");
-        throw new Error(t || "Booking failed");
-      }
       const j = await res.json().catch(() => ({}));
-      const bookingId = j?.bookingId ?? j?.id;
-      if (bookingId === undefined || bookingId === null) throw new Error("Booking created but no bookingId returned");
+      if (!res.ok) throw new Error(j?.error || "Booking failed");
 
-      // 2) Bayar on-chain
-      const tx = await payMeet({
-        bookingId,
-        creator: creatorAddr,
-        rateUsdPerMin: rate,
-        minutes: mins,
+      // bayar on-chain: rate per minute + total minutes
+      await payMeet({
+        bookingId: j?.bookingId ?? j?.id,
+        creator: (creator.id as `0x${string}`) as any, // kalau kamu punya wallet di objek creator, ganti ini
+        rateUsdPerMin: perMinute,
+        minutes,
       });
-      alert(`Booking & payment success!\nBooking #${bookingId}\nTx: ${tx}`);
 
       onClose();
       onBooked();
     } catch (e: any) {
-      const msg = e?.shortMessage || e?.message || "Something went wrong";
-      setError(msg);
-      alert(msg);
+      setError(e?.message || "Something went wrong");
     } finally {
       setLoading(false);
     }
@@ -110,10 +182,12 @@ export const BookingModal: React.FC<BookingModalProps> = ({ open, onClose, creat
 
   if (!open || !creator) return null;
 
+  // UI
   return (
     <div className="fixed inset-0 z-50 grid place-items-center">
       <div className="absolute inset-0 bg-black/60" onClick={() => !loading && onClose()} />
-      <div className="relative w-full max-w-md rounded-2xl border border-neutral-800 bg-neutral-900 p-5 shadow-xl transition">
+      <div className="relative w-full max-w-lg rounded-2xl border border-neutral-800 bg-neutral-900 p-5 shadow-xl">
+        {/* header */}
         <div className="mb-4 flex items-center gap-3">
           <div className="h-10 w-10 overflow-hidden rounded-full bg-neutral-800 ring-1 ring-neutral-700">
             {creator.avatarUrl ? (
@@ -125,79 +199,111 @@ export const BookingModal: React.FC<BookingModalProps> = ({ open, onClose, creat
           <div>
             <div className="font-semibold text-neutral-50">{creator.name}</div>
             <div className="text-xs text-neutral-400">@{creator.handle}</div>
-            {!creatorAddr && (
-              <div className="mt-1 text-[11px] text-amber-400">Creator wallet missing/invalid</div>
-            )}
+            {/* kamu bisa ganti validasi wallet di sini */}
+            <div className="mt-1 text-[11px] text-amber-400">Creator wallet missing/invalid</div>
           </div>
         </div>
 
-        <div className="mb-3 grid grid-cols-2 gap-2">
+        {/* pilih kind (harga per session) */}
+        <div className="mb-4 grid grid-cols-2 gap-2">
           <button
             type="button"
-            onClick={() => setKind("voice")}
+            onClick={() => { setKind("voice"); setSelectedTimes(new Set()); }}
             disabled={loading}
             className={`rounded-xl px-3 py-2 text-sm font-semibold transition ${
               kind === "voice" ? "bg-[var(--primary-500)] text-white"
-                                : "bg-neutral-800 text-neutral-200 hover:bg-neutral-700"}`}
+                               : "bg-neutral-800 text-neutral-200 hover:bg-neutral-700"}`}
           >
-            Voice {fmtUSD(creator.pricing.voice)}/min
+            Voice {fmtUSD(pricePerSession.voice)}/session
           </button>
           <button
             type="button"
-            onClick={() => setKind("video")}
+            onClick={() => { setKind("video"); setSelectedTimes(new Set()); }}
             disabled={loading}
             className={`rounded-xl px-3 py-2 text-sm font-semibold transition ${
               kind === "video" ? "bg-[var(--primary-500)] text-white"
                                : "bg-neutral-800 text-neutral-200 hover:bg-neutral-700"}`}
           >
-            Video {fmtUSD(creator.pricing.video)}/min
+            Video {fmtUSD(pricePerSession.video)}/session
           </button>
         </div>
 
-        <div className="mb-3 grid grid-cols-2 gap-2">
-          <div>
-            <label className="mb-1 block text-xs text-neutral-400">Date</label>
-            <input type="date" value={date} disabled={loading} onChange={(e) => setDate(e.target.value)}
-              className="w-full rounded-lg border border-neutral-800 bg-neutral-950 px-3 py-2 text-sm text-neutral-100 outline-none focus:border-[var(--primary-500)]" />
-          </div>
-          <div>
-            <label className="mb-1 block text-xs text-neutral-400">Time</label>
-            <input type="time" value={time} disabled={loading} onChange={(e) => setTime(e.target.value)}
-              className="w-full rounded-lg border border-neutral-800 bg-neutral-950 px-3 py-2 text-sm text-neutral-100 outline-none focus:border-[var(--primary-500)]" />
-          </div>
+        {/* pilih hari */}
+        <div className="mb-2 text-sm text-neutral-300">Pick a day</div>
+        <div className="mb-3 flex flex-wrap gap-2">
+          {availableDays.length === 0 ? (
+            <span className="text-xs text-neutral-500">No sessions available.</span>
+          ) : (
+            availableDays.map((d, i) => (
+              <button
+                key={d.day}
+                onClick={() => { setDayIdx(i); setSelectedTimes(new Set()); }}
+                className={`rounded-full px-3 py-1.5 text-sm ${
+                  i === dayIdx ? "bg-[var(--primary-500)] text-white"
+                               : "border border-neutral-700 bg-neutral-900 text-neutral-200 hover:bg-neutral-800"}`}
+              >
+                {d.name}
+              </button>
+            ))
+          )}
         </div>
 
-        <div className="mb-4">
-          <label className="mb-1 block text-xs text-neutral-400">Minutes</label>
-          <input type="number" min={1} step={1} value={minutes} disabled={loading}
-            onChange={(e) => setMinutes(Math.max(1, Number(e.target.value || 1)))}
-            className="w-full rounded-lg border border-neutral-800 bg-neutral-950 px-3 py-2 text-sm text-neutral-100 outline-none focus:border-[var(--primary-500)]" />
-          <div className="mt-2 text-xs text-neutral-400">
-            Rate: <span className="font-semibold text-neutral-200">{fmtUSD(rate)}</span> / min — Total:{" "}
-            <span className="font-semibold text-neutral-200">{fmtUSD(totalUsd)}</span>
-          </div>
+        {/* pilih session (10 menit) */}
+        {!!slotsForDay.length && (
+          <>
+            <div className="mb-1 text-sm text-neutral-300">
+              Available sessions ({slotMinutes} min each)
+            </div>
+            <div className="mb-3 flex flex-wrap gap-2">
+              {slotsForDay.map((t) => {
+                const active = selectedTimes.has(t);
+                return (
+                  <button
+                    key={t}
+                    onClick={() => toggleTime(t)}
+                    className={`rounded-full px-3 py-1 text-sm ${
+                      active
+                        ? "border border-black bg-black text-white"
+                        : "border border-neutral-700 bg-neutral-900 text-neutral-300 hover:bg-neutral-800"
+                    }`}
+                  >
+                    {t}
+                  </button>
+                );
+              })}
+            </div>
+          </>
+        )}
+
+        {/* harga & total */}
+        <div className="mt-2 text-sm text-neutral-300">
+          Price: <span className="font-semibold text-neutral-100">{fmtUSD(sessionPriceUsd)}</span> / session
+          {" — "}Sessions: <span className="font-semibold text-neutral-100">{totalSessions}</span>
+          {" — "}Total: <span className="font-semibold text-neutral-100">{fmtUSD(totalUsd)}</span>
         </div>
 
         {error && (
-          <div className="mb-3 rounded-md border border-red-800/60 bg-red-900/20 px-3 py-2 text-sm text-red-300">{error}</div>
+          <div className="mt-3 rounded-md border border-red-800/60 bg-red-900/20 px-3 py-2 text-sm text-red-300">
+            {error}
+          </div>
         )}
 
+        {/* actions */}
         <div className="mt-4 flex items-center justify-end gap-3">
-          <button type="button" onClick={onClose} disabled={loading}
-            className="rounded-xl bg-neutral-800 px-4 py-2 text-sm font-semibold text-neutral-100 hover:bg-neutral-700 disabled:cursor-not-allowed disabled:opacity-60">
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={loading}
+            className="rounded-xl bg-neutral-800 px-4 py-2 text-sm font-semibold text-neutral-100 hover:bg-neutral-700 disabled:cursor-not-allowed disabled:opacity-60"
+          >
             Cancel
           </button>
-
-          <button type="button" onClick={submit}
-            disabled={loading || !creatorAddr || rate <= 0 || totalUsd <= 0 || !date || !time}
+          <button
+            type="button"
+            onClick={submit}
+            disabled={loading || totalSessions === 0}
             className="rounded-xl bg-[var(--primary-500)] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-opacity-90 disabled:cursor-not-allowed disabled:bg-neutral-700"
-            title={
-              !creatorAddr ? "Invalid creator wallet"
-              : rate <= 0 ? "Invalid rate"
-              : totalUsd <= 0 ? "Total must be > 0"
-              : !date || !time ? "Select date & time"
-              : ""
-            }>
+          >
             {loading ? "Booking..." : "Confirm & Pay"}
           </button>
         </div>

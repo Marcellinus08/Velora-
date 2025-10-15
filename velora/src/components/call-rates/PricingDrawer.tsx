@@ -1,4 +1,3 @@
-// src/components/call-rates/PricingDrawer.tsx
 import React, { useState, useMemo, useEffect } from "react";
 import Row from "./Row";
 
@@ -10,33 +9,40 @@ const fmtUSD = (n: number) =>
     maximumFractionDigits: 2,
   }).format(isFinite(n) ? n : 0);
 
+/** Harga yang dimasukkan adalah PER MENIT.
+ *  Quick preview menampilkan PER SESSION (10 menit).
+ */
 function PricingDrawer({
   open,
   onClose,
   kind,
-  initialPerSession,
+  initialPerMinute,
   onConfirm,
 }: {
   open: boolean;
   onClose: () => void;
   kind: "voice" | "video";
-  initialPerSession: number;
-  onConfirm: (perSession: number) => void;
+  /** USD per minute */
+  initialPerMinute: number;
+  /** return USD per minute */
+  onConfirm: (perMinute: number) => void;
 }) {
-  const [perSessionStr, setPerSessionStr] = useState<string>(String(initialPerSession ?? ""));
-  useEffect(() => setPerSessionStr(String(initialPerSession ?? "")), [initialPerSession, open]);
+  const [perMinuteStr, setPerMinuteStr] = useState<string>(String(initialPerMinute ?? ""));
 
-  const perSession = useMemo(() => {
-    const normalized = perSessionStr.replace(",", ".").trim();
+  useEffect(() => setPerMinuteStr(String(initialPerMinute ?? "")), [initialPerMinute, open]);
+
+  const perMinute = useMemo(() => {
+    const normalized = perMinuteStr.replace(",", ".").trim();
     const n = parseFloat(normalized);
     return isNaN(n) || n < 0 ? 0 : n;
-  }, [perSessionStr]);
+  }, [perMinuteStr]);
 
-  const price10 = useMemo(() => perSession * 1, [perSession]);
-  const price20 = useMemo(() => perSession * 2, [perSession]);
-  const price40 = useMemo(() => perSession * 4, [perSession]);
+  // preview per session (10 minutes)
+  const session10 = useMemo(() => perMinute * 10, [perMinute]);
+  const session20 = useMemo(() => perMinute * 20, [perMinute]);
+  const session40 = useMemo(() => perMinute * 40, [perMinute]);
 
-  const quick = [0.25, 1, 5, 10];
+  const quick = [0.25, 1, 5, 10]; // quick pick per minute
 
   return (
     <div className={`fixed inset-0 z-[80] ${open ? "" : "pointer-events-none"}`} aria-hidden={!open}>
@@ -54,34 +60,36 @@ function PricingDrawer({
               <path d="M18 6 6 18M6 6l12 12" />
             </svg>
           </button>
-          <h3 className="text-[20px] font-semibold text-neutral-50">Set your price ({kind === "voice" ? "Voice" : "Video"})</h3>
+          <h3 className="text-[20px] font-semibold text-neutral-50">
+            Set your price ({kind === "voice" ? "Voice" : "Video"})
+          </h3>
         </div>
 
         <div className="space-y-6 p-6">
           <div className="space-y-2">
-            <p className="text-sm text-neutral-300">Price per session (USD)</p>
+            <p className="text-sm text-neutral-300">Price per minute (USD)</p>
 
             <div className="relative">
               <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500">$</span>
               <input
                 inputMode="decimal"
-                value={perSessionStr}
+                value={perMinuteStr}
                 onChange={(e) => {
                   const raw = e.target.value;
                   const cleaned = raw.replace(/[^\d.,\s]/g, "");
-                  setPerSessionStr(cleaned);
+                  setPerMinuteStr(cleaned);
                 }}
                 placeholder="0"
                 className="h-12 w-full rounded-2xl border border-neutral-800 bg-neutral-900 pl-6 pr-16 text-neutral-100 placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-violet-500/60"
               />
-              <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-neutral-500">/ session</span>
+              <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-neutral-500">/ min</span>
             </div>
 
             <div className="flex flex-wrap items-center gap-2 pt-2">
               {quick.map((v) => (
                 <button
                   key={v}
-                  onClick={() => setPerSessionStr(String(v))}
+                  onClick={() => setPerMinuteStr(String(v))}
                   className="h-11 rounded-2xl border border-neutral-700 bg-neutral-900 px-4 text-sm text-neutral-200 hover:bg-neutral-800"
                 >
                   {fmtUSD(v)}
@@ -91,11 +99,11 @@ function PricingDrawer({
           </div>
 
           <div className="space-y-3">
-            <p className="text-sm font-medium text-neutral-50">Quick preview</p>
+            <p className="text-sm font-medium text-neutral-50">Quick preview (per session)</p>
             <div className="space-y-2 text-neutral-100">
-              <Row label="10 minutes (1 session)" value={fmtUSD(price10)} />
-              <Row label="20 minutes (2 sessions)" value={fmtUSD(price20)} />
-              <Row label="40 minutes (4 sessions)" value={fmtUSD(price40)} />
+              <Row label="10 minutes (1 session)" value={fmtUSD(session10)} />
+              <Row label="20 minutes (2 sessions)" value={fmtUSD(session20)} />
+              <Row label="40 minutes (4 sessions)" value={fmtUSD(session40)} />
             </div>
           </div>
         </div>
@@ -104,7 +112,7 @@ function PricingDrawer({
           <button
             className="h-12 w-full rounded-2xl bg-[var(--primary-500)] font-semibold text-white hover:opacity-90"
             onClick={() => {
-              onConfirm(perSession);
+              onConfirm(perMinute); // <- return PER MINUTE
               onClose();
             }}
           >
