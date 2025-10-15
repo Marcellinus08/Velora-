@@ -1,57 +1,56 @@
+// src/app/meet/page.tsx
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import Sidebar from "@/components/sidebar";
 import { Header } from "@/components/meet/Header";
 import { TabButton } from "@/components/meet/TabButton";
-import { MeetCard } from "@/components/meet/MeetCard";
+import { MeetCard, MeetCardSkeleton } from "@/components/meet/MeetCard";
 import { BookingModal } from "@/components/meet/BookingModal";
 
-type CreatorCard = {
-  id: string;                              // abstract_id
+type Creator = {
+  id: string; // abstract_id lowercased (0x…)
   name: string;
   handle: string;
   avatarUrl?: string;
-  pricing: { voice?: number; video?: number }; // USD per minute
+  pricing: { voice?: number; video?: number }; // USD / minute
 };
 
 export default function MeetPage() {
   const [tab, setTab] = useState<"creators" | "upcoming" | "pending" | "history" | "orders">("creators");
-  const [creators, setCreators] = useState<CreatorCard[]>([]);
-  const [orders, setOrders] = useState<{ id: number; creator: string; status: string }[]>([]);
+
+  const [loading, setLoading] = useState<boolean>(true);
+  const [creators, setCreators] = useState<Creator[]>([]);
+  const [orders, setOrders] = useState<any[]>([]);
   const [openModal, setOpenModal] = useState(false);
-  const [selectedCreator, setSelectedCreator] = useState<CreatorCard | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [selectedCreator, setSelectedCreator] = useState<Creator | null>(null);
 
   useEffect(() => {
-    // contoh demo orders (placeholder)
+    let alive = true;
+    (async () => {
+      try {
+        setLoading(true);
+        const res = await fetch("/api/meet/creators", { cache: "no-store" });
+        const j = await res.json();
+        if (!res.ok) throw new Error(j?.error || "Failed to load creators");
+        if (alive) setCreators(j.creators || []);
+      } catch {
+        if (alive) setCreators([]);
+      } finally {
+        if (alive) setLoading(false);
+      }
+    })();
+    // contoh dummy orders
     setOrders([
       { id: 1, creator: "Creator 1", status: "Completed" },
       { id: 2, creator: "Creator 2", status: "Pending" },
     ]);
+    return () => {
+      alive = false;
+    };
   }, []);
 
-  // Ambil creators dari DB
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      setLoading(true);
-      try {
-        const res = await fetch("/api/meet/creators", { cache: "no-store" });
-        const json = await res.json().catch(() => ({}));
-        if (!res.ok) throw new Error(json?.error || res.statusText);
-        if (!cancelled) setCreators(Array.isArray(json.creators) ? json.creators : []);
-      } catch (e) {
-        console.error("[meet] load creators failed:", e);
-        if (!cancelled) setCreators([]);
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    })();
-    return () => { cancelled = true; };
-  }, []);
-
-  const openBooking = (creator: CreatorCard) => {
+  const openBooking = (creator: Creator) => {
     setSelectedCreator(creator);
     setOpenModal(true);
   };
@@ -62,7 +61,7 @@ export default function MeetPage() {
       <main className="flex-1 px-6 py-8">
         <Header />
 
-        {/* Tabs */}
+        {/* Tab Button for navigation */}
         <div className="mb-4 flex gap-6">
           <TabButton active={tab === "creators"} onClick={() => setTab("creators")}>Creators</TabButton>
           <TabButton active={tab === "upcoming"} onClick={() => setTab("upcoming")}>Upcoming</TabButton>
@@ -73,21 +72,23 @@ export default function MeetPage() {
           </div>
         </div>
 
-        {/* Content */}
+        {/* Creators tab */}
         {tab === "creators" && (
           <>
             {loading ? (
-              <div className="rounded-xl border border-neutral-800 bg-neutral-900 p-4 text-neutral-300">
-                Loading creators…
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <MeetCardSkeleton key={i} />
+                ))}
               </div>
             ) : creators.length === 0 ? (
-              <div className="rounded-xl border border-neutral-800 bg-neutral-900 p-4 text-neutral-300">
+              <div className="rounded-xl border border-neutral-800 bg-neutral-900 p-4 text-sm text-neutral-400">
                 No creators yet.
               </div>
             ) : (
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                {creators.map((creator) => (
-                  <MeetCard key={creator.id} creator={creator} onCall={openBooking} />
+                {creators.map((c) => (
+                  <MeetCard key={c.id} creator={c} onCall={openBooking} />
                 ))}
               </div>
             )}
@@ -105,7 +106,7 @@ export default function MeetPage() {
               <div>No orders available</div>
             ) : (
               orders.map((order) => (
-                <div key={order.id} className="rounded-xl border border-neutral-800 p-4 bg-neutral-900">
+                <div key={order.id} className="rounded-xl border border-neutral-800 bg-neutral-900 p-4">
                   <div className="flex justify-between">
                     <div className="font-semibold text-neutral-50">{order.creator}</div>
                     <div className={`text-sm ${order.status === "Completed" ? "text-green-300" : "text-yellow-300"}`}>
@@ -119,11 +120,11 @@ export default function MeetPage() {
         )}
       </main>
 
-      {/* Modal for booking */}
+      {/* Booking Modal */}
       <BookingModal
         open={openModal}
         onClose={() => setOpenModal(false)}
-        creator={selectedCreator as any}
+        creator={selectedCreator}
         onBooked={() => setTab("pending")}
       />
     </div>

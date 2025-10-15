@@ -50,9 +50,7 @@ export const MeetCard: React.FC<MeetCardProps> = ({ creator, onCall }) => {
           <div className="text-base font-semibold text-neutral-50">{creator.name}</div>
           <div className="mt-1 text-[11px]">
             {displayAddr ? (
-              <span className="text-neutral-400">
-                {displayAddr}
-              </span>
+              <span className="text-neutral-400">{displayAddr}</span>
             ) : (
               <span className="text-amber-400">Creator wallet missing/invalid</span>
             )}
@@ -86,6 +84,37 @@ export const MeetCard: React.FC<MeetCardProps> = ({ creator, onCall }) => {
       >
         Booking
       </button>
+    </div>
+  );
+};
+
+/** Skeleton loading ala CardsGrid */
+export const MeetCardSkeleton: React.FC = () => {
+  return (
+    <div className="animate-pulse rounded-xl border border-neutral-800 bg-neutral-900 p-5">
+      {/* header skeleton */}
+      <div className="mb-4 flex items-center gap-3">
+        <div className="h-12 w-12 rounded-full bg-neutral-800/60" />
+        <div className="min-w-0 flex-1">
+          <div className="h-4 w-32 rounded bg-neutral-800/60" />
+          <div className="mt-2 h-3 w-24 rounded bg-neutral-800/60" />
+        </div>
+      </div>
+
+      {/* pricing skeleton */}
+      <div className="mb-4 grid grid-cols-2 gap-3">
+        <div className="rounded-lg border border-neutral-800 p-3">
+          <div className="h-3 w-12 rounded bg-neutral-800/60" />
+          <div className="mt-2 h-4 w-20 rounded bg-neutral-800/60" />
+        </div>
+        <div className="rounded-lg border border-neutral-800 p-3">
+          <div className="h-3 w-12 rounded bg-neutral-800/60" />
+          <div className="mt-2 h-4 w-20 rounded bg-neutral-800/60" />
+        </div>
+      </div>
+
+      {/* button skeleton */}
+      <div className="h-9 w-full rounded-full bg-neutral-800/60" />
     </div>
   );
 };
