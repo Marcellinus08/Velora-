@@ -1,11 +1,9 @@
-// src/components/call-rates/SchedulePicker.tsx
 "use client";
 
 import React, { useMemo, useState } from "react";
 import Swal from "sweetalert2";
 
 const daysOfWeek = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
-const ETH_RE = /^0x[a-fA-F0-9]{40}$/;
 
 type CallKind = "voice" | "video";
 type Session = { id: string; start: string; end: string; active: boolean };
@@ -21,7 +19,8 @@ type DaySchedule = { id: string; day: string; hours: HourBlock[] };
 const uid = (p = "id") => `${p}_${Math.random().toString(36).slice(2)}${Date.now()}`;
 const toMinutes = (hhmm: string) => { const [h,m]=hhmm.split(":").map(Number); return (h||0)*60+(m||0); };
 const fromMinutes = (t: number) => `${String(Math.floor(t/60)%24).padStart(2,"0")}:${String(t%60).padStart(2,"0")}`;
-const genSessions = (startHHMM: string, duration=60, slot=10): Session[] => {
+const SLOT_MINUTES = 10; // 1 session = 10 menit
+const genSessions = (startHHMM: string, duration=60, slot=SLOT_MINUTES): Session[] => {
   if (!startHHMM || duration<=0) return [];
   const s=toMinutes(startHHMM), e=s+duration, out: Session[]=[];
   for (let t=s; t+slot<=e; t+=slot) out.push({ id: uid("sess"), start: fromMinutes(t), end: fromMinutes(t+slot), active: true });
@@ -30,12 +29,16 @@ const genSessions = (startHHMM: string, duration=60, slot=10): Session[] => {
 const dayNameToNum = (d: string) => daysOfWeek.indexOf(d) + 1;
 
 interface SchedulePickerProps {
-  abstractId: string; // ETH address (lowercased)
-  onScheduleAdded: (day: string, startTime: string, slots: string[], kind: CallKind) => void;
+  abstractId: string;
+  onScheduleAdded: (day: string, start: string, slots: string[], kind: CallKind) => void;
+
   hasVoicePrice: boolean;
   hasVideoPrice: boolean;
-  voicePriceUSD: number;
-  videoPriceUSD: number;
+  /** USD per minute */
+  voicePricePerMinuteUSD: number;
+  /** USD per minute */
+  videoPricePerMinuteUSD: number;
+
   currency?: string;
   onResetPrices?: () => void;
 }
@@ -49,8 +52,8 @@ const SchedulePicker: React.FC<SchedulePickerProps> = ({
   onScheduleAdded,
   hasVoicePrice,
   hasVideoPrice,
-  voicePriceUSD,
-  videoPriceUSD,
+  voicePricePerMinuteUSD,
+  videoPricePerMinuteUSD,
   currency = "USD",
   onResetPrices,
 }) => {
@@ -77,7 +80,7 @@ const SchedulePicker: React.FC<SchedulePickerProps> = ({
     setDays(prev => prev.map(d => d.id===dayId ? { ...d, hours: d.hours.map(h => h.id===hourId ? { ...h, [field]: value } : h) } : d));
 
   const rebuildSessions = (dayId: string, hourId: string) =>
-    setDays(prev => prev.map(d => d.id===dayId ? { ...d, hours: d.hours.map(h => h.id===hourId ? { ...h, sessions: genSessions(h.start, h.duration, 10) } : h) } : d));
+    setDays(prev => prev.map(d => d.id===dayId ? { ...d, hours: d.hours.map(h => h.id===hourId ? { ...h, sessions: genSessions(h.start, h.duration, SLOT_MINUTES) } : h) } : d));
 
   const toggleSession = (dayId: string, hourId: string, sessId: string) =>
     setDays(prev => prev.map(d => d.id===dayId ? { ...d, hours: d.hours.map(h => h.id===hourId ? { ...h, sessions: h.sessions.map(s=>s.id===sessId?{...s,active:!s.active}:s) } : h) } : d));
@@ -91,7 +94,7 @@ const SchedulePicker: React.FC<SchedulePickerProps> = ({
       Swal.fire({
         icon: "warning",
         title: `Set ${kind === "voice" ? "Voice" : "Video"} pricing first`,
-        text: "Open the pricing card above to set your per-session price.",
+        text: "Open the pricing card above to set your per-minute price.",
         position: "top-end",
         toast: true,
         timer: 2500,
@@ -102,7 +105,6 @@ const SchedulePicker: React.FC<SchedulePickerProps> = ({
     setDays(prev => prev.map(d => d.id===dayId ? { ...d, hours: d.hours.map(h => h.id===hourId ? { ...h, kinds: { ...h.kinds, [kind]: !h.kinds[kind] } } : h) } : d));
   };
 
-  // Preview model
   const preview = useMemo(() => {
     const order = (nm: string) => daysOfWeek.indexOf(nm);
     return days
@@ -127,16 +129,6 @@ const SchedulePicker: React.FC<SchedulePickerProps> = ({
   [days, hasVoicePrice, hasVideoPrice]);
 
   const handleAddSchedules = async () => {
-    // wallet guard
-    if (!ETH_RE.test(abstractId)) {
-      await Swal.fire({
-        icon: "warning",
-        title: "Connect your wallet",
-        text: "Please connect your wallet before saving schedules.",
-      });
-      return;
-    }
-
     // pricing guard
     const missing = new Set<CallKind>();
     days.forEach(d => d.hours.forEach(h => {
@@ -151,7 +143,6 @@ const SchedulePicker: React.FC<SchedulePickerProps> = ({
       return;
     }
 
-    // build payload per kind
     type Item = { day: number; start: string; duration: number; slots: string[] };
     const voiceItems: Item[] = [];
     const videoItems: Item[] = [];
@@ -167,6 +158,10 @@ const SchedulePicker: React.FC<SchedulePickerProps> = ({
 
     const toCents = (usd: number) => Math.round((usd || 0) * 100);
 
+    // KONVERSI: per-minute -> per-session (10 menit)
+    const voicePerSessionUSD = (voicePricePerMinuteUSD || 0) * SLOT_MINUTES;
+    const videoPerSessionUSD = (videoPricePerMinuteUSD || 0) * SLOT_MINUTES;
+
     setSaving(true);
     try {
       const res = await fetch("/api/call-rates/schedules", {
@@ -175,14 +170,13 @@ const SchedulePicker: React.FC<SchedulePickerProps> = ({
         body: JSON.stringify({
           abstractId,
           currency,
-          voice: voiceItems.length ? { price_cents: toCents(voicePriceUSD), items: voiceItems } : undefined,
-          video: videoItems.length ? { price_cents: toCents(videoPriceUSD), items: videoItems } : undefined,
+          voice: voiceItems.length ? { price_cents: toCents(voicePerSessionUSD), items: voiceItems } : undefined,
+          video: videoItems.length ? { price_cents: toCents(videoPerSessionUSD), items: videoItems } : undefined,
         }),
       });
       const j = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(j?.error || "Failed to save");
 
-      // notify parent
       voiceItems.forEach(it => onScheduleAdded(daysOfWeek[it.day-1], it.start, it.slots, "voice"));
       videoItems.forEach(it => onScheduleAdded(daysOfWeek[it.day-1], it.start, it.slots, "video"));
 
@@ -199,7 +193,6 @@ const SchedulePicker: React.FC<SchedulePickerProps> = ({
         showConfirmButton: false,
       });
 
-      // reset
       onResetPrices?.();
       setSelectedDays([]);
       setDays([]);
@@ -244,7 +237,7 @@ const SchedulePicker: React.FC<SchedulePickerProps> = ({
         )}
       </div>
 
-      {/* Time blocks (UI) */}
+      {/* Time blocks (UI tetap sama) */}
       {selectedDays.length > 0 ? (
         <div className="mt-4 space-y-4">
           {selectedDays.map((dayName) => {
@@ -275,7 +268,7 @@ const SchedulePicker: React.FC<SchedulePickerProps> = ({
                             <span className="mb-1 block font-medium">Start</span>
                             <input
                               type="time"
-                              step={600}
+                              step={SLOT_MINUTES * 60}
                               value={h.start}
                               onChange={(e) => updateHour(d.id, h.id, "start", e.target.value)}
                               onBlur={() => rebuildSessions(d.id, h.id)}
@@ -299,7 +292,7 @@ const SchedulePicker: React.FC<SchedulePickerProps> = ({
                             </select>
                           </label>
 
-                          {/* Call type switches */}
+                          {/* Call type */}
                           <div className="ml-auto text-sm">
                             <span className="mb-1 block font-medium">Call Type</span>
                             <div className="inline-flex rounded-xl border border-neutral-700 bg-neutral-900 p-1">
