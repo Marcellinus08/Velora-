@@ -5,62 +5,53 @@ import Sidebar from "@/components/sidebar";
 import { Header } from "@/components/meet/Header";
 import { TabButton } from "@/components/meet/TabButton";
 import { MeetCard } from "@/components/meet/MeetCard";
-import { BookingList } from "@/components/meet/BookingList";
 import { BookingModal } from "@/components/meet/BookingModal";
 
-// Daftar creators dummy
-const DUMMY_CREATORS = [
-  {
-    id: "c_maria",
-    name: "Maria",
-    handle: "maria",
-    avatarUrl:
-      "https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=256&auto=format&fit=crop",
-    pricing: { voice: 1, video: 5 },
-  },
-  {
-    id: "c_arif",
-    name: "Arif",
-    handle: "arif",
-    avatarUrl:
-      "https://images.unsplash.com/photo-1607746882042-944635dfe10e?q=80&w=256&auto=format&fit=crop",
-    pricing: { voice: 3, video: 7 },
-  },
-  {
-    id: "c_sinta",
-    name: "Sinta",
-    handle: "sinta",
-    avatarUrl:
-      "https://images.unsplash.com/photo-1547425260-76bcadfb4f2c?q=80&w=256&auto=format&fit=crop",
-    pricing: { voice: 1.5, video: 4 },
-  },
-  {
-    id: "c_dimas",
-    name: "Dimas",
-    handle: "dimas",
-    avatarUrl:
-      "https://images.unsplash.com/photo-1607746882042-944635dfe10e?q=80&w=256&auto=format&fit=crop",
-    pricing: { voice: 2, video: 6 },
-  },
-]; // You can modify this array based on your data source
+type CreatorCard = {
+  id: string;                              // abstract_id
+  name: string;
+  handle: string;
+  avatarUrl?: string;
+  pricing: { voice?: number; video?: number }; // USD per minute
+};
 
 export default function MeetPage() {
-  const [tab, setTab] = useState("creators");
-  const [creators, setCreators] = useState(DUMMY_CREATORS);
-  const [bookings, setBookings] = useState([]);
-  const [orders, setOrders] = useState([]);
+  const [tab, setTab] = useState<"creators" | "upcoming" | "pending" | "history" | "orders">("creators");
+  const [creators, setCreators] = useState<CreatorCard[]>([]);
+  const [orders, setOrders] = useState<{ id: number; creator: string; status: string }[]>([]);
   const [openModal, setOpenModal] = useState(false);
-  const [selectedCreator, setSelectedCreator] = useState(null);
+  const [selectedCreator, setSelectedCreator] = useState<CreatorCard | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setCreators(DUMMY_CREATORS);
+    // contoh demo orders (placeholder)
     setOrders([
       { id: 1, creator: "Creator 1", status: "Completed" },
       { id: 2, creator: "Creator 2", status: "Pending" },
     ]);
   }, []);
 
-  const openBooking = (creator) => {
+  // Ambil creators dari DB
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setLoading(true);
+      try {
+        const res = await fetch("/api/meet/creators", { cache: "no-store" });
+        const json = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(json?.error || res.statusText);
+        if (!cancelled) setCreators(Array.isArray(json.creators) ? json.creators : []);
+      } catch (e) {
+        console.error("[meet] load creators failed:", e);
+        if (!cancelled) setCreators([]);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  const openBooking = (creator: CreatorCard) => {
     setSelectedCreator(creator);
     setOpenModal(true);
   };
@@ -71,36 +62,36 @@ export default function MeetPage() {
       <main className="flex-1 px-6 py-8">
         <Header />
 
-        {/* Tab Button for navigation */}
+        {/* Tabs */}
         <div className="mb-4 flex gap-6">
-          <TabButton active={tab === "creators"} onClick={() => setTab("creators")}>
-            Creators
-          </TabButton>
-          <TabButton active={tab === "upcoming"} onClick={() => setTab("upcoming")}>
-            Upcoming
-          </TabButton>
-          <TabButton active={tab === "pending"} onClick={() => setTab("pending")}>
-            Pending
-          </TabButton>
-          <TabButton active={tab === "history"} onClick={() => setTab("history")}>
-            History
-          </TabButton>
-
-          {/* "Orders" tab pushed to the far right */}
+          <TabButton active={tab === "creators"} onClick={() => setTab("creators")}>Creators</TabButton>
+          <TabButton active={tab === "upcoming"} onClick={() => setTab("upcoming")}>Upcoming</TabButton>
+          <TabButton active={tab === "pending"} onClick={() => setTab("pending")}>Pending</TabButton>
+          <TabButton active={tab === "history"} onClick={() => setTab("history")}>History</TabButton>
           <div className="ml-auto">
-            <TabButton active={tab === "orders"} onClick={() => setTab("orders")}>
-              Orders
-            </TabButton>
+            <TabButton active={tab === "orders"} onClick={() => setTab("orders")}>Orders</TabButton>
           </div>
         </div>
 
-        {/* Content based on the active tab */}
+        {/* Content */}
         {tab === "creators" && (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-            {creators.map((creator) => (
-              <MeetCard key={creator.id} creator={creator} onCall={openBooking} />
-            ))}
-          </div>
+          <>
+            {loading ? (
+              <div className="rounded-xl border border-neutral-800 bg-neutral-900 p-4 text-neutral-300">
+                Loading creators…
+              </div>
+            ) : creators.length === 0 ? (
+              <div className="rounded-xl border border-neutral-800 bg-neutral-900 p-4 text-neutral-300">
+                No creators yet.
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                {creators.map((creator) => (
+                  <MeetCard key={creator.id} creator={creator} onCall={openBooking} />
+                ))}
+              </div>
+            )}
+          </>
         )}
 
         {tab === "upcoming" && <div>Upcoming Content</div>}
@@ -132,7 +123,7 @@ export default function MeetPage() {
       <BookingModal
         open={openModal}
         onClose={() => setOpenModal(false)}
-        creator={selectedCreator}
+        creator={selectedCreator as any}
         onBooked={() => setTab("pending")}
       />
     </div>

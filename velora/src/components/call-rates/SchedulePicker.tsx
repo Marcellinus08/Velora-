@@ -1,210 +1,215 @@
+// src/components/call-rates/SchedulePicker.tsx
 "use client";
 
 import React, { useMemo, useState } from "react";
 import Swal from "sweetalert2";
 
-// Weekdays
-const daysOfWeek = [
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
-  "Sunday",
-];
+const daysOfWeek = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
+const ETH_RE = /^0x[a-fA-F0-9]{40}$/;
 
+type CallKind = "voice" | "video";
 type Session = { id: string; start: string; end: string; active: boolean };
-type HourBlock = { id: string; start: string; duration: number; sessions: Session[] };
+type HourBlock = {
+  id: string;
+  start: string;
+  duration: number;
+  sessions: Session[];
+  kinds: { voice: boolean; video: boolean };
+};
 type DaySchedule = { id: string; day: string; hours: HourBlock[] };
 
 const uid = (p = "id") => `${p}_${Math.random().toString(36).slice(2)}${Date.now()}`;
-
-const toMinutes = (hhmm: string) => {
-  if (!hhmm) return 0;
-  const [h, m] = hhmm.split(":").map(Number);
-  return (h || 0) * 60 + (m || 0);
-};
-const fromMinutes = (t: number) => {
-  const h = Math.floor(t / 60) % 24;
-  const m = t % 60;
-  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
-};
-
-const genSessions = (startHHMM: string, duration = 60, slot = 10): Session[] => {
-  if (!startHHMM || duration <= 0) return [];
-  const start = toMinutes(startHHMM);
-  const end = start + duration;
-  const out: Session[] = [];
-  for (let t = start; t + slot <= end; t += slot) {
-    out.push({ id: uid("sess"), start: fromMinutes(t), end: fromMinutes(t + slot), active: true });
-  }
+const toMinutes = (hhmm: string) => { const [h,m]=hhmm.split(":").map(Number); return (h||0)*60+(m||0); };
+const fromMinutes = (t: number) => `${String(Math.floor(t/60)%24).padStart(2,"0")}:${String(t%60).padStart(2,"0")}`;
+const genSessions = (startHHMM: string, duration=60, slot=10): Session[] => {
+  if (!startHHMM || duration<=0) return [];
+  const s=toMinutes(startHHMM), e=s+duration, out: Session[]=[];
+  for (let t=s; t+slot<=e; t+=slot) out.push({ id: uid("sess"), start: fromMinutes(t), end: fromMinutes(t+slot), active: true });
   return out;
 };
+const dayNameToNum = (d: string) => daysOfWeek.indexOf(d) + 1;
 
 interface SchedulePickerProps {
-  // Called for each hour-block that has active slots
-  onScheduleAdded: (day: string, startTime: string, slots: string[]) => void;
+  abstractId: string; // ETH address (lowercased)
+  onScheduleAdded: (day: string, startTime: string, slots: string[], kind: CallKind) => void;
+  hasVoicePrice: boolean;
+  hasVideoPrice: boolean;
+  voicePriceUSD: number;
+  videoPriceUSD: number;
+  currency?: string;
+  onResetPrices?: () => void;
 }
 
 const chipCls = "rounded-full border px-3 py-1 text-xs transition select-none";
 const cardCls = "rounded-2xl border border-neutral-800 bg-neutral-900/50 p-4";
+const badgeBase = "inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-medium";
 
-const SchedulePicker: React.FC<SchedulePickerProps> = ({ onScheduleAdded }) => {
-  // Multi-select days
+const SchedulePicker: React.FC<SchedulePickerProps> = ({
+  abstractId,
+  onScheduleAdded,
+  hasVoicePrice,
+  hasVideoPrice,
+  voicePriceUSD,
+  videoPriceUSD,
+  currency = "USD",
+  onResetPrices,
+}) => {
   const [selectedDays, setSelectedDays] = useState<string[]>([]);
   const [days, setDays] = useState<DaySchedule[]>([]);
   const [savedCount, setSavedCount] = useState(0);
+  const [saving, setSaving] = useState(false);
 
-  const ensureDay = (dayName: string) => {
-    setDays((prev) => {
-      const exist = prev.find((d) => d.day === dayName);
-      if (exist) return prev;
-      return [...prev, { id: uid("day"), day: dayName, hours: [] }];
-    });
+  const ensureDay = (dayName: string) =>
+    setDays(prev => (prev.some(d=>d.day===dayName) ? prev : [...prev, { id: uid("day"), day: dayName, hours: [] }]));
+
+  const toggleDay = (dayName: string) =>
+    setSelectedDays(prev => prev.includes(dayName) ? prev.filter(d=>d!==dayName) : (ensureDay(dayName), [...prev, dayName]));
+
+  const getDayByName = (dayName: string) => days.find(d=>d.day===dayName) || null;
+
+  const addHour = (dayId: string) =>
+    setDays(prev => prev.map(d => d.id===dayId ? { ...d, hours:[...d.hours, { id: uid("hour"), start:"", duration:60, sessions:[], kinds:{ voice:true, video:false } }] } : d));
+
+  const removeHour = (dayId: string, hourId: string) =>
+    setDays(prev => prev.map(d => d.id===dayId ? { ...d, hours: d.hours.filter(h=>h.id!==hourId) } : d));
+
+  const updateHour = (dayId: string, hourId: string, field: keyof HourBlock, value: any) =>
+    setDays(prev => prev.map(d => d.id===dayId ? { ...d, hours: d.hours.map(h => h.id===hourId ? { ...h, [field]: value } : h) } : d));
+
+  const rebuildSessions = (dayId: string, hourId: string) =>
+    setDays(prev => prev.map(d => d.id===dayId ? { ...d, hours: d.hours.map(h => h.id===hourId ? { ...h, sessions: genSessions(h.start, h.duration, 10) } : h) } : d));
+
+  const toggleSession = (dayId: string, hourId: string, sessId: string) =>
+    setDays(prev => prev.map(d => d.id===dayId ? { ...d, hours: d.hours.map(h => h.id===hourId ? { ...h, sessions: h.sessions.map(s=>s.id===sessId?{...s,active:!s.active}:s) } : h) } : d));
+
+  const selectAll = (dayId: string, hourId: string, val: boolean) =>
+    setDays(prev => prev.map(d => d.id===dayId ? { ...d, hours: d.hours.map(h => h.id===hourId ? { ...h, sessions: h.sessions.map(s=>({ ...s, active: val })) } : h) } : d));
+
+  const toggleKind = (dayId: string, hourId: string, kind: CallKind) => {
+    const allowed = kind === "voice" ? hasVoicePrice : hasVideoPrice;
+    if (!allowed) {
+      Swal.fire({
+        icon: "warning",
+        title: `Set ${kind === "voice" ? "Voice" : "Video"} pricing first`,
+        text: "Open the pricing card above to set your per-session price.",
+        position: "top-end",
+        toast: true,
+        timer: 2500,
+        showConfirmButton: false,
+      });
+      return;
+    }
+    setDays(prev => prev.map(d => d.id===dayId ? { ...d, hours: d.hours.map(h => h.id===hourId ? { ...h, kinds: { ...h.kinds, [kind]: !h.kinds[kind] } } : h) } : d));
   };
 
-  const toggleDay = (dayName: string) => {
-    setSelectedDays((prev) => {
-      const on = prev.includes(dayName);
-      if (on) return prev.filter((d) => d !== dayName);
-      ensureDay(dayName);
-      return [...prev, dayName];
-    });
-  };
-
-  const getDayByName = (dayName: string) => days.find((d) => d.day === dayName) || null;
-
-  const addHour = (dayId: string) => {
-    setDays((prev) =>
-      prev.map((d) =>
-        d.id === dayId
-          ? { ...d, hours: [...d.hours, { id: uid("hour"), start: "", duration: 60, sessions: [] }] }
-          : d
-      )
-    );
-  };
-
-  const removeHour = (dayId: string, hourId: string) => {
-    setDays((prev) =>
-      prev.map((d) => (d.id === dayId ? { ...d, hours: d.hours.filter((h) => h.id !== hourId) } : d))
-    );
-  };
-
-  const updateHour = (dayId: string, hourId: string, field: keyof HourBlock, value: string | number) => {
-    setDays((prev) =>
-      prev.map((d) =>
-        d.id === dayId
-          ? { ...d, hours: d.hours.map((h) => (h.id === hourId ? { ...h, [field]: value as any } : h)) }
-          : d
-      )
-    );
-  };
-
-  const rebuildSessions = (dayId: string, hourId: string) => {
-    setDays((prev) =>
-      prev.map((d) =>
-        d.id === dayId
-          ? {
-              ...d,
-              hours: d.hours.map((h) =>
-                h.id === hourId ? { ...h, sessions: genSessions(h.start, h.duration, 10) } : h
-              ),
-            }
-          : d
-      )
-    );
-  };
-
-  const toggleSession = (dayId: string, hourId: string, sessId: string) => {
-    setDays((prev) =>
-      prev.map((d) =>
-        d.id === dayId
-          ? {
-              ...d,
-              hours: d.hours.map((h) =>
-                h.id === hourId
-                  ? { ...h, sessions: h.sessions.map((s) => (s.id === sessId ? { ...s, active: !s.active } : s)) }
-                  : h
-              ),
-            }
-          : d
-      )
-    );
-  };
-
-  const selectAll = (dayId: string, hourId: string, val: boolean) => {
-    setDays((prev) =>
-      prev.map((d) =>
-        d.id === dayId
-          ? { ...d, hours: d.hours.map((h) => (h.id === hourId ? { ...h, sessions: h.sessions.map((s) => ({ ...s, active: val })) } : h)) }
-          : d
-      )
-    );
-  };
-
-  // --- PREVIEW MODEL (grouped & sorted) ---
+  // Preview model
   const preview = useMemo(() => {
-    const dayOrder = (name: string) => daysOfWeek.indexOf(name);
+    const order = (nm: string) => daysOfWeek.indexOf(nm);
     return days
-      .map((d) => {
+      .map(d => {
         const blocks = d.hours
-          .map((h) => ({
-            id: h.id,
-            start: h.start,
-            duration: h.duration,
-            sessions: h.sessions.filter((s) => s.active),
-          }))
-          .filter((b) => b.sessions.length > 0)
-          .sort((a, b) => toMinutes(a.start) - toMinutes(b.start));
-        const totalSlots = blocks.reduce((acc, b) => acc + b.sessions.length, 0);
+          .map(h => ({ id: h.id, start: h.start, duration: h.duration, sessions: h.sessions.filter(s=>s.active), kinds: h.kinds }))
+          .filter(b => b.sessions.length > 0 && (b.kinds.voice || b.kinds.video))
+          .sort((a,b)=>toMinutes(a.start)-toMinutes(b.start));
+        const totalSlots = blocks.reduce((a,b)=>a+b.sessions.length,0);
         return { day: d.day, blocks, totalSlots };
       })
-      .filter((d) => d.blocks.length > 0)
-      .sort((a, b) => dayOrder(a.day) - dayOrder(b.day));
+      .filter(x=>x.blocks.length>0)
+      .sort((a,b)=>order(a.day)-order(b.day));
   }, [days]);
+  const totalPreviewSlots = useMemo(()=>preview.reduce((a,d)=>a+d.totalSlots,0),[preview]);
 
-  const totalPreviewSlots = useMemo(
-    () => preview.reduce((acc, d) => acc + d.totalSlots, 0),
-    [preview]
-  );
+  const hasAnyActive = useMemo(() =>
+    days.some(d => d.hours.some(h =>
+      h.sessions.some(s=>s.active) &&
+      ((h.kinds.voice && hasVoicePrice) || (h.kinds.video && hasVideoPrice))
+    )),
+  [days, hasVoicePrice, hasVideoPrice]);
 
-  // 👉 Reset immediately after click (no await)
-  const handleAddSchedules = () => {
-    // collect payloads
-    const toSend: Array<{ day: string; start: string; slots: string[] }> = [];
-    days.forEach((d) =>
-      d.hours.forEach((h) => {
-        const activeSlots = h.sessions.filter((s) => s.active).map((s) => s.start);
-        if (d.day && h.start && activeSlots.length) {
-          toSend.push({ day: d.day, start: h.start, slots: activeSlots });
-        }
-      })
-    );
-    if (!toSend.length) return;
+  const handleAddSchedules = async () => {
+    // wallet guard
+    if (!ETH_RE.test(abstractId)) {
+      await Swal.fire({
+        icon: "warning",
+        title: "Connect your wallet",
+        text: "Please connect your wallet before saving schedules.",
+      });
+      return;
+    }
 
-    // call parent callbacks
-    toSend.forEach(({ day, start, slots }) => onScheduleAdded(day, start, slots));
+    // pricing guard
+    const missing = new Set<CallKind>();
+    days.forEach(d => d.hours.forEach(h => {
+      if (h.sessions.some(s=>s.active)) {
+        if (h.kinds.voice && !hasVoicePrice) missing.add("voice");
+        if (h.kinds.video && !hasVideoPrice) missing.add("video");
+      }
+    }));
+    if (missing.size) {
+      const list = Array.from(missing).map(k => `<li>${k === "voice" ? "Voice calls" : "Video calls"}</li>`).join("");
+      await Swal.fire({ icon: "error", title: "Pricing required", html: `<ul style="margin-top:6px">${list}</ul>` });
+      return;
+    }
 
-    // show toast (asynchronous) …
-    Swal.fire({
-      icon: "success",
-      title: "Schedule saved!",
-      text: `${toSend.length} time block(s) added successfully.`,
-      position: "top-end",
-      toast: true,
-      timer: 3000,
-      timerProgressBar: true,
-      showConfirmButton: false,
-    });
+    // build payload per kind
+    type Item = { day: number; start: string; duration: number; slots: string[] };
+    const voiceItems: Item[] = [];
+    const videoItems: Item[] = [];
 
-    // …and RESET inputs immediately
-    setSelectedDays([]);
-    setDays([]);
-    setSavedCount(0);
+    days.forEach(d => d.hours.forEach(h => {
+      const slots = h.sessions.filter(s=>s.active).map(s=>s.start);
+      if (!d.day || !h.start || !slots.length) return;
+      const item: Item = { day: dayNameToNum(d.day), start: h.start, duration: h.duration, slots };
+      if (h.kinds.voice && hasVoicePrice) voiceItems.push(item);
+      if (h.kinds.video && hasVideoPrice) videoItems.push(item);
+    }));
+    if (!voiceItems.length && !videoItems.length) return;
+
+    const toCents = (usd: number) => Math.round((usd || 0) * 100);
+
+    setSaving(true);
+    try {
+      const res = await fetch("/api/call-rates/schedules", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          abstractId,
+          currency,
+          voice: voiceItems.length ? { price_cents: toCents(voicePriceUSD), items: voiceItems } : undefined,
+          video: videoItems.length ? { price_cents: toCents(videoPriceUSD), items: videoItems } : undefined,
+        }),
+      });
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(j?.error || "Failed to save");
+
+      // notify parent
+      voiceItems.forEach(it => onScheduleAdded(daysOfWeek[it.day-1], it.start, it.slots, "voice"));
+      videoItems.forEach(it => onScheduleAdded(daysOfWeek[it.day-1], it.start, it.slots, "video"));
+
+      setSavedCount(c => c + voiceItems.length + videoItems.length);
+
+      Swal.fire({
+        icon: "success",
+        title: "Schedule saved!",
+        text: `${voiceItems.length + videoItems.length} time block(s) added successfully.`,
+        position: "top-end",
+        toast: true,
+        timer: 3000,
+        timerProgressBar: true,
+        showConfirmButton: false,
+      });
+
+      // reset
+      onResetPrices?.();
+      setSelectedDays([]);
+      setDays([]);
+      setSavedCount(0);
+    } catch (e: any) {
+      Swal.fire({ icon: "error", title: "Save failed", text: e?.message || "Unknown error" });
+    } finally {
+      setSaving(false);
+    }
   };
-
-  const hasAnyActive = preview.length > 0 && totalPreviewSlots > 0;
 
   return (
     <div className="mt-6">
@@ -212,7 +217,7 @@ const SchedulePicker: React.FC<SchedulePickerProps> = ({ onScheduleAdded }) => {
         Pick your available time for calls (10-minute sessions)
       </h3>
 
-      {/* Step 1 — select days */}
+      {/* Select days */}
       <div className={cardCls}>
         <p className="mb-2 text-sm text-neutral-300">Select Days:</p>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
@@ -239,7 +244,7 @@ const SchedulePicker: React.FC<SchedulePickerProps> = ({ onScheduleAdded }) => {
         )}
       </div>
 
-      {/* Step 2 — configure time blocks for each selected day */}
+      {/* Time blocks (UI) */}
       {selectedDays.length > 0 ? (
         <div className="mt-4 space-y-4">
           {selectedDays.map((dayName) => {
@@ -288,44 +293,69 @@ const SchedulePicker: React.FC<SchedulePickerProps> = ({ onScheduleAdded }) => {
                               }}
                               className="w-36 rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-1.5 text-neutral-100"
                             >
-                              {[30, 40, 50, 60, 70, 80, 90, 120].map((m) => (
-                                <option key={m} value={m}>
-                                  {m} minutes
-                                </option>
+                              {[30,40,50,60,70,80,90,120].map((m) => (
+                                <option key={m} value={m}>{m} minutes</option>
                               ))}
                             </select>
                           </label>
 
-                          <button
-                            onClick={() => rebuildSessions(d.id, h.id)}
-                            className="ml-auto rounded-lg bg-black px-3 py-2 text-sm text-white hover:opacity-90"
-                          >
+                          {/* Call type switches */}
+                          <div className="ml-auto text-sm">
+                            <span className="mb-1 block font-medium">Call Type</span>
+                            <div className="inline-flex rounded-xl border border-neutral-700 bg-neutral-900 p-1">
+                              <button
+                                type="button"
+                                onClick={() => toggleKind(d.id, h.id, "voice")}
+                                title={hasVoicePrice ? "Use Voice" : "Set Voice pricing first"}
+                                aria-disabled={!hasVoicePrice}
+                                className={[
+                                  "px-3 py-1.5 text-xs rounded-lg",
+                                  hasVoicePrice
+                                    ? (h.kinds.voice ? "bg-violet-600 text-white" : "text-neutral-200 hover:bg-neutral-800")
+                                    : "opacity-50 cursor-not-allowed text-neutral-400",
+                                ].join(" ")}
+                              >
+                                Voice
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => toggleKind(d.id, h.id, "video")}
+                                title={hasVideoPrice ? "Use Video" : "Set Video pricing first"}
+                                aria-disabled={!hasVideoPrice}
+                                className={[
+                                  "px-3 py-1.5 text-xs rounded-lg",
+                                  hasVideoPrice
+                                    ? (h.kinds.video ? "bg-violet-600 text-white" : "text-neutral-200 hover:bg-neutral-800")
+                                    : "opacity-50 cursor-not-allowed text-neutral-400",
+                                ].join(" ")}
+                              >
+                                Video
+                              </button>
+                            </div>
+                          </div>
+
+                          <button onClick={() => rebuildSessions(d.id, h.id)} className="rounded-lg bg-black px-3 py-2 text-sm text-white hover:opacity-90">
                             Generate 10-min
                           </button>
-
-                          <button
-                            onClick={() => removeHour(d.id, h.id)}
-                            className="rounded-lg px-3 py-2 text-sm text-red-600 hover:bg-red-50/10"
-                          >
+                          <button onClick={() => removeHour(d.id, h.id)} className="rounded-lg px-3 py-2 text-sm text-red-600 hover:bg-red-50/10">
                             Remove
                           </button>
                         </div>
 
                         {h.sessions.length > 0 && (
                           <div className="mt-3">
-                            <div className="mb-2 flex items-center gap-2 text-xs text-neutral-400">
-                              <span>Toggle a slot to enable/disable.</span>
-                              <button
-                                onClick={() => selectAll(d.id, h.id, true)}
-                                className="underline decoration-neutral-600 underline-offset-2 hover:text-neutral-200"
-                              >
+                            <div className="mb-2 flex flex-wrap items-center gap-2 text-xs text-neutral-400">
+                              <span className={`${badgeBase} border border-neutral-700 text-neutral-300`}>
+                                Type:
+                                <strong className="ml-1 font-medium text-neutral-100">
+                                  {h.kinds.voice && h.kinds.video ? "Voice + Video" : h.kinds.voice ? "Voice only" : h.kinds.video ? "Video only" : "—"}
+                                </strong>
+                              </span>
+                              <button onClick={() => selectAll(d.id, h.id, true)} className="underline decoration-neutral-600 underline-offset-2 hover:text-neutral-200">
                                 Select all
                               </button>
                               <span>·</span>
-                              <button
-                                onClick={() => selectAll(d.id, h.id, false)}
-                                className="underline decoration-neutral-600 underline-offset-2 hover:text-neutral-200"
-                              >
+                              <button onClick={() => selectAll(d.id, h.id, false)} className="underline decoration-neutral-600 underline-offset-2 hover:text-neutral-200">
                                 Clear all
                               </button>
                             </div>
@@ -334,12 +364,7 @@ const SchedulePicker: React.FC<SchedulePickerProps> = ({ onScheduleAdded }) => {
                                 <button
                                   key={s.id}
                                   onClick={() => toggleSession(d.id, h.id, s.id)}
-                                  className={[
-                                    chipCls,
-                                    s.active
-                                      ? "border-black bg-black text-white"
-                                      : "border-neutral-700 bg-neutral-900 text-neutral-300 hover:bg-neutral-800",
-                                  ].join(" ")}
+                                  className={[chipCls, s.active ? "border-black bg-black text-white" : "border-neutral-700 bg-neutral-900 text-neutral-300 hover:bg-neutral-800"].join(" ")}
                                   title={`${s.start}–${s.end}`}
                                 >
                                   {s.start}–{s.end}
@@ -362,13 +387,11 @@ const SchedulePicker: React.FC<SchedulePickerProps> = ({ onScheduleAdded }) => {
         </div>
       )}
 
-      {/* ===== Preview section (separated with H3) ===== */}
+      {/* Preview */}
       <h3 className="mt-10 text-lg font-semibold text-neutral-50">Schedule Preview</h3>
       <div className="mt-3">
         <div className="mb-2 flex items-center justify-between">
-          <span className="text-xs text-neutral-400">
-            {preview.length} day(s) • {totalPreviewSlots} slot(s)
-          </span>
+          <span className="text-xs text-neutral-400">{preview.length} day(s) • {totalPreviewSlots} slot(s)</span>
         </div>
 
         {preview.length === 0 ? (
@@ -382,28 +405,23 @@ const SchedulePicker: React.FC<SchedulePickerProps> = ({ onScheduleAdded }) => {
                 <div className="flex items-center justify-between border-b border-neutral-800 px-4 py-3">
                   <div>
                     <h5 className="text-sm font-semibold text-neutral-100">{d.day}</h5>
-                    <p className="text-xs text-neutral-400">
-                      {d.blocks.length} time block(s) • {d.totalSlots} slot(s)
-                    </p>
+                    <p className="text-xs text-neutral-400">{d.blocks.length} time block(s) • {d.totalSlots} slot(s)</p>
                   </div>
                 </div>
-
                 <div className="space-y-3 p-4">
                   {d.blocks.map((b) => (
                     <div key={b.id} className="rounded-xl border border-neutral-800 bg-neutral-950 p-3">
                       <div className="mb-2 flex items-center justify-between">
-                        <div className="text-sm font-medium text-neutral-50">
-                          Start {b.start || "—"}
+                        <div className="text-sm font-medium text-neutral-50">Start {b.start || "—"}</div>
+                        <div className="flex items-center gap-2">
+                          {b.kinds.voice && <span className={`${badgeBase} border border-violet-700/60 text-violet-300`}>Voice</span>}
+                          {b.kinds.video && <span className={`${badgeBase} border border-sky-700/60 text-sky-300`}>Video</span>}
+                          <div className="text-xs text-neutral-400">{b.duration} min</div>
                         </div>
-                        <div className="text-xs text-neutral-400">{b.duration} min</div>
                       </div>
                       <div className="flex flex-wrap gap-2">
                         {b.sessions.map((s) => (
-                          <span
-                            key={s.id}
-                            className="rounded-full border border-black bg-black px-2.5 py-1 text-xs text-white"
-                            title={`${s.start}–${s.end}`}
-                          >
+                          <span key={s.id} className="rounded-full border border-black bg-black px-2.5 py-1 text-xs text-white" title={`${s.start}–${s.end}`}>
                             {s.start}–{s.end}
                           </span>
                         ))}
@@ -417,22 +435,18 @@ const SchedulePicker: React.FC<SchedulePickerProps> = ({ onScheduleAdded }) => {
         )}
       </div>
 
-      {/* ===== Bottom primary action ===== */}
+      {/* Bottom action */}
       <div className="mt-6 flex items-center justify-end gap-3">
-        {savedCount > 0 && (
-          <span className="text-xs text-neutral-400">{savedCount} time block(s) sent</span>
-        )}
+        {savedCount > 0 && <span className="text-xs text-neutral-400">{savedCount} time block(s) sent</span>}
         <button
           onClick={handleAddSchedules}
-          disabled={!hasAnyActive}
+          disabled={!hasAnyActive || saving}
           className={[
             "h-11 rounded-2xl px-5 font-semibold",
-            hasAnyActive
-              ? "bg-[var(--primary-500)] text-white hover:opacity-90"
-              : "cursor-not-allowed bg-neutral-700 text-neutral-300",
+            (!hasAnyActive || saving) ? "cursor-not-allowed bg-neutral-700 text-neutral-300" : "bg-[var(--primary-500)] text-white hover:opacity-90",
           ].join(" ")}
         >
-          Add Schedules
+          {saving ? "Saving…" : "Add Schedules"}
         </button>
       </div>
     </div>
