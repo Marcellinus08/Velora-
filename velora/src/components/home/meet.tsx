@@ -30,7 +30,7 @@ const toCreator = (x: any): Creator => ({
 const isAddress = (s?: string) => !!s && /^0x[a-fA-F0-9]{40}$/.test(s);
 const shorten = (addr: string) => `${addr.slice(0, 6)}…${addr.slice(-4)}`;
 
-/** Kartu kecil. Jika `neon` true -> hover outline ungu. */
+/** Kartu dasar. Jika `neon` true -> hover outline ungu. */
 const Card = ({
   children,
   className = "",
@@ -45,6 +45,44 @@ const Card = ({
   return <div className={`${base} ${hoverNeon} ${className}`}>{children}</div>;
 };
 
+/** Skeleton ala CardsGrid (animate-pulse + bar-bar bg-neutral-800/60) */
+function LoadingSkeletonRow() {
+  return (
+    <section className="mb-5">
+      <div
+        className="mt-4 flex gap-3 overflow-x-auto scroll-smooth pl-2 pr-2 md:pl-0 md:pr-0
+                   [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      >
+        {/* Title skeleton */}
+        <div className="animate-pulse min-w-[200px] rounded-xl border border-neutral-800 bg-neutral-900 px-3 py-2">
+          <div className="h-4 w-16 rounded bg-neutral-800/60" />
+          <div className="mt-1 h-3 w-28 rounded bg-neutral-800/60" />
+          <div className="mt-3 h-7 w-20 rounded bg-neutral-800/60" />
+        </div>
+
+        {Array.from({ length: 5 }).map((_, i) => (
+          <div
+            key={i}
+            className="animate-pulse min-w-[200px] rounded-xl border border-neutral-800 bg-neutral-900 px-3 py-2"
+          >
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-full bg-neutral-800/60" />
+              <div className="min-w-0 flex-1">
+                <div className="h-4 w-24 rounded bg-neutral-800/60" />
+                <div className="mt-1 h-3 w-20 rounded bg-neutral-800/60" />
+              </div>
+            </div>
+            <div className="mt-2 flex items-center gap-2">
+              <div className="h-5 w-24 rounded bg-neutral-800/60" />
+              <div className="h-5 w-24 rounded bg-neutral-800/60" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 export default function HomeMeetRibbon() {
   const [items, setItems] = React.useState<Creator[]>([]);
   const [loading, setLoading] = React.useState(true);
@@ -54,7 +92,6 @@ export default function HomeMeetRibbon() {
     (async () => {
       try {
         setLoading(true);
-        // gunakan API creators yang sudah ada
         const res = await fetch("/api/meet/creators", { cache: "no-store" });
         const j = await res.json().catch(() => ({}));
         const rows = Array.isArray(j?.creators) ? j.creators : [];
@@ -71,8 +108,10 @@ export default function HomeMeetRibbon() {
     };
   }, []);
 
-  // ⬇️ jika tidak ada data (atau masih loading), jangan render section
-  if (loading || items.length === 0) return null;
+  if (loading) return <LoadingSkeletonRow />;
+
+  // ⬇️ kalau tidak ada data, tidak render ribbon sama sekali
+  if (!items.length) return null;
 
   const renderCreatorCard = (p: Creator) => {
     const voice =
@@ -84,7 +123,7 @@ export default function HomeMeetRibbon() {
         ? `$${p.pricing.video.toFixed(2)}/min`
         : "—";
 
-    // ambil wallet dari id (abstract_id) → shorten
+    // wallet dari id (abstract_id)
     const wallet = isAddress(p.id) ? p.id : "";
     const displayAddr = wallet ? shorten(wallet) : "—";
 
@@ -101,10 +140,8 @@ export default function HomeMeetRibbon() {
           </div>
           <div className="min-w-0">
             <div className="truncate text-sm font-medium text-neutral-100">{p.name}</div>
-            {/* ⬇️ alamat wallet (bukan @handle) */}
-            <div
-              className="truncate text-[11px] text-neutral-400"
-            >
+            {/* alamat wallet (bukan @handle) */}
+            <div className="truncate text-[11px] text-neutral-400" title={wallet || undefined}>
               {displayAddr}
             </div>
           </div>
