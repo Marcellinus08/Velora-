@@ -9,8 +9,10 @@ const fmtUSD = (n: number) =>
     maximumFractionDigits: 2,
   }).format(isFinite(n) ? n : 0);
 
-/** Harga yang dimasukkan adalah PER MENIT.
- *  Quick preview menampilkan PER SESSION (10 menit).
+/**
+ * Drawer input **per-minute**.
+ * - `initialPerMinute` dipakai untuk prefill kalau user sudah pernah mengisi (contoh:
+ *   DB menyimpan $50 / session → drawer otomatis menampilkan $5 / min jika slot=10).
  */
 function PricingDrawer({
   open,
@@ -22,27 +24,32 @@ function PricingDrawer({
   open: boolean;
   onClose: () => void;
   kind: "voice" | "video";
-  /** USD per minute */
-  initialPerMinute: number;
-  /** return USD per minute */
+  initialPerMinute: number; // <<— prefill dari halaman
   onConfirm: (perMinute: number) => void;
 }) {
-  const [perMinuteStr, setPerMinuteStr] = useState<string>(String(initialPerMinute ?? ""));
+  const [perMinuteStr, setPerMinuteStr] = useState<string>("");
 
-  useEffect(() => setPerMinuteStr(String(initialPerMinute ?? "")), [initialPerMinute, open]);
+  // Prefill saat drawer dibuka / kind berubah
+  useEffect(() => {
+    if (!open) return;
+    setPerMinuteStr(
+      initialPerMinute && initialPerMinute > 0 ? String(initialPerMinute) : ""
+    );
+  }, [open, kind, initialPerMinute]);
 
+  // Normalisasi angka
   const perMinute = useMemo(() => {
     const normalized = perMinuteStr.replace(",", ".").trim();
     const n = parseFloat(normalized);
     return isNaN(n) || n < 0 ? 0 : n;
   }, [perMinuteStr]);
 
-  // preview per session (10 minutes)
-  const session10 = useMemo(() => perMinute * 10, [perMinute]);
-  const session20 = useMemo(() => perMinute * 20, [perMinute]);
-  const session40 = useMemo(() => perMinute * 40, [perMinute]);
+  // quick preview per-session (10/20/40 menit)
+  const s10 = useMemo(() => perMinute * 10, [perMinute]);
+  const s20 = useMemo(() => perMinute * 20, [perMinute]);
+  const s40 = useMemo(() => perMinute * 40, [perMinute]);
 
-  const quick = [0.25, 1, 5, 10]; // quick pick per minute
+  const quick = [0.25, 1, 5, 10];
 
   return (
     <div className={`fixed inset-0 z-[80] ${open ? "" : "pointer-events-none"}`} aria-hidden={!open}>
@@ -101,20 +108,21 @@ function PricingDrawer({
           <div className="space-y-3">
             <p className="text-sm font-medium text-neutral-50">Quick preview (per session)</p>
             <div className="space-y-2 text-neutral-100">
-              <Row label="10 minutes (1 session)" value={fmtUSD(session10)} />
-              <Row label="20 minutes (2 sessions)" value={fmtUSD(session20)} />
-              <Row label="40 minutes (4 sessions)" value={fmtUSD(session40)} />
+              <Row label="10 minutes (1 session)" value={fmtUSD(s10)} />
+              <Row label="20 minutes (2 sessions)" value={fmtUSD(s20)} />
+              <Row label="40 minutes (4 sessions)" value={fmtUSD(s40)} />
             </div>
           </div>
         </div>
 
         <div className="border-t border-neutral-800 p-6">
           <button
-            className="h-12 w-full rounded-2xl bg-[var(--primary-500)] font-semibold text-white hover:opacity-90"
+            className="h-12 w-full rounded-2xl bg-[var(--primary-500)] font-semibold text-white hover:opacity-90 disabled:opacity-60 disabled:cursor-not-allowed"
             onClick={() => {
-              onConfirm(perMinute); // <- return PER MINUTE
+              onConfirm(perMinute);
               onClose();
             }}
+            disabled={perMinute <= 0}
           >
             Confirm
           </button>

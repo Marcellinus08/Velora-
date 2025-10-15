@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import Swal from "sweetalert2";
 
 const daysOfWeek = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
@@ -19,27 +19,30 @@ type DaySchedule = { id: string; day: string; hours: HourBlock[] };
 const uid = (p = "id") => `${p}_${Math.random().toString(36).slice(2)}${Date.now()}`;
 const toMinutes = (hhmm: string) => { const [h,m]=hhmm.split(":").map(Number); return (h||0)*60+(m||0); };
 const fromMinutes = (t: number) => `${String(Math.floor(t/60)%24).padStart(2,"0")}:${String(t%60).padStart(2,"0")}`;
-const SLOT_MINUTES = 10; // 1 session = 10 menit
-const genSessions = (startHHMM: string, duration=60, slot=SLOT_MINUTES): Session[] => {
+const addMin = (t: string, m: number) => fromMinutes(toMinutes(t)+m);
+const genSessions = (startHHMM: string, duration=60, slot=10): Session[] => {
   if (!startHHMM || duration<=0) return [];
   const s=toMinutes(startHHMM), e=s+duration, out: Session[]=[];
   for (let t=s; t+slot<=e; t+=slot) out.push({ id: uid("sess"), start: fromMinutes(t), end: fromMinutes(t+slot), active: true });
   return out;
 };
 const dayNameToNum = (d: string) => daysOfWeek.indexOf(d) + 1;
+const round4 = (n: number) => Math.round(n * 10000) / 10000;
 
 interface SchedulePickerProps {
   abstractId: string;
-  onScheduleAdded: (day: string, start: string, slots: string[], kind: CallKind) => void;
+  onScheduleAdded: (day: string, startTime: string, slots: string[], kind: CallKind) => void;
 
   hasVoicePrice: boolean;
   hasVideoPrice: boolean;
-  /** USD per minute */
-  voicePricePerMinuteUSD: number;
-  /** USD per minute */
-  videoPricePerMinuteUSD: number;
-
+  voicePriceUSD: number;       // PER MINUTE (current)
+  videoPriceUSD: number;       // PER MINUTE (current)
+  initialVoicePerMin?: number; // PER MINUTE (baseline)
+  initialVideoPerMin?: number; // PER MINUTE (baseline)
   currency?: string;
+
+  slotMinutes?: number;        // default 10
+  initialDays?: DaySchedule[]; // prefill editor
   onResetPrices?: () => void;
 }
 
@@ -52,15 +55,32 @@ const SchedulePicker: React.FC<SchedulePickerProps> = ({
   onScheduleAdded,
   hasVoicePrice,
   hasVideoPrice,
-  voicePricePerMinuteUSD,
-  videoPricePerMinuteUSD,
+  voicePriceUSD,      // per minute (current)
+  videoPriceUSD,      // per minute (current)
+  initialVoicePerMin = 0,
+  initialVideoPerMin = 0,
   currency = "USD",
+  slotMinutes = 10,
+  initialDays,
   onResetPrices,
 }) => {
   const [selectedDays, setSelectedDays] = useState<string[]>([]);
   const [days, setDays] = useState<DaySchedule[]>([]);
   const [savedCount, setSavedCount] = useState(0);
   const [saving, setSaving] = useState(false);
+
+  // baseline signature (untuk cek perubahan)
+  const [baselineSig, setBaselineSig] = useState<string>("");
+
+  // ---------- prefill from server ----------
+  useEffect(() => {
+    if (!initialDays) return;
+    setDays(initialDays);
+    setSelectedDays(initialDays.map(d => d.day));
+    // set baseline signature berdasar initialDays + initial price (per-minute)
+    const sig = buildSignature(initialDays, initialVoicePerMin, initialVideoPerMin, slotMinutes);
+    setBaselineSig(sig);
+  }, [initialDays, initialVoicePerMin, initialVideoPerMin, slotMinutes]);
 
   const ensureDay = (dayName: string) =>
     setDays(prev => (prev.some(d=>d.day===dayName) ? prev : [...prev, { id: uid("day"), day: dayName, hours: [] }]));
@@ -71,7 +91,7 @@ const SchedulePicker: React.FC<SchedulePickerProps> = ({
   const getDayByName = (dayName: string) => days.find(d=>d.day===dayName) || null;
 
   const addHour = (dayId: string) =>
-    setDays(prev => prev.map(d => d.id===dayId ? { ...d, hours:[...d.hours, { id: uid("hour"), start:"", duration:60, sessions:[], kinds:{ voice:true, video:false } }] } : d));
+    setDays(prev => prev.map(d => d.id===dayId ? { ...d, hours:[...d.hours, { id: uid("hour"), start:"", duration:slotMinutes, sessions:[], kinds:{ voice:true, video:false } }] } : d));
 
   const removeHour = (dayId: string, hourId: string) =>
     setDays(prev => prev.map(d => d.id===dayId ? { ...d, hours: d.hours.filter(h=>h.id!==hourId) } : d));
@@ -80,7 +100,7 @@ const SchedulePicker: React.FC<SchedulePickerProps> = ({
     setDays(prev => prev.map(d => d.id===dayId ? { ...d, hours: d.hours.map(h => h.id===hourId ? { ...h, [field]: value } : h) } : d));
 
   const rebuildSessions = (dayId: string, hourId: string) =>
-    setDays(prev => prev.map(d => d.id===dayId ? { ...d, hours: d.hours.map(h => h.id===hourId ? { ...h, sessions: genSessions(h.start, h.duration, SLOT_MINUTES) } : h) } : d));
+    setDays(prev => prev.map(d => d.id===dayId ? { ...d, hours: d.hours.map(h => h.id===hourId ? { ...h, sessions: genSessions(h.start, h.duration, slotMinutes) } : h) } : d));
 
   const toggleSession = (dayId: string, hourId: string, sessId: string) =>
     setDays(prev => prev.map(d => d.id===dayId ? { ...d, hours: d.hours.map(h => h.id===hourId ? { ...h, sessions: h.sessions.map(s=>s.id===sessId?{...s,active:!s.active}:s) } : h) } : d));
@@ -94,17 +114,15 @@ const SchedulePicker: React.FC<SchedulePickerProps> = ({
       Swal.fire({
         icon: "warning",
         title: `Set ${kind === "voice" ? "Voice" : "Video"} pricing first`,
-        text: "Open the pricing card above to set your per-minute price.",
-        position: "top-end",
-        toast: true,
-        timer: 2500,
-        showConfirmButton: false,
+        text: "Open the pricing card above to set your price.",
+        position: "top-end", toast: true, timer: 2500, showConfirmButton: false,
       });
       return;
     }
     setDays(prev => prev.map(d => d.id===dayId ? { ...d, hours: d.hours.map(h => h.id===hourId ? { ...h, kinds: { ...h.kinds, [kind]: !h.kinds[kind] } } : h) } : d));
   };
 
+  // Preview
   const preview = useMemo(() => {
     const order = (nm: string) => daysOfWeek.indexOf(nm);
     return days
@@ -118,7 +136,7 @@ const SchedulePicker: React.FC<SchedulePickerProps> = ({
       })
       .filter(x=>x.blocks.length>0)
       .sort((a,b)=>order(a.day)-order(b.day));
-  }, [days]);
+  }, [days, slotMinutes]);
   const totalPreviewSlots = useMemo(()=>preview.reduce((a,d)=>a+d.totalSlots,0),[preview]);
 
   const hasAnyActive = useMemo(() =>
@@ -128,8 +146,15 @@ const SchedulePicker: React.FC<SchedulePickerProps> = ({
     )),
   [days, hasVoicePrice, hasVideoPrice]);
 
+  // ---------- signature & dirty check ----------
+  const currentSig = useMemo(
+    () => buildSignature(days, voicePriceUSD, videoPriceUSD, slotMinutes),
+    [days, voicePriceUSD, videoPriceUSD, slotMinutes]
+  );
+  const isChanged = baselineSig !== "" && currentSig !== baselineSig;
+
   const handleAddSchedules = async () => {
-    // pricing guard
+    // guard harga
     const missing = new Set<CallKind>();
     days.forEach(d => d.hours.forEach(h => {
       if (h.sessions.some(s=>s.active)) {
@@ -156,11 +181,7 @@ const SchedulePicker: React.FC<SchedulePickerProps> = ({
     }));
     if (!voiceItems.length && !videoItems.length) return;
 
-    const toCents = (usd: number) => Math.round((usd || 0) * 100);
-
-    // KONVERSI: per-minute -> per-session (10 menit)
-    const voicePerSessionUSD = (voicePricePerMinuteUSD || 0) * SLOT_MINUTES;
-    const videoPerSessionUSD = (videoPricePerMinuteUSD || 0) * SLOT_MINUTES;
+    const toCentsSession = (perMin: number) => Math.round((perMin * slotMinutes) * 100);
 
     setSaving(true);
     try {
@@ -170,8 +191,9 @@ const SchedulePicker: React.FC<SchedulePickerProps> = ({
         body: JSON.stringify({
           abstractId,
           currency,
-          voice: voiceItems.length ? { price_cents: toCents(voicePerSessionUSD), items: voiceItems } : undefined,
-          video: videoItems.length ? { price_cents: toCents(videoPerSessionUSD), items: videoItems } : undefined,
+          slot_minutes: slotMinutes,
+          voice: voiceItems.length ? { price_cents: toCentsSession(voicePriceUSD), items: voiceItems } : undefined,
+          video: videoItems.length ? { price_cents: toCentsSession(videoPriceUSD), items: videoItems } : undefined,
         }),
       });
       const j = await res.json().catch(() => ({}));
@@ -183,22 +205,18 @@ const SchedulePicker: React.FC<SchedulePickerProps> = ({
       setSavedCount(c => c + voiceItems.length + videoItems.length);
 
       Swal.fire({
-        icon: "success",
-        title: "Schedule saved!",
-        text: `${voiceItems.length + videoItems.length} time block(s) added successfully.`,
-        position: "top-end",
-        toast: true,
-        timer: 3000,
-        timerProgressBar: true,
-        showConfirmButton: false,
+        icon:"success",
+        title:"Schedule saved!",
+        text:`${voiceItems.length + videoItems.length} time block(s) updated.`,
+        position:"top-end", toast:true, timer:3000, showConfirmButton:false
       });
 
+      // update baseline → tombol jadi mati lagi sampai ada perubahan berikutnya
+      setBaselineSig(currentSig);
+
       onResetPrices?.();
-      setSelectedDays([]);
-      setDays([]);
-      setSavedCount(0);
     } catch (e: any) {
-      Swal.fire({ icon: "error", title: "Save failed", text: e?.message || "Unknown error" });
+      Swal.fire({ icon:"error", title:"Save failed", text:e?.message || "Unknown error" });
     } finally {
       setSaving(false);
     }
@@ -207,7 +225,7 @@ const SchedulePicker: React.FC<SchedulePickerProps> = ({
   return (
     <div className="mt-6">
       <h3 className="mb-3 text-xl font-semibold text-neutral-50">
-        Pick your available time for calls (10-minute sessions)
+        Pick your available time for calls ({slotMinutes}-minute sessions)
       </h3>
 
       {/* Select days */}
@@ -237,7 +255,7 @@ const SchedulePicker: React.FC<SchedulePickerProps> = ({
         )}
       </div>
 
-      {/* Time blocks (UI tetap sama) */}
+      {/* Time blocks (same as before) */}
       {selectedDays.length > 0 ? (
         <div className="mt-4 space-y-4">
           {selectedDays.map((dayName) => {
@@ -268,7 +286,7 @@ const SchedulePicker: React.FC<SchedulePickerProps> = ({
                             <span className="mb-1 block font-medium">Start</span>
                             <input
                               type="time"
-                              step={SLOT_MINUTES * 60}
+                              step={slotMinutes * 60}
                               value={h.start}
                               onChange={(e) => updateHour(d.id, h.id, "start", e.target.value)}
                               onBlur={() => rebuildSessions(d.id, h.id)}
@@ -286,13 +304,13 @@ const SchedulePicker: React.FC<SchedulePickerProps> = ({
                               }}
                               className="w-36 rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-1.5 text-neutral-100"
                             >
-                              {[30,40,50,60,70,80,90,120].map((m) => (
+                              {[slotMinutes, slotMinutes*2, slotMinutes*3, slotMinutes*4, 60, 90, 120].map((m) => (
                                 <option key={m} value={m}>{m} minutes</option>
                               ))}
                             </select>
                           </label>
 
-                          {/* Call type */}
+                          {/* Call type switches */}
                           <div className="ml-auto text-sm">
                             <span className="mb-1 block font-medium">Call Type</span>
                             <div className="inline-flex rounded-xl border border-neutral-700 bg-neutral-900 p-1">
@@ -328,7 +346,7 @@ const SchedulePicker: React.FC<SchedulePickerProps> = ({
                           </div>
 
                           <button onClick={() => rebuildSessions(d.id, h.id)} className="rounded-lg bg-black px-3 py-2 text-sm text-white hover:opacity-90">
-                            Generate 10-min
+                            Generate {slotMinutes}-min
                           </button>
                           <button onClick={() => removeHour(d.id, h.id)} className="rounded-lg px-3 py-2 text-sm text-red-600 hover:bg-red-50/10">
                             Remove
@@ -389,7 +407,7 @@ const SchedulePicker: React.FC<SchedulePickerProps> = ({
 
         {preview.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-neutral-700 p-4 text-sm text-neutral-400">
-            No active slots yet. Add times and generate 10-minute sessions to see them here.
+            No active slots yet. Add times and generate sessions to see them here.
           </div>
         ) : (
           <div className="grid gap-4 md:grid-cols-2">
@@ -433,11 +451,14 @@ const SchedulePicker: React.FC<SchedulePickerProps> = ({
         {savedCount > 0 && <span className="text-xs text-neutral-400">{savedCount} time block(s) sent</span>}
         <button
           onClick={handleAddSchedules}
-          disabled={!hasAnyActive || saving}
+          disabled={!hasAnyActive || saving || !isChanged}
           className={[
             "h-11 rounded-2xl px-5 font-semibold",
-            (!hasAnyActive || saving) ? "cursor-not-allowed bg-neutral-700 text-neutral-300" : "bg-[var(--primary-500)] text-white hover:opacity-90",
+            (!hasAnyActive || saving || !isChanged)
+              ? "cursor-not-allowed bg-neutral-700 text-neutral-300"
+              : "bg-[var(--primary-500)] text-white hover:opacity-90",
           ].join(" ")}
+          title={!isChanged ? "Nothing changed" : ""}
         >
           {saving ? "Saving…" : "Add Schedules"}
         </button>
@@ -445,5 +466,43 @@ const SchedulePicker: React.FC<SchedulePickerProps> = ({
     </div>
   );
 };
+
+// ---------- signature builder ----------
+function buildSignature(
+  days: DaySchedule[] = [],
+  voicePerMin: number,
+  videoPerMin: number,
+  slotMinutes: number
+) {
+  type Item = { day: number; start: string; duration: number; slots: string[] };
+
+  const vItems: Item[] = [];
+  const viItems: Item[] = [];
+
+  for (const d of days) {
+    for (const h of d.hours) {
+      const slots = h.sessions.filter(s=>s.active).map(s=>s.start).sort();
+      if (!slots.length) continue;
+      const base = { day: dayNameToNum(d.day), start: h.start, duration: h.duration, slots };
+      if (h.kinds.voice) vItems.push(base);
+      if (h.kinds.video) viItems.push(base);
+    }
+  }
+
+  const sortKey = (a: Item, b: Item) =>
+    a.day - b.day || a.start.localeCompare(b.start) || a.duration - b.duration;
+
+  vItems.sort(sortKey);
+  viItems.sort(sortKey);
+
+  // gunakan PER-MINUTE yang dibulatkan 4 desimal biar stabil
+  const body = {
+    sm: slotMinutes,
+    v:  { p: round4(voicePerMin),  items: vItems },
+    vi: { p: round4(videoPerMin), items: viItems },
+  };
+
+  return JSON.stringify(body);
+}
 
 export default SchedulePicker;

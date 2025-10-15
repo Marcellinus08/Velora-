@@ -4,7 +4,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { useGlonicTreasury } from "@/hooks/use-glonic-treasury";
 
 type MeetCreator = {
-  id: string;                             // abstract_id (lowercase)
+  id: string;                             // abstract_id (lowercase, 0x…)
   name: string;
   handle: string;
   avatarUrl?: string;
@@ -21,6 +21,7 @@ const fmtUSD = (n: number) =>
   new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(isFinite(n) ? n : 0);
 
 const isAddress = (s?: string | null) => !!s && /^0x[a-fA-F0-9]{40}$/.test(s);
+const shorten = (addr: string) => `${addr.slice(0, 6)}…${addr.slice(-4)}`;
 
 export const BookingModal = ({
   open,
@@ -45,6 +46,18 @@ export const BookingModal = ({
   const [pricePerSession, setPricePerSession] = useState<{ voice: number; video: number }>({ voice: 0, video: 0 });
 
   const { payMeet } = useGlonicTreasury();
+
+  // ==== Wallet address (ditampilkan & dipakai bayar) ====
+  const fullAddr = useMemo(() => {
+    // prioritas: creator.walletAddress (jika suatu saat ditambahkan), fallback ke creator.id (abstract_id)
+    const cand =
+      ((creator as any)?.walletAddress as string | undefined) ||
+      (creator?.id ?? "");
+    const addr = (cand || "").trim();
+    return isAddress(addr) ? (addr as `0x${string}`) : "";
+  }, [creator]);
+
+  const displayAddr = useMemo(() => (fullAddr ? shorten(fullAddr) : ""), [fullAddr]);
 
   // load sessions setiap modal dibuka
   useEffect(() => {
@@ -101,7 +114,7 @@ export const BookingModal = ({
   const totalUsd = +(sessionPriceUsd * totalSessions).toFixed(2);
 
   const perMinute = useMemo(() => {
-    // gunakan pricing per minute dari creators (fallback dari session price)
+    // gunakan pricing per minute dari creators (fallback dari session price / slotMinutes)
     const fallback = sessionPriceUsd / Math.max(1, slotMinutes);
     const fromCreators = kind === "voice" ? creator?.pricing.voice : creator?.pricing.video;
     return Number(fromCreators || fallback || 0);
@@ -119,8 +132,8 @@ export const BookingModal = ({
 
   // helper: tentukan tanggal berikutnya untuk weekday tertentu
   function nextDateForWeekday(weekdayName: string) {
-    const days = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
-    const target = days.indexOf(weekdayName);
+    const dnames = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+    const target = dnames.indexOf(weekdayName);
     const now = new Date();
     const today = now.getDay(); // 0..6 (Sun..Sat)
     let add = target - today;
@@ -133,6 +146,7 @@ export const BookingModal = ({
   const submit = async () => {
     try {
       if (!open || !creator) return;
+      if (!fullAddr) throw new Error("Creator wallet invalid");
       if (totalSessions === 0) throw new Error("Select at least one session");
 
       setLoading(true);
@@ -166,7 +180,7 @@ export const BookingModal = ({
       // bayar on-chain: rate per minute + total minutes
       await payMeet({
         bookingId: j?.bookingId ?? j?.id,
-        creator: (creator.id as `0x${string}`) as any, // kalau kamu punya wallet di objek creator, ganti ini
+        creator: fullAddr as `0x${string}`,
         rateUsdPerMin: perMinute,
         minutes,
       });
@@ -198,9 +212,13 @@ export const BookingModal = ({
           </div>
           <div>
             <div className="font-semibold text-neutral-50">{creator.name}</div>
-            <div className="text-xs text-neutral-400">@{creator.handle}</div>
-            {/* kamu bisa ganti validasi wallet di sini */}
-            <div className="mt-1 text-[11px] text-amber-400">Creator wallet missing/invalid</div>
+            <div className="mt-1 text-[11px]">
+              {displayAddr ? (
+                <span className="text-neutral-400" title={fullAddr}>{displayAddr}</span>
+              ) : (
+                <span className="text-amber-400">Creator wallet missing/invalid</span>
+              )}
+            </div>
           </div>
         </div>
 
@@ -301,7 +319,8 @@ export const BookingModal = ({
           <button
             type="button"
             onClick={submit}
-            disabled={loading || totalSessions === 0}
+            disabled={loading || totalSessions === 0 || !fullAddr}
+            title={!fullAddr ? "Invalid creator wallet" : ""}
             className="rounded-xl bg-[var(--primary-500)] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-opacity-90 disabled:cursor-not-allowed disabled:bg-neutral-700"
           >
             {loading ? "Booking..." : "Confirm & Pay"}

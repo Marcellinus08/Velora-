@@ -1,8 +1,7 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useAccount } from "wagmi";
-
 import SchedulePicker from "@/components/call-rates/SchedulePicker";
 import PricingDrawer from "@/components/call-rates/PricingDrawer";
 import ProductCard from "@/components/call-rates/ProductCard";
@@ -16,6 +15,39 @@ const fmtUSD = (n: number) =>
     maximumFractionDigits: 2,
   }).format(isFinite(n) ? n : 0);
 
+type PrefillResp = {
+  abstractId: string;
+  slotMinutes: number;
+  pricePerSession: { voice: number; video: number };
+  items: Array<{
+    day: number;
+    start: string;
+    duration: number;
+    kind: "voice" | "video";
+    slots: string[];
+  }>;
+};
+
+type HourBlock = {
+  id: string;
+  start: string;
+  duration: number;
+  sessions: { id: string; start: string; end: string; active: boolean }[];
+  kinds: { voice: boolean; video: boolean };
+};
+type DaySchedule = { id: string; day: string; hours: HourBlock[] };
+
+const uid = (p = "id") => `${p}_${Math.random().toString(36).slice(2)}${Date.now()}`;
+const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"] as const;
+
+function addMin(hhmm: string, minutes: number) {
+  const [h, m] = hhmm.split(":").map(Number);
+  const tot = (h * 60 + m + minutes) % (24 * 60);
+  const hh = String(Math.floor(tot / 60)).padStart(2, "0");
+  const mm = String(tot % 60).padStart(2, "0");
+  return `${hh}:${mm}`;
+}
+
 export default function CallRatesPage() {
   const { address } = useAccount();
   const abstractId = (address ?? "").toLowerCase();
@@ -23,54 +55,86 @@ export default function CallRatesPage() {
   const [pricingOpen, setPricingOpen] = useState(false);
   const [activeKind, setActiveKind] = useState<"voice" | "video">("voice");
 
-  // disimpan PER MENIT (input drawer)
-  const [voicePerMinute, setVoicePerMinute] = useState<number>(0);
-  const [videoPerMinute, setVideoPerMinute] = useState<number>(0);
+  // === harga DISIMPAN PER-MENIT untuk input drawer ===
+  const [voicePerMin, setVoicePerMin] = useState<number>(0);
+  const [videoPerMin, setVideoPerMin] = useState<number>(0);
 
-  // konversi untuk tampilan: PER SESI (10 menit)
-  const voicePerSession = voicePerMinute * 10;
-  const videoPerSession = videoPerMinute * 10;
+  // baseline (deteksi perubahan di builder)
+  const [initialVoicePerMin, setInitialVoicePerMin] = useState<number>(0);
+  const [initialVideoPerMin, setInitialVideoPerMin] = useState<number>(0);
+
+  const [slotMinutes, setSlotMinutes] = useState<number>(10);
+  const [initialDays, setInitialDays] = useState<DaySchedule[] | null>(null);
 
   useEffect(() => {
-    try {
-      const v = window.localStorage.getItem("velora.pricing.voice.permin");
-      const vv = window.localStorage.getItem("velora.pricing.video.permin");
-      if (v) setVoicePerMinute(Number(v) || 0);
-      if (vv) setVideoPerMinute(Number(vv) || 0);
-    } catch {}
-  }, []);
+    (async () => {
+      if (!abstractId) return;
+      try {
+        const res = await fetch(`/api/call-rates/schedules?id=${abstractId}`, { cache: "no-store" });
+        const j: PrefillResp = await res.json();
+        if (!res.ok) throw new Error((j as any)?.error || res.statusText);
+
+        setSlotMinutes(j.slotMinutes || 10);
+
+        // === session → minute (baseline + current) ===
+        const vMin = (j.pricePerSession.voice || 0) / (j.slotMinutes || 10);
+        const viMin = (j.pricePerSession.video || 0) / (j.slotMinutes || 10);
+
+        setInitialVoicePerMin(+vMin.toFixed(4));
+        setInitialVideoPerMin(+viMin.toFixed(4));
+        setVoicePerMin(+vMin.toFixed(4));
+        setVideoPerMin(+viMin.toFixed(4));
+
+        // Prefill days → DaySchedule[]
+        const map = new Map<string, DaySchedule>();
+        for (const it of j.items) {
+          const dayName = DAYS[it.day - 1];
+          if (!map.has(dayName)) map.set(dayName, { id: uid("day"), day: dayName, hours: [] });
+          const sessions = (it.slots || []).map((s) => ({
+            id: uid("sess"),
+            start: s,
+            end: addMin(s, j.slotMinutes || 10),
+            active: true,
+          }));
+          map.get(dayName)!.hours.push({
+            id: uid("hour"),
+            start: it.start,
+            duration: it.duration,
+            sessions,
+            kinds: { voice: it.kind === "voice", video: it.kind === "video" },
+          });
+        }
+        setInitialDays(Array.from(map.values()));
+      } catch (e) {
+        console.warn("prefill failed", e);
+        setInitialDays([]); // tetap render supaya user bisa buat baru
+      }
+    })();
+  }, [abstractId]);
 
   const openPricing = (k: "voice" | "video") => {
     setActiveKind(k);
     setPricingOpen(true);
   };
 
-  const handleConfirm = (kind: "voice" | "video", perMinute: number) => {
-    try {
-      const key = kind === "voice" ? "velora.pricing.voice.permin" : "velora.pricing.video.permin";
-      window.localStorage.setItem(key, String(perMinute));
-    } catch {}
-    if (kind === "voice") setVoicePerMinute(perMinute);
-    else setVideoPerMinute(perMinute);
+  const handleConfirm = (kind: "voice" | "video", perMin: number) => {
+    if (kind === "voice") setVoicePerMin(perMin);
+    else setVideoPerMin(perMin);
   };
 
   const resetPrices = () => {
-    setVoicePerMinute(0);
-    setVideoPerMinute(0);
-    try {
-      localStorage.removeItem("velora.pricing.voice.permin");
-      localStorage.removeItem("velora.pricing.video.permin");
-    } catch {}
+    setVoicePerMin(0);
+    setVideoPerMin(0);
   };
+
+  // Kartu → tampilkan PER-SESI
+  const voicePerSession = useMemo(() => voicePerMin * slotMinutes, [voicePerMin, slotMinutes]);
+  const videoPerSession = useMemo(() => videoPerMin * slotMinutes, [videoPerMin, slotMinutes]);
 
   return (
     <main className="px-4 py-6 sm:px-6 lg:px-8">
       <header className="mb-6">
         <h1 className="text-2xl font-bold text-neutral-50">Set Your Call Rates</h1>
-        <p className="mt-1 max-w-[68ch] text-sm text-neutral-300">
-          Set your per-minute rate for Voice and Video calls. We’ll show it as
-          <span className="font-medium text-neutral-100"> per session (10 min)</span> to buyers.
-        </p>
         {!abstractId && (
           <p className="mt-2 text-xs text-amber-300">
             Connect your wallet to save schedules (otherwise the server can’t resolve your profile).
@@ -78,48 +142,47 @@ export default function CallRatesPage() {
         )}
       </header>
 
-      {/* pricing cards */}
+      {/* pricing cards (per-session) */}
       <section className="grid grid-cols-1 gap-6 md:grid-cols-2">
         <ProductCard
           icon={<MicIcon />}
           title="Voice Calls"
-          // tampilkan PER SESI
+          price={voicePerSession > 0 ? voicePerSession : undefined}
           description={
             voicePerSession > 0
               ? `Current price: ${fmtUSD(voicePerSession)} / session`
               : "Get paid by the session for every voice call."
           }
-          cta={voicePerMinute > 0 ? "Update pricing" : "Setup pricing"}
+          cta={voicePerSession > 0 ? "Update pricing" : "Setup pricing"}
           onClick={() => openPricing("voice")}
-          // pill (opsional) juga per sesi
-          price={voicePerSession}
-          unitLabel="/ session"
         />
         <ProductCard
           icon={<CamIcon />}
           title="Video Calls"
+          price={videoPerSession > 0 ? videoPerSession : undefined}
           description={
             videoPerSession > 0
               ? `Current price: ${fmtUSD(videoPerSession)} / session`
               : "Get paid by the session for every video call."
           }
-          cta={videoPerMinute > 0 ? "Update pricing" : "Setup pricing"}
+          cta={videoPerSession > 0 ? "Update pricing" : "Setup pricing"}
           onClick={() => openPricing("video")}
-          price={videoPerSession}
-          unitLabel="/ session"
         />
       </section>
 
-      {/* schedule builder */}
+      {/* schedule builder (harga per-menit) */}
       <section className="mt-6">
         <SchedulePicker
           abstractId={abstractId}
-          hasVoicePrice={voicePerMinute > 0}
-          hasVideoPrice={videoPerMinute > 0}
-          // kirim PER MENIT → komponen akan konversi ke per-session (×10) ketika menyimpan
-          voicePricePerMinuteUSD={voicePerMinute}
-          videoPricePerMinuteUSD={videoPerMinute}
+          hasVoicePrice={voicePerMin > 0}
+          hasVideoPrice={videoPerMin > 0}
+          voicePriceUSD={voicePerMin}     // per-minute
+          videoPriceUSD={videoPerMin}     // per-minute
+          initialVoicePerMin={initialVoicePerMin}
+          initialVideoPerMin={initialVideoPerMin}
           currency="USD"
+          slotMinutes={slotMinutes}
+          initialDays={initialDays || undefined}
           onResetPrices={resetPrices}
           onScheduleAdded={(day, start, slots, kind) => {
             console.log("saved:", { day, start, count: slots.length, kind });
@@ -127,12 +190,12 @@ export default function CallRatesPage() {
         />
       </section>
 
-      {/* drawer set price (per minute) */}
+      {/* drawer set price → per-minute input */}
       <PricingDrawer
         open={pricingOpen}
         onClose={() => setPricingOpen(false)}
         kind={activeKind}
-        initialPerMinute={activeKind === "voice" ? voicePerMinute : videoPerMinute}
+        initialPerMinute={activeKind === "voice" ? voicePerMin : videoPerMin}
         onConfirm={(val) => handleConfirm(activeKind, val)}
       />
     </main>
