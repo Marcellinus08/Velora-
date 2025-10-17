@@ -55,7 +55,7 @@ export type PriceRule = {
 
 // Range slider: $5 – $100 (step $1) — tidak diubah
 const DEFAULT_PRICE_RULE: PriceRule = {
-  min_cents: 500,
+  min_cents: 100,
   max_cents: 10000,
   step_cents: 100,
   default_cents: 1999,
