@@ -1,10 +1,10 @@
-// src/components/payments/TreasuryButtons.tsx
 "use client";
 
 import { useState } from "react";
 import type { Address } from "viem";
 import { useGlonicTreasury } from "@/hooks/use-glonic-treasury";
 import { useLoginWithAbstract } from "@abstract-foundation/agw-react";
+import { useAccount } from "wagmi";
 
 /* helpers */
 function pickMsg(e: unknown) {
@@ -30,10 +30,9 @@ async function withInitRetry<T>(
     return await doIt();
   } catch (e) {
     const msg = pickMsg(e);
-    if (msg?.toLowerCase().includes("failed to initialize request")) {
-      // session/login AGW bisa kedaluwarsa → login lagi lalu retry sekali
-      await relogin();
-      return await doIt();
+    if (String(msg || "").toLowerCase().includes("failed to initialize request")) {
+      await relogin();      // session AGW kedaluwarsa → login ulang
+      return await doIt();  // retry sekali
     }
     throw e;
   }
@@ -57,6 +56,7 @@ export function BuyVideoButton({
 }) {
   const { loading, purchaseVideo } = useGlonicTreasury();
   const { login } = useLoginWithAbstract();
+  const { address } = useAccount();
   const [busy, setBusy] = useState(false);
 
   const onClick = async () => {
@@ -65,6 +65,25 @@ export function BuyVideoButton({
     try {
       const run = () => purchaseVideo({ videoId, creator, priceUsd });
       const tx = await withInitRetry(run, async () => login());
+
+      // Rekam pembelian ke DB
+      try {
+        await fetch("/api/purchases", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            buyer: (address || "").toLowerCase(),
+            videoId: String(videoId),
+            priceUsd: Number(priceUsd),
+            tx,
+            currency: "USD",
+          }),
+        });
+      } catch (err) {
+        // jangan block UX kalau logging gagal
+        console.warn("record purchase failed:", err);
+      }
+
       alert(`Purchase success\nTx: ${tx}`);
     } catch (e) {
       alertErr(e);
@@ -110,14 +129,12 @@ export function PayAdsButton({
     if (disabled) return;
     setBusy(true);
     const id =
-      campaignId ??
-      (typeof crypto !== "undefined" ? crypto.randomUUID() : `${Date.now()}`);
+      campaignId ?? (typeof crypto !== "undefined" ? crypto.randomUUID() : `${Date.now()}`);
 
     try {
       const run = () => payAds({ campaignId: id, amountUsd });
       const tx = await withInitRetry(run, async () => login());
       onPaid?.(tx);
-      // optional alert: alert(`Ads payment success\nTx: ${tx}`);
     } catch (e) {
       alertErr(e);
     } finally {
@@ -166,8 +183,7 @@ export function PayMeetButton({
     if (disabled) return;
     setBusy(true);
     try {
-      const run = () =>
-        payMeet({ bookingId, creator, rateUsdPerMin, minutes });
+      const run = () => payMeet({ bookingId, creator, rateUsdPerMin, minutes });
       const tx = await withInitRetry(run, async () => login());
       onPaid?.(tx);
       alert(`Meet payment success\nTx: ${tx}`);
