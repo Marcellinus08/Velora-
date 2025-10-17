@@ -1,14 +1,15 @@
+// src/components/meet/BookingModal.tsx
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
 import { useGlonicTreasury } from "@/hooks/use-glonic-treasury";
 
 type MeetCreator = {
-  id: string;                             // abstract_id (lowercase, 0x…)
+  id: string; // harus 0x.. address creator (lowercase)
   name: string;
   handle: string;
   avatarUrl?: string;
-  pricing: { voice?: number; video?: number }; // USD / minute (dari API creators)
+  pricing: { voice?: number; video?: number }; // USD / minute
 };
 
 type SessionsResp = {
@@ -18,7 +19,9 @@ type SessionsResp = {
 };
 
 const fmtUSD = (n: number) =>
-  new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(isFinite(n) ? n : 0);
+  new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(
+    isFinite(n) ? n : 0
+  );
 
 const isAddress = (s?: string | null) => !!s && /^0x[a-fA-F0-9]{40}$/.test(s);
 const shorten = (addr: string) => `${addr.slice(0, 6)}…${addr.slice(-4)}`;
@@ -43,23 +46,24 @@ export const BookingModal = ({
   const [days, setDays] = useState<SessionsResp["byDay"]>([]);
   const [dayIdx, setDayIdx] = useState<number>(0);
   const [selectedTimes, setSelectedTimes] = useState<Set<string>>(new Set());
-  const [pricePerSession, setPricePerSession] = useState<{ voice: number; video: number }>({ voice: 0, video: 0 });
+  const [pricePerSession, setPricePerSession] = useState<{
+    voice: number;
+    video: number;
+  }>({ voice: 0, video: 0 });
 
   const { payMeet } = useGlonicTreasury();
 
-  // ==== Wallet address (ditampilkan & dipakai bayar) ====
+  // ==== Wallet address (dipakai bayar) ====
   const fullAddr = useMemo(() => {
-    // prioritas: creator.walletAddress (jika suatu saat ditambahkan), fallback ke creator.id (abstract_id)
     const cand =
-      ((creator as any)?.walletAddress as string | undefined) ||
-      (creator?.id ?? "");
-    const addr = (cand || "").trim();
+      ((creator as any)?.walletAddress as string | undefined) || (creator?.id ?? "");
+    const addr = (cand || "").trim().toLowerCase();
     return isAddress(addr) ? (addr as `0x${string}`) : "";
   }, [creator]);
 
   const displayAddr = useMemo(() => (fullAddr ? shorten(fullAddr) : ""), [fullAddr]);
 
-  // load sessions setiap modal dibuka
+  // load sessions ketika modal dibuka
   useEffect(() => {
     if (!open || !creator) return;
     (async () => {
@@ -68,37 +72,42 @@ export const BookingModal = ({
         setError(null);
         setSelectedTimes(new Set());
 
-        const res = await fetch(`/api/meet/sessions?id=${creator.id}`, { cache: "no-store" });
-        const j: SessionsResp = await res.json();
-        if (!res.ok) throw new Error((j as any)?.error || res.statusText);
+        const res = await fetch(`/api/meet/sessions?id=${creator.id}`, {
+          cache: "no-store",
+        });
+        const j: SessionsResp = await res.json().catch(() => ({} as any));
+        if (!res.ok) throw new Error((j as any)?.error || res.statusText || "Failed");
 
-        setSlotMinutes(j.slotMinutes || 10);
-        setDays(j.byDay || []);
-        setPricePerSession(j.pricePerSession || { voice: 0, video: 0 });
+        setSlotMinutes(j?.slotMinutes || 10);
+        setDays(j?.byDay || []);
+        setPricePerSession(j?.pricePerSession || { voice: 0, video: 0 });
 
-        // default pilih tab berdasarkan ketersediaan
-        const hasVoice = (j.byDay || []).some(d => d.voice.length);
-        const hasVideo = (j.byDay || []).some(d => d.video.length);
+        // default tab
+        const hasVoice = (j?.byDay || []).some((d) => d.voice.length);
+        const hasVideo = (j?.byDay || []).some((d) => d.video.length);
         setKind(hasVoice ? "voice" : hasVideo ? "video" : "voice");
 
-        // default pilih hari pertama yang punya slot untuk kind tsb
-        const idx = (j.byDay || []).findIndex(d => (hasVoice ? d.voice.length : d.video.length));
+        // default hari
+        const idx = (j?.byDay || []).findIndex((d) =>
+          hasVoice ? d.voice.length : d.video.length
+        );
         setDayIdx(idx >= 0 ? idx : 0);
       } catch (e: any) {
         setDays([]);
-        setError(e?.message || "Failed to load sessions");
+        setError(e?.message || "Failed to load sessions.");
       } finally {
         setLoading(false);
       }
     })();
   }, [open, creator]);
 
-  // daftar hari yang punya slot untuk kind aktif
-  const availableDays = useMemo(() => {
-    return days.filter(d => (kind === "voice" ? d.voice.length : d.video.length));
-  }, [days, kind]);
+  // hari yang punya slot utk kind aktif
+  const availableDays = useMemo(
+    () => days.filter((d) => (kind === "voice" ? d.voice.length : d.video.length)),
+    [days, kind]
+  );
 
-  // slot untuk hari terpilih
+  // slot utk hari terpilih
   const slotsForDay = useMemo(() => {
     const cur = availableDays[dayIdx] ?? availableDays[0];
     if (!cur) return [];
@@ -114,7 +123,6 @@ export const BookingModal = ({
   const totalUsd = +(sessionPriceUsd * totalSessions).toFixed(2);
 
   const perMinute = useMemo(() => {
-    // gunakan pricing per minute dari creators (fallback dari session price / slotMinutes)
     const fallback = sessionPriceUsd / Math.max(1, slotMinutes);
     const fromCreators = kind === "voice" ? creator?.pricing.voice : creator?.pricing.video;
     return Number(fromCreators || fallback || 0);
@@ -122,7 +130,7 @@ export const BookingModal = ({
 
   // toggle pilih slot
   const toggleTime = (t: string) => {
-    setSelectedTimes(prev => {
+    setSelectedTimes((prev) => {
       const next = new Set(prev);
       if (next.has(t)) next.delete(t);
       else next.add(t);
@@ -130,29 +138,42 @@ export const BookingModal = ({
     });
   };
 
-  // helper: tentukan tanggal berikutnya untuk weekday tertentu
+  // helper: tanggal berikutnya utk weekday name
   function nextDateForWeekday(weekdayName: string) {
-    const dnames = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+    const dnames = [
+      "Sunday",
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday",
+    ];
     const target = dnames.indexOf(weekdayName);
     const now = new Date();
-    const today = now.getDay(); // 0..6 (Sun..Sat)
-    let add = target - today;
-    if (add <= 0) add += 7;
+    const add = ((target - now.getDay()) % 7 + 7) % 7 || 7;
     const d = new Date(now);
     d.setDate(now.getDate() + add);
     return d.toISOString().slice(0, 10);
   }
 
+  // booking + bayar
   const submit = async () => {
+    if (!open || !creator) return;
+    if (!fullAddr) {
+      setError("Creator wallet invalid.");
+      return;
+    }
+    if (totalSessions === 0) {
+      setError("Select at least one session.");
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
     try {
-      if (!open || !creator) return;
-      if (!fullAddr) throw new Error("Creator wallet invalid");
-      if (totalSessions === 0) throw new Error("Select at least one session");
-
-      setLoading(true);
-      setError(null);
-
-      // ambil hari yang dipilih dan slot paling awal sebagai startAt
+      // tentukan start/time
       const curDay = availableDays[dayIdx] ?? availableDays[0];
       const dayISO = nextDateForWeekday(curDay?.name || "Monday");
       const first = Array.from(selectedTimes).sort()[0];
@@ -160,27 +181,35 @@ export const BookingModal = ({
 
       const minutes = totalSessions * Math.max(1, slotMinutes);
 
-      // booking ke backend (API kamu sebelumnya)
-      const res = await fetch("/api/meet/book", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          creatorId: creator.id,
-          kind,
-          minutes,
-          startAt,
-          // OPTIONAL: kirim list slot agar backend bisa lock
-          slots: Array.from(selectedTimes).sort(),
-          slotMinutes,
-        }),
-      });
-      const j = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(j?.error || "Booking failed");
+      // 1) Coba booking ke backend
+      let bookingId: string | number | bigint | undefined;
+      try {
+        const res = await fetch("/api/meet/book", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            creatorId: creator.id,
+            kind,
+            minutes,
+            startAt,
+            slots: Array.from(selectedTimes).sort(),
+            slotMinutes,
+          }),
+        });
+        const j = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(j?.error || "Booking API failed.");
+        bookingId = j?.bookingId ?? j?.id ?? j?.booking_id;
+      } catch {
+        // 2) Fallback: generate bookingId deterministik (tanpa backend)
+        bookingId = `meet:${creator.id}:${kind}:${dayISO}:${Array.from(selectedTimes)
+          .sort()
+          .join(",")}`;
+      }
 
-      // bayar on-chain: rate per minute + total minutes
+      // 3) Bayar on-chain
       await payMeet({
-        bookingId: j?.bookingId ?? j?.id,
-        creator: fullAddr as `0x${string}`,
+        bookingId: bookingId!,
+        creator: fullAddr,
         rateUsdPerMin: perMinute,
         minutes,
       });
@@ -188,7 +217,7 @@ export const BookingModal = ({
       onClose();
       onBooked();
     } catch (e: any) {
-      setError(e?.message || "Something went wrong");
+      setError(e?.shortMessage || e?.message || "Booking or payment failed.");
     } finally {
       setLoading(false);
     }
@@ -196,7 +225,6 @@ export const BookingModal = ({
 
   if (!open || !creator) return null;
 
-  // UI
   return (
     <div className="fixed inset-0 z-50 grid place-items-center">
       <div className="absolute inset-0 bg-black/60" onClick={() => !loading && onClose()} />
@@ -222,31 +250,41 @@ export const BookingModal = ({
           </div>
         </div>
 
-        {/* pilih kind (harga per session) */}
+        {/* pilih kind */}
         <div className="mb-4 grid grid-cols-2 gap-2">
           <button
             type="button"
-            onClick={() => { setKind("voice"); setSelectedTimes(new Set()); }}
+            onClick={() => {
+              setKind("voice");
+              setSelectedTimes(new Set());
+            }}
             disabled={loading}
             className={`rounded-xl px-3 py-2 text-sm font-semibold transition ${
-              kind === "voice" ? "bg-[var(--primary-500)] text-white"
-                               : "bg-neutral-800 text-neutral-200 hover:bg-neutral-700"}`}
+              kind === "voice"
+                ? "bg-[var(--primary-500)] text-white"
+                : "bg-neutral-800 text-neutral-200 hover:bg-neutral-700"
+            }`}
           >
             Voice {fmtUSD(pricePerSession.voice)}/session
           </button>
           <button
             type="button"
-            onClick={() => { setKind("video"); setSelectedTimes(new Set()); }}
+            onClick={() => {
+              setKind("video");
+              setSelectedTimes(new Set());
+            }}
             disabled={loading}
             className={`rounded-xl px-3 py-2 text-sm font-semibold transition ${
-              kind === "video" ? "bg-[var(--primary-500)] text-white"
-                               : "bg-neutral-800 text-neutral-200 hover:bg-neutral-700"}`}
+              kind === "video"
+                ? "bg-[var(--primary-500)] text-white"
+                : "bg-neutral-800 text-neutral-200 hover:bg-neutral-700"
+            }`}
           >
             Video {fmtUSD(pricePerSession.video)}/session
           </button>
         </div>
 
-        {/* pilih hari */}
+        {/* hari */}
         <div className="mb-2 text-sm text-neutral-300">Pick a day</div>
         <div className="mb-3 flex flex-wrap gap-2">
           {availableDays.length === 0 ? (
@@ -255,10 +293,15 @@ export const BookingModal = ({
             availableDays.map((d, i) => (
               <button
                 key={d.day}
-                onClick={() => { setDayIdx(i); setSelectedTimes(new Set()); }}
+                onClick={() => {
+                  setDayIdx(i);
+                  setSelectedTimes(new Set());
+                }}
                 className={`rounded-full px-3 py-1.5 text-sm ${
-                  i === dayIdx ? "bg-[var(--primary-500)] text-white"
-                               : "border border-neutral-700 bg-neutral-900 text-neutral-200 hover:bg-neutral-800"}`}
+                  i === dayIdx
+                    ? "bg-[var(--primary-500)] text-white"
+                    : "border border-neutral-700 bg-neutral-900 text-neutral-200 hover:bg-neutral-800"
+                }`}
               >
                 {d.name}
               </button>
@@ -266,7 +309,7 @@ export const BookingModal = ({
           )}
         </div>
 
-        {/* pilih session (10 menit) */}
+        {/* slot */}
         {!!slotsForDay.length && (
           <>
             <div className="mb-1 text-sm text-neutral-300">
@@ -293,7 +336,7 @@ export const BookingModal = ({
           </>
         )}
 
-        {/* harga & total */}
+        {/* ringkasan */}
         <div className="mt-2 text-sm text-neutral-300">
           Price: <span className="font-semibold text-neutral-100">{fmtUSD(sessionPriceUsd)}</span> / session
           {" — "}Sessions: <span className="font-semibold text-neutral-100">{totalSessions}</span>

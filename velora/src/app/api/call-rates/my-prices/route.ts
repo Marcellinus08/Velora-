@@ -18,7 +18,7 @@ export async function GET(req: NextRequest) {
     .select("abstract_id, kind, price_cents, slot_minutes, currency, created_at")
     .eq("abstract_id", aid)
     .order("created_at", { ascending: false });
-
+  
   if (error) {
     console.error("[/api/call-rates/my-prices] DB error:", error);
     return NextResponse.json({ error: "DB error" }, { status: 500 });
