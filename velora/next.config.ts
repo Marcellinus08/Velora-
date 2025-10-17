@@ -12,6 +12,7 @@ const nextConfig: NextConfig = {
         hostname: "images.unsplash.com",
         pathname: "/**",
       },
+      { protocol: "https", hostname: "api.dicebear.com" },
       {
         protocol: "https",
         hostname: "lh3.googleusercontent.com",

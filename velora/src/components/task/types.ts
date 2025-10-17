@@ -1,15 +1,38 @@
-export type Creator = {
-  name: string;
-  followers: string;
-  avatar: string;
+// src/components/task/types.ts
+export type DBProfile = {
+  username: string | null;
+  avatar_url: string | null;
 };
 
-export type VideoInfo = {
+export type DBVideo = {
+  id: string;
   title: string;
-  views: string;
-  heroImage: string;
-  description: string;
-  creator: Creator;
+  description: string | null;
+  thumb_url: string | null;
+  video_url: string | null;
+  abstract_id: string | null;
+  price_cents?: number | null;
+  currency?: string | null;
+  creator?: DBProfile | null; // join: profiles!videos_abstract_id_fkey(...)
+};
+
+export type PurchaseRow = {
+  id: string;
+  created_at: string;
+  buyer_id: string;   // EOA 0x...
+  video_id: string;   // uuid
+  tx_hash?: string | null;
+  price_cents?: number | null;
+  currency?: string | null;
+  tasks_done?: boolean | null;
+  status?: string | null; // purchase_status
+};
+
+export type RecommendedVideo = {
+  id: string;
+  title: string;
+  creator: string;
+  thumbnail: string;
 };
 
 export type Comment = {
@@ -18,11 +41,4 @@ export type Comment = {
   time: string;
   avatar: string;
   text: string;
-};
-
-export type RecommendedVideo = {
-  id: number;
-  title: string;
-  creator: string;
-  thumbnail: string;
 };

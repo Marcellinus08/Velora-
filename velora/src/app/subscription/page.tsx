@@ -1,78 +1,240 @@
+// src/app/subscription/page.tsx
+"use client";
+
 import Sidebar from "@/components/sidebar";
 import { SubscriptionSection as Section } from "@/components/subscription/section";
 import { SubscriptionVideoRow as VideoRow } from "@/components/subscription/videorow";
+import { useAccount } from "wagmi";
+import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabase";
 
-const available = [
-  {
-    title: "Cooking Masterclass: The Art of Modern Cuisine",
-    thumb:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuAoJxTecPhE_PaHpo4ZMSRgsJyjjbygHj90EAayCOOo8Z61pIDLDKnANPpOPMRJmq9pRh3GMZuQ6uk1F3nKNawraJTtfehJfC_EZ7qgQX7ktNINJtTTaNVMIDSty3QfcJigHJbB3XiHQiekgePmLgzhWdD4qqrOg1SkYCaulR27KioxNtGqHocE0ZH5NdikY51LvDifBXYWb0FaNbVIWW5BUhX2AyI6Nya7Aw0kimRjnIV-d2QKl-v9HkNwdMBubIFjjRe9LfWk-bXH",
-    subtext: "Available until July 15, 2024",
-  },
-  {
-    title: "Full-Stack Web Development: From Concept to Launch",
-    thumb:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuDjFY2ZHtVpUqiwvgHNWf_hb1cG1dQana_i8GwQKa1QBoKygtoyfwjjljKZM--SZUB0hwv6UFxgqpY1UURE_snhhZ8g_TTt0QBSpaY0NidHyRYDofpmo2ih59zNKbcPSU9PSShVO76Pssu07jgsYmWAo0PD0VpucHHs6Op8Btj-AT21VRaDVyJpZ6HXac1a8J0XQ-jub9DFhXORyArxHMMPLYAjuoHas3JrKX-23W0py2zmJdT_II0FnuJk_Yx3VPlKAlRb7-or3EDY",
-    subtext: "Available until July 20, 2024",
-  },
-];
+type VideoItem = {
+  purchaseId: string;
+  purchasedAt: string;
+  buyer: string;
+  priceUsd: number;
+  currency: string;
+  status: string | null;
+  tasksDone: boolean;
+  id: string;                 // video id
+  title: string;
+  description?: string | null;
+  category?: string | null;
+  durationSeconds?: number;
+  thumbUrl?: string;
+  videoUrl?: string;
+  creator?: string | null;
+};
 
-const completed = [
-  {
-    title: "Portrait Photography: Capturing Your Subject’s Essence",
-    thumb:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuB4gb9STrJU3JCJendGpr2JPwGnwuh7zCBxeKKJLdsDI6FML7c9hdECdVn6y6Y9laurCNwxrpWamTAfEmyHJh2OayL9Eh4QGjpNhHgi7boo6OGbKeTTsB_Xy1EBFAepniY48pUe8O1tXLVGZB34E7uNV7Ns9NRUZLllWZEIs44VvKQt15w4sqIOoPswpoYkdpAP2q9Dj6_5lwP6020m_YFgxAl5uiv1Xddyr1oFeO2HSlLalbOOmC5jr4tivXNzPUn2PO5xpeJl2XbL",
-    subtext: "Completed on June 1, 2024",
-  },
-  {
-    title: "Ultimate Guide to Acoustic Guitar",
-    thumb:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuDkLd2ZMlvglYIOQVqbYQkEgGexTlopTzB61qQ04qdIANt70JBImC2uwmJ4Tp6C-0lKxFoMSHT7PrCTOkFSzMn0sTA75MwOhS4rptXW9TLjBeU3XxFL4GwSQPI0oGq_aNlJNlxY2Lcn13mUzHeJZitVejHDFfQRmk-gUra9eK_V0q78beFZ9Tvyo62oi78ZgyCAmx_DHri8teMApg24M2mYU_bofW9qZZ4WFCp4uuxWb-jvLbfeM2u9n9OKo-qa09ww5s5enLrCEWGl",
-    subtext: "Completed on May 15, 2024",
-  },
-  {
-    title: "Public Speaking: From Zero to Hero",
-    thumb:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuDsc6m5Oq7_fDQauvuY2ErAJ4dyBV1yQvyE42gwgyi2QkW-JMFj0cu0fj5vfhbOrKGg4O210RQakVU3waK9A2KjQywyGfsdkaKN3odJ8KxaLMDLOPXIIHrfOSyxy5lpmM41r216Wk6-5tzQ64t60YyK0HAdOluBJ8hsWSg3HNJCd3tOOfv5W8kl-l4gyfeo8KJUAmNhTe3IhT5nh3dL_F-smismYCx_oYvSvXOVBTd0KW7K78ram6hHRFBwnoT41ZzIZevoq91J0Og6",
-    subtext: "Completed on April 1, 2024",
-  },
-];
+const isAddr = (s?: string | null) => !!s && /^0x[a-fA-F0-9]{40}$/.test(s || "");
+const centsToUsd = (c?: number | null) => Math.max(0, Number(((c ?? 0) / 100).toFixed(2)));
+const fmtUSD = (n: number) =>
+  new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(
+    isFinite(n) ? n : 0
+  );
 
-export default function Subcription() {
+function toPayload(p: any, v: any): VideoItem {
+  return {
+    purchaseId: String(p.id),
+    purchasedAt: String(p.created_at),
+    buyer: String(p.buyer_id || ""),
+    priceUsd: centsToUsd(p.price_cents),
+    currency: p.currency || "USD",
+    status: p.status || null,
+    tasksDone: !!p.tasks_done,
+
+    id: String(v?.id || p.video_id),
+    title: String(v?.title ?? "Untitled"),
+    description: v?.description ?? null,
+    category: v?.category ?? null,
+    durationSeconds: Number(v?.duration_seconds || 0),
+    thumbUrl: v?.thumb_url || v?.thumb_path || "",
+    videoUrl: v?.video_url || v?.video_path || "",
+    creator: v?.abstract_id || null,
+  };
+}
+
+export default function SubscriptionPage() {
+  const { address } = useAccount();
+  const buyer = (address ?? "").toLowerCase();
+
+  const [loading, setLoading] = useState(true);
+  const [err, setErr] = useState("");
+  const [available, setAvailable] = useState<VideoItem[]>([]);
+  const [completed, setCompleted] = useState<VideoItem[]>([]);
+
+  useEffect(() => {
+    let alive = true;
+
+    async function loadViaApi(buyerAddr: string) {
+      const r = await fetch(`/api/subscription/list?buyer=${buyerAddr}`, { cache: "no-store" });
+      const ct = r.headers.get("content-type") || "";
+      if (!ct.includes("application/json")) {
+        const txt = await r.text();
+        throw new Error(`Unexpected response (not JSON): ${txt.slice(0, 120)}…`);
+      }
+      const j = await r.json();
+      if (!r.ok) throw new Error(j?.error || r.statusText);
+      return {
+        available: Array.isArray(j.available) ? j.available : [],
+        completed: Array.isArray(j.completed) ? j.completed : [],
+      } as { available: VideoItem[]; completed: VideoItem[] };
+    }
+
+    async function loadDirectFromSupabase(buyerAddr: string) {
+      // 1) Coba join langsung; beberapa project belum punya FK bernama → tetap dicoba
+      let { data, error } = await supabase
+        .from("video_purchases")
+        .select(
+          `
+          id, created_at, buyer_id, video_id, tx_hash, price_cents, currency, tasks_done, status,
+          videos!inner ( id, title, description, category, duration_seconds, thumb_url, thumb_path, video_url, video_path, abstract_id )
+        `
+        )
+        .eq("buyer_id", buyerAddr)
+        .order("created_at", { ascending: false });
+
+      // 2) Fallback: ambil purchases lalu fetch videos by id
+      if (error || !data) {
+        const { data: pchs, error: e1 } = await supabase
+          .from("video_purchases")
+          .select(
+            "id, created_at, buyer_id, video_id, tx_hash, price_cents, currency, tasks_done, status"
+          )
+          .eq("buyer_id", buyerAddr)
+          .order("created_at", { ascending: false });
+
+        if (e1) throw e1;
+        if (!pchs?.length) return { available: [], completed: [] };
+
+        const ids = Array.from(new Set(pchs.map((p) => p.video_id)));
+        const { data: vids, error: e2 } = await supabase
+          .from("videos")
+          .select(
+            "id, title, description, category, duration_seconds, thumb_url, thumb_path, video_url, video_path, abstract_id"
+          )
+          .in("id", ids);
+
+        if (e2) throw e2;
+
+        const vmap = new Map<string, any>();
+        (vids || []).forEach((v) => vmap.set(String(v.id), v));
+
+        const rows = (pchs || []).map((p) => ({ ...p, videos: vmap.get(String(p.video_id)) || null }));
+        data = rows as any;
+      }
+
+      const avail: VideoItem[] = [];
+      const comp: VideoItem[] = [];
+
+      for (const r of data || []) {
+        const payload = toPayload(r, r.videos || r.video || {});
+        const done = !!r.tasks_done || (String(r.status || "")).toLowerCase() === "completed";
+        if (done) comp.push(payload);
+        else avail.push(payload);
+      }
+      return { available: avail, completed: comp };
+    }
+
+    (async () => {
+      try {
+        setLoading(true);
+        setErr("");
+
+        if (!isAddr(buyer)) {
+          setAvailable([]);
+          setCompleted([]);
+          return;
+        }
+
+        // 1) Coba lewat API (jika route benar)
+        let result: { available: VideoItem[]; completed: VideoItem[] };
+        try {
+          result = await loadViaApi(buyer);
+        } catch {
+          // 2) Fallback langsung ke Supabase (menghindari error HTML dari route)
+          result = await loadDirectFromSupabase(buyer);
+        }
+
+        if (!alive) return;
+        setAvailable(result.available);
+        setCompleted(result.completed);
+      } catch (e: any) {
+        if (!alive) return;
+        setErr(e?.message || "Failed to load subscriptions");
+        setAvailable([]);
+        setCompleted([]);
+      } finally {
+        if (alive) setLoading(false);
+      }
+    })();
+
+    return () => {
+      alive = false;
+    };
+  }, [buyer]);
+
   return (
     <div className="flex h-full grow flex-row">
       <Sidebar />
       <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8">
-        {/* === Konsisten dengan Community: container & header === */}
         <div className="flex flex-col gap-6">
           <div className="flex flex-col items-start gap-4 md:flex-row md:items-center md:justify-between">
             <h2 className="text-2xl font-bold text-neutral-50">Subscription Management</h2>
           </div>
 
-          {/* Seksi 1 */}
+          {err && (
+            <div className="rounded-md border border-red-800/60 bg-red-900/20 p-3 text-sm text-red-300">
+              {err}
+            </div>
+          )}
+
+          {/* Available */}
           <Section title="Available Videos">
-            {available.map((v) => (
-              <VideoRow
-                key={v.title}
-                title={v.title}
-                thumb={v.thumb}
-                subtext={v.subtext}
-                primaryAction={{ label: "Watch" }}
-              />
-            ))}
+            {loading ? (
+              <div className="rounded-lg border border-neutral-800 bg-neutral-800/50 p-4">
+                <div className="h-4 w-40 animate-pulse rounded bg-neutral-700/50" />
+                <div className="mt-3 h-16 w-full animate-pulse rounded bg-neutral-800/60" />
+              </div>
+            ) : available.length === 0 ? (
+              <div className="rounded-lg border border-neutral-800 bg-neutral-900/30 p-4 text-sm text-neutral-400">
+                You haven’t purchased any videos yet.
+              </div>
+            ) : (
+              available.map((v) => (
+                <VideoRow
+                  key={v.purchaseId}
+                  title={v.title}
+                  thumb={v.thumbUrl || "/placeholder-thumb.png"}
+                  subtext={`Purchased • ${fmtUSD(v.priceUsd)}`}
+                  primaryAction={{ label: "Watch" }}
+                />
+              ))
+            )}
           </Section>
 
-          {/* Seksi 2 */}
+          {/* Completed */}
           <Section title="Completed Videos">
-            {completed.map((v) => (
-              <VideoRow
-                key={v.title}
-                title={v.title}
-                thumb={v.thumb}
-                subtext={v.subtext}
-                primaryAction={{ label: "Rewatch", variant: "secondary" }}
-              />
-            ))}
+            {loading ? (
+              <div className="rounded-lg border border-neutral-800 bg-neutral-800/50 p-4">
+                <div className="h-4 w-40 animate-pulse rounded bg-neutral-700/50" />
+                <div className="mt-3 h-16 w-full animate-pulse rounded bg-neutral-800/60" />
+              </div>
+            ) : completed.length === 0 ? (
+              <div className="rounded-lg border border-neutral-800 bg-neutral-900/30 p-4 text-sm text-neutral-400">
+                No completed videos yet. Finish the tasks to move a video here.
+              </div>
+            ) : (
+              completed.map((v) => (
+                <VideoRow
+                  key={v.purchaseId}
+                  title={v.title}
+                  thumb={v.thumbUrl || "/placeholder-thumb.png"}
+                  subtext={`Completed • ${fmtUSD(v.priceUsd)}`}
+                  primaryAction={{ label: "Rewatch", variant: "secondary" }}
+                />
+              ))
+            )}
           </Section>
         </div>
       </main>
