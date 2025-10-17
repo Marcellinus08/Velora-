@@ -1,3 +1,4 @@
+// src/components/call-rates/SchedulePicker.tsx
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
@@ -77,7 +78,7 @@ const SchedulePicker: React.FC<SchedulePickerProps> = ({
     if (!initialDays) return;
     setDays(initialDays);
     setSelectedDays(initialDays.map(d => d.day));
-    // set baseline signature berdasar initialDays + initial price (per-minute)
+    // baseline signature berdasar initialDays + initial price (per-minute)
     const sig = buildSignature(initialDays, initialVoicePerMin, initialVideoPerMin, slotMinutes);
     setBaselineSig(sig);
   }, [initialDays, initialVoicePerMin, initialVideoPerMin, slotMinutes]);
@@ -154,7 +155,7 @@ const SchedulePicker: React.FC<SchedulePickerProps> = ({
   const isChanged = baselineSig !== "" && currentSig !== baselineSig;
 
   const handleAddSchedules = async () => {
-    // guard harga
+    // Guard harga — hanya blokir jika ada slot aktif utk kind tsb & harganya belum diset
     const missing = new Set<CallKind>();
     days.forEach(d => d.hours.forEach(h => {
       if (h.sessions.some(s=>s.active)) {
@@ -174,27 +175,29 @@ const SchedulePicker: React.FC<SchedulePickerProps> = ({
 
     days.forEach(d => d.hours.forEach(h => {
       const slots = h.sessions.filter(s=>s.active).map(s=>s.start);
-      if (!d.day || !h.start || !slots.length) return;
-      const item: Item = { day: dayNameToNum(d.day), start: h.start, duration: h.duration, slots };
-      if (h.kinds.voice && hasVoicePrice) voiceItems.push(item);
-      if (h.kinds.video && hasVideoPrice) videoItems.push(item);
+      if (!d.day || !h.start) return;
+      const base: Item = { day: dayNameToNum(d.day), start: h.start, duration: h.duration, slots };
+      if (h.kinds.voice && hasVoicePrice) voiceItems.push(base);
+      if (h.kinds.video && hasVideoPrice) videoItems.push(base);
     }));
-    if (!voiceItems.length && !videoItems.length) return;
 
     const toCentsSession = (perMin: number) => Math.round((perMin * slotMinutes) * 100);
 
     setSaving(true);
     try {
+      // Selalu kirim kedua kind → delete-only juga dieksekusi
+      const payload = {
+        abstractId,
+        currency,
+        slot_minutes: slotMinutes,
+        voice: { price_cents: voiceItems.length ? toCentsSession(voicePriceUSD) : 0, items: voiceItems },
+        video: { price_cents: videoItems.length ? toCentsSession(videoPriceUSD) : 0, items: videoItems },
+      };
+
       const res = await fetch("/api/call-rates/schedules", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          abstractId,
-          currency,
-          slot_minutes: slotMinutes,
-          voice: voiceItems.length ? { price_cents: toCentsSession(voicePriceUSD), items: voiceItems } : undefined,
-          video: videoItems.length ? { price_cents: toCentsSession(videoPriceUSD), items: videoItems } : undefined,
-        }),
+        body: JSON.stringify(payload),
       });
       const j = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(j?.error || "Failed to save");
@@ -202,12 +205,13 @@ const SchedulePicker: React.FC<SchedulePickerProps> = ({
       voiceItems.forEach(it => onScheduleAdded(daysOfWeek[it.day-1], it.start, it.slots, "voice"));
       videoItems.forEach(it => onScheduleAdded(daysOfWeek[it.day-1], it.start, it.slots, "video"));
 
-      setSavedCount(c => c + voiceItems.length + videoItems.length);
+      const affected = voiceItems.length + videoItems.length;
+      setSavedCount(c => c + affected);
 
       Swal.fire({
         icon:"success",
         title:"Schedule saved!",
-        text:`${voiceItems.length + videoItems.length} time block(s) updated.`,
+        text: affected > 0 ? `${affected} time block(s) updated.` : "All schedules cleared.",
         position:"top-end", toast:true, timer:3000, showConfirmButton:false
       });
 
@@ -255,7 +259,7 @@ const SchedulePicker: React.FC<SchedulePickerProps> = ({
         )}
       </div>
 
-      {/* Time blocks (same as before) */}
+      {/* Time blocks */}
       {selectedDays.length > 0 ? (
         <div className="mt-4 space-y-4">
           {selectedDays.map((dayName) => {
@@ -451,10 +455,10 @@ const SchedulePicker: React.FC<SchedulePickerProps> = ({
         {savedCount > 0 && <span className="text-xs text-neutral-400">{savedCount} time block(s) sent</span>}
         <button
           onClick={handleAddSchedules}
-          disabled={!hasAnyActive || saving || !isChanged}
+          disabled={saving || !isChanged}   // <- allow delete-only saves
           className={[
             "h-11 rounded-2xl px-5 font-semibold",
-            (!hasAnyActive || saving || !isChanged)
+            (saving || !isChanged)
               ? "cursor-not-allowed bg-neutral-700 text-neutral-300"
               : "bg-[var(--primary-500)] text-white hover:opacity-90",
           ].join(" ")}
