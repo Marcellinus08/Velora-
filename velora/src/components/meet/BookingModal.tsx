@@ -5,7 +5,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { useGlonicTreasury } from "@/hooks/use-glonic-treasury";
 
 type MeetCreator = {
-  id: string; // 0x... address (lowercase)
+  id: string; 
   name: string;
   handle: string;
   avatarUrl?: string;

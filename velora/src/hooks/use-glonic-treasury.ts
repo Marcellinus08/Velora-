@@ -23,7 +23,7 @@ import {
   USDC_DECIMALS,
 } from "@/config/abstract-contracts";
 
-/* ===================== Approve Mode ===================== */
+/* == Approve Mode == */
 const APPROVE_MODE =
   (process.env.NEXT_PUBLIC_APPROVE_MODE || "infinite").toLowerCase() as
     | "infinite"
@@ -35,13 +35,13 @@ const APPROVE_CAP_USD = Number(process.env.NEXT_PUBLIC_APPROVE_CAP_USD || 100);
 function approveAmountFor(need: bigint): bigint {
   if (APPROVE_MODE === "infinite") return maxUint256;
   if (APPROVE_MODE === "cap") {
-    // Cap sekali approve (mis. $100) → dikonversi ke satuan token
+
     return parseUnits(String(APPROVE_CAP_USD.toFixed(6)), USDC_DECIMALS);
   }
   return need; // exact
 }
 
-/* ===================== Helpers ===================== */
+/* === Helpers === */
 function safeNumber(v: number | string | undefined | null): number {
   const n = Number(v);
   return Number.isFinite(n) ? n : 0;
@@ -199,9 +199,9 @@ export function useGlonicTreasury() {
     async ({
       bookingId,
       creator,
-      totalUsd,         // ✅ diutamakan
-      rateUsdPerMin,    // fallback opsional
-      minutes,          // fallback opsional
+      totalUsd,         
+      rateUsdPerMin,    
+      minutes,          
     }: {
       bookingId: number | string | bigint;
       creator: Address;
@@ -215,7 +215,7 @@ export function useGlonicTreasury() {
         const w = requireWallet();
         const account = await getAccount();
 
-        // Prefer totalUsd, fallback ke rate * minutes (dibulatkan aman)
+        // Prefer totalUsd, fallback ke rate * minutes 
         let usd = totalUsd != null
           ? safeNumber(totalUsd)
           : safeNumber(rateUsdPerMin) * Math.max(1, Math.ceil(safeNumber(minutes)));
