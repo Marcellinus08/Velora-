@@ -13,7 +13,7 @@ import {
 } from "viem";
 import { useAbstractClient } from "@abstract-foundation/agw-react";
 
-import { chain } from "@/config/chain";            // <-- pastikan chain dari config
+import { chain } from "@/config/chain";
 import { publicClient } from "@/config/viem-clients";
 import {
   ERC20_ABI,
@@ -23,36 +23,51 @@ import {
   USDC_DECIMALS,
 } from "@/config/abstract-contracts";
 
-/** MODE approve: infinite | exact | cap (optional via env) */
+/* ===================== Approve Mode ===================== */
 const APPROVE_MODE =
   (process.env.NEXT_PUBLIC_APPROVE_MODE || "infinite").toLowerCase() as
     | "infinite"
     | "exact"
     | "cap";
-const APPROVE_CAP_USD = Number(
-  process.env.NEXT_PUBLIC_APPROVE_CAP_USD || 100
-);
+
+const APPROVE_CAP_USD = Number(process.env.NEXT_PUBLIC_APPROVE_CAP_USD || 100);
 
 function approveAmountFor(need: bigint): bigint {
   if (APPROVE_MODE === "infinite") return maxUint256;
-  if (APPROVE_MODE === "cap")
-    return parseUnits(String(APPROVE_CAP_USD), USDC_DECIMALS);
+  if (APPROVE_MODE === "cap") {
+    // Cap sekali approve (mis. $100) → dikonversi ke satuan token
+    return parseUnits(String(APPROVE_CAP_USD.toFixed(6)), USDC_DECIMALS);
+  }
   return need; // exact
 }
 
-/** number | bigint | "123" | "0x.." | UUID → uint256 */
+/* ===================== Helpers ===================== */
+function safeNumber(v: number | string | undefined | null): number {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : 0;
+}
+
+/** Konversi USD ke amount token (bigint) dengan pembulatan aman (6 desimal) */
+function toUSDCAmount(usd: number | string): bigint {
+  const n = safeNumber(usd);
+  // Hindari binary float: tulis dengan fixed 6 desimal → parseUnits
+  return parseUnits(n.toFixed(6), USDC_DECIMALS);
+}
+
+/** Terima number | bigint | "123" | "0x.." | UUID → uint256 */
 function toUint256Id(id: number | string | bigint): bigint {
   if (typeof id === "bigint") return id;
   if (typeof id === "number") return BigInt(id);
   const s = String(id).trim();
   if (/^\d+$/.test(s)) return BigInt(s);
-  if ((s as any)?.startsWith?.("0x")) return BigInt(s as `0x${string}`);
+  if (isHex(s as any)) return BigInt(s as `0x${string}`);
   return BigInt(keccak256(toBytes(s)));
 }
 
+/* ===================== Hook ===================== */
 export function useGlonicTreasury() {
   const [loading, setLoading] = useState(false);
-  const { data: agw } = useAbstractClient(); // signer AGW
+  const { data: agw } = useAbstractClient();
 
   const requireWallet = useCallback(() => {
     if (!agw) throw new Error("Silakan Sign In dengan Abstract Wallet dulu.");
@@ -61,8 +76,8 @@ export function useGlonicTreasury() {
   }, [agw]);
 
   const getAccount = useCallback(async (): Promise<Address> => {
-    const a = requireWallet().account!.address as Address;
-    return a;
+    const addr = requireWallet().account!.address as Address;
+    return addr;
   }, [requireWallet]);
 
   const ensureBalance = useCallback(
@@ -78,7 +93,7 @@ export function useGlonicTreasury() {
     []
   );
 
-  /** sekali approve (mode tergantung env) */
+  // Sekali approve (bergantung env)
   const ensureAllowance = useCallback(
     async (owner: Address, spender: Address, need: bigint) => {
       const current = (await publicClient.readContract({
@@ -92,7 +107,7 @@ export function useGlonicTreasury() {
         const w = requireWallet();
         await w.writeContract({
           account: w.account,
-          chain, // <-- PENTING: gunakan chain dari config
+          chain,
           address: USDC_E_ADDRESS,
           abi: ERC20_ABI,
           functionName: "approve",
@@ -119,7 +134,8 @@ export function useGlonicTreasury() {
       try {
         const w = requireWallet();
         const account = await getAccount();
-        const amount = parseUnits(String(priceUsd), USDC_DECIMALS);
+
+        const amount = toUSDCAmount(priceUsd);
         const idU256 = toUint256Id(videoId);
 
         await ensureBalance(account, amount);
@@ -127,7 +143,7 @@ export function useGlonicTreasury() {
 
         const hash = await w.writeContract({
           account: w.account,
-          chain, // <-- chain eksplisit
+          chain,
           address: TREASURY_ADDRESS,
           abi: TREASURY_ABI,
           functionName: "purchaseVideo",
@@ -155,7 +171,8 @@ export function useGlonicTreasury() {
       try {
         const w = requireWallet();
         const account = await getAccount();
-        const amount = parseUnits(String(amountUsd), USDC_DECIMALS);
+
+        const amount = toUSDCAmount(amountUsd);
         const idU256 = toUint256Id(campaignId);
 
         await ensureBalance(account, amount);
@@ -163,7 +180,7 @@ export function useGlonicTreasury() {
 
         const hash = await w.writeContract({
           account: w.account,
-          chain, // <-- chain eksplisit
+          chain,
           address: TREASURY_ADDRESS,
           abi: TREASURY_ABI,
           functionName: "payAds",
@@ -177,27 +194,36 @@ export function useGlonicTreasury() {
     [requireWallet, getAccount, ensureAllowance, ensureBalance]
   );
 
-  /** 80/20 meet */
+  /** 80/20 meet — kirim TOTAL (kontrak yang membagi) */
   const payMeet = useCallback(
     async ({
       bookingId,
       creator,
-      rateUsdPerMin,
-      minutes,
+      totalUsd,         // ✅ diutamakan
+      rateUsdPerMin,    // fallback opsional
+      minutes,          // fallback opsional
     }: {
       bookingId: number | string | bigint;
       creator: Address;
-      rateUsdPerMin: number | string;
-      minutes: number;
+      totalUsd?: number | string;
+      rateUsdPerMin?: number | string;
+      minutes?: number;
     }): Promise<Hex> => {
       if (!TREASURY_ADDRESS) throw new Error("TREASURY_ADDRESS belum diset.");
       setLoading(true);
       try {
         const w = requireWallet();
         const account = await getAccount();
-        const mins = Math.max(1, Math.ceil(Number(minutes)));
-        const totalUsd = Number(rateUsdPerMin) * mins;
-        const amount = parseUnits(String(totalUsd), USDC_DECIMALS);
+
+        // Prefer totalUsd, fallback ke rate * minutes (dibulatkan aman)
+        let usd = totalUsd != null
+          ? safeNumber(totalUsd)
+          : safeNumber(rateUsdPerMin) * Math.max(1, Math.ceil(safeNumber(minutes)));
+
+        usd = Number(usd.toFixed(6));
+        if (!(usd > 0)) throw new Error("Nominal meet tidak valid.");
+
+        const amount = toUSDCAmount(usd);
         const idU256 = toUint256Id(bookingId);
 
         await ensureBalance(account, amount);
@@ -205,7 +231,7 @@ export function useGlonicTreasury() {
 
         const hash = await w.writeContract({
           account: w.account,
-          chain, // <-- chain eksplisit
+          chain,
           address: TREASURY_ADDRESS,
           abi: TREASURY_ABI,
           functionName: "payMeet",
