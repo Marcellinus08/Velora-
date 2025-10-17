@@ -1,3 +1,4 @@
+// src/components/upload/create.tsx
 "use client";
 
 import { useEffect, useRef, useState } from "react";
@@ -11,8 +12,7 @@ import { useAccount } from "wagmi";
 /* ---------- Config ---------- */
 const ACCEPT =
   "video/mp4,video/webm,video/ogg,video/quicktime,video/x-matroska";
-// No max size limit
-const MAX_SIZE_MB = Infinity; // no size limit
+const MAX_SIZE_MB = Infinity;
 const CATEGORIES = [
   "Education",
   "Technology",
@@ -30,10 +30,9 @@ const CATEGORIES = [
   "Film & Animation",
 ] as const;
 
-// Satu bucket: 'studio' (folder: videos/, thumbnails/)
 const STUDIO_BUCKET = "studio";
-/* -------------------------------- */
 
+/* ---------- Utils ---------- */
 const fmtBytes = (n: number) => {
   const units = ["B", "KB", "MB", "GB"];
   let i = 0;
@@ -53,20 +52,18 @@ export type PriceRule = {
   default_cents: number;
 };
 
-// Range slider: $1 – $100 (step $1) — tidak diubah
+// $1 – $100 (step $1)
 const DEFAULT_PRICE_RULE: PriceRule = {
   min_cents: 100,
   max_cents: 10000,
   step_cents: 100,
-  default_cents: 1999,
+  default_cents: 1999, // $19.99
 };
 
-// bisa dipakai kalau suatu saat kamu mau beda per kategori
 function getRuleForCategory(_category: string): PriceRule {
   return DEFAULT_PRICE_RULE;
 }
 
-// saran harga sederhana berdasar durasi (tetap di-clamp ke rule)
 function suggestPriceByDuration(durationSec: number, rule: PriceRule): number {
   const m = Math.max(1, Math.round(durationSec / 60));
   let usd = m <= 10 ? 12 : m <= 30 ? 19 : m <= 60 ? 29 : 39;
@@ -82,7 +79,7 @@ function suggestPriceByDuration(durationSec: number, rule: PriceRule): number {
 export type TaskItem = {
   question: string;
   options: [string, string, string, string];
-  answerIndex: number; // opsional dipakai nanti
+  answerIndex: number;
 };
 
 const emptyTask = (): TaskItem => ({
@@ -90,6 +87,33 @@ const emptyTask = (): TaskItem => ({
   options: ["", "", "", ""],
   answerIndex: 0,
 });
+
+/* ---------- Error helpers ---------- */
+type PgSupabaseError =
+  | {
+      message?: string;
+      details?: string;
+      hint?: string;
+      code?: string; // e.g. '42703' (undefined_column), '23503' (fk), '23505' (unique)
+    }
+  | any;
+
+function pickErrMsg(e: PgSupabaseError) {
+  if (!e) return "Unknown error";
+  return (
+    e?.message ||
+    e?.error_description ||
+    e?.error ||
+    (typeof e === "string" ? e : JSON.stringify(e))
+  );
+}
+
+function isUndefinedColumnErr(e: PgSupabaseError) {
+  // Postgres undefined_column
+  return e?.code === "42703" || /column .* does not exist/i.test(`${e?.message ?? ""}`);
+}
+
+/* =================================================================== */
 
 export default function UploadCreate() {
   // File & preview
@@ -109,7 +133,7 @@ export default function UploadCreate() {
   const [priceRule, setPriceRule] = useState<PriceRule>(DEFAULT_PRICE_RULE);
   const [priceCents, setPriceCents] = useState<number>(DEFAULT_PRICE_RULE.default_cents);
 
-  // Tasks state (mulai langsung dengan Soal 1)
+  // Tasks state
   const [tasks, setTasks] = useState<TaskItem[]>([emptyTask()]);
 
   // Thumbnail
@@ -121,7 +145,7 @@ export default function UploadCreate() {
   const [progress, setProgress] = useState(0);
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // ====== AMBIL abstract_id dari WALLET TERHUBUNG (perbaikan utama) ======
+  // Wallet
   const { address, status } = useAccount();
   const [abstractId, setAbstractId] = useState<string | null>(null);
 
@@ -130,7 +154,7 @@ export default function UploadCreate() {
       const addrLower = address.toLowerCase() as `0x${string}`;
       setAbstractId(addrLower);
 
-      // pastikan row profiles ada (jaga-jaga)
+      // jaga-jaga: pastikan profile row ada
       (async () => {
         try {
           await supabase
@@ -148,7 +172,7 @@ export default function UploadCreate() {
     }
   }, [address, status]);
 
-  // update rule & suggested price ketika kategori/durasi berubah
+  // update rule & suggested price saat kategori/durasi berubah
   useEffect(() => {
     const rule = getRuleForCategory(category);
     setPriceRule(rule);
@@ -164,7 +188,7 @@ export default function UploadCreate() {
     });
   }, [category, durationSec]);
 
-  /* cleanup URLs/timer */
+  // cleanup
   useEffect(() => {
     return () => {
       if (fileURL?.startsWith("blob:")) URL.revokeObjectURL(fileURL);
@@ -173,7 +197,7 @@ export default function UploadCreate() {
     };
   }, [fileURL, thumbURL]);
 
-  /* pick file helpers */
+  /* ---------- File handlers ---------- */
   function setVideoFile(f?: File) {
     setError("");
     if (!f) return;
@@ -181,7 +205,6 @@ export default function UploadCreate() {
       setError("Please select a valid video file.");
       return;
     }
-    // No size validation (MAX_SIZE_MB is Infinity)
     if (f.size > MAX_SIZE_MB * 1024 * 1024) {
       setError(`Maximum file size is ${MAX_SIZE_MB} MB.`);
       return;
@@ -220,7 +243,6 @@ export default function UploadCreate() {
     setDuration(`${mm}:${ss}`);
   }
 
-  /* capture thumbnail dari current frame video */
   function captureThumb() {
     const vid = videoRef.current;
     if (!vid) return;
@@ -231,10 +253,8 @@ export default function UploadCreate() {
     const h = Math.round((vid.videoHeight / vid.videoWidth) * w);
     canvas.width = w;
     canvas.height = h;
-
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-
     ctx.drawImage(vid, 0, 0, w, h);
     canvas.toBlob(
       (blob) => {
@@ -249,7 +269,6 @@ export default function UploadCreate() {
     );
   }
 
-  /* pilih file thumbnail manual (image/*) */
   function onUploadThumb(file?: File) {
     if (!file) return;
     if (!file.type.startsWith("image/")) {
@@ -259,10 +278,10 @@ export default function UploadCreate() {
     const url = URL.createObjectURL(file);
     if (thumbURL?.startsWith("blob:")) URL.revokeObjectURL(thumbURL);
     setThumbURL(url);
-    setThumbBlob(file); // File adalah Blob, bisa langsung diupload
+    setThumbBlob(file);
   }
 
-  /* supabase storage helper */
+  /* ---------- Supabase helpers ---------- */
   async function uploadToSupabase(
     bucket: string,
     path: string,
@@ -277,47 +296,45 @@ export default function UploadCreate() {
         upsert: false,
       });
     if (uploadErr) throw uploadErr;
-
     const { data: pub } = supabase.storage.from(bucket).getPublicUrl(path);
     return { path: uploadRes?.path ?? path, publicUrl: pub.publicUrl };
   }
 
-  // insert metadata (coba dengan price & tasks, kalau kolomnya tidak ada -> fallback)
-  async function insertVideoRow(payloadBase: Record<string, any>) {
-    // 1) coba dengan price & tasks (tasks_json)
-    const withExtras = {
-      ...payloadBase,
-      price_cents: priceCents,
-      currency: "USD",
-      tasks_json: tasks, // jika kolom tidak ada, fallback
-    };
-    let { error: e1 } = await supabase.from("videos").insert(withExtras);
-    if (!e1) return;
+  // Insert with targeted fallback: hanya drop field yang kolomnya TIDAK ADA.
+  async function insertVideoRowSmart(payload: Record<string, any>) {
+    // 1) coba full
+    let { error } = await supabase.from("videos").insert(payload);
+    if (!error) return;
 
-    // 2) fallback: hanya price
-    const withPrice = {
-      ...payloadBase,
-      price_cents: priceCents,
-      currency: "USD",
-    };
-    let { error: e2 } = await supabase.from("videos").insert(withPrice);
-    if (!e2) return;
+    // jika error karena kolom tidak ada, kita hapus field yang bikin error, lalu retry
+    if (isUndefinedColumnErr(error)) {
+      const msg = (error?.message || "").toLowerCase();
+      const strip: string[] = [];
+      if (msg.includes("tasks_json")) strip.push("tasks_json");
+      if (msg.includes("currency")) strip.push("currency");
+      // (tambahkan nama kolom lain kalau memang belum ada di schema)
 
-    // 3) fallback: tanpa extras
-    const { error: e3 } = await supabase.from("videos").insert(payloadBase);
-    if (e3) throw e3;
+      if (strip.length) {
+        const trimmed = { ...payload };
+        for (const k of strip) delete (trimmed as any)[k];
+        const second = await supabase.from("videos").insert(trimmed);
+        if (second.error) throw second.error;
+        return;
+      }
+    }
+
+    // error lain → lempar biar ketahuan (mis. RLS, foreign key, dll.)
+    throw error;
   }
 
+  /* ---------- Submit ---------- */
   async function startUpload() {
     try {
       if (!file || !title.trim() || !category) return;
 
-      // Wajib ada abstract_id dari wallet terhubung (bukan "latest profile")
       const aid = abstractId?.trim();
       if (!aid) {
-        setError(
-          "No connected wallet. Please connect your wallet first so we can attach your abstract_id."
-        );
+        setError("No connected wallet. Please connect your wallet first.");
         return;
       }
 
@@ -329,7 +346,7 @@ export default function UploadCreate() {
         setProgress((p) => (p >= 95 ? p : p + 1));
       }, 150);
 
-      // 1) video → studio/videos/...
+      // 1) upload video
       const fileExt = (file.name.split(".").pop() || "mp4").toLowerCase();
       const base = file.name.replace(/\s+/g, "_");
       const stamp = Date.now();
@@ -341,7 +358,7 @@ export default function UploadCreate() {
         file.type || `video/${fileExt}`
       );
 
-      // 2) thumbnail (opsional) → studio/thumbnails/...
+      // 2) upload thumb (opsional)
       let thumbRes: { path: string; publicUrl: string } | null = null;
       if (thumbBlob) {
         const mime = (thumbBlob as any).type || "image/jpeg";
@@ -351,20 +368,40 @@ export default function UploadCreate() {
         thumbRes = await uploadToSupabase(STUDIO_BUCKET, thumbPath, thumbBlob, mime);
       }
 
-      // 3) metadata → public.videos (sertakan abstract_id dari wallet)
+      // 3) normalisasi harga (range $1–$100, step $1)
+      const ruleNow = getRuleForCategory(category);
+      const normalizedCents = Math.min(
+        Math.max(
+          Math.round(priceCents / ruleNow.step_cents) * ruleNow.step_cents,
+          ruleNow.min_cents
+        ),
+        ruleNow.max_cents
+      );
+
+      console.groupCollapsed("[UPLOAD] Payload debug");
+      console.log("priceCents(raw):", priceCents);
+      console.log("normalizedCents:", normalizedCents);
+      console.log("rule:", ruleNow);
+      console.groupEnd();
+
+      // 4) insert metadata
       const payload = {
-        abstract_id: aid, // FK ke profiles.abstract_id
+        abstract_id: aid,
         title,
         description,
-        category, // enum video_category
+        category,
         duration_seconds: durationSec,
         video_path: videoRes.path,
         video_url: videoRes.publicUrl,
         thumb_path: thumbRes?.path ?? null,
         thumb_url: thumbRes?.publicUrl ?? null,
+
+        price_cents: normalizedCents,
+        currency: "USD",
+        tasks_json: tasks, // kalau kolom tidak ada → akan di-trim otomatis
       };
 
-      await insertVideoRow(payload);
+      await insertVideoRowSmart(payload);
 
       if (timer.current) {
         clearInterval(timer.current);
@@ -377,7 +414,6 @@ export default function UploadCreate() {
         icon: "success",
         title: "Upload complete!",
         text: "Your video was uploaded successfully.",
-        confirmButtonText: "OK",
         position: "top-end",
         toast: true,
         timer: 3000,
@@ -387,23 +423,23 @@ export default function UploadCreate() {
 
       resetAll();
     } catch (e: any) {
-      console.error(e);
+      // error reporting yang JELAS
+      const msg = pickErrMsg(e);
+      console.error("Upload failed:", e);
       if (timer.current) {
         clearInterval(timer.current);
         timer.current = null;
       }
       setUploading(false);
       setProgress(0);
-      const msg = e?.message || "Upload failed. Please try again.";
       setError(msg);
       Swal.fire({
         icon: "error",
         title: "Upload failed",
         text: msg,
-        confirmButtonText: "OK",
         position: "top-end",
         toast: true,
-        timer: 3000,
+        timer: 4000,
         timerProgressBar: true,
         showConfirmButton: false,
       });
@@ -421,7 +457,7 @@ export default function UploadCreate() {
     setCategory("");
     setPriceRule(DEFAULT_PRICE_RULE);
     setPriceCents(DEFAULT_PRICE_RULE.default_cents);
-    setTasks([emptyTask()]); // kembali ke Soal 1
+    setTasks([emptyTask()]);
     if (thumbURL?.startsWith("blob:")) URL.revokeObjectURL(thumbURL);
     setThumbURL(null);
     setThumbBlob(null);
@@ -448,7 +484,7 @@ export default function UploadCreate() {
         Select a video file, fill the details, then start upload.
       </p>
 
-      {/* TOP: FILE + THUMBNAIL side-by-side */}
+      {/* TOP: FILE + THUMBNAIL */}
       <section className="mt-6">
         <UploadFilePanel
           ref={videoRef}
@@ -468,7 +504,7 @@ export default function UploadCreate() {
         />
       </section>
 
-      {/* BOTTOM: inputs stacked below */}
+      {/* BOTTOM: details + actions */}
       <div className="mt-6 space-y-6">
         <UploadDetailsPanel
           title={title}
