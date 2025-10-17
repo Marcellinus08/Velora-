@@ -9,44 +9,61 @@ import {
   isHex,
   keccak256,
   toBytes,
+  maxUint256,
 } from "viem";
 import { useAbstractClient } from "@abstract-foundation/agw-react";
 
-import { chain } from "@/config/chain";
+import { chain } from "@/config/chain";            // <-- pastikan chain dari config
 import { publicClient } from "@/config/viem-clients";
 import {
   ERC20_ABI,
   TREASURY_ABI,
   TREASURY_ADDRESS,
   USDC_E_ADDRESS,
+  USDC_DECIMALS,
 } from "@/config/abstract-contracts";
 
-const USDC_DECIMALS = 6 as const;
+/** MODE approve: infinite | exact | cap (optional via env) */
+const APPROVE_MODE =
+  (process.env.NEXT_PUBLIC_APPROVE_MODE || "infinite").toLowerCase() as
+    | "infinite"
+    | "exact"
+    | "cap";
+const APPROVE_CAP_USD = Number(
+  process.env.NEXT_PUBLIC_APPROVE_CAP_USD || 100
+);
 
-/** Terima number | bigint | "123" | "0x.." | UUID → kembalikan bigint uint256 */
+function approveAmountFor(need: bigint): bigint {
+  if (APPROVE_MODE === "infinite") return maxUint256;
+  if (APPROVE_MODE === "cap")
+    return parseUnits(String(APPROVE_CAP_USD), USDC_DECIMALS);
+  return need; // exact
+}
+
+/** number | bigint | "123" | "0x.." | UUID → uint256 */
 function toUint256Id(id: number | string | bigint): bigint {
   if (typeof id === "bigint") return id;
   if (typeof id === "number") return BigInt(id);
-
   const s = String(id).trim();
-  // angka desimal murni
   if (/^\d+$/.test(s)) return BigInt(s);
-  // hex (0x...) → bisa langsung ke BigInt
-  if (isHex(s as any)) return BigInt(s as `0x${string}`);
-  // UUID / string lain → hash ke 32 byte, lalu parse sebagai BigInt
-  const h = keccak256(toBytes(s)); // 0x....
-  return BigInt(h);
+  if ((s as any)?.startsWith?.("0x")) return BigInt(s as `0x${string}`);
+  return BigInt(keccak256(toBytes(s)));
 }
 
 export function useGlonicTreasury() {
   const [loading, setLoading] = useState(false);
-  const { data: agw } = useAbstractClient(); // sumber wallet AGW
+  const { data: agw } = useAbstractClient(); // signer AGW
+
+  const requireWallet = useCallback(() => {
+    if (!agw) throw new Error("Silakan Sign In dengan Abstract Wallet dulu.");
+    if (!agw.account?.address) throw new Error("Wallet AGW belum siap.");
+    return agw;
+  }, [agw]);
 
   const getAccount = useCallback(async (): Promise<Address> => {
-    const addr = agw?.account?.address as Address | undefined;
-    if (!addr) throw new Error("Tidak ada account aktif (AGW belum login).");
-    return addr;
-  }, [agw]);
+    const a = requireWallet().account!.address as Address;
+    return a;
+  }, [requireWallet]);
 
   const ensureBalance = useCallback(
     async (owner: Address, need: bigint) => {
@@ -61,6 +78,7 @@ export function useGlonicTreasury() {
     []
   );
 
+  /** sekali approve (mode tergantung env) */
   const ensureAllowance = useCallback(
     async (owner: Address, spender: Address, need: bigint) => {
       const current = (await publicClient.readContract({
@@ -71,18 +89,18 @@ export function useGlonicTreasury() {
       })) as bigint;
 
       if (current < need) {
-        if (!agw) throw new Error("Wallet belum siap. Silakan Sign In AGW.");
-        await agw.writeContract({
+        const w = requireWallet();
+        await w.writeContract({
+          account: w.account,
+          chain, // <-- PENTING: gunakan chain dari config
           address: USDC_E_ADDRESS,
           abi: ERC20_ABI,
           functionName: "approve",
-          args: [spender, need],
-          account: agw.account,
-          chain,
+          args: [spender, approveAmountFor(need)],
         });
       }
     },
-    [agw]
+    [requireWallet]
   );
 
   /** 60/40 video */
@@ -92,15 +110,14 @@ export function useGlonicTreasury() {
       creator,
       priceUsd,
     }: {
-      videoId: number | string | bigint; // ← boleh UUID
+      videoId: number | string | bigint;
       creator: Address;
       priceUsd: number | string;
     }): Promise<Hex> => {
       if (!TREASURY_ADDRESS) throw new Error("TREASURY_ADDRESS belum diset.");
-      if (!agw) throw new Error("Silakan Sign In dengan Abstract Wallet dulu.");
-
       setLoading(true);
       try {
+        const w = requireWallet();
         const account = await getAccount();
         const amount = parseUnits(String(priceUsd), USDC_DECIMALS);
         const idU256 = toUint256Id(videoId);
@@ -108,20 +125,20 @@ export function useGlonicTreasury() {
         await ensureBalance(account, amount);
         await ensureAllowance(account, TREASURY_ADDRESS, amount);
 
-        const hash = await agw.writeContract({
+        const hash = await w.writeContract({
+          account: w.account,
+          chain, // <-- chain eksplisit
           address: TREASURY_ADDRESS,
           abi: TREASURY_ABI,
           functionName: "purchaseVideo",
           args: [idU256, creator, amount],
-          account: agw.account,
-          chain,
         });
         return hash;
       } finally {
         setLoading(false);
       }
     },
-    [agw, getAccount, ensureAllowance, ensureBalance]
+    [requireWallet, getAccount, ensureAllowance, ensureBalance]
   );
 
   /** 100% platform (ads) */
@@ -130,14 +147,13 @@ export function useGlonicTreasury() {
       campaignId,
       amountUsd,
     }: {
-      campaignId: number | string | bigint; // ← boleh UUID
+      campaignId: number | string | bigint;
       amountUsd: number | string;
     }): Promise<Hex> => {
       if (!TREASURY_ADDRESS) throw new Error("TREASURY_ADDRESS belum diset.");
-      if (!agw) throw new Error("Silakan Sign In dengan Abstract Wallet dulu.");
-
       setLoading(true);
       try {
+        const w = requireWallet();
         const account = await getAccount();
         const amount = parseUnits(String(amountUsd), USDC_DECIMALS);
         const idU256 = toUint256Id(campaignId);
@@ -145,20 +161,20 @@ export function useGlonicTreasury() {
         await ensureBalance(account, amount);
         await ensureAllowance(account, TREASURY_ADDRESS, amount);
 
-        const hash = await agw.writeContract({
+        const hash = await w.writeContract({
+          account: w.account,
+          chain, // <-- chain eksplisit
           address: TREASURY_ADDRESS,
           abi: TREASURY_ABI,
           functionName: "payAds",
           args: [idU256, amount],
-          account: agw.account,
-          chain,
         });
         return hash;
       } finally {
         setLoading(false);
       }
     },
-    [agw, getAccount, ensureAllowance, ensureBalance]
+    [requireWallet, getAccount, ensureAllowance, ensureBalance]
   );
 
   /** 80/20 meet */
@@ -169,16 +185,15 @@ export function useGlonicTreasury() {
       rateUsdPerMin,
       minutes,
     }: {
-      bookingId: number | string | bigint; // ← boleh UUID
+      bookingId: number | string | bigint;
       creator: Address;
       rateUsdPerMin: number | string;
       minutes: number;
     }): Promise<Hex> => {
       if (!TREASURY_ADDRESS) throw new Error("TREASURY_ADDRESS belum diset.");
-      if (!agw) throw new Error("Silakan Sign In dengan Abstract Wallet dulu.");
-
       setLoading(true);
       try {
+        const w = requireWallet();
         const account = await getAccount();
         const mins = Math.max(1, Math.ceil(Number(minutes)));
         const totalUsd = Number(rateUsdPerMin) * mins;
@@ -188,20 +203,20 @@ export function useGlonicTreasury() {
         await ensureBalance(account, amount);
         await ensureAllowance(account, TREASURY_ADDRESS, amount);
 
-        const hash = await agw.writeContract({
+        const hash = await w.writeContract({
+          account: w.account,
+          chain, // <-- chain eksplisit
           address: TREASURY_ADDRESS,
           abi: TREASURY_ABI,
           functionName: "payMeet",
           args: [idU256, creator, amount],
-          account: agw.account,
-          chain,
         });
         return hash;
       } finally {
         setLoading(false);
       }
     },
-    [agw, getAccount, ensureAllowance, ensureBalance]
+    [requireWallet, getAccount, ensureAllowance, ensureBalance]
   );
 
   return useMemo(

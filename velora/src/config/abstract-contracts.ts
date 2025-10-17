@@ -3,26 +3,26 @@ import type { ContractsConfig } from "@/types/contracts";
 import type { Address, Abi } from "viem";
 
 /* =====================================================================
- * ERC20 minimal ABI (lengkap untuk read + approve/transferFrom flow)
+ * ERC20 ABI (minimal lengkap utk read + approve sekali)
  * =================================================================== */
 export const ERC20_ABI = [
   { type: "function", name: "name", stateMutability: "view", inputs: [], outputs: [{ type: "string" }] },
   { type: "function", name: "symbol", stateMutability: "view", inputs: [], outputs: [{ type: "string" }] },
   { type: "function", name: "decimals", stateMutability: "view", inputs: [], outputs: [{ type: "uint8" }] },
   { type: "function", name: "totalSupply", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
-  { type: "function", name: "balanceOf", stateMutability: "view", inputs: [{ name: "account", type: "address" }], outputs: [{ type: "uint256" }] },
-  { type: "function", name: "allowance", stateMutability: "view", inputs: [{ name: "owner", type: "address" }, { name: "spender", type: "address" }], outputs: [{ type: "uint256" }] },
-  { type: "function", name: "approve", stateMutability: "nonpayable", inputs: [{ name: "spender", type: "address" }, { name: "amount", type: "uint256" }], outputs: [{ type: "bool" }] },
-  { type: "function", name: "transfer", stateMutability: "nonpayable", inputs: [{ name: "to", type: "address" }, { name: "amount", type: "uint256" }], outputs: [{ type: "bool" }] },
+  { type: "function", name: "balanceOf", stateMutability: "view", inputs: [{ type: "address" }], outputs: [{ type: "uint256" }] },
+
+  // penting untuk flow approve sekali
+  { type: "function", name: "allowance", stateMutability: "view", inputs: [{ type: "address" }, { type: "address" }], outputs: [{ type: "uint256" }] },
+  { type: "function", name: "approve", stateMutability: "nonpayable", inputs: [{ type: "address" }, { type: "uint256" }], outputs: [{ type: "bool" }] },
+
+  { type: "function", name: "transfer", stateMutability: "nonpayable", inputs: [{ type: "address" }, { type: "uint256" }], outputs: [{ type: "bool" }] },
 ] as const satisfies Abi;
 
 /* =====================================================================
- * ABI - GlonicTreasuryV2 (sesuai kode yang kamu kirim)
- * purchaseVideo(videoId, creator, price)
- * payMeet(bookingId, creator, price)
- * payAds(campaignId, amount)
+ * ABI - GlonicTreasuryV2 (sesuai kontrak kamu)
  * =================================================================== */
-export const TREASURY_ABI: Abi = [
+export const TREASURY_ABI = [
   {
     type: "function",
     name: "purchaseVideo",
@@ -55,18 +55,24 @@ export const TREASURY_ABI: Abi = [
     ],
     outputs: [],
   },
-];
+] as const satisfies Abi;
+
+export type GlonicTreasuryAbi = typeof TREASURY_ABI;
 
 /* =====================================================================
  * Helper ENV & Network
  * =================================================================== */
-const NET = (process.env.NEXT_PUBLIC_ABSTRACT_NETWORK || "mainnet").toLowerCase();
-const IS_MAINNET = NET !== "testnet";
+type Network = "mainnet" | "testnet";
+const NET: Network =
+  (process.env.NEXT_PUBLIC_ABSTRACT_NETWORK?.toLowerCase() as Network) ?? "mainnet";
+const IS_MAINNET = NET === "mainnet";
 
-/** Baca alamat dari ENV (mendukung nama lama & baru), lalu fallback default */
+export const USDC_DECIMALS = 6 as const;
+
+/** Ambil alamat dari ENV (dukungan nama lama & baru), fallback kalau perlu */
 function pickEnvAddress(
-  primaryVar: string | undefined,
-  legacyVar?: string | undefined,
+  primaryVar?: string,
+  legacyVar?: string,
   fallbackMainnet?: string,
   fallbackTestnet?: string
 ): Address | undefined {
@@ -78,26 +84,27 @@ function pickEnvAddress(
 }
 
 /* =====================================================================
- * Alamat yang dipakai langsung oleh hook transaksi
+ * Alamat untuk transaksi
  * - USDC_E_ADDRESS: USDC.e bridged di Abstract (6 desimal)
- * - TREASURY_ADDRESS: alamat kontrak GlonicTreasuryV2
- * - PLATFORM_ADDRESS: opsional, hanya untuk tampilan UI
+ * - TREASURY_ADDRESS: alamat kontrak GlonicTreasuryV2 (opsional, cek di hook)
+ * - PLATFORM_ADDRESS: opsional utk tampilan UI
  * =================================================================== */
 export const USDC_E_ADDRESS: Address = pickEnvAddress(
-  process.env.NEXT_PUBLIC_USDC_E_ADDRESS,            // nama baru (direkomendasikan)
-  process.env.NEXT_PUBLIC_USDC_ADDR,                 // back-compat (nama lama)
-  // fallback default:
-  "0x84A71ccD554Cc1b02749b35d22F684CC8ec987e1",      // mainnet
-  "0xe4C7fBB0a626ed208021ccabA6Be1566905E2dFc"       // testnet
+  process.env.NEXT_PUBLIC_USDC_E_ADDRESS,      // nama baru (disarankan)
+  process.env.NEXT_PUBLIC_USDC_ADDR,           // nama lama (kompatibel)
+  // fallback bawaan:
+  "0x84A71ccD554Cc1b02749b35d22F684CC8ec987e1", // mainnet
+  "0xe4C7fBB0a626ed208021ccabA6Be1566905E2dFc"  // testnet
 )!;
 
-export const TREASURY_ADDRESS: Address = pickEnvAddress(
-  process.env.NEXT_PUBLIC_TREASURY_ADDRESS,          // nama baru (direkomendasikan)
-  process.env.NEXT_PUBLIC_PLATFORM_TREASURY_ADDR     // back-compat (nama lama)
-)!;
+// Biarkan opsional supaya bisa ditangani elegan di hook (throw message bagus)
+export const TREASURY_ADDRESS: Address | undefined = pickEnvAddress(
+  process.env.NEXT_PUBLIC_TREASURY_ADDRESS,    // nama baru (disarankan)
+  process.env.NEXT_PUBLIC_PLATFORM_TREASURY_ADDR
+);
 
 export const PLATFORM_ADDRESS: Address | undefined = pickEnvAddress(
-  process.env.NEXT_PUBLIC_PLATFORM_ADDR               // opsional (UI)
+  process.env.NEXT_PUBLIC_PLATFORM_ADDR
 );
 
 /* =====================================================================
@@ -115,27 +122,27 @@ export const ABSTRACT_CONTRACTS: ContractsConfig = {
       // abi: WETH9_ABI,
     },
 
-    /** Catatan: alamat ini adalah USDC bridged (USDC.e) pada Abstract mainnet */
+    // Catatan: di Abstract, alamat ini adalah USDC.e (bridged)
     usdc: {
       name: "USD Coin",
-      description: "USDC - Circle's stablecoin on Abstract",
+      description: "USDC (bridged) on Abstract",
       addresses: {
         mainnet: "0x84A71ccD554Cc1b02749b35d22F684CC8ec987e1",
         testnet: "0xe4C7fBB0a626ed208021ccabA6Be1566905E2dFc",
       } as const,
-      // abi: ERC20_ABI
+      // abi: ERC20_ABI,
     },
 
     usdt: {
       name: "Tether USD",
-      description: "USDT - Tether's stablecoin on Abstract",
+      description: "USDT on Abstract",
       addresses: {
         mainnet: "0x0709F39376dEEe2A2dfC94A58EdEb2Eb9DF012bD",
       } as const,
-      // abi: ERC20_ABI
+      // abi: ERC20_ABI,
     },
 
-    /** Alias eksplisit untuk USDC.e bila kamu ingin memakainya khusus */
+    // Alias eksplisit untuk USDC.e bila ingin dipakai khusus
     usdce: {
       name: "USD Coin (Bridged)",
       description: "USDC.e on Abstract",
@@ -201,20 +208,10 @@ export const ABSTRACT_CONTRACTS: ContractsConfig = {
 };
 
 /* =====================================================================
- * Export util alamat biar gampang diimport di tempat lain
+ * Export util alamat biar gampang diimport tempat lain
  * =================================================================== */
 export const ADDRESSES = {
   USDC_E_ADDRESS,
   TREASURY_ADDRESS,
   PLATFORM_ADDRESS,
 } as const;
-
-// Re-export ABI lain (kalau kamu punya) — optional
-export {
-  // WETH9_ABI,
-  // UNISWAP_V2_FACTORY_ABI,
-  // UNISWAP_V2_ROUTER_ABI,
-  // UNISWAP_V3_FACTORY_ABI,
-  // QUOTER_V2_ABI,
-  // SWAP_ROUTER_02_ABI,
-};
