@@ -1,11 +1,20 @@
 "use client";
 
-import Image from "next/image";
 import { useState } from "react";
 import type { VideoInfo, RecommendedVideo } from "./types";
 import RecommendationPanel from "./recommendationpanel";
+import { AbstractProfile } from "@/components/abstract-profile";
 
-function VideoInfoSection({
+function FallbackInitial({ name }: { name: string }) {
+  const initial = (name || "U").trim().charAt(0).toUpperCase();
+  return (
+    <div className="grid h-12 w-12 place-items-center rounded-full bg-neutral-800 text-lg font-bold text-neutral-200 ring-2 ring-neutral-700/60">
+      {initial}
+    </div>
+  );
+}
+
+export default function VideoInfoSection({
   video,
   recommendations,
 }: {
@@ -14,12 +23,16 @@ function VideoInfoSection({
 }) {
   const [expanded, setExpanded] = useState(false);
   const [isFollowing, setIsFollowing] = useState(false);
-  const topics = ["Cooking Techniques", "Sauces", "Beginner"];
+
+  const walletLower =
+    typeof video.creator.wallet === "string"
+      ? (video.creator.wallet.toLowerCase() as string)
+      : "";
 
   return (
     <section className="col-span-12">
       <div className="grid grid-cols-12 gap-6">
-        {/* LEFT: semua info video + kreator digabung di sini */}
+        {/* LEFT */}
         <div className="col-span-12 lg:col-span-8">
           <h1 className="text-2xl md:text-3xl font-bold leading-snug text-neutral-50">
             {video.title}
@@ -28,7 +41,7 @@ function VideoInfoSection({
           {/* views + actions */}
           <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-3 text-sm text-neutral-400">
-              <span>{video.views} views</span>
+              <span>{video.views}</span>
               <span className="h-1 w-1 rounded-full bg-neutral-600" />
               <span>Streaming</span>
             </div>
@@ -41,12 +54,6 @@ function VideoInfoSection({
                   </svg>
                 </button>
                 <span className="text-sm font-medium text-neutral-50">12K</span>
-                <div className="h-4 w-px bg-neutral-700" />
-                <button className="text-neutral-50 hover:text-[var(--primary-500)]" aria-label="Dislike">
-                  <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                    <path d="M18 9.5a1.5 1.5 0 11-3 0v-6a1.5 1.5 0 013 0v6zM14 9.667v-5.43a2 2 0 00-1.106-1.79l-.05-.025A4 4 0 0011.057 2H5.642a2 2 0 00-1.962 1.608l-1.2 6A2 2 0 004.44 12H8v4a2 2 0 002 2 1 1 0 001-1v-.667a4 4 0 01.8-2.4l1.2-2.667a4 4 0 00.8-2.4z" />
-                  </svg>
-                </button>
               </div>
 
               <button className="flex items-center gap-2 rounded-full bg-neutral-800 px-3 py-1 text-neutral-50 hover:bg-neutral-700">
@@ -58,21 +65,36 @@ function VideoInfoSection({
             </div>
           </div>
 
-          {/* CREATOR: dipindah ke kiri & digabung */}
+          {/* CREATOR */}
           <div className="mt-4 flex items-center justify-between rounded-2xl border border-neutral-800 bg-neutral-900/60 p-3 sm:p-4">
             <div className="flex items-center gap-3">
-              <div className="relative h-12 w-12 overflow-hidden rounded-full ring-2 ring-neutral-700/60">
-                <Image
-                  src={video.creator.avatar}
-                  alt={`${video.creator.name} avatar`}
-                  fill
-                  sizes="48px"
-                  className="object-cover"
-                />
+              <div className="relative h-12 w-12 overflow-hidden rounded-full ring-2 ring-neutral-700/60 bg-neutral-800">
+                {video.creator.avatar ? (
+                  <img
+                    src={video.creator.avatar}
+                    alt={`${video.creator.name} avatar`}
+                    className="h-full w-full object-cover"
+                    crossOrigin="anonymous"
+                    referrerPolicy="no-referrer"
+                    onError={(e) => {
+                      (e.currentTarget as HTMLImageElement).style.display = "none";
+                    }}
+                  />
+                ) : walletLower ? (
+                  <AbstractProfile
+                    address={walletLower as `0x${string}`}
+                    size="md"
+                    showTooltip={false}
+                    className="!h-12 !w-12"
+                  />
+                ) : (
+                  <FallbackInitial name={video.creator.name} />
+                )}
               </div>
+
               <div className="min-w-0">
                 <p className="truncate font-semibold text-neutral-50">{video.creator.name}</p>
-                <p className="text-sm text-neutral-400">{video.creator.followers} Followers</p>
+                <p className="text-sm text-neutral-400">{video.creator.followers}</p>
               </div>
             </div>
 
@@ -102,12 +124,7 @@ function VideoInfoSection({
               style={
                 expanded
                   ? undefined
-                  : {
-                      display: "-webkit-box",
-                      WebkitLineClamp: 3,
-                      WebkitBoxOrient: "vertical",
-                      overflow: "hidden",
-                    }
+                  : { display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }
               }
             >
               {video.description}
@@ -120,20 +137,23 @@ function VideoInfoSection({
               {expanded ? "Show less" : "Show more"}
             </button>
 
-            <div className="mt-3 flex flex-wrap gap-2">
-              {topics.map((t) => (
-                <span
-                  key={t}
-                  className="rounded-full border border-neutral-700 bg-neutral-800/60 px-3 py-1 text-xs text-neutral-300"
-                >
-                  {t}
-                </span>
-              ))}
-            </div>
+            {/* Tags dari DB (category) */}
+            {!!video.tags?.length && (
+              <div className="mt-3 flex flex-wrap gap-2">
+                {video.tags.map((t) => (
+                  <span
+                    key={t}
+                    className="rounded-full border border-neutral-700 bg-neutral-800/60 px-3 py-1 text-xs text-neutral-300"
+                  >
+                    {t}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
-        {/* RIGHT: hanya rekomendasi */}
+        {/* RIGHT: rekomendasi */}
         <aside className="col-span-12 lg:col-span-4">
           <div className="rounded-2xl border border-neutral-800 bg-neutral-900/60 p-4">
             <RecommendationPanel items={recommendations} />
@@ -143,5 +163,3 @@ function VideoInfoSection({
     </section>
   );
 }
-
-export default VideoInfoSection;
