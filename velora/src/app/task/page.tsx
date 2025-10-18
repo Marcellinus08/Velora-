@@ -9,9 +9,9 @@ import HeroPlayer from "@/components/task/heroplayer";
 import TaskPanel, { TaskItem } from "@/components/task/taskpanel";
 import VideoInfoSection from "@/components/task/videoinfo";
 import Comments from "@/components/task/comments";
-import type { Comment, RecommendedVideo, VideoInfo } from "@/components/task/types";
+import type { RecommendedVideo, VideoInfo } from "@/components/task/types";
 
-/* Helpers */
+/* ============== Helpers ============== */
 const safe = (s?: string | null, fb = "") => (typeof s === "string" && s.trim() ? s : fb);
 const safeThumb = (s?: string | null) => safe(s, "/placeholder-thumb.png");
 const shortenAddr = (addr?: string | null) => {
@@ -25,7 +25,23 @@ const titleize = (s: string) =>
     .map((w) => (w ? w[0].toUpperCase() + w.slice(1).toLowerCase() : ""))
     .join(" ");
 
-/* Row type */
+/** Ambil alamat wallet user dari LocalStorage (Abstract/Wagmi session) */
+function getAbstractAddr(): `0x${string}` | null {
+  try {
+    const raw =
+      localStorage.getItem("wagmi.store") ||
+      localStorage.getItem("abstract:session") ||
+      localStorage.getItem("abstract_id") ||
+      localStorage.getItem("wallet");
+    if (!raw) return null;
+    const m = raw.match(/0x[a-fA-F0-9]{40}/);
+    return m ? (m[0].toLowerCase() as `0x${string}`) : null;
+  } catch {
+    return null;
+  }
+}
+
+/* ============== Row type ============== */
 type VideoRow = {
   id: string;
   title: string | null;
@@ -37,7 +53,7 @@ type VideoRow = {
   abstract_id: string | null;
   points_total?: number | null;
   tasks_json?: any;
-  likes_count?: number | null; // ← ambil dari DB
+  likes_count?: number | null;
   creator?: { username: string | null; avatar_url: string | null } | null;
 };
 
@@ -52,6 +68,12 @@ export default function TaskPage() {
   const [reco, setReco] = useState<RecommendedVideo[]>([]);
   const [tasks, setTasks] = useState<TaskItem[]>([]);
   const [totalPoints, setTotalPoints] = useState<number>(0);
+
+  // wallet user (untuk komentar, like, follow dsb.)
+  const [me, setMe] = useState<`0x${string}` | null>(null);
+  useEffect(() => {
+    setMe(getAbstractAddr());
+  }, []);
 
   useEffect(() => {
     let alive = true;
@@ -131,13 +153,13 @@ export default function TaskPage() {
         setTasks(pulled);
         setTotalPoints(points);
 
-        // ====== rekomendasi
+        // ====== rekomendasi (ambil beberapa, nanti panel menampilkan 3 random)
         const { data: others } = await supabase
           .from("videos")
           .select(`id, title, thumb_url, creator:profiles!videos_abstract_id_fkey(username)`)
           .neq("id", one.id)
           .order("created_at", { ascending: false })
-          .limit(8);
+          .limit(12);
 
         if (alive) {
           const mapped: RecommendedVideo[] = (others || []).map((v) => ({
@@ -176,32 +198,12 @@ export default function TaskPage() {
       creator: {
         name: displayName,
         followers: walletShort,
-        avatar: safe(row.creator?.avatar_url, ""), // kosong => fallback ke AbstractProfile
+        avatar: safe(row.creator?.avatar_url, ""), // kosong => fallback ke AbstractProfile di komponen
         wallet,
       },
       tags,
     };
   }, [row]);
-
-  // komentar dummy
-  const comments: Comment[] = [
-    {
-      id: 1,
-      name: "Siti Aisyah",
-      time: "2 hari lalu",
-      avatar:
-        "https://lh3.googleusercontent.com/a/ACg8ocK_1Y-3-HjG-2y9y-iY_p-A-g_F-tZ-kC-d-P-Y=s96-c",
-      text: "Video yang sangat bermanfaat! Saya belajar banyak teknik baru yang bisa saya terapkan di dapur.",
-    },
-    {
-      id: 2,
-      name: "Budi Santoso",
-      time: "1 minggu lalu",
-      avatar:
-        "https://lh3.googleusercontent.com/a/ACg8ocL8R-V_3y_c-f_W-j-X_q_Z-j_E-z_T-v_R-z_X=s96-c",
-      text: "Penjelasan jelas dan mudah diikuti. Terima kasih telah berbagi ilmu!",
-    },
-  ];
 
   const videoSrc = useMemo(() => (row ? safe(row.video_url, row.video_path || "") : ""), [row]);
   const initialLikes = row?.likes_count ?? 0;
@@ -228,6 +230,7 @@ export default function TaskPage() {
       {!loading && row && (
         <>
           <div className="grid grid-cols-12 items-stretch gap-8">
+            {/* Player kiri */}
             <section className="col-span-12 lg:col-span-8">
               {videoSrc ? (
                 <HeroPlayer src={videoSrc} poster={safeThumb(row.thumb_url)} controls autoPlay={false} muted={false} />
@@ -238,10 +241,12 @@ export default function TaskPage() {
               )}
             </section>
 
+            {/* Panel task kanan */}
             <aside className="col-span-12 lg:col-span-4">
               <TaskPanel className="h-full" tasks={tasks} totalPoints={totalPoints} />
             </aside>
 
+            {/* Info + rekomendasi */}
             {videoInfo && (
               <VideoInfoSection
                 video={videoInfo}
@@ -252,7 +257,8 @@ export default function TaskPage() {
             )}
           </div>
 
-          <Comments items={comments} />
+          {/* Comments tersambung DB */}
+          <Comments videoId={row.id} currentUserAddr={me} />
         </>
       )}
     </main>

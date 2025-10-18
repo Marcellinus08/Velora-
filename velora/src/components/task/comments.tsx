@@ -1,9 +1,8 @@
+// src/components/task/comments.tsx
 "use client";
 
-import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import type { Comment } from "./types";
 
 /* ===== helpers ===== */
 const shortAddr = (a?: string | null) =>
@@ -16,6 +15,57 @@ const relTime = (d: string | Date) => {
   if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
   if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
   return `${Math.floor(diff / 86400)}d ago`;
+};
+
+/* ===== session cache utk avatar Abstract (TTL 30m) ===== */
+const TTL_MS = 30 * 60 * 1000;
+const okKey = (addr: string) => `absavatar:${addr}`;
+const missKey = (addr: string) => `absavatar-miss:${addr}`;
+function readCacheUrl(key: string): string | null {
+  try {
+    const raw = sessionStorage.getItem(key);
+    if (!raw) return null;
+    const { t, v } = JSON.parse(raw);
+    if (Date.now() - t > TTL_MS) return null;
+    return typeof v === "string" ? v : null;
+  } catch {
+    return null;
+  }
+}
+function writeCacheUrl(key: string, value: string) {
+  try {
+    sessionStorage.setItem(key, JSON.stringify({ t: Date.now(), v: value }));
+  } catch {}
+}
+function readCacheMiss(key: string): boolean {
+  try {
+    const raw = sessionStorage.getItem(key);
+    if (!raw) return false;
+    const { t } = JSON.parse(raw);
+    return Date.now() - t <= TTL_MS;
+  } catch {
+    return false;
+  }
+}
+function writeCacheMiss(key: string) {
+  try {
+    sessionStorage.setItem(key, JSON.stringify({ t: Date.now(), v: "MISS" }));
+  } catch {}
+}
+
+type DbComment = {
+  id: string;
+  created_at: string;
+  user_addr: string | null;
+  content: string | null;
+};
+
+type ListItem = {
+  id: string;
+  addr: string;     // lowercase
+  name: string;     // short display
+  time: string;     // "just now" etc
+  text: string;     // content
 };
 
 function SortDropdown({
@@ -69,13 +119,13 @@ function SortDropdown({
 function CommentItem({
   name,
   time,
-  avatar,
+  avatarUrl,
   text,
   seed = 8,
 }: {
   name: string;
   time: string;
-  avatar: string;
+  avatarUrl: string;
   text: string;
   seed?: number;
 }) {
@@ -105,8 +155,19 @@ function CommentItem({
 
   return (
     <div className="group grid grid-cols-[40px_1fr] gap-3 rounded-xl border border-neutral-800 bg-neutral-900/60 p-3 transition-colors hover:bg-neutral-900">
-      <div className="relative h-10 w-10 overflow-hidden rounded-full">
-        <Image src={avatar} alt={`${name} avatar`} fill sizes="40px" className="object-cover" />
+      <div className="h-10 w-10 overflow-hidden rounded-full bg-neutral-800 ring-1 ring-neutral-700">
+        {/* pakai <img> supaya bebas domain */}
+        <img
+          src={avatarUrl}
+          alt={`${name} avatar`}
+          className="h-full w-full object-cover"
+          crossOrigin="anonymous"
+          referrerPolicy="no-referrer"
+          onError={(e) => {
+            (e.currentTarget as HTMLImageElement).src =
+              "https://api.dicebear.com/7.x/identicon/svg?seed=fallback";
+          }}
+        />
       </div>
 
       <div>
@@ -120,12 +181,7 @@ function CommentItem({
           style={
             expanded
               ? undefined
-              : {
-                  display: "-webkit-box",
-                  WebkitLineClamp: 3,
-                  WebkitBoxOrient: "vertical",
-                  overflow: "hidden",
-                }
+              : { display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }
           }
         >
           {text}
@@ -160,10 +216,7 @@ function CommentItem({
           <button className="ml-1 rounded-full px-2 py-1 text-neutral-300 hover:bg-neutral-800">Reply</button>
 
           {!expanded && (
-            <button
-              onClick={() => setExpanded(true)}
-              className="ml-2 rounded-full px-2 py-1 text-neutral-300 hover:bg-neutral-800"
-            >
+            <button onClick={() => setExpanded(true)} className="ml-2 rounded-full px-2 py-1 text-neutral-300 hover:bg-neutral-800">
               Read more
             </button>
           )}
@@ -176,9 +229,11 @@ function CommentItem({
 function CommentComposer({
   onSend,
   disabled,
+  myAvatarUrl,
 }: {
   onSend: (text: string) => Promise<void>;
   disabled?: boolean;
+  myAvatarUrl: string;
 }) {
   const [val, setVal] = useState("");
 
@@ -191,13 +246,17 @@ function CommentComposer({
 
   return (
     <div className="flex items-start gap-3">
-      <div className="relative h-10 w-10 overflow-hidden rounded-full">
-        <Image
-          src="https://api.dicebear.com/7.x/identicon/svg?seed=guest"
+      <div className="h-10 w-10 overflow-hidden rounded-full bg-neutral-800 ring-1 ring-neutral-700">
+        <img
+          src={myAvatarUrl}
           alt="Your avatar"
-          fill
-          sizes="40px"
-          className="object-cover"
+          className="h-full w-full object-cover"
+          crossOrigin="anonymous"
+          referrerPolicy="no-referrer"
+          onError={(e) => {
+            (e.currentTarget as HTMLImageElement).src =
+              "https://api.dicebear.com/7.x/identicon/svg?seed=guest";
+          }}
         />
       </div>
 
@@ -231,6 +290,7 @@ function CommentComposer({
   );
 }
 
+/* ======================== MAIN ======================== */
 export default function Comments({
   videoId,
   currentUserAddr,
@@ -239,16 +299,21 @@ export default function Comments({
   currentUserAddr?: string | null;
 }) {
   const [sort, setSort] = useState<"top" | "newest">("newest");
-  const [items, setItems] = useState<Comment[]>([]);
+  const [items, setItems] = useState<ListItem[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Load from DB
+  // peta alamat -> avatarURL
+  const [avatarMap, setAvatarMap] = useState<Record<string, string>>({});
+
+  // Load comments dari DB + siapkan avatar
   useEffect(() => {
     let alive = true;
 
     (async () => {
       try {
         setLoading(true);
+
+        // 1) ambil komentar
         const { data } = await supabase
           .from("video_comments")
           .select("id, created_at, user_addr, content")
@@ -256,19 +321,85 @@ export default function Comments({
           .eq("is_deleted", false)
           .order("created_at", { ascending: false });
 
-        if (!alive || !data) return;
+        if (!alive) return;
 
-        const mapped: Comment[] = data.map((r) => ({
-          id: r.id,
-          name: shortAddr(r.user_addr) || "Anonymous",
-          time: relTime(r.created_at),
-          avatar: `https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent(
-            r.user_addr || "anon"
-          )}`,
-          text: r.content || "",
-        }));
+        const mapped: ListItem[] = (data || []).map((r: DbComment) => {
+          const addr = (r.user_addr || "0x").toLowerCase();
+          return {
+            id: r.id,
+            addr,
+            name: shortAddr(addr) || "Anonymous",
+            time: relTime(r.created_at),
+            text: r.content || "",
+          };
+        });
 
         setItems(mapped);
+
+        // 2) siapkan daftar alamat yang perlu avatar
+        const addrs = Array.from(
+          new Set(
+            [
+              ...mapped.map((m) => m.addr),
+              (currentUserAddr || "").toLowerCase(),
+            ].filter(Boolean)
+          )
+        );
+
+        if (addrs.length === 0) {
+          setAvatarMap({});
+          return;
+        }
+
+        // 3) ambil avatar_url dari tabel profiles terlebih dahulu
+        const { data: profs } = await supabase
+          .from("profiles")
+          .select("abstract_id, avatar_url")
+          .in("abstract_id", addrs);
+
+        const initialMap: Record<string, string> = {};
+        (profs || []).forEach((p: any) => {
+          const addr = (p?.abstract_id || "").toLowerCase();
+          const url = p?.avatar_url || "";
+          if (addr && url) initialMap[addr] = url;
+        });
+
+        // 4) untuk alamat yg belum punya avatar_url di DB, coba fetch Abstract (dengan cache)
+        const needAbstract = addrs.filter((a) => !initialMap[a]);
+
+        if (needAbstract.length) {
+          const results = await Promise.all(
+            needAbstract.map(async (addr) => {
+              const cached = readCacheUrl(okKey(addr));
+              if (cached) return [addr, cached] as const;
+
+              if (readCacheMiss(missKey(addr))) return [addr, ""] as const;
+
+              try {
+                const r = await fetch(`/api/abstract/user/${addr}`, { cache: "force-cache" });
+                if (r.ok) {
+                  const j = await r.json();
+                  const url: string | null = j?.profilePicture || j?.avatar || j?.imageUrl || null;
+                  if (url) {
+                    writeCacheUrl(okKey(addr), url);
+                    return [addr, url] as const;
+                  }
+                }
+              } catch {
+                /* ignore */
+              }
+              writeCacheMiss(missKey(addr));
+              return [addr, ""] as const;
+            })
+          );
+
+          results.forEach(([addr, url]) => {
+            if (url) initialMap[addr] = url;
+          });
+        }
+
+        // 5) set peta avatar (fallback ke identicon jika kosong saat render)
+        if (alive) setAvatarMap(initialMap);
       } finally {
         if (alive) setLoading(false);
       }
@@ -277,8 +408,9 @@ export default function Comments({
     return () => {
       alive = false;
     };
-  }, [videoId]);
+  }, [videoId, currentUserAddr]);
 
+  // insert komentar
   const onSend = async (text: string) => {
     const addr = (currentUserAddr || "anonymous").toLowerCase();
     const { data, error } = await supabase
@@ -288,24 +420,54 @@ export default function Comments({
       .single();
 
     if (!error && data) {
-      const newItem: Comment = {
-        id: data.id,
-        name: shortAddr(data.user_addr) || "Anonymous",
-        time: relTime(data.created_at),
-        avatar: `https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent(
-          data.user_addr || "anon"
-        )}`,
-        text: data.content || "",
-      };
-      setItems((prev) => [newItem, ...prev]);
+      const addrLower = (data.user_addr || "0x").toLowerCase();
+      setItems((prev) => [
+        {
+          id: data.id,
+          addr: addrLower,
+          name: shortAddr(addrLower) || "Anonymous",
+          time: relTime(data.created_at),
+          text: data.content || "",
+        },
+        ...prev,
+      ]);
+
+      // kalau avatar belum ada di map, coba isi cepat dari cache/abstract
+      if (!avatarMap[addrLower]) {
+        const cached = readCacheUrl(okKey(addrLower));
+        if (cached) {
+          setAvatarMap((m) => ({ ...m, [addrLower]: cached }));
+        } else {
+          try {
+            const r = await fetch(`/api/abstract/user/${addrLower}`, { cache: "force-cache" });
+            if (r.ok) {
+              const j = await r.json();
+              const url: string | null = j?.profilePicture || j?.avatar || j?.imageUrl || null;
+              if (url) {
+                writeCacheUrl(okKey(addrLower), url);
+                setAvatarMap((m) => ({ ...m, [addrLower]: url }));
+              }
+            }
+          } catch {
+            /* ignore */
+          }
+        }
+      }
     }
   };
 
+  // avatar getter (DB > Abstract > identicon)
+  const getAvatarUrl = (addr: string) =>
+    avatarMap[addr] ||
+    `https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent(addr || "anon")}`;
+
   const sorted = useMemo(() => {
     if (sort === "newest") return items;
-    // "top" di sini masih dummy (urut stabil), nanti bisa diganti by like_count
+    // "top" belum pakai metrik; tetap return items apa adanya.
     return items;
   }, [items, sort]);
+
+  const myAvatar = getAvatarUrl((currentUserAddr || "guest").toLowerCase());
 
   return (
     <div className="w-full border-t border-neutral-800 bg-neutral-900 px-4 py-6 sm:px-6 lg:px-8">
@@ -316,7 +478,7 @@ export default function Comments({
         <SortDropdown value={sort} onChange={setSort} />
       </div>
 
-      <CommentComposer onSend={onSend} disabled={loading} />
+      <CommentComposer onSend={onSend} disabled={loading} myAvatarUrl={myAvatar} />
 
       <div className="mt-5 space-y-4">
         {sorted.map((c, idx) => (
@@ -324,9 +486,9 @@ export default function Comments({
             key={c.id}
             name={c.name}
             time={c.time}
-            avatar={c.avatar}
+            avatarUrl={getAvatarUrl(c.addr)}
             text={c.text}
-            seed={idx + (typeof c.id === "number" ? (c.id as number) : 0)}
+            seed={idx}
           />
         ))}
       </div>
