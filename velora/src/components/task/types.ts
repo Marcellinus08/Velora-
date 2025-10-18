@@ -1,33 +1,31 @@
-export type Creator = {
-  name: string;
-  followers: string;
-  /** URL avatar dari DB (jika ada) */
-  avatar?: string | null;
-  /** Alamat wallet pemilik video – buat fallback avatar Abstract */
-  wallet?: string | null;
-};
+// src/components/task/types.ts
 
 export type VideoInfo = {
   title: string;
   views: string;
   heroImage: string;
   description: string;
-  creator: Creator;
-  /** Tag/chips yang ditampilkan di bawah deskripsi (dari DB) */
+  creator: {
+    name: string;
+    followers: string; // di UI dipakai untuk menampilkan wallet pendek
+    avatar: string;    // boleh kosong, nanti fallback ke AbstractProfile
+    wallet?: string;   // alamat wallet penuh (0x...)
+  };
+  /** optional: kategori/tag dari DB */
   tags?: string[];
 };
 
-export type Comment = {
+export type RecommendedVideo = {
   id: string | number;
+  title: string;
+  creator: string;
+  thumbnail: string;
+};
+
+export type Comment = {
+  id: number | string;
   name: string;
   time: string;
   avatar: string;
   text: string;
-};
-
-export type RecommendedVideo = {
-  id: number;
-  title: string;
-  creator: string;
-  thumbnail: string;
 };

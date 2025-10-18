@@ -1,8 +1,22 @@
 "use client";
 
 import Image from "next/image";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { supabase } from "@/lib/supabase";
 import type { Comment } from "./types";
+
+/* ===== helpers ===== */
+const shortAddr = (a?: string | null) =>
+  !a ? "" : a.length <= 12 ? a : `${a.slice(0, 6)}...${a.slice(-4)}`;
+
+const relTime = (d: string | Date) => {
+  const t = typeof d === "string" ? new Date(d) : d;
+  const diff = (Date.now() - t.getTime()) / 1000;
+  if (diff < 60) return "just now";
+  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+  return `${Math.floor(diff / 86400)}d ago`;
+};
 
 function SortDropdown({
   value,
@@ -159,14 +173,27 @@ function CommentItem({
   );
 }
 
-function CommentComposer() {
+function CommentComposer({
+  onSend,
+  disabled,
+}: {
+  onSend: (text: string) => Promise<void>;
+  disabled?: boolean;
+}) {
   const [val, setVal] = useState("");
+
+  const submit = async () => {
+    const v = val.trim();
+    if (!v) return;
+    await onSend(v);
+    setVal("");
+  };
 
   return (
     <div className="flex items-start gap-3">
       <div className="relative h-10 w-10 overflow-hidden rounded-full">
         <Image
-          src="https://lh3.googleusercontent.com/aida-public/AB6AXuC3txMvWebVOWUCSc_JSlUiMuPymMamNlXpP6eVstETd_jpkEBvYMGpJlTLoyuPwEwsMNuVYLjzgBpWmzSf6GYUfFWATxj-4TF40AhJkCdlDSb39pF3NUuSO2eLUVCQs7Le4yeaVhGRKD7Qej0a1_iX065ldiv32JMh2TvPLfeEluliBoM5Mhmqpjee8Q6p86zTwHwQRPn-qtU0pO3lN1OOfA7nhRXvoyjsnoDZoNavsdfvB9Zuu4lWLeWohE9LasU1LScS-OKcER7f"
+          src="https://api.dicebear.com/7.x/identicon/svg?seed=guest"
           alt="Your avatar"
           fill
           sizes="40px"
@@ -184,20 +211,16 @@ function CommentComposer() {
         />
         <div className="flex items-center justify-between px-3 pb-2 pt-1">
           <div className="flex items-center gap-2 text-neutral-400">
-            <button className="rounded p-1 hover:bg-neutral-700/60" title="Emoji">
+            <button className="rounded p-1 hover:bg-neutral-700/60" title="Emoji" type="button">
               <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                 <path d="M10 18a8 8 0 100-16 8 8 0 000 16zm3-7a1 1 0 10-2 0 1 1 0 002 0zM9 11a1 1 0 11-2 0 1 1 0 012 0zm1 4a5 5 0 004.546-2.916.75.75 0 10-1.343-.668A3.5 3.5 0 0110 13.5a3.5 3.5 0 01-3.203-2.084.75.75 0 10-1.343.668A5 5 0 0010 15z" />
-              </svg>
-            </button>
-            <button className="rounded p-1 hover:bg-neutral-700/60" title="Attach">
-              <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                <path d="M8 7a3 3 0 016 0v5a4 4 0 11-8 0V6a2 2 0 114 0v6a1 1 0 11-2 0V7H6v5a3 3 0 006 0V6a4 4 0 10-8 0v6a5 5 0 0010 0V7h-2v5a3 3 0 11-6 0V7z" />
               </svg>
             </button>
           </div>
 
           <button
-            disabled={!val.trim()}
+            onClick={submit}
+            disabled={disabled || !val.trim()}
             className="rounded-full bg-[var(--primary-500)] px-4 py-1.5 text-sm font-semibold text-white transition hover:bg-opacity-90 disabled:cursor-not-allowed disabled:bg-neutral-700"
           >
             Send
@@ -208,13 +231,80 @@ function CommentComposer() {
   );
 }
 
-function Comments({ items }: { items: Comment[] }) {
-  const [sort, setSort] = useState<"top" | "newest">("top");
+export default function Comments({
+  videoId,
+  currentUserAddr,
+}: {
+  videoId: string;
+  currentUserAddr?: string | null;
+}) {
+  const [sort, setSort] = useState<"top" | "newest">("newest");
+  const [items, setItems] = useState<Comment[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Load from DB
+  useEffect(() => {
+    let alive = true;
+
+    (async () => {
+      try {
+        setLoading(true);
+        const { data } = await supabase
+          .from("video_comments")
+          .select("id, created_at, user_addr, content")
+          .eq("video_id", videoId)
+          .eq("is_deleted", false)
+          .order("created_at", { ascending: false });
+
+        if (!alive || !data) return;
+
+        const mapped: Comment[] = data.map((r) => ({
+          id: r.id,
+          name: shortAddr(r.user_addr) || "Anonymous",
+          time: relTime(r.created_at),
+          avatar: `https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent(
+            r.user_addr || "anon"
+          )}`,
+          text: r.content || "",
+        }));
+
+        setItems(mapped);
+      } finally {
+        if (alive) setLoading(false);
+      }
+    })();
+
+    return () => {
+      alive = false;
+    };
+  }, [videoId]);
+
+  const onSend = async (text: string) => {
+    const addr = (currentUserAddr || "anonymous").toLowerCase();
+    const { data, error } = await supabase
+      .from("video_comments")
+      .insert({ video_id: videoId, user_addr: addr, content: text })
+      .select("id, created_at, user_addr, content")
+      .single();
+
+    if (!error && data) {
+      const newItem: Comment = {
+        id: data.id,
+        name: shortAddr(data.user_addr) || "Anonymous",
+        time: relTime(data.created_at),
+        avatar: `https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent(
+          data.user_addr || "anon"
+        )}`,
+        text: data.content || "",
+      };
+      setItems((prev) => [newItem, ...prev]);
+    }
+  };
 
   const sorted = useMemo(() => {
-    if (sort === "top") return items;
-    const numeric = items.every((i) => typeof i.id === "number");
-    return numeric ? [...items].sort((a, b) => (b.id as number) - (a.id as number)) : items;
+    if (sort === "newest") return items;
+    // "top" di sini masih dummy (urut stabil), nanti bisa diganti by like_count
+    return items;
   }, [items, sort]);
 
   return (
@@ -226,7 +316,7 @@ function Comments({ items }: { items: Comment[] }) {
         <SortDropdown value={sort} onChange={setSort} />
       </div>
 
-      <CommentComposer />
+      <CommentComposer onSend={onSend} disabled={loading} />
 
       <div className="mt-5 space-y-4">
         {sorted.map((c, idx) => (
@@ -243,5 +333,3 @@ function Comments({ items }: { items: Comment[] }) {
     </div>
   );
 }
-
-export default Comments;

@@ -1,10 +1,15 @@
+// src/components/task/videoinfo.tsx
 "use client";
 
-import { useState } from "react";
-import type { VideoInfo, RecommendedVideo } from "./types";
-import RecommendationPanel from "./recommendationpanel";
+import { useEffect, useMemo, useState } from "react";
+import Image from "next/image";
+import { supabase } from "@/lib/supabase";
 import { AbstractProfile } from "@/components/abstract-profile";
+import LikeButton from "./likebutton";
+import RecommendationPanel from "./recommendationpanel";
+import type { VideoInfo, RecommendedVideo } from "./types";
 
+/* ================= Helpers ================= */
 function FallbackInitial({ name }: { name: string }) {
   const initial = (name || "U").trim().charAt(0).toUpperCase();
   return (
@@ -14,20 +19,129 @@ function FallbackInitial({ name }: { name: string }) {
   );
 }
 
+/** Ambil alamat wallet dari localStorage (wagmi / Abstract). */
+function getAbstractAddressFromSession(): `0x${string}` | null {
+  try {
+    // 1) wagmi.persist (umum di wagmi v1+)
+    const rawWagmi = localStorage.getItem("wagmi.store");
+    if (rawWagmi) {
+      // Cari pattern alamat 0x... (agar robust terhadap struktur berbeda)
+      const m = rawWagmi.match(/0x[a-fA-F0-9]{40}/);
+      if (m && m[0]) return m[0].toLowerCase() as `0x${string}`;
+    }
+
+    // 2) abstract session (kalau ada)
+    const rawAbs = localStorage.getItem("abstract:session");
+    if (rawAbs) {
+      const m = rawAbs.match(/0x[a-fA-F0-9]{40}/);
+      if (m && m[0]) return m[0].toLowerCase() as `0x${string}`;
+    }
+
+    // 3) fallback lain yang mungkin kamu simpan sendiri
+    const rawDirect = localStorage.getItem("abstract_id") || localStorage.getItem("wallet");
+    if (rawDirect) {
+      const m = rawDirect.match(/0x[a-fA-F0-9]{40}/);
+      if (m && m[0]) return m[0].toLowerCase() as `0x${string}`;
+    }
+  } catch {
+    /* ignore */
+  }
+  return null;
+}
+
+function cn(...xs: Array<string | false | undefined>) {
+  return xs.filter(Boolean).join(" ");
+}
+
+/* ================ Component ================ */
 export default function VideoInfoSection({
   video,
   recommendations,
+  videoId,
+  initialLikes = 0,
 }: {
   video: VideoInfo;
   recommendations: RecommendedVideo[];
+  videoId: string;
+  initialLikes?: number;
 }) {
   const [expanded, setExpanded] = useState(false);
-  const [isFollowing, setIsFollowing] = useState(false);
 
+  // follow state
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [followBusy, setFollowBusy] = useState(false);
+
+  // creator wallet lower
   const walletLower =
     typeof video.creator.wallet === "string"
-      ? (video.creator.wallet.toLowerCase() as string)
-      : "";
+      ? (video.creator.wallet.toLowerCase() as `0x${string}`)
+      : ("" as `0x${string}`);
+
+  // apakah user sedang melihat profil sendiri?
+  const myAddr = useMemo(() => getAbstractAddressFromSession(), []);
+  const isSelf = !!myAddr && !!walletLower && myAddr === walletLower;
+
+  // Cek status mengikuti saat mount/pada perubahan wallet creator
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      if (!walletLower) return;
+      const me = getAbstractAddressFromSession();
+      if (!me) return;
+
+      const { count, error } = await supabase
+        .from("profiles_follows")
+        .select("id", { count: "exact", head: true })
+        .eq("follower_addr", me)
+        .eq("followee_addr", walletLower);
+
+      if (!active) return;
+      if (!error) setIsFollowing((count || 0) > 0);
+    })();
+
+    return () => {
+      active = false;
+    };
+  }, [walletLower]);
+
+  // Toggle follow/unfollow
+  const onToggleFollow = async () => {
+    const me = getAbstractAddressFromSession();
+    if (!me) {
+      alert("Please connect your wallet to follow this creator.");
+      return;
+    }
+    if (!walletLower) return;
+    if (me === walletLower) {
+      alert("You cannot follow your own profile.");
+      return;
+    }
+
+    setFollowBusy(true);
+    try {
+      if (isFollowing) {
+        const { error } = await supabase
+          .from("profiles_follows")
+          .delete()
+          .eq("follower_addr", me)
+          .eq("followee_addr", walletLower);
+        if (error) throw error;
+        setIsFollowing(false);
+      } else {
+        const { error } = await supabase.from("profiles_follows").insert({
+          follower_addr: me,
+          followee_addr: walletLower,
+        });
+        if (error) throw error;
+        setIsFollowing(true);
+      }
+    } catch (e: any) {
+      console.error("Follow toggle failed:", e);
+      alert(e?.message || "Failed to update follow status.");
+    } finally {
+      setFollowBusy(false);
+    }
+  };
 
   return (
     <section className="col-span-12">
@@ -38,7 +152,7 @@ export default function VideoInfoSection({
             {video.title}
           </h1>
 
-          {/* views + actions */}
+          {/* actions */}
           <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-3 text-sm text-neutral-400">
               <span>{video.views}</span>
@@ -47,16 +161,24 @@ export default function VideoInfoSection({
             </div>
 
             <div className="flex items-center gap-2">
-              <div className="flex items-center gap-1 rounded-full bg-neutral-800 px-2 py-1">
-                <button className="text-neutral-50 hover:text-[var(--primary-500)]" aria-label="Like">
-                  <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                    <path d="M2 10.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6zM6 10.333v5.43a2 2 0 001.106 1.79l.05.025A4 4 0 008.943 18h5.416a2 2 0 001.962-1.608l1.2-6A2 2 0 0015.56 8H12V4a2 2 0 00-2-2 1 1 0 00-1 1v.667a4 4 0 01-.8 2.4L6.8 7.933a4 4 0 00-.8 2.4z" />
-                  </svg>
-                </button>
-                <span className="text-sm font-medium text-neutral-50">12K</span>
-              </div>
-
-              <button className="flex items-center gap-2 rounded-full bg-neutral-800 px-3 py-1 text-neutral-50 hover:bg-neutral-700">
+              <LikeButton videoId={videoId} initialCount={initialLikes} />
+              <button
+                className="flex items-center gap-2 rounded-full bg-neutral-800 px-3 py-1 text-neutral-50 hover:bg-neutral-700"
+                onClick={() => {
+                  try {
+                    navigator.share?.({
+                      title: video.title,
+                      url: typeof window !== "undefined" ? window.location.href : undefined,
+                    });
+                  } catch {
+                    // fallback: copy link
+                    if (typeof window !== "undefined") {
+                      navigator.clipboard.writeText(window.location.href);
+                      alert("Link copied to clipboard.");
+                    }
+                  }
+                }}
+              >
                 <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                   <path d="M12.232 4.232a2.5 2.5 0 013.536 3.536l-1.225 1.224a.75.75 0 001.061 1.06l1.224-1.224a4 4 0 00-5.656-5.656l-3 3a4 4 0 00-.225 5.865.75.75 0 00.977-1.138 2.5 2.5 0 01.142 3.665l-3 3z" />
                 </svg>
@@ -70,19 +192,21 @@ export default function VideoInfoSection({
             <div className="flex items-center gap-3">
               <div className="relative h-12 w-12 overflow-hidden rounded-full ring-2 ring-neutral-700/60 bg-neutral-800">
                 {video.creator.avatar ? (
-                  <img
+                  <Image
                     src={video.creator.avatar}
                     alt={`${video.creator.name} avatar`}
-                    className="h-full w-full object-cover"
+                    fill
+                    sizes="48px"
+                    className="object-cover"
                     crossOrigin="anonymous"
                     referrerPolicy="no-referrer"
                     onError={(e) => {
-                      (e.currentTarget as HTMLImageElement).style.display = "none";
+                      (e.currentTarget as any).style.display = "none";
                     }}
                   />
                 ) : walletLower ? (
                   <AbstractProfile
-                    address={walletLower as `0x${string}`}
+                    address={walletLower}
                     size="md"
                     showTooltip={false}
                     className="!h-12 !w-12"
@@ -99,14 +223,17 @@ export default function VideoInfoSection({
             </div>
 
             <button
-              onClick={() => setIsFollowing((v) => !v)}
-              className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
+              onClick={onToggleFollow}
+              disabled={followBusy || isSelf || !walletLower}
+              className={cn(
+                "rounded-full px-4 py-2 text-sm font-semibold transition disabled:opacity-60 disabled:cursor-not-allowed",
                 isFollowing
                   ? "bg-neutral-700 text-neutral-100 hover:bg-neutral-600"
                   : "bg-[var(--primary-500)] text-white hover:bg-violet-600"
-              }`}
+              )}
+              title={isSelf ? "You cannot follow yourself" : undefined}
             >
-              {isFollowing ? "Following" : "Follow"}
+              {isFollowing ? (followBusy ? "…" : "Following") : followBusy ? "…" : "Follow"}
             </button>
           </div>
 
@@ -137,7 +264,6 @@ export default function VideoInfoSection({
               {expanded ? "Show less" : "Show more"}
             </button>
 
-            {/* Tags dari DB (category) */}
             {!!video.tags?.length && (
               <div className="mt-3 flex flex-wrap gap-2">
                 {video.tags.map((t) => (

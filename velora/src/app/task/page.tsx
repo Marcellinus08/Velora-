@@ -25,6 +25,7 @@ const titleize = (s: string) =>
     .map((w) => (w ? w[0].toUpperCase() + w.slice(1).toLowerCase() : ""))
     .join(" ");
 
+/* Row type */
 type VideoRow = {
   id: string;
   title: string | null;
@@ -36,6 +37,7 @@ type VideoRow = {
   abstract_id: string | null;
   points_total?: number | null;
   tasks_json?: any;
+  likes_count?: number | null; // ← ambil dari DB
   creator?: { username: string | null; avatar_url: string | null } | null;
 };
 
@@ -59,7 +61,6 @@ export default function TaskPage() {
       setErr("");
 
       try {
-        // ✅ JANGAN pakai komentar di dalam select()
         const selectCols = `
           id,
           title,
@@ -71,6 +72,7 @@ export default function TaskPage() {
           abstract_id,
           points_total,
           tasks_json,
+          likes_count,
           creator:profiles!videos_abstract_id_fkey(username,avatar_url)
         `;
 
@@ -85,7 +87,7 @@ export default function TaskPage() {
         if (!alive) return;
         setRow(one as unknown as VideoRow);
 
-        // tasks
+        // ====== tasks
         let pulled: TaskItem[] = [];
         let points = Number(one.points_total || 0) || 0;
 
@@ -105,13 +107,15 @@ export default function TaskPage() {
                 const p = JSON.parse(raw);
                 opts = Array.isArray(p) ? p : [];
               } catch {
-                opts = raw
-                  .split("|")
-                  .map((s) => s.trim())
-                  .filter(Boolean);
+                opts = raw.split("|").map((s) => s.trim()).filter(Boolean);
               }
             }
-            return { id: String(r.id), question: String(r.question ?? ""), options: opts, points: r.points ?? undefined };
+            return {
+              id: String(r.id),
+              question: String(r.question ?? ""),
+              options: opts,
+              points: typeof r.points === "number" ? r.points : undefined,
+            };
           });
           if (!points) points = pulled.reduce((a, b) => a + (b.points || 0), 0);
         } else if (Array.isArray(one.tasks_json)) {
@@ -127,7 +131,7 @@ export default function TaskPage() {
         setTasks(pulled);
         setTotalPoints(points);
 
-        // rekomendasi
+        // ====== rekomendasi
         const { data: others } = await supabase
           .from("videos")
           .select(`id, title, thumb_url, creator:profiles!videos_abstract_id_fkey(username)`)
@@ -172,7 +176,7 @@ export default function TaskPage() {
       creator: {
         name: displayName,
         followers: walletShort,
-        avatar: safe(row.creator?.avatar_url, ""), // kosong → fallback Abstract di komponen
+        avatar: safe(row.creator?.avatar_url, ""), // kosong => fallback ke AbstractProfile
         wallet,
       },
       tags,
@@ -200,6 +204,7 @@ export default function TaskPage() {
   ];
 
   const videoSrc = useMemo(() => (row ? safe(row.video_url, row.video_path || "") : ""), [row]);
+  const initialLikes = row?.likes_count ?? 0;
 
   return (
     <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8">
@@ -237,7 +242,14 @@ export default function TaskPage() {
               <TaskPanel className="h-full" tasks={tasks} totalPoints={totalPoints} />
             </aside>
 
-            {videoInfo && <VideoInfoSection video={videoInfo} recommendations={reco} />}
+            {videoInfo && (
+              <VideoInfoSection
+                video={videoInfo}
+                recommendations={reco}
+                videoId={row.id}
+                initialLikes={initialLikes}
+              />
+            )}
           </div>
 
           <Comments items={comments} />
