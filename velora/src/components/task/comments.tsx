@@ -1,10 +1,9 @@
-// src/components/task/comments.tsx
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabase";
 
-/* ===== helpers ===== */
+/* ============ Helpers ============ */
 const shortAddr = (a?: string | null) =>
   !a ? "" : a.length <= 12 ? a : `${a.slice(0, 6)}...${a.slice(-4)}`;
 
@@ -17,10 +16,11 @@ const relTime = (d: string | Date) => {
   return `${Math.floor(diff / 86400)}d ago`;
 };
 
-/* ===== session cache utk avatar Abstract (TTL 30m) ===== */
+/* ============ Session cache utk avatar Abstract (TTL 30m) ============ */
 const TTL_MS = 30 * 60 * 1000;
 const okKey = (addr: string) => `absavatar:${addr}`;
 const missKey = (addr: string) => `absavatar-miss:${addr}`;
+
 function readCacheUrl(key: string): string | null {
   try {
     const raw = sessionStorage.getItem(key);
@@ -53,21 +53,27 @@ function writeCacheMiss(key: string) {
   } catch {}
 }
 
+/* ============ DB row types & UI types ============ */
 type DbComment = {
   id: string;
   created_at: string;
   user_addr: string | null;
   content: string | null;
+  parent_id: string | null;
 };
 
-type ListItem = {
+type UiComment = {
   id: string;
-  addr: string;     // lowercase
-  name: string;     // short display
-  time: string;     // "just now" etc
-  text: string;     // content
+  addr: string;
+  name: string;
+  time: string;
+  text: string;
+  likeCount: number;
+  likedByMe: boolean;
+  replies: UiComment[];
 };
 
+/* ============ Sorting dropdown ============ */
 function SortDropdown({
   value,
   onChange,
@@ -76,7 +82,6 @@ function SortDropdown({
   onChange: (v: "top" | "newest") => void;
 }) {
   const [open, setOpen] = useState(false);
-
   return (
     <div className="relative">
       <button
@@ -116,117 +121,198 @@ function SortDropdown({
   );
 }
 
-function CommentItem({
-  name,
-  time,
-  avatarUrl,
-  text,
-  seed = 8,
+/* ============ Like pill (warna kontras + animasi) ============ */
+function LikePill({
+  count,
+  liked,
+  disabled,
+  onClick,
 }: {
-  name: string;
-  time: string;
-  avatarUrl: string;
-  text: string;
-  seed?: number;
+  count: number;
+  liked: boolean;
+  disabled?: boolean;
+  onClick: () => void;
 }) {
-  const [expanded, setExpanded] = useState(false);
-  const [liked, setLiked] = useState(false);
-  const [disliked, setDisliked] = useState(false);
-  const [count, setCount] = useState(5 + (seed % 37));
+  const [burst, setBurst] = useState(false);
 
-  const toggleLike = () => {
-    if (liked) {
-      setLiked(false);
-      setCount((c) => Math.max(0, c - 1));
-    } else {
-      setLiked(true);
-      setCount((c) => c + 1);
-      if (disliked) setDisliked(false);
-    }
-  };
-
-  const toggleDislike = () => {
-    setDisliked((d) => !d);
-    if (!disliked && liked) {
-      setLiked(false);
-      setCount((c) => Math.max(0, c - 1));
-    }
+  const handle = () => {
+    if (disabled) return;
+    onClick();
+    setBurst(true);
+    setTimeout(() => setBurst(false), 350);
   };
 
   return (
-    <div className="group grid grid-cols-[40px_1fr] gap-3 rounded-xl border border-neutral-800 bg-neutral-900/60 p-3 transition-colors hover:bg-neutral-900">
-      <div className="h-10 w-10 overflow-hidden rounded-full bg-neutral-800 ring-1 ring-neutral-700">
-        {/* pakai <img> supaya bebas domain */}
-        <img
-          src={avatarUrl}
-          alt={`${name} avatar`}
-          className="h-full w-full object-cover"
-          crossOrigin="anonymous"
-          referrerPolicy="no-referrer"
-          onError={(e) => {
-            (e.currentTarget as HTMLImageElement).src =
-              "https://api.dicebear.com/7.x/identicon/svg?seed=fallback";
-          }}
-        />
+    <button
+      onClick={handle}
+      className={`relative inline-flex items-center gap-1 rounded-full px-2 py-1 transition
+      ${liked
+        ? "bg-violet-600/20 text-violet-200 ring-1 ring-violet-500/50"
+        : "bg-neutral-800/60 text-neutral-300 ring-1 ring-neutral-700/60 hover:bg-neutral-800"}
+      ${disabled ? "opacity-60 cursor-not-allowed" : "hover:scale-[1.03] active:scale-95"}
+      `}
+      title={liked ? "Unlike" : "Like"}
+    >
+      {/* burst ring */}
+      {burst && liked && (
+        <span className="pointer-events-none absolute inset-0 -z-10 rounded-full animate-ping bg-violet-500/20" />
+      )}
+      <svg
+        className={`h-4 w-4 transition ${liked ? "text-violet-300" : "text-neutral-300"}`}
+        viewBox="0 0 20 20"
+        fill="currentColor"
+      >
+        <path d="M2 10.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6zM6 10.333v5.43a2 2 0 001.106 1.79l.05.025A4 4 0 008.943 18h5.416a2 2 0 001.962-1.608l1.2-6A2 2 0 0015.56 8H12V4a2 2 0 00-2-2 1 1 0 00-1 1v.667a4 4 0 01-.8 2.4L6.8 7.933a4 4 0 00-.8 2.4z" />
+      </svg>
+      <span className={`text-[13px] ${liked ? "font-semibold" : ""}`}>{count}</span>
+    </button>
+  );
+}
+
+/* ============ Reply composer ============ */
+function ReplyComposer({
+  onSend,
+  myAvatarUrl,
+}: {
+  onSend: (text: string) => Promise<void>;
+  myAvatarUrl: string;
+}) {
+  const [val, setVal] = useState("");
+  const submit = async () => {
+    const v = val.trim();
+    if (!v) return;
+    await onSend(v);
+    setVal("");
+  };
+  return (
+    <div className="mt-2 ml-10 flex items-start gap-3">
+      <div className="h-8 w-8 overflow-hidden rounded-full bg-neutral-800 ring-1 ring-neutral-700">
+        <img src={myAvatarUrl} alt="" className="h-full w-full object-cover" />
       </div>
-
-      <div>
-        <div className="flex items-center gap-2">
-          <p className="font-semibold text-neutral-50">{name}</p>
-          <span className="text-sm text-neutral-400">• {time}</span>
-        </div>
-
-        <p
-          className="mt-1 text-neutral-50"
-          style={
-            expanded
-              ? undefined
-              : { display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }
-          }
-        >
-          {text}
-        </p>
-
-        <div className="mt-2 flex items-center gap-2 text-sm">
+      <div className="flex-1 rounded-xl border border-neutral-700 bg-neutral-800/60">
+        <textarea
+          rows={1}
+          value={val}
+          onChange={(e) => setVal(e.target.value)}
+          placeholder="Write a reply…"
+          className="block w-full resize-none rounded-xl bg-transparent px-3 pt-2 text-neutral-50 placeholder:text-neutral-400 focus:outline-none"
+        />
+        <div className="flex items-center justify-end px-3 pb-2">
           <button
-            onClick={toggleLike}
-            className={`inline-flex items-center gap-1 rounded-full px-2 py-1 ${
-              liked ? "bg-[var(--primary-500)]/20 text-[var(--primary-300)]" : "text-neutral-300 hover:bg-neutral-800"
-            }`}
+            onClick={submit}
+            disabled={!val.trim()}
+            className="rounded-full bg-[var(--primary-500)] px-3 py-1 text-xs font-semibold text-white disabled:cursor-not-allowed disabled:bg-neutral-700"
           >
-            <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-              <path d="M2 10.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6zM6 10.333v5.43a2 2 0 001.106 1.79l.05.025A4 4 0 008.943 18h5.416a2 2 0 001.962-1.608l1.2-6A2 2 0 0015.56 8H12V4a2 2 0 00-2-2 1 1 0 00-1 1v.667a4 4 0 01-.8 2.4L6.8 7.933a4 4 0 00-.8 2.4z" />
-            </svg>
-            <span>{count}</span>
+            Reply
           </button>
-
-          <button
-            onClick={toggleDislike}
-            aria-label="Dislike"
-            title="Dislike"
-            className={`inline-flex items-center gap-1 rounded-full px-2 py-1 ${
-              disliked ? "bg-neutral-700 text-neutral-200" : "text-neutral-300 hover:bg-neutral-800"
-            }`}
-          >
-            <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-              <path d="M18 9.5a1.5 1.5 0 11-3 0v-6a1.5 1.5 0 013 0v6zM14 9.667v-5.43a2 2 0 00-1.106-1.79l-.05-.025A4 4 0 0011.057 2H5.642a2 2 0 00-1.962 1.608l-1.2 6A2 2 0 004.44 12H8v4a2 2 0 002 2 1 1 0 001-1v-.667a4 4 0 01.8-2.4l1.2-2.667a4 4 0 00.8-2.4z" />
-            </svg>
-          </button>
-
-          <button className="ml-1 rounded-full px-2 py-1 text-neutral-300 hover:bg-neutral-800">Reply</button>
-
-          {!expanded && (
-            <button onClick={() => setExpanded(true)} className="ml-2 rounded-full px-2 py-1 text-neutral-300 hover:bg-neutral-800">
-              Read more
-            </button>
-          )}
         </div>
       </div>
     </div>
   );
 }
 
-function CommentComposer({
+/* ============ Comment item ============ */
+function CommentItem({
+  c,
+  avatarUrl,
+  myAddr,
+  myAvatarUrl,
+  getAvatarUrl,
+  onToggleLike,
+  onReply,
+}: {
+  c: UiComment;
+  avatarUrl: string;
+  myAddr?: string | null;
+  myAvatarUrl: string;
+  getAvatarUrl: (addr: string) => string;
+  onToggleLike: (commentId: string, liked: boolean) => Promise<void>;
+  onReply: (parentId: string, text: string) => Promise<void>;
+}) {
+  const [openReply, setOpenReply] = useState(false);
+
+  return (
+    <div className="group rounded-xl border border-neutral-800 bg-neutral-900/60 p-3 transition-colors hover:bg-neutral-900">
+      <div className="grid grid-cols-[40px_1fr] gap-3">
+        <div className="h-10 w-10 overflow-hidden rounded-full bg-neutral-800 ring-1 ring-neutral-700">
+          <img
+            src={avatarUrl}
+            alt=""
+            className="h-full w-full object-cover"
+            crossOrigin="anonymous"
+            referrerPolicy="no-referrer"
+            onError={(e) => {
+              (e.currentTarget as HTMLImageElement).src =
+                "https://api.dicebear.com/7.x/identicon/svg?seed=fallback";
+            }}
+          />
+        </div>
+
+        <div>
+          <div className="flex items-center gap-2">
+            <p className="font-semibold text-neutral-50">{c.name}</p>
+            <span className="text-sm text-neutral-400">• {c.time}</span>
+          </div>
+
+          <p className="mt-1 text-neutral-50">{c.text}</p>
+
+          <div className="mt-2 flex items-center gap-3 text-sm">
+            <LikePill
+              count={c.likeCount}
+              liked={c.likedByMe}
+              disabled={!myAddr}
+              onClick={() => {
+                if (!myAddr) return alert("Please connect your wallet to like.");
+                onToggleLike(c.id, c.likedByMe);
+              }}
+            />
+
+            <button
+              onClick={() => setOpenReply((v) => !v)}
+              className="rounded-full px-2 py-1 text-neutral-300 hover:bg-neutral-800"
+            >
+              Reply
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Replies (1 level) */}
+      {c.replies.length > 0 && (
+        <div className="mt-3 space-y-3">
+          {c.replies.map((r) => (
+            <div key={r.id} className="grid grid-cols-[40px_1fr] gap-3 ml-10">
+              <div className="h-8 w-8 overflow-hidden rounded-full bg-neutral-800 ring-1 ring-neutral-700">
+                <img src={getAvatarUrl(r.addr)} alt="" className="h-full w-full object-cover" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <p className="font-semibold text-neutral-50">{r.name}</p>
+                  <span className="text-sm text-neutral-400">• {r.time}</span>
+                </div>
+                <p className="mt-1 text-neutral-50">{r.text}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {openReply && (
+        <ReplyComposer
+          myAvatarUrl={myAvatarUrl}
+          onSend={async (text) => {
+            if (!myAddr) return alert("Please connect your wallet to reply.");
+            await onReply(c.id, text);
+            setOpenReply(false);
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+/* ============ Top composer ============ */
+function TopComposer({
   onSend,
   disabled,
   myAvatarUrl,
@@ -246,19 +332,6 @@ function CommentComposer({
 
   return (
     <div className="flex items-start gap-3">
-      <div className="h-10 w-10 overflow-hidden rounded-full bg-neutral-800 ring-1 ring-neutral-700">
-        <img
-          src={myAvatarUrl}
-          alt="Your avatar"
-          className="h-full w-full object-cover"
-          crossOrigin="anonymous"
-          referrerPolicy="no-referrer"
-          onError={(e) => {
-            (e.currentTarget as HTMLImageElement).src =
-              "https://api.dicebear.com/7.x/identicon/svg?seed=guest";
-          }}
-        />
-      </div>
 
       <div className="w-full rounded-2xl border border-neutral-700 bg-neutral-800/60 focus-within:border-[var(--primary-500)]">
         <textarea
@@ -268,15 +341,7 @@ function CommentComposer({
           placeholder="Write a comment…"
           className="block w-full resize-none rounded-2xl bg-transparent px-4 pt-3 text-neutral-50 placeholder:text-neutral-400 focus:outline-none"
         />
-        <div className="flex items-center justify-between px-3 pb-2 pt-1">
-          <div className="flex items-center gap-2 text-neutral-400">
-            <button className="rounded p-1 hover:bg-neutral-700/60" title="Emoji" type="button">
-              <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                <path d="M10 18a8 8 0 100-16 8 8 0 000 16zm3-7a1 1 0 10-2 0 1 1 0 002 0zM9 11a1 1 0 11-2 0 1 1 0 012 0zm1 4a5 5 0 004.546-2.916.75.75 0 10-1.343-.668A3.5 3.5 0 0110 13.5a3.5 3.5 0 01-3.203-2.084.75.75 0 10-1.343.668A5 5 0 0010 15z" />
-              </svg>
-            </button>
-          </div>
-
+        <div className="flex items-center justify-end px-3 pb-2 pt-1">
           <button
             onClick={submit}
             disabled={disabled || !val.trim()}
@@ -299,13 +364,13 @@ export default function Comments({
   currentUserAddr?: string | null;
 }) {
   const [sort, setSort] = useState<"top" | "newest">("newest");
-  const [items, setItems] = useState<ListItem[]>([]);
+  const [list, setList] = useState<UiComment[]>([]);
   const [loading, setLoading] = useState(true);
+  const myAddr = (currentUserAddr || "").toLowerCase();
 
-  // peta alamat -> avatarURL
+  // peta alamat -> avatarURL (DB/Abstract), sisanya fallback identicon saat render
   const [avatarMap, setAvatarMap] = useState<Record<string, string>>({});
 
-  // Load comments dari DB + siapkan avatar
   useEffect(() => {
     let alive = true;
 
@@ -313,93 +378,116 @@ export default function Comments({
       try {
         setLoading(true);
 
-        // 1) ambil komentar
-        const { data } = await supabase
+        // 1) ambil semua komentar video
+        const { data: rows } = await supabase
           .from("video_comments")
-          .select("id, created_at, user_addr, content")
+          .select("id, created_at, user_addr, content, parent_id")
           .eq("video_id", videoId)
           .eq("is_deleted", false)
           .order("created_at", { ascending: false });
 
-        if (!alive) return;
+        const comments = (rows || []) as DbComment[];
+        const ids = comments.map((c) => c.id);
 
-        const mapped: ListItem[] = (data || []).map((r: DbComment) => {
+        // 2) ambil likes untuk semua komentar
+        const { data: likesRows } = ids.length
+          ? await supabase
+              .from("video_comment_likes")
+              .select("comment_id, user_addr")
+              .in("comment_id", ids)
+          : { data: [] as any[] };
+
+        const likeCountMap = new Map<string, number>();
+        const likedByMeSet = new Set<string>();
+        (likesRows || []).forEach((r: any) => {
+          likeCountMap.set(r.comment_id, (likeCountMap.get(r.comment_id) || 0) + 1);
+          if (myAddr && r.user_addr?.toLowerCase() === myAddr) likedByMeSet.add(r.comment_id);
+        });
+
+        // 3) bentuk tree (1 level)
+        const byId = new Map<string, UiComment>();
+        const roots: UiComment[] = [];
+
+        comments.forEach((r) => {
           const addr = (r.user_addr || "0x").toLowerCase();
-          return {
+          const node: UiComment = {
             id: r.id,
             addr,
             name: shortAddr(addr) || "Anonymous",
             time: relTime(r.created_at),
             text: r.content || "",
+            likeCount: likeCountMap.get(r.id) || 0,
+            likedByMe: likedByMeSet.has(r.id),
+            replies: [],
           };
+          byId.set(r.id, node);
         });
 
-        setItems(mapped);
+        comments.forEach((r) => {
+          const node = byId.get(r.id)!;
+          if (r.parent_id) {
+            const p = byId.get(r.parent_id);
+            if (p) p.replies.push(node);
+          } else {
+            roots.push(node);
+          }
+        });
 
-        // 2) siapkan daftar alamat yang perlu avatar
+        if (alive) setList(roots);
+
+        // 4) siapkan peta avatar: DB terlebih dulu, lalu Abstract (cached)
         const addrs = Array.from(
           new Set(
             [
-              ...mapped.map((m) => m.addr),
-              (currentUserAddr || "").toLowerCase(),
+              ...comments.map((c) => (c.user_addr || "").toLowerCase()),
+              myAddr,
             ].filter(Boolean)
           )
         );
 
-        if (addrs.length === 0) {
-          setAvatarMap({});
-          return;
-        }
+        if (addrs.length) {
+          const { data: profs } = await supabase
+            .from("profiles")
+            .select("abstract_id, avatar_url")
+            .in("abstract_id", addrs);
 
-        // 3) ambil avatar_url dari tabel profiles terlebih dahulu
-        const { data: profs } = await supabase
-          .from("profiles")
-          .select("abstract_id, avatar_url")
-          .in("abstract_id", addrs);
-
-        const initialMap: Record<string, string> = {};
-        (profs || []).forEach((p: any) => {
-          const addr = (p?.abstract_id || "").toLowerCase();
-          const url = p?.avatar_url || "";
-          if (addr && url) initialMap[addr] = url;
-        });
-
-        // 4) untuk alamat yg belum punya avatar_url di DB, coba fetch Abstract (dengan cache)
-        const needAbstract = addrs.filter((a) => !initialMap[a]);
-
-        if (needAbstract.length) {
-          const results = await Promise.all(
-            needAbstract.map(async (addr) => {
-              const cached = readCacheUrl(okKey(addr));
-              if (cached) return [addr, cached] as const;
-
-              if (readCacheMiss(missKey(addr))) return [addr, ""] as const;
-
-              try {
-                const r = await fetch(`/api/abstract/user/${addr}`, { cache: "force-cache" });
-                if (r.ok) {
-                  const j = await r.json();
-                  const url: string | null = j?.profilePicture || j?.avatar || j?.imageUrl || null;
-                  if (url) {
-                    writeCacheUrl(okKey(addr), url);
-                    return [addr, url] as const;
-                  }
-                }
-              } catch {
-                /* ignore */
-              }
-              writeCacheMiss(missKey(addr));
-              return [addr, ""] as const;
-            })
-          );
-
-          results.forEach(([addr, url]) => {
-            if (url) initialMap[addr] = url;
+          const map: Record<string, string> = {};
+          (profs || []).forEach((p: any) => {
+            const addr = (p?.abstract_id || "").toLowerCase();
+            if (addr && p?.avatar_url) map[addr] = p.avatar_url;
           });
-        }
 
-        // 5) set peta avatar (fallback ke identicon jika kosong saat render)
-        if (alive) setAvatarMap(initialMap);
+          const need = addrs.filter((a) => !map[a]);
+          if (need.length) {
+            const results = await Promise.all(
+              need.map(async (a) => {
+                const cached = readCacheUrl(okKey(a));
+                if (cached) return [a, cached] as const;
+                if (readCacheMiss(missKey(a))) return [a, ""] as const;
+                try {
+                  const r = await fetch(`/api/abstract/user/${a}`, { cache: "force-cache" });
+                  if (r.ok) {
+                    const j = await r.json();
+                    const url: string | null = j?.profilePicture || j?.avatar || j?.imageUrl || null;
+                    if (url) {
+                      writeCacheUrl(okKey(a), url);
+                      return [a, url] as const;
+                    }
+                  }
+                } catch {}
+                writeCacheMiss(missKey(a));
+                return [a, ""] as const;
+              })
+            );
+            results.forEach(([a, url]) => {
+              if (url) map[a] = url;
+            });
+          }
+
+          if (alive) setAvatarMap(map);
+        } else {
+          if (alive) setAvatarMap({});
+        }
       } finally {
         if (alive) setLoading(false);
       }
@@ -408,87 +496,139 @@ export default function Comments({
     return () => {
       alive = false;
     };
-  }, [videoId, currentUserAddr]);
+  }, [videoId, myAddr]);
 
-  // insert komentar
-  const onSend = async (text: string) => {
-    const addr = (currentUserAddr || "anonymous").toLowerCase();
-    const { data, error } = await supabase
-      .from("video_comments")
-      .insert({ video_id: videoId, user_addr: addr, content: text })
-      .select("id, created_at, user_addr, content")
-      .single();
-
-    if (!error && data) {
-      const addrLower = (data.user_addr || "0x").toLowerCase();
-      setItems((prev) => [
-        {
-          id: data.id,
-          addr: addrLower,
-          name: shortAddr(addrLower) || "Anonymous",
-          time: relTime(data.created_at),
-          text: data.content || "",
-        },
-        ...prev,
-      ]);
-
-      // kalau avatar belum ada di map, coba isi cepat dari cache/abstract
-      if (!avatarMap[addrLower]) {
-        const cached = readCacheUrl(okKey(addrLower));
-        if (cached) {
-          setAvatarMap((m) => ({ ...m, [addrLower]: cached }));
-        } else {
-          try {
-            const r = await fetch(`/api/abstract/user/${addrLower}`, { cache: "force-cache" });
-            if (r.ok) {
-              const j = await r.json();
-              const url: string | null = j?.profilePicture || j?.avatar || j?.imageUrl || null;
-              if (url) {
-                writeCacheUrl(okKey(addrLower), url);
-                setAvatarMap((m) => ({ ...m, [addrLower]: url }));
-              }
-            }
-          } catch {
-            /* ignore */
-          }
-        }
-      }
-    }
-  };
-
-  // avatar getter (DB > Abstract > identicon)
+  // avatar getter: DB/Abstract map -> fallback identicon
   const getAvatarUrl = (addr: string) =>
     avatarMap[addr] ||
     `https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent(addr || "anon")}`;
 
-  const sorted = useMemo(() => {
-    if (sort === "newest") return items;
-    // "top" belum pakai metrik; tetap return items apa adanya.
-    return items;
-  }, [items, sort]);
+  const myAvatarUrl = getAvatarUrl(myAddr || "guest");
 
-  const myAvatar = getAvatarUrl((currentUserAddr || "guest").toLowerCase());
+  // insert komentar root
+  const onSend = async (text: string) => {
+    const addr = myAddr;
+    const { data, error } = await supabase
+      .from("video_comments")
+      .insert({ video_id: videoId, user_addr: addr || "anonymous", content: text })
+      .select("id, created_at, user_addr, content, parent_id")
+      .single();
+
+    if (!error && data) {
+      const addrLower = (data.user_addr || "0x").toLowerCase();
+      const newItem: UiComment = {
+        id: data.id,
+        addr: addrLower,
+        name: shortAddr(addrLower) || "Anonymous",
+        time: relTime(data.created_at),
+        text: data.content || "",
+        likeCount: 0,
+        likedByMe: false,
+        replies: [],
+      };
+      setList((prev) => [newItem, ...prev]);
+      if (!avatarMap[addrLower]) {
+        setAvatarMap((m) => ({ ...m, [addrLower]: myAvatarUrl }));
+      }
+    }
+  };
+
+  // insert reply
+  const onReply = async (parentId: string, text: string) => {
+    const addr = myAddr;
+    const { data, error } = await supabase
+      .from("video_comments")
+      .insert({ video_id: videoId, user_addr: addr || "anonymous", content: text, parent_id: parentId })
+      .select("id, created_at, user_addr, content, parent_id")
+      .single();
+
+    if (!error && data) {
+      const addrLower = (data.user_addr || "0x").toLowerCase();
+      setList((prev) =>
+        prev.map((p) =>
+          p.id === parentId
+            ? {
+                ...p,
+                replies: [
+                  {
+                    id: data.id,
+                    addr: addrLower,
+                    name: shortAddr(addrLower) || "Anonymous",
+                    time: relTime(data.created_at),
+                    text: data.content || "",
+                    likeCount: 0,
+                    likedByMe: false,
+                    replies: [],
+                  },
+                  ...p.replies,
+                ],
+              }
+            : p
+        )
+      );
+      if (!avatarMap[addrLower]) {
+        setAvatarMap((m) => ({ ...m, [addrLower]: myAvatarUrl }));
+      }
+    }
+  };
+
+  // toggle like (simpan ke DB video_comment_likes)
+  const onToggleLike = async (commentId: string, liked: boolean) => {
+    if (!myAddr) return;
+    if (!liked) {
+      const { error } = await supabase.from("video_comment_likes").insert({
+        comment_id: commentId,
+        user_addr: myAddr,
+      });
+      if (!error) {
+        setList((prev) =>
+          prev.map((c) =>
+            c.id === commentId ? { ...c, likeCount: c.likeCount + 1, likedByMe: true } : c
+          )
+        );
+      }
+    } else {
+      const { error } = await supabase
+        .from("video_comment_likes")
+        .delete()
+        .match({ comment_id: commentId, user_addr: myAddr });
+      if (!error) {
+        setList((prev) =>
+          prev.map((c) =>
+            c.id === commentId ? { ...c, likeCount: Math.max(0, c.likeCount - 1), likedByMe: false } : c
+          )
+        );
+      }
+    }
+  };
+
+  const sorted = useMemo(() => {
+    if (sort === "newest") return list;
+    return [...list].sort((a, b) => b.likeCount - a.likeCount);
+  }, [list, sort]);
 
   return (
     <div className="w-full border-t border-neutral-800 bg-neutral-900 px-4 py-6 sm:px-6 lg:px-8">
       <div className="mb-4 flex items-center justify-between">
         <h2 className="text-xl font-semibold text-neutral-50">
-          Comments <span className="ml-2 text-base font-normal text-neutral-400">• {items.length}</span>
+          Comments <span className="ml-2 text-base font-normal text-neutral-400">• {list.length}</span>
         </h2>
         <SortDropdown value={sort} onChange={setSort} />
       </div>
 
-      <CommentComposer onSend={onSend} disabled={loading} myAvatarUrl={myAvatar} />
+      <TopComposer onSend={onSend} disabled={loading} myAvatarUrl={myAvatarUrl} />
 
       <div className="mt-5 space-y-4">
-        {sorted.map((c, idx) => (
+        {sorted.map((c) => (
           <CommentItem
             key={c.id}
-            name={c.name}
-            time={c.time}
+            c={c}
             avatarUrl={getAvatarUrl(c.addr)}
-            text={c.text}
-            seed={idx}
+            myAddr={myAddr}
+            myAvatarUrl={myAvatarUrl}
+            getAvatarUrl={getAvatarUrl}
+            onToggleLike={onToggleLike}
+            onReply={onReply}
           />
         ))}
       </div>
