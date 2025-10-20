@@ -1,9 +1,11 @@
 // src/components/task/recommendationpanel.tsx
+"use client";
+
+import { useMemo } from "react";
 import Image from "next/image";
 import type { RecommendedVideo } from "./types";
 
 function shuffle<T>(arr: T[]): T[] {
-  // Fisher–Yates
   const a = [...arr];
   for (let i = a.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
@@ -45,11 +47,13 @@ export default function RecommendationPanel({
 }: {
   items: RecommendedVideo[];
 }) {
-  if (!items || items.length === 0) return null;
+  // Penting: pilih 3 item secara acak HANYA ketika 'items' berubah (mis. saat buka video lain).
+  const selected = useMemo(() => {
+    if (!items || items.length === 0) return [];
+    return items.length <= 3 ? items : shuffle(items).slice(0, 3);
+  }, [items]);
 
-  // Pick 3 random items (unique) each render
-  const selected =
-    items.length <= 3 ? items : shuffle(items).slice(0, 3);
+  if (!selected.length) return null;
 
   return (
     <div>

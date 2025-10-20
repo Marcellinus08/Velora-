@@ -5,7 +5,6 @@ import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { supabase } from "@/lib/supabase";
 import { AbstractProfile } from "@/components/abstract-profile";
-import LikeButton from "./likebutton";
 import RecommendationPanel from "./recommendationpanel";
 import type { VideoInfo, RecommendedVideo } from "./types";
 
@@ -22,22 +21,16 @@ function FallbackInitial({ name }: { name: string }) {
 /** Ambil alamat wallet dari localStorage (wagmi / Abstract). */
 function getAbstractAddressFromSession(): `0x${string}` | null {
   try {
-    // 1) wagmi.persist (umum di wagmi v1+)
     const rawWagmi = localStorage.getItem("wagmi.store");
     if (rawWagmi) {
-      // Cari pattern alamat 0x... (agar robust terhadap struktur berbeda)
       const m = rawWagmi.match(/0x[a-fA-F0-9]{40}/);
       if (m && m[0]) return m[0].toLowerCase() as `0x${string}`;
     }
-
-    // 2) abstract session (kalau ada)
     const rawAbs = localStorage.getItem("abstract:session");
     if (rawAbs) {
       const m = rawAbs.match(/0x[a-fA-F0-9]{40}/);
       if (m && m[0]) return m[0].toLowerCase() as `0x${string}`;
     }
-
-    // 3) fallback lain yang mungkin kamu simpan sendiri
     const rawDirect = localStorage.getItem("abstract_id") || localStorage.getItem("wallet");
     if (rawDirect) {
       const m = rawDirect.match(/0x[a-fA-F0-9]{40}/);
@@ -71,6 +64,11 @@ export default function VideoInfoSection({
   const [isFollowing, setIsFollowing] = useState(false);
   const [followBusy, setFollowBusy] = useState(false);
 
+  // like state (heart like seperti Community)
+  const [likeCount, setLikeCount] = useState<number>(initialLikes || 0);
+  const [liked, setLiked] = useState(false);
+  const [likeBusy, setLikeBusy] = useState(false);
+
   // creator wallet lower
   const walletLower =
     typeof video.creator.wallet === "string"
@@ -103,6 +101,85 @@ export default function VideoInfoSection({
       active = false;
     };
   }, [walletLower]);
+
+  // ===== Like loader (count + liked-by-me)
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        // count
+        const { count } = await supabase
+          .from("video_likes")
+          .select("*", { head: true, count: "exact" })
+          .eq("video_id", videoId);
+        if (alive) setLikeCount(count ?? initialLikes ?? 0);
+
+        // liked-by-me
+        const me = getAbstractAddressFromSession();
+        if (!me) {
+          if (alive) setLiked(false);
+          return;
+        }
+        const { data } = await supabase
+          .from("video_likes")
+          .select("id")
+          .eq("video_id", videoId)
+          .eq("user_addr", me.toLowerCase())
+          .maybeSingle();
+        if (alive) setLiked(!!data);
+      } catch {
+        // keep initial
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+  }, [videoId, initialLikes]);
+
+  // ===== Toggle like (heart)
+  const onToggleLikeVideo = async () => {
+    const me = getAbstractAddressFromSession();
+    if (!me) {
+      alert("Please connect your wallet to like this video.");
+      return;
+    }
+    if (likeBusy) return;
+    setLikeBusy(true);
+    try {
+      if (!liked) {
+        await supabase
+          .from("video_likes")
+          .upsert([{ video_id: videoId, user_addr: me.toLowerCase() }], {
+            onConflict: "video_id,user_addr",
+          });
+        setLiked(true);
+      } else {
+        await supabase.from("video_likes").delete().eq("video_id", videoId).eq("user_addr", me.toLowerCase());
+        setLiked(false);
+      }
+      const { count } = await supabase
+        .from("video_likes")
+        .select("*", { head: true, count: "exact" })
+        .eq("video_id", videoId);
+      setLikeCount(count ?? 0);
+
+      // Optional: sinkronkan aggregate tabel videos
+      await supabase.from("videos").update({ likes_count: count ?? 0 }).eq("id", videoId);
+    } finally {
+      setLikeBusy(false);
+    }
+  };
+
+  // helper ikon Material (round) – sama seperti Community
+  const MI = ({ name, className = "" }: { name: string; className?: string }) => (
+    <span
+      className={`material-icons-round text-[16px] leading-none align-middle ${className}`}
+      aria-hidden="true"
+    >
+      {name}
+    </span>
+  );
+  const likeIcon = liked ? "favorite" : "favorite_border";
 
   // Toggle follow/unfollow
   const onToggleFollow = async () => {
@@ -161,7 +238,24 @@ export default function VideoInfoSection({
             </div>
 
             <div className="flex items-center gap-2">
-              <LikeButton videoId={videoId} initialCount={initialLikes} />
+              {/* Heart like ala Community */}
+              <button
+                onClick={onToggleLikeVideo}
+                disabled={likeBusy}
+                className={[
+                  "flex items-center gap-1.5 rounded-full border px-3 py-1 text-sm transition",
+                  liked
+                    ? "text-[var(--primary-500)] border-[var(--primary-500)]/40 bg-violet-900/20"
+                    : "text-neutral-200 border-neutral-700 bg-neutral-800/80 hover:bg-neutral-700",
+                  likeBusy ? "opacity-60 cursor-not-allowed" : "hover:scale-[1.03] active:scale-95",
+                ].join(" ")}
+                title={liked ? "Unlike" : "Like"}
+              >
+                <MI name={likeIcon} />
+                <span>{likeCount}</span>
+              </button>
+
+              {/* Share */}
               <button
                 className="flex items-center gap-2 rounded-full bg-neutral-800 px-3 py-1 text-neutral-50 hover:bg-neutral-700"
                 onClick={() => {
@@ -171,7 +265,6 @@ export default function VideoInfoSection({
                       url: typeof window !== "undefined" ? window.location.href : undefined,
                     });
                   } catch {
-                    // fallback: copy link
                     if (typeof window !== "undefined") {
                       navigator.clipboard.writeText(window.location.href);
                       alert("Link copied to clipboard.");
