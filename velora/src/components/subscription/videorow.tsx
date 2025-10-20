@@ -1,4 +1,4 @@
-// src/components/subscription-video-row.tsx
+// src/components/subscription/videorow.tsx
 import Image from "next/image";
 import Link from "next/link";
 
@@ -7,15 +7,20 @@ export function SubscriptionVideoRow({
   thumb,
   subtext,
   primaryAction,
+  videoId,       // ← NEW
+  href,          // ← optional: override link manually
 }: {
   title: string;
   thumb: string;
   subtext: string;
   primaryAction: { label: string; variant?: "primary" | "secondary" };
+  videoId?: string;
+  href?: string;
 }) {
   const isPrimary = primaryAction.variant !== "secondary";
+  const targetHref = href || (videoId ? `/task?id=${encodeURIComponent(videoId)}` : "/task");
 
-  // Helper Material Icon (Round)
+  // Material Icon helper
   const MI = ({ name, className = "" }: { name: string; className?: string }) => (
     <span className={`material-icons-round ${className}`} aria-hidden="true">
       {name}
@@ -42,7 +47,7 @@ export function SubscriptionVideoRow({
         </div>
 
         <div className="flex items-center gap-2">
-          <Link href="/task">
+          <Link href={targetHref} prefetch={false}>
             <button
               type="button"
               className={[
@@ -64,13 +69,12 @@ export function SubscriptionVideoRow({
                       "before:bg-[radial-gradient(120px_80px_at_10%_10%,rgba(255,255,255,0.15),transparent)] group-hover:before:opacity-100",
                     ].join(" "),
               ].join(" ")}
+              aria-label={primaryAction.label}
             >
-              {/* shimmer sweep */}
               <span className="pointer-events-none absolute inset-0 overflow-hidden rounded-md">
                 <span className="absolute -left-10 top-0 h-full w-8 skew-x-[-20deg] bg-white/20 opacity-0 transition-all duration-300 group-hover:left-[110%] group-hover:opacity-100" />
               </span>
 
-              {/* Material Icon (animasi hover tetap) */}
               <MI
                 name={isPrimary ? "play_arrow" : "autorenew"}
                 className="text-[16px] leading-none align-middle transition-transform duration-200 group-hover:translate-x-0.5 group-hover:scale-110"

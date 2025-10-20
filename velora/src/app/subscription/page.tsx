@@ -82,7 +82,6 @@ export default function SubscriptionPage() {
     }
 
     async function loadDirectFromSupabase(buyerAddr: string) {
-      // 1) Coba join langsung; beberapa project belum punya FK bernama → tetap dicoba
       let { data, error } = await supabase
         .from("video_purchases")
         .select(
@@ -94,7 +93,6 @@ export default function SubscriptionPage() {
         .eq("buyer_id", buyerAddr)
         .order("created_at", { ascending: false });
 
-      // 2) Fallback: ambil purchases lalu fetch videos by id
       if (error || !data) {
         const { data: pchs, error: e1 } = await supabase
           .from("video_purchases")
@@ -147,12 +145,10 @@ export default function SubscriptionPage() {
           return;
         }
 
-        // 1) Coba lewat API (jika route benar)
         let result: { available: VideoItem[]; completed: VideoItem[] };
         try {
           result = await loadViaApi(buyer);
         } catch {
-          // 2) Fallback langsung ke Supabase (menghindari error HTML dari route)
           result = await loadDirectFromSupabase(buyer);
         }
 
@@ -204,6 +200,7 @@ export default function SubscriptionPage() {
               available.map((v) => (
                 <VideoRow
                   key={v.purchaseId}
+                  videoId={v.id}
                   title={v.title}
                   thumb={v.thumbUrl || "/placeholder-thumb.png"}
                   subtext={`Purchased • ${fmtUSD(v.priceUsd)}`}
@@ -228,6 +225,7 @@ export default function SubscriptionPage() {
               completed.map((v) => (
                 <VideoRow
                   key={v.purchaseId}
+                  videoId={v.id}
                   title={v.title}
                   thumb={v.thumbUrl || "/placeholder-thumb.png"}
                   subtext={`Completed • ${fmtUSD(v.priceUsd)}`}

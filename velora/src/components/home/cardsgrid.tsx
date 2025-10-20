@@ -2,6 +2,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
+import { useAccount } from "wagmi";
 import { supabase } from "@/lib/supabase";
 import { AbstractProfile } from "@/components/abstract-profile";
 import { BuyVideoButton } from "@/components/payments/TreasuryButtons";
@@ -80,11 +82,19 @@ const resolveTotalPoints = (row: VideoRow) => {
   return calcTotalPointsFromPrice(row.price_cents);
 };
 
+const isAddr = (s?: string | null) => !!s && /^0x[a-fA-F0-9]{40}$/.test(s || "");
+
 /* ================== Grid ================== */
 export default function CardsGrid() {
+  const { address } = useAccount();
+  const buyer = (address ?? "").toLowerCase();
+
   const [items, setItems] = useState<VideoRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string>("");
+
+  // ===== OWNED: set id video yang sudah dibeli user ini
+  const [owned, setOwned] = useState<Set<string>>(new Set());
 
   // addrLower -> avatarUrl
   const [absAvatars, setAbsAvatars] = useState<Record<string, string>>({});
@@ -92,6 +102,52 @@ export default function CardsGrid() {
   const [absTried, setAbsTried] = useState<Record<string, boolean>>({});
   // guard untuk request yang sedang berjalan
   const inFlight = useRef<Set<string>>(new Set());
+
+  // 0) Ambil list kepemilikan video (available+completed) untuk user saat ini
+  useEffect(() => {
+    let alive = true;
+
+    async function loadOwned(addrLower: string) {
+      try {
+        if (!isAddr(addrLower)) {
+          if (alive) setOwned(new Set());
+          return;
+        }
+
+        // Prefer API (tanpa terkendala RLS). Fallback: langsung Supabase.
+        let ids: string[] = [];
+        try {
+          const r = await fetch(`/api/subscription/list?buyer=${addrLower}`, { cache: "no-store" });
+          if (r.ok) {
+            const j = await r.json();
+            const a = Array.isArray(j?.available) ? j.available : [];
+            const c = Array.isArray(j?.completed) ? j.completed : [];
+            ids = [...a, ...c].map((x: any) => String(x?.id)).filter(Boolean);
+          }
+        } catch {
+          /* fall through */
+        }
+
+        if (!ids.length) {
+          const { data } = await supabase
+            .from("video_purchases")
+            .select("video_id,status")
+            .eq("buyer_id", addrLower);
+          const ok = (data || []).filter((r: any) => String(r?.status || "").toLowerCase() !== "refunded");
+          ids = ok.map((r: any) => String(r.video_id)).filter(Boolean);
+        }
+
+        if (alive) setOwned(new Set(ids));
+      } catch {
+        if (alive) setOwned(new Set());
+      }
+    }
+
+    loadOwned(buyer);
+    return () => {
+      alive = false;
+    };
+  }, [buyer]);
 
   // 1) Ambil video + join profile
   useEffect(() => {
@@ -234,7 +290,6 @@ export default function CardsGrid() {
     return () => {
       alive = false;
     };
-    // ⚠ jangan masukkan absAvatars ke deps untuk menghindari loop saat setAbsAvatars
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [items, absTried]);
 
@@ -281,6 +336,9 @@ export default function CardsGrid() {
         const priceUsd = Math.max(0, Number(((v.price_cents ?? 0) / 100).toFixed(2))) || 0;
         const creatorAddress = isAddressLike(addrLower) ? (addrLower as `0x${string}`) : undefined;
         const canBuy = priceUsd > 0 && !!creatorAddress;
+
+        // ====== Ownership ======
+        const isOwned = owned.has(String(v.id));
 
         return (
           <div
@@ -329,7 +387,7 @@ export default function CardsGrid() {
                       }}
                     />
                   ) : addrLower ? (
-                    <AbstractProfile address={addrLower} size="xs" showTooltip={false} className="!h-6 !w-6" />
+                    <AbstractProfile address={addrLower as `0x${string}`} size="xs" showTooltip={false} className="!h-6 !w-6" />
                   ) : (
                     <svg viewBox="0 0 24 24" className="h-6 w-6 text-neutral-500" fill="currentColor" aria-hidden="true">
                       <path d="M12 12a5 5 0 100-10 5 5 0 000 10zm0 2c-4.418 0-8 2.239-8 5v1h16v-1c0-2.761-3.582-5-8-5z" />
@@ -340,10 +398,25 @@ export default function CardsGrid() {
               </div>
 
               <div className="mt-auto flex items-end justify-between">
-                <p className="text-base font-bold text-neutral-50">{priceText}</p>
+                <p className={`text-base font-bold ${isOwned ? "text-violet-300" : "text-neutral-50"}`}>
+                  {isOwned ? "Owned" : priceText}
+                </p>
 
-                {/* ====== BUY BUTTON (panggil kontrak) ====== */}
-                {canBuy ? (
+                {/* ====== ACTION ====== */}
+                {isOwned ? (
+                  <Link href={`/task?id=${v.id}`} prefetch={false}>
+                    <button
+                      type="button"
+                      className="group relative inline-flex items-center gap-2 rounded-full bg-neutral-700 px-4 py-2 text-sm font-semibold text-white transition-all duration-200 ease-out hover:scale-105 hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[var(--primary-500)] focus-visible:ring-offset-neutral-900"
+                      title="Watch this video"
+                    >
+                      <span className="material-icons-round text-[16px]" aria-hidden>
+                        play_arrow
+                      </span>
+                      Watch
+                    </button>
+                  </Link>
+                ) : canBuy ? (
                   <BuyVideoButton
                     videoId={v.id}                 // ← biarkan UUID, hook akan mengubah ke uint256
                     creator={creatorAddress}
@@ -357,7 +430,7 @@ export default function CardsGrid() {
                     type="button"
                     disabled
                     className="inline-flex items-center gap-2 rounded-full bg-neutral-700 px-4 py-2 text-sm font-semibold text-white opacity-60"
-                    title={priceUsd <= 0 ? "Video gratis" : "Alamat kreator tidak valid"}
+                    title={priceUsd <= 0 ? "Free video" : "Invalid creator address"}
                   >
                     {priceUsd <= 0 ? "Free" : "Buy"}
                   </button>
