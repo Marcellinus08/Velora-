@@ -154,6 +154,8 @@ export default function TaskPage() {
         setTotalPoints(points);
 
         // ====== rekomendasi (ambil beberapa, nanti panel menampilkan 3 random)
+        const userWallet = me?.toLowerCase();
+        
         const { data: others } = await supabase
           .from("videos")
           .select(`
@@ -167,14 +169,21 @@ export default function TaskPage() {
             creator:profiles!videos_abstract_id_fkey(
               username,
               avatar_url
-            )
+            ),
+            video_purchases(buyer_id)
           `)
-          .neq("id", one.id)
-          .order("created_at", { ascending: false })
+          .neq('id', one.id)
+          .order('created_at', { ascending: false })
           .limit(12);
 
-        if (alive) {
-          const mapped: RecommendedVideo[] = (others || []).map((v) => ({
+        if (alive && others) {
+          // Filter dan map video rekomendasi
+          const filteredVideos = others.filter((v) => {
+            const purchases = (v as any).video_purchases || [];
+            return !purchases.some((p: any) => p.buyer_id === userWallet);
+          });
+
+          const mapped: RecommendedVideo[] = filteredVideos.map((v) => ({
             id: (v as any).id,
             title: safe((v as any).title, "Untitled"),
             creator: {
@@ -184,10 +193,13 @@ export default function TaskPage() {
             thumbnail: safeThumb((v as any).thumb_url),
             points: (v as any)?.points_total || 0,
             price: (v as any)?.price_cents ? {
-              amount: (v as any).price_cents / 100, // convert cents to dollars/main unit
+              amount: (v as any).price_cents / 100,
               currency: (v as any)?.currency || 'USD'
-            } : undefined
+            } : undefined,
+            isLocked: true
           }));
+
+          setReco(mapped);
           setReco(mapped);
         }
       } catch (e: any) {

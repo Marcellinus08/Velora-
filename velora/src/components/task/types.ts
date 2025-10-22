@@ -28,6 +28,7 @@ export type RecommendedVideo = {
     amount: number;
     currency: string;
   };
+  isLocked?: boolean;
 };
 
 export type Comment = {

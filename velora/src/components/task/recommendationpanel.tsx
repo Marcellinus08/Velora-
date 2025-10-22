@@ -4,6 +4,7 @@
 import { useMemo } from "react";
 import Image from "next/image";
 import type { RecommendedVideo } from "./types";
+import { LockOverlay } from "./LockOverlay";
 
 function shuffle<T>(arr: T[]): T[] {
   const a = [...arr];
@@ -24,8 +25,8 @@ function shortenWalletAddress(address: string): string {
 function RecommendationItem({ video }: { video: RecommendedVideo }) {
   return (
     <a
-      href={`/task?id=${video.id}`}
-      className="flex items-start gap-3 rounded-lg p-2 hover:bg-neutral-800/70"
+      href={video.isLocked ? `/purchase/${video.id}` : `/task?id=${video.id}`}
+      className="group flex items-start gap-3 rounded-lg p-2 hover:bg-neutral-800/70"
     >
       <div className="relative aspect-video h-auto w-28 shrink-0 overflow-hidden rounded">
         <Image
@@ -35,6 +36,7 @@ function RecommendationItem({ video }: { video: RecommendedVideo }) {
           sizes="112px"
           className="object-cover"
         />
+        {video.isLocked && <LockOverlay price={video.price} />}
       </div>
       <div className="min-w-0 flex-1">
         <p
@@ -43,10 +45,17 @@ function RecommendationItem({ video }: { video: RecommendedVideo }) {
         >
           {video.title}
         </p>
-        <p className="truncate text-xs text-neutral-400">
-          {video.creator.name || 
-           (video.creator.wallet ? shortenWalletAddress(video.creator.wallet.toLowerCase()) : "Anonymous")}
-        </p>
+        <div className="flex items-center gap-2">
+          <p className="truncate text-xs text-neutral-400">
+            {video.creator.name || 
+             (video.creator.wallet ? shortenWalletAddress(video.creator.wallet.toLowerCase()) : "Anonymous")}
+          </p>
+          {video.isLocked && (
+            <span className="rounded bg-red-500/20 px-1.5 py-0.5 text-xs text-red-400">
+              Locked
+            </span>
+          )}
+        </div>
         <div className="mt-1 flex items-center gap-2 text-xs">
           {typeof video.points === 'number' && video.points > 0 && (
             <span className="inline-flex items-center gap-1 rounded bg-violet-500/20 px-1.5 py-0.5 text-violet-300">
@@ -54,11 +63,6 @@ function RecommendationItem({ video }: { video: RecommendedVideo }) {
                 <path d="M10.464 3.314a.75.75 0 00-1.1.16L6.25 8H2.5A.75.75 0 001.75 8.75v2.5A.75.75 0 002.5 12h2.75l2.114 3.525a.75.75 0 001.1.16l2.886-2.163a.75.75 0 00.3-.6V6.178a.75.75 0 00-.3-.6l-2.886-2.163z" />
               </svg>
               {video.points} pts
-            </span>
-          )}
-          {video.price && (
-            <span className="inline-flex items-center rounded bg-emerald-500/20 px-1.5 py-0.5 text-emerald-300">
-              {video.price.amount} {video.price.currency}
             </span>
           )}
         </div>
