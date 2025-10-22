@@ -18,8 +18,16 @@ export type VideoInfo = {
 export type RecommendedVideo = {
   id: string | number;
   title: string;
-  creator: string;
+  creator: {
+    name?: string;
+    wallet?: string;
+  };
   thumbnail: string;
+  points?: number;
+  price?: {
+    amount: number;
+    currency: string;
+  };
 };
 
 export type Comment = {

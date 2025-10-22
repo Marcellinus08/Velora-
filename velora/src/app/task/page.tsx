@@ -156,7 +156,19 @@ export default function TaskPage() {
         // ====== rekomendasi (ambil beberapa, nanti panel menampilkan 3 random)
         const { data: others } = await supabase
           .from("videos")
-          .select(`id, title, thumb_url, creator:profiles!videos_abstract_id_fkey(username)`)
+          .select(`
+            id, 
+            title, 
+            thumb_url, 
+            abstract_id,
+            points_total,
+            price_cents,
+            currency,
+            creator:profiles!videos_abstract_id_fkey(
+              username,
+              avatar_url
+            )
+          `)
           .neq("id", one.id)
           .order("created_at", { ascending: false })
           .limit(12);
@@ -165,8 +177,16 @@ export default function TaskPage() {
           const mapped: RecommendedVideo[] = (others || []).map((v) => ({
             id: (v as any).id,
             title: safe((v as any).title, "Untitled"),
-            creator: safe((v as any)?.creator?.username, "Creator"),
+            creator: {
+              name: (v as any)?.creator?.username || undefined,
+              wallet: (v as any)?.abstract_id || undefined
+            },
             thumbnail: safeThumb((v as any).thumb_url),
+            points: (v as any)?.points_total || 0,
+            price: (v as any)?.price_cents ? {
+              amount: (v as any).price_cents / 100, // convert cents to dollars/main unit
+              currency: (v as any)?.currency || 'USD'
+            } : undefined
           }));
           setReco(mapped);
         }
