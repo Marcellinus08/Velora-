@@ -52,11 +52,13 @@ export default function VideoInfoSection({
   recommendations,
   videoId,
   initialLikes = 0,
+  sharePoints = 0,
 }: {
   video: VideoInfo;
   recommendations: RecommendedVideo[];
   videoId: string;
   initialLikes?: number;
+  sharePoints?: number;
 }) {
   const [expanded, setExpanded] = useState(false);
 
@@ -272,10 +274,23 @@ export default function VideoInfoSection({
                   }
                 }}
               >
-                <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                  <path d="M12.232 4.232a2.5 2.5 0 013.536 3.536l-1.225 1.224a.75.75 0 001.061 1.06l1.224-1.224a4 4 0 00-5.656-5.656l-3 3a4 4 0 00-.225 5.865.75.75 0 00.977-1.138 2.5 2.5 0 01.142 3.665l-3 3z" />
-                </svg>
-                <span className="text-sm font-medium">Share</span>
+                <div className="flex items-center gap-2">
+                  <span
+                    className="material-icons-round text-[16px] leading-none align-middle"
+                    aria-hidden="true"
+                  >
+                    share
+                  </span>
+                  <span className="text-sm font-medium">Share</span>
+                </div>
+                {sharePoints > 0 && (
+                  <div className="flex items-center gap-1.5 ml-2 pl-2 border-l border-neutral-700">
+                    <svg className="w-4 h-4 text-yellow-400" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                    </svg>
+                    <span className="text-sm font-medium text-yellow-400">{sharePoints}</span>
+                  </div>
+                )}
               </button>
             </div>
           </div>

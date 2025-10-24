@@ -315,6 +315,7 @@ export default function TaskPage() {
                 recommendations={reco}
                 videoId={row.id}
                 initialLikes={initialLikes}
+                sharePoints={5} // Set the share points value here
               />
             )}
           </div>
