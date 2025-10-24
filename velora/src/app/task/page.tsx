@@ -305,6 +305,8 @@ export default function TaskPage() {
                 tasks={tasks} 
                 totalPoints={totalPoints}
                 isLocked={isLocked}
+                videoId={row.id}
+                userAddress={me || undefined}
               />
             </aside>
 
@@ -315,7 +317,9 @@ export default function TaskPage() {
                 recommendations={reco}
                 videoId={row.id}
                 initialLikes={initialLikes}
-                sharePoints={5} // Set the share points value here
+                sharePoints={Math.floor(totalPoints * 0.4)} // 40% dari total point untuk share
+                totalPoints={totalPoints} // Total point dari video
+                userAddress={me || undefined}
               />
             )}
           </div>

@@ -53,12 +53,16 @@ export default function VideoInfoSection({
   videoId,
   initialLikes = 0,
   sharePoints = 0,
+  totalPoints = 0,
+  userAddress,
 }: {
   video: VideoInfo;
   recommendations: RecommendedVideo[];
   videoId: string;
   initialLikes?: number;
   sharePoints?: number;
+  totalPoints?: number;
+  userAddress?: string;
 }) {
   const [expanded, setExpanded] = useState(false);
 
@@ -260,18 +264,38 @@ export default function VideoInfoSection({
               {/* Share */}
               <button
                 className="flex items-center gap-2 rounded-full bg-neutral-800 px-3 py-1 text-neutral-50 hover:bg-neutral-700"
-                onClick={() => {
-                  try {
-                    navigator.share?.({
-                      title: video.title,
-                      url: typeof window !== "undefined" ? window.location.href : undefined,
-                    });
-                  } catch {
-                    if (typeof window !== "undefined") {
-                      navigator.clipboard.writeText(window.location.href);
-                      alert("Link copied to clipboard.");
+                onClick={async () => {
+                  // Award points untuk share (hanya sekali)
+                  if (userAddress && totalPoints > 0) {
+                    try {
+                      const response = await fetch("/api/user-progress", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                          userAddr: userAddress.toLowerCase(),
+                          videoId,
+                          action: "share",
+                          totalPoints,
+                        }),
+                      });
+
+                      const data = await response.json();
+
+                      if (!response.ok) {
+                        // Jika error (misalnya belum purchase), tetap bisa share tapi tidak dapat poin
+                        console.log("Note:", data.error);
+                      }
+                    } catch (error) {
+                      console.error("Error awarding share points:", error);
                     }
                   }
+
+                  // Share to Twitter/X (tetap bisa share meskipun belum purchase)
+                  const pointsText = totalPoints > 0 ? ` and get total ${totalPoints} points!` : '!';
+                  const url = typeof window !== "undefined" ? window.location.href : "";
+                  const text = `Check out this video: ${video.title}${pointsText}\n\n${url}\n\n@AbstractChain`;
+                  const twitterIntent = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
+                  window.open(twitterIntent, "_blank");
                 }}
               >
                 <div className="flex items-center gap-2">

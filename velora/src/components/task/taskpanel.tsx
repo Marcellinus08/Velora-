@@ -19,6 +19,8 @@ export default function TaskPanel({
   totalPoints = 0,
   isLocked = false,
   onValidated,
+  videoId,
+  userAddress,
 }: {
   className?: string;
   /** list of tasks for current video (fetched from DB) */
@@ -34,9 +36,14 @@ export default function TaskPanel({
     pointsEarned: number;
     answers: Array<number | null>;
   }) => void;
+  /** video ID untuk tracking progress */
+  videoId?: string;
+  /** user address untuk tracking progress */
+  userAddress?: string;
 }) {
   const [started, setStarted] = useState(false);
   const [completed, setCompleted] = useState(false);
+  const [earnedPoints, setEarnedPoints] = useState(0);
   const [step, setStep] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
   const [answers, setAnswers] = useState<Array<number | null>>(
@@ -46,7 +53,10 @@ export default function TaskPanel({
   const current = tasks?.[step];
 
   const allPoints = useMemo(() => {
-    if (totalPoints && totalPoints > 0) return totalPoints;
+    if (totalPoints && totalPoints > 0) {
+      // Calculate 20% of total points for tasks
+      return Math.floor(totalPoints * 0.2);  // 20% dari total point
+    }
     const sum = (tasks || []).reduce((a, b) => a + (b.points || 0), 0);
     return sum || 0;
   }, [tasks, totalPoints]);
@@ -107,7 +117,7 @@ export default function TaskPanel({
     }
   };
 
-  const handleDone = () => {
+  const handleDone = async () => {
     if (selected === null) {
       toastWarn("Please select an answer first");
       return;
@@ -117,32 +127,151 @@ export default function TaskPanel({
     const finalAnswers = [...answers];
     finalAnswers[step] = selected;
 
-    // Since we're accepting any answer, give full points
-    const pointsEarned = allPoints;
+    // Hitung berapa jawaban yang benar
+    let correctCount = 0;
+    let totalWithAnswer = 0;
 
-    // Show completion toast
-    Swal.fire({
-      icon: "success",
-      title: "Task Completed! 🎉",
-      html: `<div style="font-size:13px;line-height:18px">
-        You've earned <b>${pointsEarned}</b> points!
-      </div>`,
-      position: "top-end",
-      toast: true,
-      timer: 3000,
-      showConfirmButton: false,
+    tasks.forEach((task, idx) => {
+      if (typeof task.answerIndex === "number" && task.answerIndex >= 0) {
+        totalWithAnswer++;
+        if (finalAnswers[idx] === task.answerIndex) {
+          correctCount++;
+        }
+      }
     });
 
-    // Notify parent component
-    onValidated?.({
-      correct: tasks.length, // All answers are considered correct
-      total: tasks.length,
-      pointsEarned,
-      answers: finalAnswers,
-    });
+    // Hanya berikan poin jika semua jawaban benar
+    const allCorrect = totalWithAnswer > 0 && correctCount === totalWithAnswer;
+    const pointsEarned = allCorrect ? allPoints : 0;
 
-    // Show completion screen
-    setCompleted(true);
+    // Award points via API jika user address dan video ID tersedia
+    if (userAddress && videoId && totalPoints > 0) {
+      try {
+        const response = await fetch("/api/user-progress", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userAddr: userAddress.toLowerCase(),
+            videoId,
+            action: "task",
+            totalPoints,
+            isCorrect: allCorrect, // Kirim info apakah jawaban benar semua
+          }),
+        });
+
+        const data = await response.json();
+        
+        if (!response.ok) {
+          // Error dari server (misalnya belum purchase)
+          Swal.fire({
+            icon: "error",
+            title: "Cannot Complete Task",
+            text: data.error || "Failed to award points",
+            position: "top-end",
+            toast: true,
+            timer: 3000,
+            showConfirmButton: false,
+          });
+          return;
+        }
+        
+        // Show completion toast
+        if (allCorrect) {
+          Swal.fire({
+            icon: "success",
+            title: "Perfect Score! 🎉",
+            html: `<div style="font-size:13px;line-height:18px">
+              All answers correct!<br/>You've earned <b>${data.pointsAwarded || pointsEarned}</b> points!
+            </div>`,
+            position: "top-end",
+            toast: true,
+            timer: 3000,
+            showConfirmButton: false,
+          });
+        } else {
+          Swal.fire({
+            icon: "warning",
+            title: "Task Completed",
+            html: `<div style="font-size:13px;line-height:18px">
+              Correct: <b>${correctCount}</b> / <b>${totalWithAnswer}</b><br/>
+              You need all correct answers to earn points.
+            </div>`,
+            position: "top-end",
+            toast: true,
+            timer: 3500,
+            showConfirmButton: false,
+          });
+        }
+        
+        // Notify parent component
+        onValidated?.({
+          correct: correctCount,
+          total: totalWithAnswer,
+          pointsEarned: data.pointsAwarded || pointsEarned,
+          answers: finalAnswers,
+        });
+
+        // Save earned points for display
+        setEarnedPoints(data.pointsAwarded || pointsEarned);
+
+        // Show completion screen
+        setCompleted(true);
+      } catch (error) {
+        console.error("Error awarding points:", error);
+        // Show error toast
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: "Failed to complete task. Please try again.",
+          position: "top-end",
+          toast: true,
+          timer: 3000,
+          showConfirmButton: false,
+        });
+      }
+    } else {
+      // Show completion toast
+      if (allCorrect) {
+        Swal.fire({
+          icon: "success",
+          title: "Perfect Score! 🎉",
+          html: `<div style="font-size:13px;line-height:18px">
+            All answers correct!<br/>You've earned <b>${pointsEarned}</b> points!
+          </div>`,
+          position: "top-end",
+          toast: true,
+          timer: 3000,
+          showConfirmButton: false,
+        });
+      } else {
+        Swal.fire({
+          icon: "warning",
+          title: "Task Completed",
+          html: `<div style="font-size:13px;line-height:18px">
+            Correct: <b>${correctCount}</b> / <b>${totalWithAnswer}</b><br/>
+            You need all correct answers to earn points.
+          </div>`,
+          position: "top-end",
+          toast: true,
+          timer: 3500,
+          showConfirmButton: false,
+        });
+      }
+      
+      // Notify parent component
+      onValidated?.({
+        correct: correctCount,
+        total: totalWithAnswer,
+        pointsEarned,
+        answers: finalAnswers,
+      });
+
+      // Save earned points for display
+      setEarnedPoints(pointsEarned);
+
+      // Show completion screen
+      setCompleted(true);
+    }
   };
 
   return (
@@ -201,7 +330,9 @@ export default function TaskPanel({
               </h3>
               <p className="text-neutral-400 mb-6">
                 {completed 
-                  ? `You've earned ${allPoints} points!` 
+                  ? earnedPoints > 0 
+                    ? `You've earned ${earnedPoints} points!` 
+                    : `All answers must be correct to earn points. Try again with another video!`
                   : `Complete ${tasks.length} questions about this video${allPoints > 0 ? ` to earn ${allPoints} points` : ''}!`
                 }
               </p>
