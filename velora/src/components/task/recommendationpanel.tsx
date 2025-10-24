@@ -1,10 +1,10 @@
-// src/components/task/recommendationpanel.tsx
 "use client";
 
 import { useMemo } from "react";
 import Image from "next/image";
 import type { RecommendedVideo } from "./types";
 import { LockOverlay } from "./LockOverlay";
+import Link from "next/link";
 
 function shuffle<T>(arr: T[]): T[] {
   const a = [...arr];
@@ -24,50 +24,52 @@ function shortenWalletAddress(address: string): string {
 
 function RecommendationItem({ video }: { video: RecommendedVideo }) {
   return (
-    <a
-      href={video.isLocked ? `/purchase/${video.id}` : `/task?id=${video.id}`}
-      className="group flex items-start gap-3 rounded-lg p-2 hover:bg-neutral-800/70"
+    <Link
+      href={`/task?id=${video.id}`}
+      className="group relative flex items-start gap-3 rounded-lg p-2 hover:bg-neutral-800/70 transition-colors"
     >
-      <div className="relative aspect-video h-auto w-28 shrink-0 overflow-hidden rounded">
+      <div className="relative aspect-video h-auto w-28 shrink-0 overflow-hidden rounded-lg">
         <Image
           src={video.thumbnail}
           alt={video.title}
           fill
           sizes="112px"
-          className="object-cover"
+          className={`object-cover transition-transform duration-300 ${video.isLocked ? 'opacity-80' : 'group-hover:scale-110'}`}
         />
         {video.isLocked && <LockOverlay price={video.price} />}
       </div>
       <div className="min-w-0 flex-1">
+        {/* Title */}
         <p
-          className="truncate text-sm font-semibold text-neutral-50"
+          className={`truncate text-sm font-semibold ${
+            video.isLocked 
+              ? 'text-neutral-400 group-hover:text-neutral-200' 
+              : 'text-neutral-50 group-hover:text-[var(--primary-500)]'
+          } transition-colors`}
           title={video.title}
         >
           {video.title}
         </p>
-        <div className="flex items-center gap-2">
-          <p className="truncate text-xs text-neutral-400">
-            {video.creator.name || 
-             (video.creator.wallet ? shortenWalletAddress(video.creator.wallet.toLowerCase()) : "Anonymous")}
-          </p>
-          {video.isLocked && (
-            <span className="rounded bg-red-500/20 px-1.5 py-0.5 text-xs text-red-400">
-              Locked
-            </span>
-          )}
-        </div>
-        <div className="mt-1 flex items-center gap-2 text-xs">
+
+        {/* Creator info */}
+        <p className="mt-0.5 truncate text-[11px] text-neutral-500/80">
+          {video.creator.name || 
+           (video.creator.wallet ? shortenWalletAddress(video.creator.wallet.toLowerCase()) : "Anonymous")}
+        </p>
+
+        {/* Points and unlock info */}
+        <div className="mt-1.5 flex items-center gap-2">
           {typeof video.points === 'number' && video.points > 0 && (
-            <span className="inline-flex items-center gap-1 rounded bg-violet-500/20 px-1.5 py-0.5 text-violet-300">
-              <svg className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
-                <path d="M10.464 3.314a.75.75 0 00-1.1.16L6.25 8H2.5A.75.75 0 001.75 8.75v2.5A.75.75 0 002.5 12h2.75l2.114 3.525a.75.75 0 001.1.16l2.886-2.163a.75.75 0 00.3-.6V6.178a.75.75 0 00-.3-.6l-2.886-2.163z" />
+            <span className="inline-flex items-center gap-1 text-yellow-400">
+              <svg className="h-3 w-3" viewBox="0 0 24 24" fill="currentColor">
+                <path fillRule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z" clipRule="evenodd" />
               </svg>
-              {video.points} pts
+              <span className="text-[11px] font-medium">{video.points}</span>
             </span>
           )}
         </div>
       </div>
-    </a>
+    </Link>
   );
 }
 
@@ -76,7 +78,7 @@ export default function RecommendationPanel({
 }: {
   items: RecommendedVideo[];
 }) {
-  // Penting: pilih 3 item secara acak HANYA ketika 'items' berubah (mis. saat buka video lain).
+  // Penting: pilih 3 item secara acak HANYA ketika 'items' berubah
   const selected = useMemo(() => {
     if (!items || items.length === 0) return [];
     return items.length <= 3 ? items : shuffle(items).slice(0, 3);

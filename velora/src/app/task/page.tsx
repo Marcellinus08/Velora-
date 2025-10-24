@@ -1,14 +1,13 @@
-// src/app/task/page.tsx
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 
-import HeroPlayer from "@/components/task/heroplayer";
 import TaskPanel, { TaskItem } from "@/components/task/taskpanel";
 import VideoInfoSection from "@/components/task/videoinfo";
 import Comments from "@/components/task/comments";
+import VideoPlayer from "@/components/task/videoplayer";
 import type { RecommendedVideo, VideoInfo } from "@/components/task/types";
 
 /* ============== Helpers ============== */
@@ -54,7 +53,10 @@ type VideoRow = {
   points_total?: number | null;
   tasks_json?: any;
   likes_count?: number | null;
+  price_cents?: number;
+  currency?: string;
   creator?: { username: string | null; avatar_url: string | null } | null;
+  video_purchases?: Array<{ buyer_id: string }>;
 };
 
 export default function TaskPage() {
@@ -76,6 +78,12 @@ export default function TaskPage() {
   }, []);
 
   useEffect(() => {
+    // Reset state saat video ID berubah
+    setRow(null);
+    setReco([]);
+    setTasks([]);
+    setTotalPoints(0);
+    
     let alive = true;
 
     (async () => {
@@ -95,7 +103,10 @@ export default function TaskPage() {
           points_total,
           tasks_json,
           likes_count,
-          creator:profiles!videos_abstract_id_fkey(username,avatar_url)
+          price_cents,
+          currency,
+          creator:profiles!videos_abstract_id_fkey(username,avatar_url),
+          video_purchases(buyer_id)
         `;
 
         const oneReq = idFromQuery
@@ -177,29 +188,30 @@ export default function TaskPage() {
           .limit(12);
 
         if (alive && others) {
-          // Filter dan map video rekomendasi
-          const filteredVideos = others.filter((v) => {
-            const purchases = (v as any).video_purchases || [];
-            return !purchases.some((p: any) => p.buyer_id === userWallet);
+          const mapped: RecommendedVideo[] = others.map((v: any) => {
+            const hasPrice = v.price_cents > 0;
+            const purchases = v.video_purchases || [];
+            const isPurchased = userWallet && purchases.some(
+              (p: any) => p.buyer_id?.toLowerCase() === userWallet
+            );
+            
+            return {
+              id: v.id,
+              title: safe(v.title, "Untitled"),
+              creator: {
+                name: v?.creator?.username || undefined,
+                wallet: v?.abstract_id || undefined
+              },
+              thumbnail: safeThumb(v.thumb_url),
+              points: v?.points_total || 0,
+              price: v.price_cents ? {
+                amount: v.price_cents / 100,
+                currency: v.currency || 'USD'
+              } : undefined,
+              isLocked: hasPrice && !isPurchased // Video terkunci hanya jika berbayar dan belum dibeli
+            };
           });
 
-          const mapped: RecommendedVideo[] = filteredVideos.map((v) => ({
-            id: (v as any).id,
-            title: safe((v as any).title, "Untitled"),
-            creator: {
-              name: (v as any)?.creator?.username || undefined,
-              wallet: (v as any)?.abstract_id || undefined
-            },
-            thumbnail: safeThumb((v as any).thumb_url),
-            points: (v as any)?.points_total || 0,
-            price: (v as any)?.price_cents ? {
-              amount: (v as any).price_cents / 100,
-              currency: (v as any)?.currency || 'USD'
-            } : undefined,
-            isLocked: true
-          }));
-
-          setReco(mapped);
           setReco(mapped);
         }
       } catch (e: any) {
@@ -212,7 +224,7 @@ export default function TaskPage() {
     return () => {
       alive = false;
     };
-  }, [idFromQuery]);
+  }, [idFromQuery, me]); // tambahkan me ke dependencies
 
   // Bentuk data untuk komponen info (termasuk tag dari category)
   const videoInfo: VideoInfo | null = useMemo(() => {
@@ -230,7 +242,7 @@ export default function TaskPage() {
       creator: {
         name: displayName,
         followers: walletShort,
-        avatar: safe(row.creator?.avatar_url, ""), // kosong => fallback ke AbstractProfile di komponen
+        avatar: safe(row.creator?.avatar_url, ""),
         wallet,
       },
       tags,
@@ -239,6 +251,12 @@ export default function TaskPage() {
 
   const videoSrc = useMemo(() => (row ? safe(row.video_url, row.video_path || "") : ""), [row]);
   const initialLikes = row?.likes_count ?? 0;
+
+  const isLocked = useMemo(() => {
+    if (!row || !row.price_cents) return false;
+    if (!me) return true;
+    return !row.video_purchases?.some(p => p.buyer_id.toLowerCase() === me.toLowerCase());
+  }, [row, me]);
 
   return (
     <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8">
@@ -264,18 +282,30 @@ export default function TaskPage() {
           <div className="grid grid-cols-12 items-stretch gap-8">
             {/* Player kiri */}
             <section className="col-span-12 lg:col-span-8">
-              {videoSrc ? (
-                <HeroPlayer src={videoSrc} poster={safeThumb(row.thumb_url)} controls autoPlay={false} muted={false} />
-              ) : (
-                <div className="grid aspect-video place-items-center rounded-2xl border border-neutral-800 bg-neutral-900 text-neutral-400">
-                  URL video tidak tersedia.
-                </div>
-              )}
+              <VideoPlayer 
+                videoUrl={videoSrc || ''} 
+                thumbnailUrl={safeThumb(row.thumb_url)}
+                isLocked={isLocked}
+                price={row.price_cents ? {
+                  amount: row.price_cents / 100,
+                  currency: row.currency || 'USD'
+                } : undefined}
+                points={totalPoints}
+                onUnlock={() => {
+                  // Redirect ke halaman pembelian
+                  window.location.href = `/purchase/${row.id}`;
+                }}
+              />
             </section>
 
             {/* Panel task kanan */}
             <aside className="col-span-12 lg:col-span-4">
-              <TaskPanel className="h-full" tasks={tasks} totalPoints={totalPoints} />
+              <TaskPanel 
+                className="h-full" 
+                tasks={tasks} 
+                totalPoints={totalPoints}
+                isLocked={isLocked}
+              />
             </aside>
 
             {/* Info + rekomendasi */}
@@ -290,7 +320,11 @@ export default function TaskPage() {
           </div>
 
           {/* Comments tersambung DB */}
-          <Comments videoId={row.id} currentUserAddr={me} />
+          <Comments 
+            videoId={row.id} 
+            currentUserAddr={me}
+            isLocked={isLocked}
+          />
         </>
       )}
     </main>

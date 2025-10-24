@@ -7,9 +7,9 @@ export type TaskItem = {
   id?: string | number;
   question: string;
   options: string[];
-  /** index jawaban benar (0-based). */
+  /** correct answer index (0-based) */
   answerIndex?: number;
-  /** poin untuk task ini (opsional) */
+  /** points for this task (optional) */
   points?: number;
 };
 
@@ -17,14 +17,17 @@ export default function TaskPanel({
   className = "",
   tasks,
   totalPoints = 0,
+  isLocked = false,
   onValidated,
 }: {
   className?: string;
-  /** daftar task untuk video saat ini (diambil dari DB) */
+  /** list of tasks for current video (fetched from DB) */
   tasks: TaskItem[];
-  /** total poin untuk semua task (videos.points_total atau akumulasi) */
+  /** total points for all tasks (videos.points_total or accumulated) */
   totalPoints?: number;
-  /** callback opsional ketika selesai validasi */
+  /** whether the tasks are locked */
+  isLocked?: boolean;
+  /** optional callback when validation is complete */
   onValidated?: (result: {
     correct: number;
     wrong: number;
@@ -33,6 +36,7 @@ export default function TaskPanel({
     answers: Array<number | null>;
   }) => void;
 }) {
+  const [started, setStarted] = useState(false);
   const [step, setStep] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
   const [answers, setAnswers] = useState<Array<number | null>>(
@@ -52,7 +56,7 @@ export default function TaskPanel({
       <div className={`rounded-lg bg-neutral-800 p-6 ${className}`}>
         <h2 className="text-xl font-bold text-neutral-50">Your Task</h2>
         <p className="mt-2 text-sm text-neutral-400">
-          Belum ada task untuk video ini.
+          No tasks available for this video yet.
         </p>
       </div>
     );
@@ -75,9 +79,9 @@ export default function TaskPanel({
     const allCorrect = correct === total;
     Swal.fire({
       icon: allCorrect ? "success" : "info",
-      title: allCorrect ? "Semua benar! 🎉" : "Hasil validasi",
+      title: allCorrect ? "Perfect Score! 🎉" : "Task Results",
       html: `<div style="font-size:13px;line-height:18px">
-        Benar: <b>${correct}</b> • Salah: <b>${wrong}</b><br/>Poin: <b>+${pts}</b>
+        Correct: <b>${correct}</b> • Wrong: <b>${wrong}</b><br/>Points: <b>+${pts}</b>
       </div>`,
       position: "top-end",
       toast: true,
@@ -88,7 +92,7 @@ export default function TaskPanel({
 
   const handleNext = () => {
     if (selected === null) {
-      toastWarn("Pilih salah satu jawaban dahulu");
+      toastWarn("Please select an answer first");
       return;
     }
     setAnswers((prev) => {
@@ -104,6 +108,11 @@ export default function TaskPanel({
   };
 
   const handleDone = () => {
+    if (selected === null) {
+      toastWarn("Pilih salah satu jawaban dahulu");
+      return;
+    }
+    
     // pastikan terakhir tersimpan
     const finalAnswers =
       selected === null
@@ -165,74 +174,164 @@ export default function TaskPanel({
       {/* Header: judul + poin */}
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-bold text-neutral-50">Your Task</h2>
-        <div className="flex items-center gap-2">
-          <svg
-            className="size-5 text-yellow-400"
-            viewBox="0 0 256 256"
-            fill="currentColor"
-            aria-hidden="true"
-          >
-            <path d="M239.2,97.41a16.4,16.4,0,0,0-14.21-10.06l-49.33-7.17L153.8,36.52a16.37,16.37,0,0,0-29.6,0L102.34,80.18,53,87.35A16.4,16.4,0,0,0,38.8,97.41a16.43,16.43,0,0,0,4.28,17.27l35.69,34.78-8.43,49.14a16.4,16.4,0,0,0,7.86,17.2,16.32,16.32,0,0,0,18.15,.11L128,193.07l44.13,23.2a16.32,16.32,0,0,0,18.15-.11,16.4,16.4,0,0,0,7.86-17.2l-8.43-49.14,35.69-34.78A16.43,16.43,0,0,0,239.2,97.41Z" />
-          </svg>
-          <span className="font-semibold text-neutral-50">{allPoints} pts</span>
-        </div>
       </div>
 
-      {/* Progress: hanya satu badge "X / N" */}
-      <div className="mt-3">
-        <span className="inline-flex items-center rounded-full border border-neutral-700 bg-neutral-900/60 px-2.5 py-0.5 text-xs font-medium text-neutral-300">
-          {step + 1} / {tasks.length}
-        </span>
-      </div>
-
-      {/* Konten pertanyaan + opsi */}
-      <div className="mt-4 flex-1 space-y-4 overflow-y-auto">
-        <p className="text-[15px] font-semibold text-neutral-50">{current.question}</p>
-
-        <div className="space-y-3">
-          {current.options.map((label, i) => {
-            const checked = selected === i;
-            return (
-              <label
-                key={i}
-                className={[
-                  "flex cursor-pointer items-center gap-3 rounded-lg p-3 transition-colors",
-                  "border border-neutral-700 hover:bg-neutral-700/50",
-                  checked ? "bg-violet-900/20 border-[var(--primary-500)]" : "bg-transparent",
-                ].join(" ")}
+      {!started ? (
+        // Task intro screen
+        <div className="flex-1 flex flex-col items-center justify-center text-center relative">
+          {!isLocked ? (
+            <>
+              <div className="w-16 h-16 bg-violet-600/20 rounded-full flex items-center justify-center mb-4">
+                <svg 
+                  className="w-8 h-8 text-violet-500" 
+                  fill="none" 
+                  viewBox="0 0 24 24" 
+                  stroke="currentColor"
+                >
+                  <path 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round" 
+                    strokeWidth={2} 
+                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                  />
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold text-white mb-2">Ready to Begin?</h3>
+              <p className="text-neutral-400 mb-6">
+                Complete {tasks.length} questions about this video{allPoints > 0 ? ` to earn ${allPoints} points` : ''}!
+              </p>
+              <button
+                onClick={() => setStarted(true)}
+                className="w-48 rounded-full py-2.5 text-sm font-semibold text-white bg-[var(--primary-500)] hover:bg-violet-500 transition-colors"
               >
-                <input
-                  type="radio"
-                  name={`q_${step}`}
-                  checked={checked}
-                  onChange={() => setSelected(i)}
-                  className="form-radio size-4"
-                />
-                <span className="text-sm text-neutral-50">{label}</span>
-              </label>
-            );
-          })}
+                Start Task
+              </button>
+            </>
+          ) : (
+            <>
+              <div className="w-16 h-16 bg-[#271759] rounded-full flex items-center justify-center mb-4">
+                <svg 
+                  className="w-8 h-8 text-[#9333EA]" 
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <path 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round" 
+                    d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"
+                  />
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold text-white mb-2">Video Locked</h3>
+              <p className="text-neutral-400 mb-4">Unlock for 31 USD</p>
+              <div className="flex items-center gap-2 text-neutral-400">
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                  <path fillRule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z" clipRule="evenodd" />
+                </svg>
+                <span>{allPoints} points available</span>
+              </div>
+            </>
+          )}
         </div>
-      </div>
+      ) : (
+        <>
+          {/* Progress: single badge "X / N" */}
+          <div className="mt-3">
+            <span className="inline-flex items-center rounded-full border border-neutral-700 bg-neutral-900/60 px-2.5 py-0.5 text-xs font-medium text-neutral-300">
+              Question {step + 1} of {tasks.length}
+            </span>
+          </div>
 
-      {/* Tombol aksi */}
-      <div className="mt-6">
-        {isLast ? (
-          <button
-            onClick={handleDone}
-            className="w-full rounded-full bg-[var(--primary-500)] py-2.5 text-sm font-semibold text-neutral-50 hover:bg-violet-500"
-          >
-            Done
-          </button>
-        ) : (
-          <button
-            onClick={handleNext}
-            className="w-full rounded-full bg-[var(--primary-500)] py-2.5 text-sm font-semibold text-neutral-50 hover:bg-violet-500"
-          >
-            Next
-          </button>
-        )}
-      </div>
+          <div className="relative flex-1">
+            <div className={`space-y-4 mt-4 ${isLocked ? 'opacity-10' : ''}`}>
+              <p className="text-[15px] font-semibold text-neutral-50">{current.question}</p>
+
+              <div className="space-y-3">
+                {current.options.map((label, i) => {
+                  const checked = selected === i;
+                  return (
+                    <label
+                      key={i}
+                      className={[
+                        "flex cursor-pointer items-center gap-3 rounded-lg p-3 transition-colors",
+                        "border border-neutral-700 hover:bg-neutral-700/50",
+                        checked ? "bg-violet-900/20 border-[var(--primary-500)]" : "bg-transparent",
+                      ].join(" ")}
+                    >
+                      <input
+                        type="radio"
+                        name={`q_${step}`}
+                        checked={checked}
+                        onChange={() => setSelected(i)}
+                        className="form-radio size-4"
+                        disabled={isLocked}
+                      />
+                      <span className="text-sm text-neutral-50">{label}</span>
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
+
+            {isLocked && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <div className="text-center space-y-4">
+                  <div className="bg-neutral-800 p-4 rounded-full inline-block">
+                    <svg 
+                      className="w-8 h-8 text-white" 
+                      fill="none" 
+                      viewBox="0 0 24 24" 
+                      stroke="currentColor"
+                    >
+                      <path 
+                        strokeLinecap="round" 
+                        strokeLinejoin="round" 
+                        strokeWidth={2} 
+                        d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" 
+                      />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-white mb-2">Content Locked</h3>
+                    <p className="text-neutral-200">
+                      Purchase this video to unlock these tasks
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Tombol aksi */}
+          <div className="mt-6">
+            {isLast ? (
+              <button
+                onClick={handleDone}
+                disabled={isLocked}
+                className={`w-full rounded-full py-2.5 text-sm font-semibold text-neutral-50 transition-colors
+                  ${isLocked 
+                    ? 'bg-neutral-700 cursor-not-allowed opacity-50' 
+                    : 'bg-[var(--primary-500)] hover:bg-violet-500'}`}
+              >
+                Submit
+              </button>
+            ) : (
+              <button
+                onClick={handleNext}
+                disabled={isLocked}
+                className={`w-full rounded-full py-2.5 text-sm font-semibold text-neutral-50 transition-colors
+                  ${isLocked 
+                    ? 'bg-neutral-700 cursor-not-allowed opacity-50' 
+                    : 'bg-[var(--primary-500)] hover:bg-violet-500'}`}
+              >
+                Next
+              </button>
+            )}
+          </div>
+        </>
+      )}
     </div>
   );
 }

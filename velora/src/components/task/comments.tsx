@@ -472,9 +472,11 @@ function CommentNode({
 export default function Comments({
   videoId,
   currentUserAddr,
+  isLocked = false,
 }: {
   videoId: string;
   currentUserAddr?: string | null;
+  isLocked?: boolean;
 }) {
   const [sort, setSort] = useState<"top" | "newest">("newest");
   const [roots, setRoots] = useState<UiNode[]>([]);
@@ -854,36 +856,93 @@ export default function Comments({
         </div>
       </div>
 
-      {/* top composer */}
-      <div className="flex items-start gap-3">
-        {isAddr(myAddr) && <AvatarCircle address={myAddr} url={getAvatarUrl(myAddr)} size="lg" />}
-        <div className="flex-1">
-          <Composer onSend={onSend} placeholder="Write a comment…" />
-          {!isAddr(myAddr) && (
-            <p className="mt-2 text-xs text-neutral-400">Connect your wallet to post a comment.</p>
-          )}
+      {loading ? (
+        <div className="text-sm text-neutral-400">Loading comments…</div>
+      ) : isLocked ? (
+        <div className="relative min-h-[200px]">
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 text-white">
+            <div className="bg-neutral-800/80 p-4 rounded-full">
+              <svg 
+                className="w-8 h-8" 
+                fill="none" 
+                viewBox="0 0 24 24" 
+                stroke="currentColor"
+              >
+                <path 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round" 
+                  strokeWidth={2} 
+                  d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" 
+                />
+              </svg>
+            </div>
+            <div className="text-center">
+              <h3 className="text-xl font-bold mb-2">Comments Locked</h3>
+              <p className="text-neutral-200">
+                Purchase this video to join the discussion
+              </p>
+            </div>
+          </div>
+
+          <div className="opacity-10 pointer-events-none">
+            <div className="flex items-start gap-3">
+              {isAddr(myAddr) && <AvatarCircle address={myAddr} url={getAvatarUrl(myAddr)} size="lg" />}
+              <div className="flex-1">
+                <Composer onSend={onSend} placeholder="Write a comment…" />
+                {!isAddr(myAddr) && (
+                  <p className="mt-2 text-xs text-neutral-400">Connect your wallet to post a comment.</p>
+                )}
+              </div>
+            </div>
+
+            <div className="mt-5 space-y-5">
+              {sortedRoots.map((node) => (
+                <CommentNode
+                  key={node.id}
+                  node={node}
+                  avatarUrl={getAvatarUrl(node.addr)}
+                  myAddr={myAddr}
+                  onToggleLike={onToggleLike}
+                  onReply={onReply}
+                  onEdit={onEdit}
+                  onDelete={onDelete}
+                  sort={sort}
+                  getAvatarUrl={getAvatarUrl}
+                />
+              ))}
+            </div>
+          </div>
         </div>
-      </div>
+      ) : (
+        <>
+          <div className="flex items-start gap-3">
+            {isAddr(myAddr) && <AvatarCircle address={myAddr} url={getAvatarUrl(myAddr)} size="lg" />}
+            <div className="flex-1">
+              <Composer onSend={onSend} placeholder="Write a comment…" />
+              {!isAddr(myAddr) && (
+                <p className="mt-2 text-xs text-neutral-400">Connect your wallet to post a comment.</p>
+              )}
+            </div>
+          </div>
 
-      <div className="mt-5 space-y-5">
-        {!loading &&
-          sortedRoots.map((node) => (
-            <CommentNode
-              key={node.id}
-              node={node}
-              avatarUrl={getAvatarUrl(node.addr)}
-              myAddr={myAddr}
-              onToggleLike={onToggleLike}
-              onReply={onReply}
-              onEdit={onEdit}
-              onDelete={onDelete}
-              sort={sort}
-              getAvatarUrl={getAvatarUrl}
-            />
-          ))}
-
-        {loading && <div className="text-sm text-neutral-400">Loading comments…</div>}
-      </div>
+          <div className="mt-5 space-y-5">
+            {sortedRoots.map((node) => (
+              <CommentNode
+                key={node.id}
+                node={node}
+                avatarUrl={getAvatarUrl(node.addr)}
+                myAddr={myAddr}
+                onToggleLike={onToggleLike}
+                onReply={onReply}
+                onEdit={onEdit}
+                onDelete={onDelete}
+                sort={sort}
+                getAvatarUrl={getAvatarUrl}
+              />
+            ))}
+          </div>
+        </>
+      )}
     </div>
   );
 }
