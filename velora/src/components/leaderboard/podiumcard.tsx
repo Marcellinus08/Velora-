@@ -13,7 +13,7 @@ export default function PodiumCard({
   user: TopUser;
   highlight?: boolean;
   borderClass?: string;
-  onOpen?: (u: { name: string; handle: string; rank?: number; score?: number }) => void;
+  onOpen?: (u: { name: string; handle: string; rank?: number; score?: number; avatarUrl?: string }) => void;
 }) {
   const ringClass = highlight ? "border-yellow-400" : borderClass;
   const badgeClass = highlight ? "border-yellow-400 text-yellow-400" : "border-neutral-700 text-yellow-400";
@@ -22,7 +22,7 @@ export default function PodiumCard({
   const handleKey = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
-      onOpen?.({ name: user.name, handle: user.handle, rank: user.rank, score: user.score });
+      onOpen?.({ name: user.name, handle: user.handle, rank: user.rank, score: user.score, avatarUrl: user.avatarUrl });
     }
   };
 
@@ -30,7 +30,7 @@ export default function PodiumCard({
     <div
       role="button"
       tabIndex={0}
-      onClick={() => onOpen?.({ name: user.name, handle: user.handle, rank: user.rank, score: user.score })}
+      onClick={() => onOpen?.({ name: user.name, handle: user.handle, rank: user.rank, score: user.score, avatarUrl: user.avatarUrl })}
       onKeyDown={handleKey}
       className="relative flex w-full max-w-[14rem] flex-col items-center outline-none sm:max-w-[16rem] focus-visible:ring-2 focus-visible:ring-[var(--primary-500)] rounded-lg"
     >
@@ -56,7 +56,6 @@ export default function PodiumCard({
       </div>
 
       <h3 className={`mt-4 ${highlight ? "text-2xl" : "text-xl"} font-bold text-neutral-50`}>{user.name}</h3>
-      <p className="text-neutral-400">@{user.handle}</p>
 
       <div className="mt-2 flex items-center gap-1.5">
         <MI name="star" className={`${highlight ? "text-[18px]" : "text-[16px]"} text-yellow-400`} />

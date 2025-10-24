@@ -3,6 +3,7 @@ export type TopUser = {
   handle: string;
   score: number;
   rank: 1 | 2 | 3;
+  avatarUrl?: string;
   avatarNode: React.ReactNode;
 };
 
@@ -11,6 +12,7 @@ export type TableEntry = {
   name: string;
   handle: string;
   score: number;
+  avatarUrl?: string;
   avatarNode: React.ReactNode;
 };
 
@@ -19,6 +21,7 @@ export type CurrentUser = {
   name: string;
   handle: string;
   score: number;
+  avatarUrl?: string;
   avatarNode: React.ReactNode;
 };
 
@@ -37,6 +40,7 @@ export type UserProfile = {
   handle: string;
   rank?: number;
   score?: number;
+  avatarUrl?: string;
   purchases: Purchase[];
   activity: Activity[];
 };

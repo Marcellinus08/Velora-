@@ -3,6 +3,13 @@
 import React from "react";
 import MI from "./MI";
 import type { UserProfile } from "./types";
+import { AbstractProfile } from "@/components/abstract-profile";
+
+// Helper function to shorten wallet address
+const shortenAddress = (addr: string): string => {
+  if (addr.length <= 12) return addr;
+  return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
+};
 
 function TabButton({ active, onClick, label }: { active: boolean; onClick: () => void; label: string }) {
   return (
@@ -63,13 +70,29 @@ export default function ProfileModal({ profile, onClose }: { profile: UserProfil
       <div className="w-full max-w-5xl overflow-hidden rounded-2xl border border-neutral-800 bg-neutral-900">
         {/* Header */}
         <div className="grid grid-cols-1 gap-6 border-b border-neutral-800 p-6 sm:grid-cols-3">
-          <div className="col-span-2">
-            <div className="text-lg font-semibold text-neutral-50">
-              {profile.name} <span className="text-neutral-400">@{profile.handle}</span>
-            </div>
-            <div className="mt-1 text-sm text-neutral-400">
-              Rank <span className="text-neutral-50">#{fmtNum(profile.rank)}</span> • Points{" "}
-              <span className="text-neutral-50">{fmtNum(profile.score)}</span>
+          <div className="col-span-2 flex items-center gap-4">
+            {profile.avatarUrl ? (
+              <img
+                src={profile.avatarUrl}
+                alt={profile.name}
+                className="h-16 w-16 rounded-full border-2 border-neutral-700 object-cover"
+              />
+            ) : (
+              <AbstractProfile
+                address={profile.handle as `0x${string}`}
+                size="lg"
+                showTooltip={false}
+                ring={true}
+                ringWidth={2}
+              />
+            )}
+            <div>
+              <div className="text-lg font-semibold text-neutral-50">
+                {profile.name}
+              </div>
+              <div className="mt-1 text-sm text-neutral-400">
+                @{shortenAddress(profile.handle)}
+              </div>
             </div>
           </div>
           <div className="grid grid-cols-3 gap-3">
