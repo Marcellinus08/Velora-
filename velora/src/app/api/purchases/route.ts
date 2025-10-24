@@ -3,6 +3,42 @@ import { supabaseAdmin } from "@/lib/supabase-admin";
 
 const okAddr = (s?: string | null) => !!s && /^0x[a-fA-F0-9]{40}$/.test(s || "");
 
+// GET endpoint for debugging purchases
+export async function GET(req: NextRequest) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const videoId = searchParams.get("videoId");
+    const buyerId = searchParams.get("buyerId")?.toLowerCase();
+
+    if (!videoId) {
+      return NextResponse.json({ error: "videoId is required" }, { status: 400 });
+    }
+
+    let query = supabaseAdmin
+      .from("video_purchases")
+      .select("*")
+      .eq("video_id", videoId);
+
+    if (buyerId) {
+      query = query.ilike("buyer_id", buyerId);
+    }
+
+    const { data, error } = await query;
+
+    if (error) throw error;
+
+    return NextResponse.json({ 
+      purchases: data,
+      count: data?.length || 0,
+      videoId,
+      buyerId: buyerId || "all"
+    });
+  } catch (e: any) {
+    console.error("[GET /api/purchases] error", e);
+    return NextResponse.json({ error: e?.message || "Server error" }, { status: 500 });
+  }
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json().catch(() => ({}));

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import Swal from "sweetalert2";
 
 export type TaskItem = {
@@ -21,6 +21,8 @@ export default function TaskPanel({
   onValidated,
   videoId,
   userAddress,
+  hasCompletedTask = false,
+  earnedTaskPoints = 0,
 }: {
   className?: string;
   /** list of tasks for current video (fetched from DB) */
@@ -40,15 +42,25 @@ export default function TaskPanel({
   videoId?: string;
   /** user address untuk tracking progress */
   userAddress?: string;
+  /** apakah user sudah pernah complete task */
+  hasCompletedTask?: boolean;
+  /** points yang didapat dari task sebelumnya */
+  earnedTaskPoints?: number;
 }) {
   const [started, setStarted] = useState(false);
-  const [completed, setCompleted] = useState(false);
-  const [earnedPoints, setEarnedPoints] = useState(0);
+  const [completed, setCompleted] = useState(hasCompletedTask); // Set to true jika sudah pernah complete
+  const [earnedPoints, setEarnedPoints] = useState(earnedTaskPoints); // Set earned points dari DB
   const [step, setStep] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
   const [answers, setAnswers] = useState<Array<number | null>>(
     Array.from({ length: tasks?.length || 0 }, () => null)
   );
+
+  // Update completed dan earnedPoints jika hasCompletedTask berubah
+  useEffect(() => {
+    setCompleted(hasCompletedTask);
+    setEarnedPoints(earnedTaskPoints);
+  }, [hasCompletedTask, earnedTaskPoints]);
 
   const current = tasks?.[step];
 
@@ -332,17 +344,22 @@ export default function TaskPanel({
                 {completed 
                   ? earnedPoints > 0 
                     ? `You've earned ${earnedPoints} points!` 
-                    : `All answers must be correct to earn points. Try again with another video!`
+                    : `All answers must be correct to earn points.`
                   : `Complete ${tasks.length} questions about this video${allPoints > 0 ? ` to earn ${allPoints} points` : ''}!`
                 }
               </p>
-              {!completed && (
+              {!completed && !hasCompletedTask && (
                 <button
                   onClick={() => setStarted(true)}
                   className="w-48 rounded-full py-2.5 text-sm font-semibold text-white bg-[var(--primary-500)] hover:bg-violet-500 transition-colors"
                 >
                   Start Task
                 </button>
+              )}
+              {hasCompletedTask && (
+                <p className="text-sm text-neutral-500">
+                  You have already completed this task.
+                </p>
               )}
             </>
           ) : (

@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Link from "next/link";
 import { MI } from "./MI";
 
 /** ---------- Generic Modal (overlay + panel) ---------- */
@@ -122,21 +123,12 @@ function Progress({ value }: { value: number }) {
 export function PointsSheet({
   open,
   onClose,
-  points = 2500,
-  level = "Bronze",
-  nextTarget = 5000,
-  portfolioPts = 0,
-  plPts = 0,
+  points = 0,
 }: {
   open: boolean;
   onClose: () => void;
   points?: number;
-  level?: string;
-  nextTarget?: number;
-  portfolioPts?: number;
-  plPts?: number;
 }) {
-  const progress = Math.min(100, Math.round((points / nextTarget) * 100));
   const nf = new Intl.NumberFormat("en-US");
 
   return (
@@ -147,26 +139,16 @@ export function PointsSheet({
           icon={<MI name="star" className="text-[18px] text-yellow-400" />}
           name="Points"
           amount={`${nf.format(points)} pts`}
-          right={null}
+          right={
+            <Link 
+              href="/profile"
+              onClick={onClose}
+              className="rounded-xl border border-neutral-700 bg-neutral-900 px-4 py-2 text-sm font-medium text-neutral-200 hover:bg-neutral-800 transition-colors"
+            >
+              View Portfolio
+            </Link>
+          }
         />
-        <div className="mt-3 rounded-xl border border-neutral-800 bg-neutral-900 p-4">
-          <div className="text-sm text-neutral-300">
-            Level: <span className="font-semibold text-neutral-100">{level}</span>
-          </div>
-          <div className="mt-2 flex items-center justify-between text-xs text-neutral-400">
-            <span>Progress to next level</span>
-            <span>{progress}%</span>
-          </div>
-          <div className="mt-2">
-            <Progress value={progress} />
-          </div>
-        </div>
-
-        {/* Stats */}
-        <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <StatCard label="Portfolio" value={`${nf.format(portfolioPts)} pts`} />
-          <StatCard label="Profit / Loss" value={`${nf.format(plPts)} pts`} />
-        </div>
       </div>
     </Modal>
   );

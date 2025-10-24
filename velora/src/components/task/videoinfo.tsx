@@ -55,6 +55,8 @@ export default function VideoInfoSection({
   sharePoints = 0,
   totalPoints = 0,
   userAddress,
+  hasShared = false,
+  claimedSharePoints = 0,
 }: {
   video: VideoInfo;
   recommendations: RecommendedVideo[];
@@ -63,6 +65,8 @@ export default function VideoInfoSection({
   sharePoints?: number;
   totalPoints?: number;
   userAddress?: string;
+  hasShared?: boolean;
+  claimedSharePoints?: number;
 }) {
   const [expanded, setExpanded] = useState(false);
 
@@ -263,8 +267,17 @@ export default function VideoInfoSection({
 
               {/* Share */}
               <button
-                className="flex items-center gap-2 rounded-full bg-neutral-800 px-3 py-1 text-neutral-50 hover:bg-neutral-700"
+                className={`flex items-center gap-2 rounded-full px-3 py-1 text-neutral-50 transition-colors ${
+                  hasShared 
+                    ? 'bg-green-900/30 border border-green-500/30 cursor-default' 
+                    : 'bg-neutral-800 hover:bg-neutral-700'
+                }`}
                 onClick={async () => {
+                  // Jika sudah pernah share, tidak bisa claim lagi
+                  if (hasShared) {
+                    return;
+                  }
+
                   // Award points untuk share (hanya sekali)
                   if (userAddress && totalPoints > 0) {
                     try {
@@ -290,30 +303,40 @@ export default function VideoInfoSection({
                     }
                   }
 
-                  // Share to Twitter/X (tetap bisa share meskipun belum purchase)
+                  // Share to Twitter/X (tetap bisa share meskipun sudah pernah)
                   const pointsText = totalPoints > 0 ? ` and get total ${totalPoints} points!` : '!';
                   const url = typeof window !== "undefined" ? window.location.href : "";
                   const text = `Check out this video: ${video.title}${pointsText}\n\n${url}\n\n@AbstractChain`;
                   const twitterIntent = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
                   window.open(twitterIntent, "_blank");
                 }}
+                disabled={hasShared}
               >
                 <div className="flex items-center gap-2">
                   <span
                     className="material-icons-round text-[16px] leading-none align-middle"
                     aria-hidden="true"
                   >
-                    share
+                    {hasShared ? 'check_circle' : 'share'}
                   </span>
-                  <span className="text-sm font-medium">Share</span>
+                  <span className="text-sm font-medium">{hasShared ? 'Shared' : 'Share'}</span>
                 </div>
                 {sharePoints > 0 && (
-                  <div className="flex items-center gap-1.5 ml-2 pl-2 border-l border-neutral-700">
+                  <div className={`flex items-center gap-1.5 ml-2 pl-2 border-l ${
+                    hasShared ? 'border-green-600/30' : 'border-neutral-700'
+                  }`}>
                     <svg className="w-4 h-4 text-yellow-400" viewBox="0 0 24 24" fill="currentColor">
                       <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
                     </svg>
-                    <span className="text-sm font-medium text-yellow-400">{sharePoints}</span>
+                    <span className={`text-sm font-medium ${
+                      hasShared ? 'text-green-400' : 'text-yellow-400'
+                    }`}>
+                      {hasShared ? `+${claimedSharePoints}` : sharePoints}
+                    </span>
                   </div>
+                )}
+                {hasShared && (
+                  <span className="ml-2 text-xs text-green-400">Claimed</span>
                 )}
               </button>
             </div>
