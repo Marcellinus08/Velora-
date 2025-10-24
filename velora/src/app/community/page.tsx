@@ -93,6 +93,68 @@ export default function CommunityPage() {
   }
 
   // ✅ Hanya SweetAlert
+  async function handleEdit({ postId, title, content }: { postId: string; title: string; content: string }) {
+    if (!me) return;
+
+    const prevPosts = [...posts];
+    
+    // Optimistic update
+    setPosts((currentPosts) =>
+      currentPosts.map((p) =>
+        p.id === postId
+          ? { ...p, title, content }
+          : p
+      )
+    );
+
+    try {
+      const res = await fetch(`/api/community/posts/${postId}`, {
+        method: "PUT",
+        headers: { 
+          "Content-Type": "application/json",
+          "Accept": "application/json"
+        },
+        body: JSON.stringify({ 
+          abstractId: me,
+          title: title.trim(),
+          content: content.trim()
+        }),
+      });
+      
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({ error: res.statusText }));
+        throw new Error(errorData.error || `HTTP ${res.status}`);
+      }
+
+      // Toast notification untuk sukses
+      Swal.fire({
+        icon: "success",
+        title: "Changes saved!",
+        position: "top-end",
+        toast: true,
+        timer: 2000,
+        timerProgressBar: true,
+        showConfirmButton: false
+      });
+    } catch (e: any) {
+      console.error("Edit failed:", e);
+      // Rollback on error
+      setPosts(prevPosts);
+      
+      // Toast notification untuk error
+      Swal.fire({
+        icon: "error",
+        title: "Failed to save changes",
+        text: e?.message || "Unknown error",
+        position: "top-end",
+        toast: true,
+        timer: 3000,
+        timerProgressBar: true,
+        showConfirmButton: false
+      });
+    }
+  }
+
   async function handleDelete(id: string) {
     if (!me) return;
 
@@ -105,6 +167,10 @@ export default function CommunityPage() {
       cancelButtonText: "Cancel",
       reverseButtons: true,
       confirmButtonColor: "#ef4444",
+      position: "top-end",
+      toast: true,
+      timer: 3000,
+      timerProgressBar: true,
     });
     if (!isConfirmed) return;
 
@@ -120,11 +186,30 @@ export default function CommunityPage() {
       const json = await safeJson(res);
       if (!res.ok) throw new Error(json?.error || res.statusText);
 
-      await Swal.fire({ icon: "success", title: "Deleted", timer: 1200, showConfirmButton: false });
+      // Toast notification untuk sukses
+      Swal.fire({ 
+        icon: "success", 
+        title: "Post deleted successfully",
+        position: "top-end",
+        toast: true,
+        timer: 2000,
+        timerProgressBar: true,
+        showConfirmButton: false 
+      });
     } catch (e: any) {
       console.error("Delete failed:", e);
       setPosts(prev);
-      await Swal.fire({ icon: "error", title: "Gagal menghapus", text: e?.message || "Unknown error" });
+      // Toast notification untuk error
+      Swal.fire({ 
+        icon: "error", 
+        title: "Failed to delete post", 
+        text: e?.message || "Unknown error",
+        position: "top-end",
+        toast: true,
+        timer: 3000,
+        timerProgressBar: true,
+        showConfirmButton: false 
+      });
     }
   }
 
@@ -165,6 +250,7 @@ export default function CommunityPage() {
                     currentAddress={me}
                     onLike={() => toggleLike(p.id)}
                     onDelete={handleDelete} // parent yang konfirmasi
+                    onEdit={handleEdit} // tambahkan handler edit
                   />
                 ))
               : !error && <p className="text-neutral-400">Belum ada post untuk kategori ini.</p>}

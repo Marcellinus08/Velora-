@@ -1,10 +1,16 @@
-// src/components/community-post-row.tsx
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
 import Replies from "./replies";
 import type { CommunityPost } from "./types";
 import { AbstractProfile } from "@/components/abstract-profile";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { EditModal } from "./editmodal";
 
 /* ===== utils kecil ===== */
 const TTL = 5 * 60_000;
@@ -162,15 +168,19 @@ export default function CommunityPostRow({
   currentAddress, // alamat wallet user yang login
   onDelete, // callback hapus post (parent yang konfirmasi)
   loading = false, // <<— PROP BARU
+  onEdit, // callback untuk edit post
 }: {
   post: CommunityPost;
   onLike?: () => void;
   currentAddress?: string;
   onDelete?: (postId: string) => void;
+  onEdit?: (data: { postId: string; title: string; content: string }) => Promise<void>;
   loading?: boolean;
 }) {
   // Tampilkan skeleton ketika loading
   if (loading) return <PostSkeleton />;
+
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   const [expanded, setExpanded] = useState(false);
   const [openReplies, setOpenReplies] = useState(false);
@@ -245,6 +255,7 @@ export default function CommunityPostRow({
 
         {/* Body */}
         <div className="flex-1">
+          {/* HEADER: kiri (nama + kategori), kanan (waktu + menu) — sejajar rapi */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <p className="font-semibold text-neutral-50">{displayName}</p>
@@ -252,11 +263,35 @@ export default function CommunityPostRow({
                 posted in <span className="font-medium text-neutral-50">{post.category}</span>
               </p>
             </div>
-            <p className="text-sm text-neutral-400">{post.timeAgo}</p>
+            <div className="flex items-center gap-1 text-sm text-neutral-400">
+              <span>{post.timeAgo}</span>
+              {canDelete && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger className="flex items-center gap-1.5 hover:text-neutral-50">
+                    <MI name="more_vert" />
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => setIsEditModalOpen(true)} className="cursor-pointer">
+                      <MI name="edit" className="mr-2" />
+                      <span>Edit Post</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={requestDelete}
+                      className="cursor-pointer text-red-500 focus:text-red-500 hover:text-red-400"
+                    >
+                      <MI name="delete" className="mr-2" />
+                      <span>Delete Post</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+            </div>
           </div>
 
+          {/* TITLE */}
           <h3 className="mt-2 text-lg font-bold text-neutral-50">{post.title}</h3>
 
+          {/* CONTENT */}
           <div className="mt-1 text-neutral-400">
             {!expanded ? (
               <>
@@ -312,18 +347,23 @@ export default function CommunityPostRow({
               <MI name="share" />
               <span>Share</span>
             </button>
-
-            {canDelete && onDelete && (
-              <button
-                onClick={requestDelete}
-                className="flex items-center gap-1.5 text-red-500 hover:text-red-400"
-                title="Delete this post"
-              >
-                <MI name="delete" />
-                <span>Delete</span>
-              </button>
-            )}
           </div>
+
+          {/* Edit Modal */}
+          {canDelete && onEdit && (
+            <EditModal
+              post={post}
+              isOpen={isEditModalOpen}
+              onClose={() => setIsEditModalOpen(false)}
+              onSave={async (data) => {
+                await onEdit({
+                  postId: post.id,
+                  title: data.title,
+                  content: data.content
+                });
+              }}
+            />
+          )}
 
           {openReplies && <Replies postId={post.id} onPosted={() => setReplyCount((c) => c + 1)} />}
         </div>
