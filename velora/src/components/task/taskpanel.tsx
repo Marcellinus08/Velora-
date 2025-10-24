@@ -30,13 +30,13 @@ export default function TaskPanel({
   /** optional callback when validation is complete */
   onValidated?: (result: {
     correct: number;
-    wrong: number;
     total: number;
     pointsEarned: number;
     answers: Array<number | null>;
   }) => void;
 }) {
   const [started, setStarted] = useState(false);
+  const [completed, setCompleted] = useState(false);
   const [step, setStep] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
   const [answers, setAnswers] = useState<Array<number | null>>(
@@ -109,64 +109,40 @@ export default function TaskPanel({
 
   const handleDone = () => {
     if (selected === null) {
-      toastWarn("Pilih salah satu jawaban dahulu");
+      toastWarn("Please select an answer first");
       return;
     }
     
-    // pastikan terakhir tersimpan
-    const finalAnswers =
-      selected === null
-        ? answers
-        : (() => {
-            const cp = [...answers];
-            cp[step] = selected;
-            return cp;
-          })();
+    // Save the final answer
+    const finalAnswers = [...answers];
+    finalAnswers[step] = selected;
 
-    // hitung benar/salah
-    let correct = 0;
-    let wrong = 0;
-    let pointsEarned = 0;
+    // Since we're accepting any answer, give full points
+    const pointsEarned = allPoints;
 
-    const withKey = tasks.map((t, i) => ({
-      t,
-      ans: finalAnswers[i],
-      hasKey: typeof t.answerIndex === "number" && t.answerIndex! >= 0,
-    }));
-
-    const totalWithKey = withKey.filter((x) => x.hasKey).length || tasks.length;
-
-    withKey.forEach(({ t, ans, hasKey }) => {
-      if (!hasKey) {
-        // kalau tak ada kunci, treat sebagai salah/0 poin
-        wrong += 1;
-        return;
-      }
-      const good = ans === t.answerIndex;
-      if (good) {
-        correct += 1;
-        // hitung poin:
-        if (allPoints > 0) {
-          // proporsional dari totalPoints
-          // (pembulatan bawah agar stabil)
-          pointsEarned += Math.floor((allPoints / totalWithKey) + 1e-6);
-        } else {
-          pointsEarned += t.points || 0;
-        }
-      } else {
-        wrong += 1;
-      }
+    // Show completion toast
+    Swal.fire({
+      icon: "success",
+      title: "Task Completed! 🎉",
+      html: `<div style="font-size:13px;line-height:18px">
+        You've earned <b>${pointsEarned}</b> points!
+      </div>`,
+      position: "top-end",
+      toast: true,
+      timer: 3000,
+      showConfirmButton: false,
     });
 
-    toastResult(correct, wrong, pointsEarned, totalWithKey);
-
+    // Notify parent component
     onValidated?.({
-      correct,
-      wrong,
-      total: totalWithKey,
+      correct: tasks.length, // All answers are considered correct
+      total: tasks.length,
       pointsEarned,
       answers: finalAnswers,
     });
+
+    // Show completion screen
+    setCompleted(true);
   };
 
   return (
@@ -174,38 +150,69 @@ export default function TaskPanel({
       {/* Header: judul + poin */}
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-bold text-neutral-50">Your Task</h2>
+        {allPoints > 0 && (
+          <div className="flex items-center gap-1.5 px-2.5 py-1">
+            <svg className="w-5 h-5 text-yellow-400" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+            </svg>
+            <span className="text-sm font-medium text-yellow-400">{allPoints}</span>
+          </div>
+        )}
       </div>
 
-      {!started ? (
-        // Task intro screen
+      {!started || completed ? (
+        // Task intro/completion screen
         <div className="flex-1 flex flex-col items-center justify-center text-center relative">
           {!isLocked ? (
             <>
               <div className="w-16 h-16 bg-violet-600/20 rounded-full flex items-center justify-center mb-4">
-                <svg 
-                  className="w-8 h-8 text-violet-500" 
-                  fill="none" 
-                  viewBox="0 0 24 24" 
-                  stroke="currentColor"
-                >
-                  <path 
-                    strokeLinecap="round" 
-                    strokeLinejoin="round" 
-                    strokeWidth={2} 
-                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                  />
-                </svg>
+                {completed ? (
+                  <svg 
+                    className="w-8 h-8 text-violet-500" 
+                    viewBox="0 0 24 24" 
+                    fill="none" 
+                    stroke="currentColor"
+                  >
+                    <path 
+                      strokeLinecap="round" 
+                      strokeLinejoin="round" 
+                      strokeWidth={2} 
+                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" 
+                    />
+                  </svg>
+                ) : (
+                  <svg 
+                    className="w-8 h-8 text-violet-500" 
+                    fill="none" 
+                    viewBox="0 0 24 24" 
+                    stroke="currentColor"
+                  >
+                    <path 
+                      strokeLinecap="round" 
+                      strokeLinejoin="round" 
+                      strokeWidth={2} 
+                      d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                    />
+                  </svg>
+                )}
               </div>
-              <h3 className="text-xl font-bold text-white mb-2">Ready to Begin?</h3>
+              <h3 className="text-xl font-bold text-white mb-2">
+                {completed ? "Task Completed!" : "Ready to Begin?"}
+              </h3>
               <p className="text-neutral-400 mb-6">
-                Complete {tasks.length} questions about this video{allPoints > 0 ? ` to earn ${allPoints} points` : ''}!
+                {completed 
+                  ? `You've earned ${allPoints} points!` 
+                  : `Complete ${tasks.length} questions about this video${allPoints > 0 ? ` to earn ${allPoints} points` : ''}!`
+                }
               </p>
-              <button
-                onClick={() => setStarted(true)}
-                className="w-48 rounded-full py-2.5 text-sm font-semibold text-white bg-[var(--primary-500)] hover:bg-violet-500 transition-colors"
-              >
-                Start Task
-              </button>
+              {!completed && (
+                <button
+                  onClick={() => setStarted(true)}
+                  className="w-48 rounded-full py-2.5 text-sm font-semibold text-white bg-[var(--primary-500)] hover:bg-violet-500 transition-colors"
+                >
+                  Start Task
+                </button>
+              )}
             </>
           ) : (
             <>

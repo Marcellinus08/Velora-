@@ -4,6 +4,101 @@
 import { useEffect, useMemo, useState } from "react";
 import { useAccount } from "wagmi";
 import { AbstractProfile } from "@/components/abstract-profile";
+import Swal from "sweetalert2";
+
+// Configure SweetAlert2 defaults
+const Toast = Swal.mixin({
+  toast: true,
+  position: 'top',
+  showConfirmButton: false,
+  timer: 3000,
+  timerProgressBar: true,
+  customClass: {
+    container: 'sweet-alert-container',
+    popup: 'sweet-alert-popup',
+  }
+});
+
+// Add styles to head
+if (typeof document !== 'undefined') {
+  const style = document.createElement('style');
+  style.textContent = `
+    .sweet-alert-container {
+      padding-top: 480px !important; /* Increased padding to clear the header */
+      z-index: 1000; /* Reduced z-index to stay below header */
+    }
+    
+    .sweet-alert-popup {
+      margin: 100 !important;
+      position: relative !important;
+      top: auto !important;
+    }
+
+    @keyframes slideInRight {
+      from {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+
+    @keyframes slideOutRight {
+      from {
+        transform: translateX(0);
+        opacity: 1;
+      }
+      to {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+    }
+
+    @keyframes slideInDown {
+      from {
+        transform: translateY(-100%);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    @keyframes slideOutUp {
+      from {
+        transform: translateY(0);
+        opacity: 1;
+      }
+      to {
+        transform: translateY(-100%);
+        opacity: 0;
+      }
+    }
+    .animated-toast {
+      border-radius: 8px !important;
+      padding: 12px 24px !important;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.1) !important;
+      border: 1px solid rgba(255,255,255,0.1) !important;
+      backdrop-filter: blur(8px) !important;
+      margin: 12px !important;
+    }
+
+    .timer-progress {
+      background: linear-gradient(to right, rgba(255,255,255,0.2), rgba(255,255,255,0.4)) !important;
+      height: 2px !important;
+    }
+
+    .animated-toast .swal2-html-container {
+      margin: 0 !important;
+      padding: 0 !important;
+      font-size: 14px !important;
+    }
+  `;
+  document.head.appendChild(style);
+}
 
 type ReplyNode = {
   id: string;
@@ -68,6 +163,7 @@ export default function Replies({ postId, onPosted }: { postId: string; onPosted
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [text, setText] = useState("");
+  const [editingReplyId, setEditingReplyId] = useState<string | null>(null);
 
   async function load() {
     setLoading(true);
@@ -99,12 +195,13 @@ export default function Replies({ postId, onPosted }: { postId: string; onPosted
         body: JSON.stringify({ abstractId: me, content: text.trim(), parentId: parentId ?? null }),
       });
       const j = await r.json().catch(() => ({} as any));
-      if (!r.ok) throw new Error(j?.error || "Failed");
+      if (!r.ok) throw new Error(j?.error || "Failed to post reply");
       setText("");
       onPosted?.();
       await load();
+      showToast('success', 'Reply posted successfully');
     } catch (e: any) {
-      setErr(e?.message || "Failed to post reply");
+      showToast('error', e?.message || "Failed to post reply");
     }
   }
 
@@ -137,10 +234,161 @@ export default function Replies({ postId, onPosted }: { postId: string; onPosted
     return { ...node, children: node.children.map((c) => updateNode(c, id, fn)) };
   }
 
+  const showToast = (type: 'success' | 'error' | 'warning', message: string) => {
+    const iconColors = {
+      success: '#10b981',
+      error: '#ef4444',
+      warning: '#f59e0b'
+    };
+
+    const icons = {
+      success: `
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+      `,
+      error: `
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+      `,
+      warning: `
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+        </svg>
+      `
+    };
+
+    Swal.fire({
+      html: `
+        <div class="flex items-center">
+          <div class="mr-3" style="color: ${iconColors[type]}">${icons[type]}</div>
+          <div>${message}</div>
+        </div>
+      `,
+      toast: true,
+      position: 'top-end',
+      showConfirmButton: false,
+      timer: 3000,
+      timerProgressBar: true,
+      background: '#18181b',
+      color: '#fff',
+      customClass: {
+        popup: 'animated-toast',
+        timerProgressBar: 'timer-progress'
+      },
+      showClass: {
+        popup: 'animate__animated animate__fadeInRight animate__faster'
+      },
+      hideClass: {
+        popup: 'animate__animated animate__fadeOutRight animate__faster'
+      },
+      didOpen: (toast) => {
+        toast.addEventListener('mouseenter', Swal.stopTimer);
+        toast.addEventListener('mouseleave', Swal.resumeTimer);
+      }
+    });
+  };
+
+  async function handleEdit(id: string, newContent: string) {
+    if (!me || !newContent.trim()) return;
+    
+    try {
+      const r = await fetch(`/api/community/replies/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: newContent.trim(), abstractId: me }),
+      });
+      
+      const data = await r.json();
+      
+      if (!r.ok) {
+        throw new Error(data.error || 'Failed to edit reply');
+      }
+
+      // Update local state to show the edited content immediately
+      setItems((prev) => 
+        prev.map((item) => updateNode(item, id, (node) => ({
+          ...node,
+          content: newContent.trim()
+        })))
+      );
+
+      // Close edit mode and reload to ensure we have fresh data
+      if (editingReplyId === id) {
+        setEditingReplyId(null);
+      }
+      await load();
+      
+      showToast('success', 'Reply updated successfully');
+    } catch (e: any) {
+      console.error('Edit error:', e);
+      showToast('error', e?.message || 'Failed to edit reply');
+      throw e;
+    }
+  }
+
+  async function handleDelete(id: string) {
+    if (!me) return;
+    
+    // Konfirmasi dengan SweetAlert
+    const result = await Swal.fire({
+      html: `
+        <div class="flex flex-col items-center">
+          <svg class="w-12 h-12 mb-4 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+          </svg>
+          <div class="text-lg font-semibold mb-2">Delete Reply?</div>
+          <div class="text-sm text-neutral-400">This action cannot be undone</div>
+        </div>
+      `,
+      showCancelButton: true,
+      confirmButtonText: 'Delete',
+      cancelButtonText: 'Cancel',
+      confirmButtonColor: '#ef4444',
+      cancelButtonColor: '#3f3f46',
+      background: '#18181b',
+      color: '#fff',
+      customClass: {
+        popup: 'animated-popup',
+        confirmButton: 'confirm-button',
+        cancelButton: 'cancel-button'
+      },
+      showClass: {
+        popup: 'animate__animated animate__fadeInDown animate__faster'
+      },
+      hideClass: {
+        popup: 'animate__animated animate__fadeOutUp animate__faster'
+      }
+    });
+
+    if (!result.isConfirmed) return;
+    
+    try {
+      const r = await fetch(`/api/community/replies/${id}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ abstractId: me }),
+      });
+      if (!r.ok) throw new Error('Failed to delete reply');
+      await load();
+      showToast('success', 'Reply deleted successfully');
+    } catch (e: any) {
+      showToast('error', e?.message || 'Failed to delete reply');
+    }
+  }
+
   function Item({ node }: { node: ReplyNode }) {
     const [openReplyBox, setOpenReplyBox] = useState(false);
     const [childText, setChildText] = useState("");
     const [showChildren, setShowChildren] = useState(false);
+    const [showOptions, setShowOptions] = useState(false);
+    const [isEditing, setIsEditing] = useState(false);
+    const [editContent, setEditContent] = useState(node.content);
+    
+    useEffect(() => {
+      setEditContent(node.content);
+    }, [node.content]);
 
     async function postChild() {
       if (!me || !childText.trim()) return;
@@ -151,13 +399,16 @@ export default function Replies({ postId, onPosted }: { postId: string; onPosted
           body: JSON.stringify({ abstractId: me, content: childText.trim(), parentId: node.id }),
         });
         const j = await r.json().catch(() => ({} as any));
-        if (!r.ok) throw new Error(j?.error || "Failed");
+        if (!r.ok) throw new Error(j?.error || "Failed to post reply");
         setChildText("");
         setOpenReplyBox(false);
         onPosted?.();
         await load();
         setShowChildren(true);
-      } catch {}
+        showToast('success', 'Reply posted successfully');
+      } catch (e: any) {
+        showToast('error', e?.message || "Failed to post reply");
+      }
     }
 
     const likeIcon = node.liked ? "favorite" : "favorite_border";
@@ -167,16 +418,93 @@ export default function Replies({ postId, onPosted }: { postId: string; onPosted
         <div className="flex items-start gap-3">
           <Avatar address={node.authorAddress} url={node.authorAvatar} />
           <div className="flex-1">
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-semibold text-neutral-100">
-                {node.authorName?.trim() || short(node.authorAddress)}
-              </span>
-              <span className="text-xs text-neutral-400">
-                {new Date(node.createdAt).toLocaleString()}
-              </span>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-semibold text-neutral-100">
+                  {node.authorName?.trim() || short(node.authorAddress)}
+                </span>
+                <span className="text-xs text-neutral-400">
+                  {new Date(node.createdAt).toLocaleString()}
+                </span>
+              </div>
+              
+              {/* Menu Options (three dots) - Only show for reply owner */}
+              {me === node.authorAddress.toLowerCase() && (
+                <div className="relative group">
+                  <button 
+                    className="p-1 hover:bg-neutral-800 rounded-full"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowOptions(prev => !prev);
+                    }}
+                  >
+                    <MI name="more_horiz" className="text-neutral-400" />
+                  </button>
+                  
+                  {/* Dropdown menu */}
+                  <div className={`absolute right-0 mt-1 w-32 bg-neutral-800 rounded-lg shadow-lg py-1 z-10 ${showOptions ? 'block' : 'hidden'}`}>
+                    <button
+                      onClick={() => {
+                        setShowOptions(false);
+                        setEditingReplyId(node.id);
+                      }}
+                      className="w-full px-4 py-2 text-sm text-left text-neutral-200 hover:bg-neutral-700 flex items-center gap-2"
+                    >
+                      <MI name="edit" className="text-neutral-400" />
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowOptions(false);
+                        handleDelete(node.id);
+                      }}
+                      className="w-full px-4 py-2 text-sm text-left text-red-400 hover:bg-neutral-700 flex items-center gap-2"
+                    >
+                      <MI name="delete" className="text-red-400" />
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
 
-            <div className="mt-1 whitespace-pre-wrap text-neutral-200">{node.content}</div>
+            {editingReplyId === node.id ? (
+              <div className="mt-2">
+                <textarea
+                  value={editContent}
+                  onChange={(e) => setEditContent(e.target.value)}
+                  className="w-full rounded-md border border-neutral-700 bg-neutral-950 p-2 text-sm text-neutral-50 outline-none"
+                  rows={2}
+                />
+                <div className="mt-2 flex justify-end gap-2">
+                  <button
+                    onClick={() => {
+                      setEditingReplyId(null);
+                      setEditContent(node.content);
+                    }}
+                    className="px-3 py-1 text-sm text-neutral-400 hover:text-neutral-200"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={async () => {
+                      try {
+                        await handleEdit(node.id, editContent);
+                        await load(); // Reload setelah edit berhasil
+                      } catch (e) {
+                        console.error('Failed to edit:', e);
+                      }
+                    }}
+                    disabled={!editContent.trim() || editContent === node.content}
+                    className="px-3 py-1 text-sm bg-[var(--primary-600)] text-white rounded-md hover:bg-[var(--primary-500)] disabled:opacity-50 disabled:hover:bg-[var(--primary-600)]"
+                  >
+                    Save
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="mt-1 whitespace-pre-wrap text-neutral-200">{node.content}</div>
+            )}
 
             {/* actions: LIKE + REPLIES + REPLY */}
             <div className="mt-2 flex items-center gap-6 text-sm text-neutral-400">

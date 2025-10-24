@@ -399,6 +399,11 @@ export default function UploadCreate() {
         price_cents: normalizedCents,
         currency: "USD",
         tasks_json: tasks, // kalau kolom tidak ada → akan di-trim otomatis
+        
+        // Tambahkan pembagian points saja
+        points_buy_share: 40,  // 40% untuk pembeli
+        points_task_share: 20, // 20% untuk task
+        points_share_share: 40 // 40% untuk sharing
       };
 
       await insertVideoRowSmart(payload);
