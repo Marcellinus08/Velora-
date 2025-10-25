@@ -15,11 +15,10 @@ const MI = ({ name, className = "" }: { name: string; className?: string }) => (
 
 const nf = new Intl.NumberFormat("en-US");
 function formatUSD(n?: number) {
-  if (n == null || !isFinite(n)) return "$0";
-  if (n < 1) return `$${n.toFixed(4)}`;
-  if (n < 1000) return `$${n.toFixed(2)}`;
-  if (n < 1_000_000) return `$${(n / 1_000).toFixed(1)}k`;
-  return `$${(n / 1_000_000).toFixed(1)}m`;
+  if (n == null || !isFinite(n)) return "0.00";
+  if (n < 1000) return n.toFixed(2);
+  if (n < 1_000_000) return `${(n / 1_000).toFixed(2)}k`;
+  return `${(n / 1_000_000).toFixed(2)}m`;
 }
 
 /* ===== CRUD menu small ===== */
@@ -194,7 +193,7 @@ export default function StudioRecentUploads({
                   </p>
                 )}
                 <div className="mt-1 text-sm text-neutral-400">
-                  {nf.format(v.views)} views • {v.date}
+                  {v.date}
                 </div>
               </div>
 
@@ -210,7 +209,7 @@ export default function StudioRecentUploads({
                   </div>
                   <div
                     className="inline-flex items-center gap-1 text-[11px] text-neutral-300 tabular-nums"
-                    title={`${formatUSD(v.revenueUsd ?? 0)} revenue`}
+                    title={`$${formatUSD(v.revenueUsd ?? 0)} revenue`}
                   >
                     <MI name="attach_money" className="text-[12px] leading-none -mt-px" />
                     <span className="leading-none">{formatUSD(v.revenueUsd ?? 0)}</span>

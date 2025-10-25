@@ -8,28 +8,15 @@ import Sidebar from "@/components/sidebar";
 import { AbstractProfile } from "@/components/abstract-profile";
 
 import RangeFilter from "@/components/leaderboard/rangefilter";
-import PodiumCard from "@/components/leaderboard/podiumcard";
-import CurrentUserCard from "@/components/leaderboard/currentusercard";
 import ProfileModal from "@/components/leaderboard/profilemodal";
 
 import { PROFILE_DB } from "@/components/leaderboard/data";
 import type {
-  TopUser,
   TableEntry,
   CurrentUser,
   RangeKey,
   UserProfile,
 } from "@/components/leaderboard/types";
-
-/* Avatar placeholder contoh */
-function AccountIcon({ className = "" }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" className={`text-neutral-200 ${className}`} fill="currentColor">
-      <path d="M12 12a4 4 0 100-8 4 4 0 000 8zm-8 8a8 8 0 1116 0v1H4v-1z" />
-    </svg>
-  );
-}
-const AvatarPlaceholder = () => <AccountIcon className="h-3/5 w-3/5" />;
 
 interface LeaderboardUser {
   user_addr: string;
@@ -46,8 +33,6 @@ const shortenAddress = (addr: string): string => {
 
 export default function LeaderboardPage() {
   const { address } = useAccount();
-  const podiumAvatar = <AvatarPlaceholder />;
-  const rowAvatar = <AvatarPlaceholder />;
 
   const [leaderboardData, setLeaderboardData] = useState<LeaderboardUser[]>([]);
   const [loading, setLoading] = useState(true);
@@ -127,51 +112,10 @@ export default function LeaderboardPage() {
 
   useEffect(() => setPage(1), [range, pageSize]);
 
-  // Convert leaderboard data to display format
-  const top3: [TopUser, TopUser, TopUser] = [
-    leaderboardData[1] ? {
-      rank: 2,
-      name: leaderboardData[1].username || shortenAddress(leaderboardData[1].user_addr),
-      handle: leaderboardData[1].user_addr, // Kirim alamat wallet lengkap
-      score: leaderboardData[1].total_points,
-      avatarUrl: leaderboardData[1].avatar_url,
-      avatarNode: leaderboardData[1].avatar_url ? (
-        <img src={leaderboardData[1].avatar_url} alt="" className="h-full w-full object-cover" />
-      ) : (
-        <AbstractProfile address={leaderboardData[1].user_addr as `0x${string}`} size="lg" showTooltip={false} ring={false} />
-      ),
-    } : { rank: 2, name: "—", handle: "—", score: 0, avatarNode: podiumAvatar },
-    
-    leaderboardData[0] ? {
-      rank: 1,
-      name: leaderboardData[0].username || shortenAddress(leaderboardData[0].user_addr),
-      handle: leaderboardData[0].user_addr, // Kirim alamat wallet lengkap
-      score: leaderboardData[0].total_points,
-      avatarUrl: leaderboardData[0].avatar_url,
-      avatarNode: leaderboardData[0].avatar_url ? (
-        <img src={leaderboardData[0].avatar_url} alt="" className="h-full w-full object-cover" />
-      ) : (
-        <AbstractProfile address={leaderboardData[0].user_addr as `0x${string}`} size="lg" showTooltip={false} ring={false} />
-      ),
-    } : { rank: 1, name: "—", handle: "—", score: 0, avatarNode: podiumAvatar },
-    
-    leaderboardData[2] ? {
-      rank: 3,
-      name: leaderboardData[2].username || shortenAddress(leaderboardData[2].user_addr),
-      handle: leaderboardData[2].user_addr, // Kirim alamat wallet lengkap
-      score: leaderboardData[2].total_points,
-      avatarUrl: leaderboardData[2].avatar_url,
-      avatarNode: leaderboardData[2].avatar_url ? (
-        <img src={leaderboardData[2].avatar_url} alt="" className="h-full w-full object-cover" />
-      ) : (
-        <AbstractProfile address={leaderboardData[2].user_addr as `0x${string}`} size="lg" showTooltip={false} ring={false} />
-      ),
-    } : { rank: 3, name: "—", handle: "—", score: 0, avatarNode: podiumAvatar },
-  ];
-
-  // Table entries (rank 4+)
-  const entries: TableEntry[] = leaderboardData.slice(3).map((user, index) => ({
-    rank: index + 4,
+  // Convert leaderboard data to display format - only users with points > 0
+  // All entries combined (no separate top3 section since we use simple table)
+  const entries: TableEntry[] = leaderboardData.map((user, index) => ({
+    rank: index + 1,
     name: user.username || shortenAddress(user.user_addr),
     handle: user.user_addr, // Kirim alamat wallet lengkap
     score: user.total_points,
@@ -240,75 +184,130 @@ export default function LeaderboardPage() {
   return (
     <div className="flex h-full grow flex-row">
       <Sidebar />
-      <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8">
+      <main className="flex-1 overflow-y-auto px-4 py-6 sm:px-6 lg:px-8">
         <div className="flex flex-col gap-6">
+          {/* Header with Filter */}
           <div className="flex flex-col items-start gap-4 md:flex-row md:items-center md:justify-between">
             <h2 className="text-2xl font-bold text-neutral-50">Leaderboard</h2>
             <RangeFilter value={range} onChange={setRange} />
           </div>
 
-          {/* Top 3 */}
-          <div className="grid grid-cols-1 place-items-center gap-12 sm:grid-cols-3">
-            <PodiumCard user={top3.find((u) => u.rank === 2)!} borderClass="border-neutral-700" onOpen={openProfile} />
-            <PodiumCard user={top3.find((u) => u.rank === 1)!} highlight onOpen={openProfile} />
-            <PodiumCard user={top3.find((u) => u.rank === 3)!} borderClass="border-neutral-700" onOpen={openProfile} />
-          </div>
+          {/* Current user highlight */}
+          {currentUser && (
+            <div className="flex items-center justify-between rounded-xl border border-purple-500/30 bg-purple-500/5 px-6 py-4">
+              <div className="flex items-center gap-4">
+                <div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-full border-2 border-purple-500/40 bg-neutral-800">
+                  {currentUser.avatarNode}
+                </div>
+                <div>
+                  <div className="text-lg font-bold text-neutral-50">You</div>
+                  <div className="text-sm text-neutral-400">Your ranking position</div>
+                </div>
+              </div>
+              <div className="flex items-center gap-8">
+                <div className="text-right">
+                  <div className="text-xs font-medium uppercase tracking-wide text-neutral-500">Rank</div>
+                  <div className="mt-1 text-2xl font-bold text-purple-400">#{currentUser.rank}</div>
+                </div>
+                <div className="text-right">
+                  <div className="text-xs font-medium uppercase tracking-wide text-neutral-500">Score</div>
+                  <div className="mt-1 text-2xl font-bold text-yellow-400">{fmt(currentUser.score)}</div>
+                </div>
+              </div>
+            </div>
+          )}
 
-          {/* Current user */}
-          {currentUser && <CurrentUserCard user={currentUser} fmt={fmt} />}
-
-          {/* Table */}
-          <div className="overflow-hidden rounded-lg border border-neutral-800">
-            <table className="min-w-full divide-y divide-neutral-800">
-              <thead className="bg-neutral-800">
-                <tr>
-                  <th className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-neutral-50 sm:pl-6">Rank</th>
-                  <th className="px-3 py-3.5 text-left text-sm font-semibold text-neutral-50">User</th>
-                  <th className="px-3 py-3.5 text-left text-sm font-semibold text-neutral-50">Score</th>
+          {/* Simple Table List */}
+          <div className="overflow-hidden rounded-xl border border-neutral-800/50 bg-neutral-900/30">
+            <table className="min-w-full">
+              <thead>
+                <tr className="border-b border-neutral-800/50 bg-neutral-800/30">
+                  <th className="py-4 pl-6 pr-3 text-left text-xs font-semibold uppercase tracking-wide text-neutral-400">Rank</th>
+                  <th className="px-3 py-4 text-left text-xs font-semibold uppercase tracking-wide text-neutral-400">User</th>
+                  <th className="px-3 py-4 pr-6 text-right text-xs font-semibold uppercase tracking-wide text-neutral-400">Score</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-neutral-800 bg-neutral-900">
-                {pageEntries.map((e) => (
-                  <tr key={e.rank} className="bg-neutral-800/50 hover:bg-neutral-800 cursor-pointer transition-colors" onClick={() => openProfile({ name: e.name, handle: e.handle, rank: e.rank, score: e.score, avatarUrl: e.avatarUrl })}>
-                    <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-neutral-50 sm:pl-6">
-                      {e.rank}
-                    </td>
-                    <td className="whitespace-nowrap px-3 py-4 text-sm text-neutral-400">
-                      <div className="flex items-center gap-4">
-                        <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border border-neutral-600 bg-neutral-700">
-                          {e.avatarNode}
+              <tbody className="divide-y divide-neutral-800/30">
+                {pageEntries.map((e) => {
+                  const isFirst = e.rank === 1;
+                  const isSecond = e.rank === 2;
+                  const isThird = e.rank === 3;
+                  const isCurrentUser = address && e.handle.toLowerCase() === address.toLowerCase();
+                  
+                  return (
+                    <tr
+                      key={e.rank}
+                      className={`cursor-pointer transition-all duration-200 ${
+                        isFirst
+                          ? "bg-gradient-to-r from-yellow-900/30 via-yellow-800/20 to-transparent hover:from-yellow-900/40 hover:via-yellow-800/30"
+                          : isCurrentUser
+                          ? "bg-purple-900/20 hover:bg-purple-900/30"
+                          : "hover:bg-neutral-800/40"
+                      }`}
+                      onClick={() => openProfile({ name: e.name, handle: e.handle, rank: e.rank, score: e.score, avatarUrl: e.avatarUrl })}
+                    >
+                      <td className="whitespace-nowrap py-5 pl-6 pr-3">
+                        <div
+                          className={`inline-flex h-10 w-10 items-center justify-center rounded-lg text-base font-bold transition-transform hover:scale-105 ${
+                            isFirst
+                              ? "bg-gradient-to-br from-yellow-500 to-yellow-600 text-white shadow-lg shadow-yellow-600/30"
+                              : isSecond
+                              ? "border-2 border-neutral-500 bg-neutral-800/50 text-neutral-200"
+                              : isThird
+                              ? "border-2 border-yellow-700/70 bg-yellow-900/20 text-yellow-500"
+                              : "text-neutral-400"
+                          }`}
+                        >
+                          {e.rank}
                         </div>
-                        <div>
-                          <div className="font-medium text-neutral-50">{e.name}</div>
-                          <div className="text-neutral-400">@{shortenAddress(e.handle)}</div>
+                      </td>
+                      <td className="px-3 py-5">
+                        <div className="flex items-center gap-4">
+                          <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full border-2 border-neutral-700/50 bg-neutral-800">
+                            {e.avatarNode}
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2 font-semibold text-neutral-50">
+                              <span>{e.name}</span>
+                              {isCurrentUser && (
+                                <span className="rounded-full bg-purple-500/20 px-2.5 py-0.5 text-xs font-medium text-purple-400 ring-1 ring-purple-500/30">You</span>
+                              )}
+                            </div>
+                            <div className="mt-0.5 text-xs text-neutral-500">@{shortenAddress(e.handle)}</div>
+                          </div>
                         </div>
-                      </div>
-                    </td>
-                    <td className="whitespace-nowrap px-3 py-4 text-sm font-medium text-neutral-50">
-                      {fmt(e.score)}
-                    </td>
-                  </tr>
-                ))}
+                      </td>
+                      <td className="whitespace-nowrap px-3 py-5 pr-6 text-right">
+                        <div className="inline-flex items-center gap-2 text-yellow-400">
+                          <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                          </svg>
+                          <span className="text-base font-bold">{fmt(e.score)}</span>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
 
             {/* Pagination */}
-            <div className="flex flex-col items-center justify-between gap-3 bg-neutral-900 px-4 py-3 sm:flex-row">
+            <div className="flex flex-col items-center justify-between gap-4 border-t border-neutral-800/50 bg-neutral-800/20 px-6 py-4 sm:flex-row">
               <div className="text-sm text-neutral-400">
-                Showing <span className="text-neutral-50">{start + 1}</span>–
-                <span className="text-neutral-50">{Math.min(start + pageSize, entries.length)}</span> of{" "}
-                <span className="text-neutral-50">{fmt(entries.length)}</span>
+                Showing <span className="font-semibold text-neutral-200">{start + 1}</span>–
+                <span className="font-semibold text-neutral-200">{Math.min(start + pageSize, entries.length)}</span> of{" "}
+                <span className="font-semibold text-neutral-200">{fmt(entries.length)}</span>
               </div>
 
-              <div className="flex items-center gap-3">
-                <label className="text-sm text-neutral-400">
-                  Rows per page{" "}
+              <div className="flex items-center gap-4">
+                <label className="flex items-center gap-2 text-sm text-neutral-400">
+                  <span>Rows per page</span>
                   <select
-                    className="ml-2 rounded-md border border-neutral-700 bg-neutral-800 px-2 py-1 text-neutral-50"
+                    className="rounded-lg border border-neutral-700 bg-neutral-800 px-3 py-1.5 text-sm text-neutral-50 transition-colors hover:border-neutral-600 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500/20"
                     value={pageSize}
                     onChange={(e) => setPageSize(Number(e.target.value))}
                   >
-                    {[5, 10, 20, 50].map((n) => (
+                    {[10, 20, 50, 100].map((n) => (
                       <option key={n} value={n}>
                         {n}
                       </option>
@@ -318,18 +317,18 @@ export default function LeaderboardPage() {
 
                 <div className="flex items-center gap-2">
                   <button
-                    className="rounded-md border border-neutral-700 px-3 py-1 text-sm text-neutral-50 hover:bg-neutral-800 disabled:opacity-40"
+                    className="rounded-lg border border-neutral-700 bg-neutral-800/50 px-4 py-1.5 text-sm font-medium text-neutral-50 transition-all hover:border-neutral-600 hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-neutral-700 disabled:hover:bg-neutral-800/50"
                     disabled={page === 1}
                     onClick={() => setPage((p) => Math.max(1, p - 1))}
                   >
                     Prev
                   </button>
-                  <span className="text-sm text-neutral-400">
-                    Page <span className="text-neutral-50">{page}</span> of{" "}
-                    <span className="text-neutral-50">{totalPages}</span>
+                  <span className="min-w-[120px] text-center text-sm text-neutral-400">
+                    Page <span className="font-semibold text-neutral-200">{page}</span> of{" "}
+                    <span className="font-semibold text-neutral-200">{totalPages}</span>
                   </span>
                   <button
-                    className="rounded-md border border-neutral-700 px-3 py-1 text-sm text-neutral-50 hover:bg-neutral-800 disabled:opacity-40"
+                    className="rounded-lg border border-neutral-700 bg-neutral-800/50 px-4 py-1.5 text-sm font-medium text-neutral-50 transition-all hover:border-neutral-600 hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-neutral-700 disabled:hover:bg-neutral-800/50"
                     disabled={page === totalPages}
                     onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                   >

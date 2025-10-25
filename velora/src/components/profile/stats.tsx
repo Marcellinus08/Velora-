@@ -44,13 +44,17 @@ export default function ProfileStatsCard({
       {rank ? (
         <div className="rounded-lg bg-neutral-800/60 p-3 text-center">
           <p className="text-neutral-400">Rank</p>
-          <p className="font-semibold text-neutral-50">#{fmt(rank.rank)}</p>
+          {rank.rank > 0 ? (
+            <p className="font-semibold text-neutral-50">#{fmt(rank.rank)}</p>
+          ) : (
+            <p className="font-semibold text-neutral-500">Unranked</p>
+          )}
         </div>
       ) : (
         // fallback kalau belum ada data rank (opsional, biar tidak pecah)
         <div className="rounded-lg bg-neutral-800/60 p-3 text-center">
           <p className="text-neutral-400">Rank</p>
-          <p className="font-semibold text-neutral-300">—</p>
+          <p className="font-semibold text-neutral-500">Unranked</p>
         </div>
       )}
     </div>

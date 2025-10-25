@@ -54,6 +54,8 @@ export default function StudioPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [videos, setVideos] = useState<StudioVideo[]>([]);
+  const [buyersTotal, setBuyersTotal] = useState(0);
+  const [earningsUsd, setEarningsUsd] = useState(0);
 
   async function load() {
     if (!me) return;
@@ -74,18 +76,113 @@ export default function StudioPage() {
         description: v.description ?? undefined,
         points: v.points_total ?? undefined,
 
-        // buyers & revenue: belum ada tabel orders di skema contoh -> biarkan undefined
-        buyers: undefined,
-        revenueUsd: undefined,
+        // buyers & revenue: akan diisi setelah fetch dari video_purchases
+        buyers: 0,
+        revenueUsd: 0,
       }));
 
       setVideos(items);
+
+      // Fetch buyers and earnings data from video_purchases
+      await fetchStudioStats(items);
     } catch (e: any) {
       console.error("[studio page] load videos failed:", e);
       setError(e?.message || "Failed to load videos");
       setVideos([]);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function fetchStudioStats(videoItems: StudioVideo[]) {
+    if (!me || videoItems.length === 0) return;
+    
+    try {
+      // Import supabase client
+      const { supabase } = await import("@/lib/supabase");
+
+      // Get all videos owned by this user directly from database
+      const { data: myVideos, error: videosError } = await supabase
+        .from("videos")
+        .select("id, price_cents")
+        .eq("abstract_id", me);
+
+      console.log('[Studio Stats] My videos from DB:', myVideos);
+      console.log('[Studio Stats] Videos error:', videosError);
+      
+      if (!myVideos || myVideos.length === 0) {
+        console.log('[Studio Stats] No videos found for user:', me);
+        setBuyersTotal(0);
+        setEarningsUsd(0);
+        return;
+      }
+      
+      const videoIds = myVideos.map(v => v.id);
+      
+      console.log('[Studio Stats] Video IDs:', videoIds);
+
+      // Fetch all purchases for these videos
+      const { data: purchases, error: purchaseError } = await supabase
+        .from("video_purchases")
+        .select("buyer_id, video_id")
+        .in("video_id", videoIds);
+
+      console.log('[Studio Stats] Purchases:', purchases);
+      console.log('[Studio Stats] Purchase Error:', purchaseError);
+
+      if (purchases && purchases.length > 0) {
+        // Count total purchases (not unique buyers)
+        // If User A buys 3 videos = counted as 3 buyers
+        const totalPurchases = purchases.length;
+        console.log('[Studio Stats] Total Purchases:', totalPurchases);
+        setBuyersTotal(totalPurchases);
+
+        // Create price map
+        const priceMap = new Map<string, number>();
+        myVideos.forEach(v => {
+          if (v.price_cents) priceMap.set(v.id, v.price_cents);
+        });
+
+        // Count buyers per video (purchases per video)
+        const buyersPerVideo = new Map<string, number>();
+        const revenuePerVideo = new Map<string, number>();
+
+        purchases.forEach(p => {
+          // Count purchases per video
+          buyersPerVideo.set(p.video_id, (buyersPerVideo.get(p.video_id) || 0) + 1);
+
+          // Sum revenue per video (60% for creator)
+          const priceCents = priceMap.get(p.video_id) || 0;
+          const creatorEarnings = Math.round(priceCents * 0.6); // 60% for creator
+          const creatorUsd = creatorEarnings / 100;
+          revenuePerVideo.set(p.video_id, (revenuePerVideo.get(p.video_id) || 0) + creatorUsd);
+        });
+
+        // Update videos with buyers and revenue data
+        const updatedVideos = videoItems.map(video => ({
+          ...video,
+          buyers: buyersPerVideo.get(video.id) || 0,
+          revenueUsd: revenuePerVideo.get(video.id) || 0,
+        }));
+
+        setVideos(updatedVideos);
+
+        // Calculate total earnings
+        const totalEarnings = Array.from(revenuePerVideo.values()).reduce((sum, rev) => sum + rev, 0);
+        
+        console.log('[Studio Stats] Buyers per video:', Array.from(buyersPerVideo.entries()));
+        console.log('[Studio Stats] Revenue per video:', Array.from(revenuePerVideo.entries()));
+        console.log('[Studio Stats] Total Earnings:', totalEarnings);
+        setEarningsUsd(totalEarnings);
+      } else {
+        console.log('[Studio Stats] No purchases found');
+        setBuyersTotal(0);
+        setEarningsUsd(0);
+      }
+    } catch (error) {
+      console.error("[Studio Stats] Error:", error);
+      setBuyersTotal(0);
+      setEarningsUsd(0);
     }
   }
 
@@ -104,8 +201,8 @@ export default function StudioPage() {
             totals={{
               videos: videos.length,
               campaigns: 0,                 // belum ada data campaign di contoh
-              buyersTotal: videos.reduce((a, b) => a + (b.buyers ?? 0), 0),
-              earningsUsd: videos.reduce((a, b) => a + (b.revenueUsd ?? 0), 0),
+              buyers: buyersTotal,
+              earningsUsd: earningsUsd,
             }}
           />
         </div>
