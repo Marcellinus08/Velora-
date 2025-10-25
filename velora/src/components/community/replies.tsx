@@ -118,14 +118,36 @@ type ReplyNode = {
 const short = (a?: string) =>
   a && a.startsWith("0x") && a.length >= 10 ? `${a.slice(0, 6)}…${a.slice(-4)}` : a || "-";
 
-/* ===== Avatar util ===== */
+/* ===== Avatar util with database fallback ===== */
 function Avatar({ address, url }: { address: string; url: string | null }) {
-  if (url && url.trim() !== "") {
+  const [dbAvatar, setDbAvatar] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  // Check database for avatar if no url provided
+  useEffect(() => {
+    if (!url || url.trim() === "") {
+      setLoading(true);
+      fetch(`/api/profiles/${address.toLowerCase()}`)
+        .then(res => res.ok ? res.json() : null)
+        .then(data => {
+          if (data?.avatar_url && data.avatar_url.trim() !== "") {
+            setDbAvatar(data.avatar_url);
+          }
+        })
+        .catch(() => {})
+        .finally(() => setLoading(false));
+    }
+  }, [address, url]);
+
+  // Priority: provided url > database avatar > AbstractProfile
+  const avatarUrl = url && url.trim() !== "" ? url : dbAvatar;
+
+  if (avatarUrl) {
     const fallback = `https://api.dicebear.com/7.x/identicon/svg?seed=${address || "anon"}`;
     return (
       // eslint-disable-next-line @next/next/no-img-element
       <img
-        src={url}
+        src={avatarUrl}
         alt="avatar"
         className="h-8 w-8 rounded-full object-cover"
         onError={(e) => {
@@ -135,6 +157,11 @@ function Avatar({ address, url }: { address: string; url: string | null }) {
       />
     );
   }
+
+  if (loading) {
+    return <div className="h-8 w-8 rounded-full bg-neutral-800 animate-pulse" />;
+  }
+
   return (
     <AbstractProfile
       size="xs"
@@ -164,6 +191,21 @@ export default function Replies({ postId, onPosted }: { postId: string; onPosted
   const [err, setErr] = useState<string | null>(null);
   const [text, setText] = useState("");
   const [editingReplyId, setEditingReplyId] = useState<string | null>(null);
+  const [currentUserAvatar, setCurrentUserAvatar] = useState<string | null>(null);
+
+  // Fetch current user avatar from database
+  useEffect(() => {
+    if (me) {
+      fetch(`/api/profiles/${me}`)
+        .then(res => res.ok ? res.json() : null)
+        .then(data => {
+          if (data?.avatar_url && data.avatar_url.trim() !== "") {
+            setCurrentUserAvatar(data.avatar_url);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [me]);
 
   async function load() {
     setLoading(true);
@@ -542,7 +584,7 @@ export default function Replies({ postId, onPosted }: { postId: string; onPosted
             {/* composer anak */}
             {openReplyBox && (
               <div className="mt-2 flex items-start gap-2">
-                <Avatar address={me} url={null} />
+                <Avatar address={me} url={currentUserAvatar} />
                 <div className="flex-1">
                   <textarea
                     value={childText}
@@ -587,7 +629,7 @@ export default function Replies({ postId, onPosted }: { postId: string; onPosted
     <div className="mt-4">
       {/* composer top-level */}
       <div className="flex items-start gap-3">
-        <Avatar address={me} url={null} />
+        <Avatar address={me} url={currentUserAvatar} />
         <div className="flex-1">
           <textarea
             value={text}

@@ -19,35 +19,46 @@ export default function AdSummary({
   campaignId,    // opsional
   onPaid,        // opsional — dipanggil saat tx sukses
   payDisabled,   // opsional — kunci tombol pay sampai form valid
+  saving = false, // NEW: status saving to database
 }: SummaryProps) {
   const canPayOnChain = Boolean(TREASURY_ADDRESS) && priceUsd > 0;
-
-  // Publish aktif jika SUDAH dibayar & form valid (parent sudah hitung canPublish)
-  const readyToPublish = paid && canPublish;
 
   // util untuk kelas disabled yang konsisten
   const disabledCls =
     "disabled:cursor-not-allowed disabled:opacity-60 aria-disabled:cursor-not-allowed aria-disabled:opacity-60";
 
   return (
-    <aside className="space-y-4">
+    <aside className="space-y-6">
       {/* Payment Summary */}
-      <div className="rounded-2xl border border-neutral-800 bg-neutral-900 p-4 sm:p-5">
-        <h3 className="text-sm font-semibold text-neutral-200">Payment Summary</h3>
+      <div className="rounded-3xl border border-neutral-700/50 bg-gradient-to-br from-neutral-900/80 to-neutral-800/40 backdrop-blur-sm p-6 shadow-2xl">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center">
+            <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+            </svg>
+          </div>
+          <h3 className="text-lg font-bold text-white">Payment Summary</h3>
+        </div>
 
-        <div className="mt-3 space-y-2 text-sm">
-          <div className="flex items-center justify-between">
-            <span className="text-neutral-400">Duration</span>
-            <span className="text-neutral-100">
+        <div className="space-y-4">
+          <div className="flex items-center justify-between p-3 rounded-xl bg-neutral-800/40">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-blue-400"></div>
+              <span className="text-neutral-300 text-sm">Campaign Duration</span>
+            </div>
+            <span className="text-neutral-100 font-medium">
               {durationDays} {durationDays > 1 ? "days" : "day"}
             </span>
           </div>
 
-          <div className="h-px bg-neutral-800" />
+          <div className="h-px bg-gradient-to-r from-transparent via-neutral-600 to-transparent" />
 
-          <div className="flex items-center justify-between text-base font-semibold">
-            <span className="text-neutral-300">Total</span>
-            <span className="text-neutral-50">{fmtUSD(priceUsd)}</span>
+          <div className="flex items-center justify-between p-4 rounded-xl bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border border-emerald-500/20">
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-emerald-400"></div>
+              <span className="text-emerald-200 font-medium">Total Amount</span>
+            </div>
+            <span className="text-emerald-100 text-xl font-bold">{fmtUSD(priceUsd)}</span>
           </div>
 
           {!canPayOnChain && (
@@ -65,49 +76,60 @@ export default function AdSummary({
           )}
         </div>
 
-        {/* Tombol bayar */}
-        {!paid ? (
-          canPayOnChain ? (
-            <PayAdsButton
-              campaignId={campaignId}
-              amountUsd={priceUsd}
-              onPaid={(tx) => onPaid?.(tx)}
-              disabled={!!payDisabled} // ✅ kunci sampai form valid
-              className={`mt-4 inline-flex w-full items-center justify-center rounded-xl bg-[var(--primary-500)] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-opacity-90 ${disabledCls}`}
-            >
-              Proceed to Payment
-            </PayAdsButton>
-          ) : (
-            <button
-              onClick={onOpenPayment}
-              disabled={!!payDisabled}
-              aria-disabled={!!payDisabled}
-              className={`mt-4 inline-flex w-full items-center justify-center rounded-xl bg-[var(--primary-500)] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-opacity-90 ${disabledCls}`}
-            >
-              Proceed to Payment (Preview)
-            </button>
-          )
+        {/* Tombol Pay & Publish (digabung) */}
+        {canPayOnChain ? (
+          <PayAdsButton
+            campaignId={campaignId}
+            amountUsd={priceUsd}
+            onPaid={(tx) => {
+              onPaid?.(tx);
+            }}
+            disabled={!!payDisabled || saving}
+            className={`mt-6 inline-flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 px-6 py-4 text-sm font-bold text-white shadow-xl transition-all duration-200 transform hover:scale-105 ${disabledCls}`}
+          >
+            <div className="flex items-center gap-3">
+              {saving ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                  Publishing...
+                </>
+              ) : (
+                <>
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
+                  Pay & Publish Ad
+                </>
+              )}
+            </div>
+          </PayAdsButton>
         ) : (
-          <div className="mt-4 rounded-xl border border-emerald-700/40 bg-emerald-900/20 px-3 py-2 text-sm text-emerald-300">
-            Payment complete. You can now publish your ad.
-          </div>
+          <button
+            onClick={() => {
+              onOpenPayment();
+            }}
+            disabled={!!payDisabled || saving}
+            aria-disabled={!!payDisabled || saving}
+            className={`mt-6 inline-flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 px-6 py-4 text-sm font-bold text-white shadow-xl transition-all duration-200 transform hover:scale-105 ${disabledCls}`}
+          >
+            <div className="flex items-center gap-3">
+              {saving ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                  Publishing...
+                </>
+              ) : (
+                <>
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                  Pay & Publish Ad (Preview)
+                </>
+              )}
+            </div>
+          </button>
         )}
-      </div>
-
-      {/* Publish */}
-      <div className="rounded-2xl border border-neutral-800 bg-neutral-900 p-4 sm:p-5">
-        <h3 className="text-sm font-semibold text-neutral-200">Publish</h3>
-        <p className="mt-2 text-xs text-neutral-500">
-          Make sure all information looks correct.
-        </p>
-        <button
-          onClick={onPublish}
-          disabled={!readyToPublish}
-          aria-disabled={!readyToPublish}
-          className={`mt-3 inline-flex w-full items-center justify-center rounded-xl bg-neutral-700 px-4 py-2.5 text-sm font-semibold text-neutral-100 transition hover:bg-neutral-600 ${disabledCls}`}
-        >
-          Publish Ad
-        </button>
       </div>
     </aside>
   );

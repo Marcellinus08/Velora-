@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { AbstractProfile } from "@/components/abstract-profile";
 
 type Creator = {
   id: string;                                // abstract_id (0x…)
@@ -130,12 +131,21 @@ export default function HomeMeetRibbon() {
     return (
       <Card key={p.id} neon>
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 overflow-hidden rounded-full bg-neutral-800 grayscale transition group-hover:grayscale-0">
+          <div className="overflow-hidden grayscale transition group-hover:grayscale-0">
             {p.avatarUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={p.avatarUrl} alt={p.name} className="h-full w-full object-cover" />
+              // User has avatar in database - use it
+              <div className="h-10 w-10 overflow-hidden rounded-full bg-neutral-800">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={p.avatarUrl} alt={p.name} className="h-full w-full object-cover" />
+              </div>
             ) : (
-              <div className="grid h-full w-full place-items-center text-neutral-500">👤</div>
+              // User doesn't have avatar in database - use AbstractProfile
+              <AbstractProfile 
+                address={isAddress(p.id) ? p.id as `0x${string}` : undefined}
+                size="md"
+                showTooltip={false}
+                fallback={p.name.slice(0, 2).toUpperCase()}
+              />
             )}
           </div>
           <div className="min-w-0">

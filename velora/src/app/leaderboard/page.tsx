@@ -123,7 +123,7 @@ export default function LeaderboardPage() {
     avatarNode: user.avatar_url ? (
       <img src={user.avatar_url} alt="" className="h-full w-full object-cover" />
     ) : (
-      <AbstractProfile address={user.user_addr as `0x${string}`} size="sm" showTooltip={false} ring={false} />
+      <AbstractProfile address={user.user_addr as `0x${string}`} size="lg" showTooltip={false} ring={false} />
     ),
   }));
 
@@ -143,7 +143,7 @@ export default function LeaderboardPage() {
           avatarNode: leaderboardData[currentUserIndex].avatar_url ? (
             <img src={leaderboardData[currentUserIndex].avatar_url} alt="" className="h-full w-full object-cover" />
           ) : (
-            <AbstractProfile address={leaderboardData[currentUserIndex].user_addr as `0x${string}`} size="sm" showTooltip={false} ring={false} />
+            <AbstractProfile address={leaderboardData[currentUserIndex].user_addr as `0x${string}`} size="lg" showTooltip={false} ring={false} />
           ),
         }
       : null;
@@ -196,7 +196,7 @@ export default function LeaderboardPage() {
           {currentUser && (
             <div className="flex items-center justify-between rounded-xl border border-purple-500/30 bg-purple-500/5 px-6 py-4">
               <div className="flex items-center gap-4">
-                <div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-full border-2 border-purple-500/40 bg-neutral-800">
+                <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full border-2 border-purple-500/40 bg-neutral-800">
                   {currentUser.avatarNode}
                 </div>
                 <div>

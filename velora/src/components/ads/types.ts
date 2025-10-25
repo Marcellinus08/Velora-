@@ -49,6 +49,9 @@ export type SummaryProps = {
 
   /** kunci tombol Pay sampai form valid (ditentukan di CreateAd) */
   payDisabled?: boolean;
+
+  /** Status saving to database */
+  saving?: boolean;
 };
 
 /** Props untuk form input iklan */
@@ -64,6 +67,13 @@ export type FormProps = {
   onChangeTitle: (v: string) => void;
   onChangeDesc: (v: string) => void;
   onChooseMedia: (file: File | null) => void;
+
+  // New props for video selection and CTA
+  myVideos?: Array<{ id: string; title: string }>;
+  selectedVideoId?: string;
+  onChangeVideoId?: (id: string) => void;
+  ctaText?: string;
+  onChangeCtaText?: (text: string) => void;
 };
 
 /** Props untuk komponen CreateAd supaya wrapper client bisa oper state/handler on-chain */
@@ -76,4 +86,10 @@ export type CreateAdProps = {
 
   /** callback dari PayAdsButton saat tx sukses, untuk isi paidTx di parent */
   onPaid?: (tx: TxHash) => void;
+
+  /** list video milik user untuk dipilih */
+  myVideos?: Array<{ id: string; title: string }>;
+
+  /** wallet address creator */
+  creatorAddr?: string;
 };

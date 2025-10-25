@@ -1,5 +1,6 @@
 // components/meet/MeetCard.tsx
 import React, { useMemo } from "react";
+import { AbstractProfile } from "@/components/abstract-profile";
 
 const SESSION_MINUTES = 10; // hanya untuk tampilan; slotMinutes real ada di API sessions
 
@@ -39,13 +40,21 @@ export const MeetCard: React.FC<MeetCardProps> = ({ creator, onCall }) => {
     <div className="rounded-xl border border-neutral-800 bg-neutral-900 p-5 transition-all hover:border-[var(--primary-500)] hover:bg-neutral-900/80 hover:shadow-[0_0_0_1px_var(--primary-500),0_0_24px_2px_rgba(139,92,246,0.45)]">
       {/* Header: avatar + name + wallet */}
       <div className="mb-4 flex items-center gap-3">
-        <div className="h-12 w-12 overflow-hidden rounded-full bg-neutral-800 ring-1 ring-neutral-700">
-          {creator.avatarUrl ? (
+        {creator.avatarUrl ? (
+          // User has avatar in database - use it
+          <div className="h-12 w-12 overflow-hidden rounded-full bg-neutral-800 ring-1 ring-neutral-700">
             <img className="h-full w-full object-cover" src={creator.avatarUrl} alt={creator.name} />
-          ) : (
-            <div className="grid h-full w-full place-items-center text-neutral-400">👤</div>
-          )}
-        </div>
+          </div>
+        ) : (
+          // User doesn't have avatar in database - use AbstractProfile
+          <AbstractProfile 
+            address={fullAddr || undefined}
+            size="lg"
+            showTooltip={false}
+            fallback={creator.name.slice(0, 2).toUpperCase()}
+            ringWidth={1}
+          />
+        )}
         <div>
           <div className="text-base font-semibold text-neutral-50">{creator.name}</div>
           <div className="mt-1 text-[11px]">
