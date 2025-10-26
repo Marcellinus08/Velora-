@@ -63,11 +63,24 @@ export default function SubscriptionPage() {
   const [available, setAvailable] = useState<VideoItem[]>([]);
   const [completed, setCompleted] = useState<VideoItem[]>([]);
 
+  // Add refresh on visibility change to catch updates from task page
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden && !loading && isAddr(buyer)) {
+        // Refresh data when user returns to this page
+        window.location.reload();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [buyer, loading]);
+
   useEffect(() => {
     let alive = true;
 
     async function loadViaApi(buyerAddr: string) {
-      const r = await fetch(`/api/subscription/list?buyer=${buyerAddr}`, { cache: "no-store" });
+      const r = await fetch(`/api/subcription/list?buyer=${buyerAddr}`, { cache: "no-store" });
       const ct = r.headers.get("content-type") || "";
       if (!ct.includes("application/json")) {
         const txt = await r.text();
@@ -122,12 +135,32 @@ export default function SubscriptionPage() {
         data = rows as any;
       }
 
+      // Fetch user progress untuk semua video yang dibeli
+      const videoIds = Array.from(new Set((data || []).map(r => r.video_id)));
+      const { data: progressData } = await supabase
+        .from("user_video_progress")
+        .select("video_id, has_completed_task, has_shared")
+        .eq("user_addr", buyerAddr)
+        .in("video_id", videoIds);
+
+      const progressMap = new Map<string, any>();
+      (progressData || []).forEach((p) => progressMap.set(p.video_id, p));
+
       const avail: VideoItem[] = [];
       const comp: VideoItem[] = [];
 
       for (const r of data || []) {
-        const payload = toPayload(r, r.videos || r.video || {});
-        const done = !!r.tasks_done || (String(r.status || "")).toLowerCase() === "completed";
+        const videoData = Array.isArray(r.videos) ? r.videos[0] : r.videos;
+        const payload = toPayload(r, videoData || {});
+        
+        // Cek progress dari user_video_progress table
+        const progress = progressMap.get(r.video_id);
+        const hasCompletedTask = progress?.has_completed_task || false;
+        const hasShared = progress?.has_shared || false;
+        
+        // Video completed jika user sudah mengerjakan task DAN sudah share
+        const done = hasCompletedTask && hasShared;
+        
         if (done) comp.push(payload);
         else avail.push(payload);
       }

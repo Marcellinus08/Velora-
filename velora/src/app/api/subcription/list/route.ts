@@ -94,6 +94,26 @@ async function fetchWithFallback(buyer: string) {
   return data as PurchaseRow[];
 }
 
+/** Fetch user progress data for completion check */
+async function fetchUserProgress(buyer: string, videoIds: string[]) {
+  if (!videoIds.length) return new Map();
+
+  const { data: progressData, error } = await supabaseAdmin
+    .from("user_video_progress")
+    .select("video_id, has_completed_task, has_shared")
+    .eq("user_addr", buyer)
+    .in("video_id", videoIds);
+
+  if (error) {
+    console.error("Error fetching user progress:", error);
+    return new Map();
+  }
+
+  const progressMap = new Map<string, any>();
+  (progressData || []).forEach((p) => progressMap.set(p.video_id, p));
+  return progressMap;
+}
+
 export async function GET(req: NextRequest) {
   try {
     const url = new URL(req.url);
@@ -104,18 +124,33 @@ export async function GET(req: NextRequest) {
 
     const rows = await fetchWithFallback(buyer);
 
+    // Ambil video IDs untuk fetch user progress
+    const videoIds = rows.map(r => r.video_id);
+    const progressMap = await fetchUserProgress(buyer, videoIds);
+
     // Kriteria:
-    // - "completed": tasks_done = true ATAU status = 'completed'
-    // - "available": sebaliknya (sudah dibeli, belum selesai)
+    // - "completed": user sudah mengerjakan task DAN sudah share
+    // - "available": sudah dibeli, tapi belum selesai task dan share
     const available: any[] = [];
     const completed: any[] = [];
 
     for (const r of rows) {
       const v = r.video || {};
       const payload = toVideoPayload(r, v);
-      const done = !!r.tasks_done || (r.status || "").toLowerCase() === "completed";
-      if (done) completed.push(payload);
-      else available.push(payload);
+      
+      // Cek progress dari user_video_progress table
+      const progress = progressMap.get(r.video_id);
+      const hasCompletedTask = progress?.has_completed_task || false;
+      const hasShared = progress?.has_shared || false;
+      
+      // Video completed jika user sudah mengerjakan task DAN sudah share
+      const isCompleted = hasCompletedTask && hasShared;
+      
+      if (isCompleted) {
+        completed.push(payload);
+      } else {
+        available.push(payload);
+      }
     }
 
     return NextResponse.json(
