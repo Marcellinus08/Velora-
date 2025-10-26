@@ -7,14 +7,13 @@ import { useAccount } from "wagmi";
 import Sidebar from "@/components/sidebar";
 import { AbstractProfile } from "@/components/abstract-profile";
 
-import RangeFilter from "@/components/leaderboard/rangefilter";
 import ProfileModal from "@/components/leaderboard/profilemodal";
+import { LeaderboardEmptyState } from "@/components/leaderboard/empty-state";
 
 import { PROFILE_DB } from "@/components/leaderboard/data";
 import type {
   TableEntry,
   CurrentUser,
-  RangeKey,
   UserProfile,
 } from "@/components/leaderboard/types";
 
@@ -36,7 +35,6 @@ export default function LeaderboardPage() {
 
   const [leaderboardData, setLeaderboardData] = useState<LeaderboardUser[]>([]);
   const [loading, setLoading] = useState(true);
-  const [range, setRange] = useState<RangeKey>("week");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [selected, setSelected] = useState<UserProfile | null>(null);
@@ -106,11 +104,9 @@ export default function LeaderboardPage() {
     }
 
     fetchLeaderboard();
-  }, [range]);
+  }, []);
 
-  useEffect(() => setPage(1), [range, pageSize]);
-
-  useEffect(() => setPage(1), [range, pageSize]);
+  useEffect(() => setPage(1), [pageSize]);
 
   // Convert leaderboard data to display format - only users with points > 0
   // All entries combined (no separate top3 section since we use simple table)
@@ -186,10 +182,23 @@ export default function LeaderboardPage() {
       <Sidebar />
       <main className="flex-1 overflow-y-auto px-4 py-6 sm:px-6 lg:px-8">
         <div className="flex flex-col gap-6">
-          {/* Header with Filter */}
+          {/* Simple Header */}
           <div className="flex flex-col items-start gap-4 md:flex-row md:items-center md:justify-between">
-            <h2 className="text-2xl font-bold text-neutral-50">Leaderboard</h2>
-            <RangeFilter value={range} onChange={setRange} />
+            <div className="flex items-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-yellow-500/10 border border-yellow-500/20">
+                <svg className="h-6 w-6 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                </svg>
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold text-neutral-50">Leaderboard</h2>
+                <p className="text-sm text-neutral-400">Top performing community members</p>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-4 text-sm text-neutral-400">
+              <span>{fmt(entries.length)} players</span>
+            </div>
           </div>
 
           {/* Current user highlight */}
@@ -217,9 +226,12 @@ export default function LeaderboardPage() {
             </div>
           )}
 
-          {/* Simple Table List */}
-          <div className="overflow-hidden rounded-xl border border-neutral-800/50 bg-neutral-900/30">
-            <table className="min-w-full">
+          {/* Empty State or Enhanced Table */}
+          {entries.length === 0 ? (
+            <LeaderboardEmptyState />
+          ) : (
+            <div className="overflow-hidden rounded-xl border border-neutral-800/50 bg-neutral-900/30">
+              <table className="min-w-full">
               <thead>
                 <tr className="border-b border-neutral-800/50 bg-neutral-800/30">
                   <th className="py-4 pl-6 pr-3 text-left text-xs font-semibold uppercase tracking-wide text-neutral-400">Rank</th>
@@ -237,9 +249,13 @@ export default function LeaderboardPage() {
                   return (
                     <tr
                       key={e.rank}
-                      className={`cursor-pointer transition-all duration-200 ${
+                      className={`cursor-pointer transition-all duration-300 ${
                         isFirst
-                          ? "bg-gradient-to-r from-yellow-900/30 via-yellow-800/20 to-transparent hover:from-yellow-900/40 hover:via-yellow-800/30"
+                          ? "bg-yellow-900/20 hover:bg-yellow-900/30"
+                          : isSecond
+                          ? "bg-gray-800/20 hover:bg-gray-800/30"
+                          : isThird
+                          ? "bg-amber-900/20 hover:bg-amber-900/30"
                           : isCurrentUser
                           ? "bg-purple-900/20 hover:bg-purple-900/30"
                           : "hover:bg-neutral-800/40"
@@ -252,9 +268,9 @@ export default function LeaderboardPage() {
                             isFirst
                               ? "bg-gradient-to-br from-yellow-500 to-yellow-600 text-white shadow-lg shadow-yellow-600/30"
                               : isSecond
-                              ? "border-2 border-neutral-500 bg-neutral-800/50 text-neutral-200"
+                              ? "bg-gradient-to-br from-gray-500 to-gray-600 text-white shadow-lg shadow-gray-600/30"
                               : isThird
-                              ? "border-2 border-yellow-700/70 bg-yellow-900/20 text-yellow-500"
+                              ? "bg-gradient-to-br from-amber-600 to-amber-700 text-white shadow-lg shadow-amber-600/30"
                               : "text-neutral-400"
                           }`}
                         >
@@ -317,7 +333,7 @@ export default function LeaderboardPage() {
 
                 <div className="flex items-center gap-2">
                   <button
-                    className="rounded-lg border border-neutral-700 bg-neutral-800/50 px-4 py-1.5 text-sm font-medium text-neutral-50 transition-all hover:border-neutral-600 hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-neutral-700 disabled:hover:bg-neutral-800/50"
+                    className="rounded-lg border border-neutral-700 bg-neutral-800/50 px-4 py-1.5 text-sm font-medium text-neutral-50 transition-all hover:border-neutral-600 hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-40"
                     disabled={page === 1}
                     onClick={() => setPage((p) => Math.max(1, p - 1))}
                   >
@@ -328,7 +344,7 @@ export default function LeaderboardPage() {
                     <span className="font-semibold text-neutral-200">{totalPages}</span>
                   </span>
                   <button
-                    className="rounded-lg border border-neutral-700 bg-neutral-800/50 px-4 py-1.5 text-sm font-medium text-neutral-50 transition-all hover:border-neutral-600 hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-neutral-700 disabled:hover:bg-neutral-800/50"
+                    className="rounded-lg border border-neutral-700 bg-neutral-800/50 px-4 py-1.5 text-sm font-medium text-neutral-50 transition-all hover:border-neutral-600 hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-40"
                     disabled={page === totalPages}
                     onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                   >
@@ -337,7 +353,8 @@ export default function LeaderboardPage() {
                 </div>
               </div>
             </div>
-          </div>
+            </div>
+          )}
         </div>
       </main>
 

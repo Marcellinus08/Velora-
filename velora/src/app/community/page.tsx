@@ -9,6 +9,7 @@ import CommunityTabs from "@/components/community/tabs";
 // ⬇️ gunakan komponen yang mendukung prop `loading`
 import CommunityPostRow from "@/components/community/postrow";
 import CreatePostModal from "@/components/community/createmodal";
+import { CommunityEmptyState } from "@/components/community/empty-state";
 import { CommunityPost, NewPostPayload } from "@/components/community/types";
 
 export default function CommunityPage() {
@@ -253,7 +254,11 @@ export default function CommunityPage() {
                     onEdit={handleEdit} // tambahkan handler edit
                   />
                 ))
-              : !error && <p className="text-neutral-400">Belum ada post untuk kategori ini.</p>}
+              : !error && (
+                  <CommunityEmptyState 
+                    category={category}
+                  />
+                )}
           </div>
         </div>
       </main>

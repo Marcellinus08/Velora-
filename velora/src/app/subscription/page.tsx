@@ -4,6 +4,9 @@
 import Sidebar from "@/components/sidebar";
 import { SubscriptionSection as Section } from "@/components/subscription/section";
 import { SubscriptionVideoRow as VideoRow } from "@/components/subscription/videorow";
+import { SubscriptionEmptyState } from "@/components/subscription/empty-state";
+import { ConnectWalletPrompt } from "@/components/subscription/connect-wallet-prompt";
+import { SubscriptionErrorState } from "@/components/subscription/error-state";
 import { useAccount } from "wagmi";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
@@ -213,22 +216,36 @@ export default function SubscriptionPage() {
           </div>
 
           {err && (
-            <div className="rounded-md border border-red-800/60 bg-red-900/20 p-3 text-sm text-red-300">
-              {err}
-            </div>
+            <SubscriptionErrorState 
+              error={err} 
+              onRetry={() => window.location.reload()} 
+            />
           )}
 
-          {/* Available */}
-          <Section title="Available Videos">
+          {/* Show connect wallet prompt if no wallet connected */}
+          {!isAddr(buyer) && !loading ? (
+            <ConnectWalletPrompt />
+          ) : (
+            <>
+              {/* Available */}
+              <Section title="Available Videos">
             {loading ? (
-              <div className="rounded-lg border border-neutral-800 bg-neutral-800/50 p-4">
-                <div className="h-4 w-40 animate-pulse rounded bg-neutral-700/50" />
-                <div className="mt-3 h-16 w-full animate-pulse rounded bg-neutral-800/60" />
+              <div className="space-y-4">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="rounded-lg border border-neutral-800 bg-neutral-900/40 p-4">
+                    <div className="flex items-center space-x-4">
+                      <div className="h-16 w-24 animate-pulse rounded bg-neutral-700/50" />
+                      <div className="flex-1 space-y-2">
+                        <div className="h-4 w-3/4 animate-pulse rounded bg-neutral-700/50" />
+                        <div className="h-3 w-1/2 animate-pulse rounded bg-neutral-700/30" />
+                      </div>
+                      <div className="h-8 w-20 animate-pulse rounded bg-neutral-700/50" />
+                    </div>
+                  </div>
+                ))}
               </div>
             ) : available.length === 0 ? (
-              <div className="rounded-lg border border-neutral-800 bg-neutral-900/30 p-4 text-sm text-neutral-400">
-                You haven’t purchased any videos yet.
-              </div>
+              <SubscriptionEmptyState type="available" />
             ) : (
               available.map((v) => (
                 <VideoRow
@@ -246,14 +263,22 @@ export default function SubscriptionPage() {
           {/* Completed */}
           <Section title="Completed Videos">
             {loading ? (
-              <div className="rounded-lg border border-neutral-800 bg-neutral-800/50 p-4">
-                <div className="h-4 w-40 animate-pulse rounded bg-neutral-700/50" />
-                <div className="mt-3 h-16 w-full animate-pulse rounded bg-neutral-800/60" />
+              <div className="space-y-4">
+                {[1, 2].map((i) => (
+                  <div key={i} className="rounded-lg border border-neutral-800 bg-neutral-900/40 p-4">
+                    <div className="flex items-center space-x-4">
+                      <div className="h-16 w-24 animate-pulse rounded bg-neutral-700/50" />
+                      <div className="flex-1 space-y-2">
+                        <div className="h-4 w-3/4 animate-pulse rounded bg-neutral-700/50" />
+                        <div className="h-3 w-1/2 animate-pulse rounded bg-neutral-700/30" />
+                      </div>
+                      <div className="h-8 w-20 animate-pulse rounded bg-neutral-700/50" />
+                    </div>
+                  </div>
+                ))}
               </div>
             ) : completed.length === 0 ? (
-              <div className="rounded-lg border border-neutral-800 bg-neutral-900/30 p-4 text-sm text-neutral-400">
-                No completed videos yet. Finish the tasks to move a video here.
-              </div>
+              <SubscriptionEmptyState type="completed" />
             ) : (
               completed.map((v) => (
                 <VideoRow
@@ -267,6 +292,8 @@ export default function SubscriptionPage() {
               ))
             )}
           </Section>
+            </>
+          )}
         </div>
       </main>
     </div>

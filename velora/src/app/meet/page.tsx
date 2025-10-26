@@ -7,6 +7,7 @@ import { Header } from "@/components/meet/Header";
 import { TabButton } from "@/components/meet/TabButton";
 import { MeetCard, MeetCardSkeleton } from "@/components/meet/MeetCard";
 import { BookingModal } from "@/components/meet/BookingModal";
+import { MeetEmptyState } from "@/components/meet/empty-state";
 
 type Creator = {
   id: string; // abstract_id lowercased (0x…)
@@ -82,9 +83,7 @@ export default function MeetPage() {
                 ))}
               </div>
             ) : creators.length === 0 ? (
-              <div className="rounded-xl border border-neutral-800 bg-neutral-900 p-4 text-sm text-neutral-400">
-                No creators yet.
-              </div>
+              <MeetEmptyState type="creators" />
             ) : (
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
                 {creators.map((c) => (
@@ -95,15 +94,15 @@ export default function MeetPage() {
           </>
         )}
 
-        {tab === "upcoming" && <div>Upcoming Content</div>}
-        {tab === "pending" && <div>Pending Content</div>}
-        {tab === "history" && <div>History Content</div>}
+        {tab === "upcoming" && <MeetEmptyState type="upcoming" />}
+        {tab === "pending" && <MeetEmptyState type="pending" />}
+        {tab === "history" && <MeetEmptyState type="history" />}
 
         {/* Orders Tab Content */}
         {tab === "orders" && (
           <div className="grid grid-cols-1 gap-4">
             {orders.length === 0 ? (
-              <div>No orders available</div>
+              <MeetEmptyState type="orders" />
             ) : (
               orders.map((order) => (
                 <div key={order.id} className="rounded-xl border border-neutral-800 bg-neutral-900 p-4">
