@@ -33,16 +33,16 @@ export function SubscriptionEmptyState({ type }: EmptyStateProps) {
       buttonText: "Leaderboard",
       buttonLink: "/leaderboard",
       buttonIcon: BookOpen,
-      gradient: "from-green-900/20 via-neutral-900/50 to-neutral-800/30",
-      borderColor: "border-green-500/40 hover:border-green-400/60",
-      iconGradient: "from-green-500/15 to-emerald-600/20",
-      ringColor: "ring-green-500/30",
-      shadowColor: "shadow-green-500/10 group-hover:shadow-green-500/20",
-      buttonGradient: "from-green-600 to-emerald-700 hover:from-green-500 hover:to-emerald-600",
-      buttonShadow: "hover:shadow-green-500/20",
-      iconColor: "text-green-300 group-hover:text-green-200",
-      glowColor: "from-green-500/5 via-transparent to-emerald-400/5",
-      pulseColor: "bg-green-400"
+      gradient: "from-purple-900/20 via-neutral-900/50 to-neutral-800/30",
+      borderColor: "border-purple-500/40 hover:border-purple-400/60",
+      iconGradient: "from-purple-500/15 to-purple-600/20",
+      ringColor: "ring-purple-500/30",
+      shadowColor: "shadow-purple-500/10 group-hover:shadow-purple-500/20",
+      buttonGradient: "from-purple-600 to-purple-700 hover:from-purple-500 hover:to-purple-600",
+      buttonShadow: "hover:shadow-purple-500/20",
+      iconColor: "text-purple-300 group-hover:text-purple-200",
+      glowColor: "from-purple-500/5 via-transparent to-purple-400/5",
+      pulseColor: "bg-purple-400"
     }
   };
 
@@ -77,8 +77,8 @@ export function SubscriptionEmptyState({ type }: EmptyStateProps) {
               {type === "available" ? (
                 <div className={`absolute top-2 right-2 h-2.5 w-2.5 ${config.pulseColor} rounded-full animate-pulse opacity-70 group-hover:animate-ping transition-all duration-300`} />
               ) : (
-                <div className="absolute bottom-2 left-2 right-2 h-1 bg-green-500/20 rounded-full overflow-hidden">
-                  <div className="h-full w-0 bg-green-400 rounded-full group-hover:w-full transition-all duration-1000 ease-out" />
+                <div className="absolute bottom-2 left-2 right-2 h-1 bg-purple-500/20 rounded-full overflow-hidden">
+                  <div className="h-full w-0 bg-purple-400 rounded-full group-hover:w-full transition-all duration-1000 ease-out" />
                 </div>
               )}
               
