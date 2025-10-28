@@ -87,8 +87,11 @@ export default function VideoPlayer({
           src={videoUrl}
           className="w-full h-full"
           controls
+          controlsList="nodownload"
+          disablePictureInPicture={false}
           playsInline
           poster={thumbnailUrl}
+          onContextMenu={(e) => e.preventDefault()}
         />
       )}
 

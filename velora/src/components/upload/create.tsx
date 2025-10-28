@@ -12,7 +12,7 @@ import { useAccount } from "wagmi";
 /* ---------- Config ---------- */
 const ACCEPT =
   "video/mp4,video/webm,video/ogg,video/quicktime,video/x-matroska";
-const MAX_SIZE_MB = Infinity;
+const MAX_SIZE_MB = 4096; // 4GB untuk Supabase Pro
 const CATEGORIES = [
   "Education",
   "Technology",

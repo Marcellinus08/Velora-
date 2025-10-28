@@ -75,12 +75,15 @@ export default function HeroPlayer({
         ref={videoRef}
         poster={poster}
         controls={controls}
+        controlsList="nodownload"
+        disablePictureInPicture={false}
         autoPlay={autoPlay}
         muted={muted}
         playsInline
         preload="metadata"
         className="h-full w-full object-contain"
         onError={() => setError("Video gagal diputar (cek URL/CORS/MIME).")}
+        onContextMenu={(e) => e.preventDefault()}
       />
 
       {error && (

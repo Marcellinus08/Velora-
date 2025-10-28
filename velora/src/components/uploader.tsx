@@ -7,8 +7,8 @@ import { supabase } from "@/lib/supabase";
 
 /* ---------- Config ---------- */
 const ACCEPT =
-  "video/mp4,video/webm,video/ogg,video/quicktime,video/x-matroska";
-const MAX_SIZE_MB = 1024; // 1 GB
+  "video/mp4,video/webm,video/ogg,video/quicktime,video/x-matroska,video/avi,video/mov,video/wmv,video/flv";
+const MAX_SIZE_MB = 4096; // 4GB untuk Supabase Pro
 const CATEGORIES = [
   "Education",
   "Technology",
@@ -82,9 +82,22 @@ export default function UploadVideoForm() {
       return;
     }
     if (f.size > MAX_SIZE_MB * 1024 * 1024) {
-      setError(`Maximum file size is ${MAX_SIZE_MB} MB.`);
+      setError(`File terlalu besar! Maksimum ${MAX_SIZE_MB} MB. File Anda: ${fmtBytes(f.size)}`);
       return;
     }
+    
+    // Additional validation for Supabase Pro
+    const supportedTypes = [
+      'video/mp4', 'video/webm', 'video/ogg', 'video/quicktime', 
+      'video/x-matroska', 'video/avi', 'video/mov', 'video/wmv'
+    ];
+    
+    if (!supportedTypes.includes(f.type)) {
+      setError(`Format tidak didukung: ${f.type}. Gunakan MP4, WebM, MOV, AVI, atau MKV.`);
+      return;
+    }
+
+    console.log(`✅ File valid: ${f.name} (${fmtBytes(f.size)}, ${f.type})`);
     setFile(f);
     const url = URL.createObjectURL(f);
     setFileURL((prev) => {
@@ -141,25 +154,50 @@ export default function UploadVideoForm() {
     }, "image/jpeg");
   }
 
-  // ★ upload helper
+  // ★ upload helper with better error handling for large files
   async function uploadToSupabase(
     bucket: string,
     path: string,
     data: File | Blob,
     contentType?: string
   ) {
-    const { data: uploadRes, error: uploadErr } = await supabase.storage
-      .from(bucket)
-      .upload(path, data, {
-        contentType,
-        cacheControl: "3600",
-        upsert: false,
+    try {
+      console.log(`📤 Starting upload to ${bucket}/${path}`, {
+        size: data.size,
+        type: contentType || (data as File).type,
+        sizeFormatted: fmtBytes(data.size)
       });
 
-    if (uploadErr) throw uploadErr;
+      const { data: uploadRes, error: uploadErr } = await supabase.storage
+        .from(bucket)
+        .upload(path, data, {
+          contentType,
+          cacheControl: "3600",
+          upsert: false,
+        });
 
-    const { data: pub } = supabase.storage.from(bucket).getPublicUrl(path);
-    return { path: uploadRes?.path ?? path, publicUrl: pub.publicUrl };
+      if (uploadErr) {
+        console.error("❌ Upload error:", uploadErr);
+        
+        // Better error messages for common issues
+        if (uploadErr.message.includes("maximum allowed size")) {
+          throw new Error(`File terlalu besar untuk bucket ini. Pastikan bucket sudah dikonfigurasi untuk 4GB. Saat ini: ${fmtBytes(data.size)}`);
+        }
+        if (uploadErr.message.includes("not allowed")) {
+          throw new Error("Format file tidak didukung. Gunakan MP4, WebM, atau MOV.");
+        }
+        throw uploadErr;
+      }
+
+      console.log("✅ Upload successful:", uploadRes);
+
+      const { data: pub } = supabase.storage.from(bucket).getPublicUrl(path);
+      return { path: uploadRes?.path ?? path, publicUrl: pub.publicUrl };
+      
+    } catch (error) {
+      console.error("🚨 Upload failed:", error);
+      throw error;
+    }
   }
 
   async function startUpload() {
@@ -170,13 +208,20 @@ export default function UploadVideoForm() {
       setUploading(true);
       setProgress(5);
 
+      // Slower progress for larger files (more realistic)
+      const fileSizeMB = file.size / (1024 * 1024);
+      const progressInterval = fileSizeMB > 100 ? 300 : 150; // Slower for files > 100MB
+
       if (timer.current) clearInterval(timer.current);
       timer.current = setInterval(() => {
         setProgress((p) => {
           if (p >= 95) return p;
-          return p + 1;
+          return p + (fileSizeMB > 100 ? 0.5 : 1); // Slower increment for large files
         });
-      }, 150);
+      }, progressInterval);
+
+      console.log(`🚀 Starting upload for ${file.name} (${fmtBytes(file.size)})`);
+      console.log(`📊 Using progress interval: ${progressInterval}ms`);
 
       // 1) upload video
       const fileExt = file.name.split(".").pop() || "mp4";
@@ -307,7 +352,9 @@ export default function UploadVideoForm() {
                 Drag & drop video here, or <span className="underline">browse</span>
               </div>
               <div className="mt-1 text-xs text-neutral-500">
-                Accepted: MP4, WebM, MOV, MKV (max {MAX_SIZE_MB} MB)
+                Accepted: MP4, WebM, MOV, AVI, MKV, WMV (max {MAX_SIZE_MB} MB)
+                <br />
+                ✨ Supabase Pro: Mendukung file hingga 4GB dengan upload yang stabil
               </div>
             </label>
           )}
@@ -463,7 +510,9 @@ export default function UploadVideoForm() {
             </div>
 
             <p className="mt-3 text-xs text-neutral-500">
-              Files are uploaded to Supabase Storage and metadata saved in Postgres.
+              Files are uploaded to Supabase Pro Storage with enhanced limits.
+              <br />
+              📊 Current limit: {MAX_SIZE_MB}MB per file | Your file: {file ? fmtBytes(file.size) : 'No file selected'}
             </p>
           </section>
         </div>
