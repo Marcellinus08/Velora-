@@ -23,11 +23,6 @@ export default function AddMenu() {
         </DropdownMenuTrigger>
 
         <DropdownMenuContent align="end" side="bottom" className="w-48">
-          <DropdownMenuItem onClick={() => router.push("/call-rates")} className="cursor-pointer hover:text-purple-600">
-            <MI name="call" className="text-[16px]" />
-            Set call rates
-          </DropdownMenuItem>
-
           <DropdownMenuItem onClick={() => router.push("/ads")} className="cursor-pointer hover:text-purple-600">
             <MI name="ads_click" className="text-[16px]" />
             Create ads

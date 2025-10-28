@@ -15,25 +15,27 @@ type Totals = {
 /** CSS-only tooltip with clamped width and safe insets */
 function InfoHint({ text }: { text: string }) {
   return (
-    <span className="relative ml-2 inline-flex group align-middle">
+    <span className="relative ml-2 inline-flex group/tooltip align-middle isolate">
       <span
         className="flex h-5 w-5 items-center justify-center rounded-full border border-neutral-700 text-[10px] leading-none text-neutral-300
-                   hover:border-neutral-500 hover:text-neutral-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary-500)]"
+                   hover:border-neutral-500 hover:text-neutral-100 hover:bg-neutral-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 transition-all duration-200 cursor-help"
         aria-label="Info"
         tabIndex={0}
       >
         i
       </span>
-      {/* Tooltip */}
+      {/* Tooltip - positioned to the right with max-width constraint */}
       <span
-        className="pointer-events-none absolute top-full z-20 mt-2 hidden max-w-[420px] -translate-x-1/2 rounded-lg border border-neutral-800
-                   bg-neutral-900/90 px-3 py-2 text-xs text-neutral-200 shadow-lg backdrop-blur
-                   group-hover:block group-focus-within:block
-                   left-1/2"
-        style={{ insetInlineStart: "50%", translate: "-50% 0" } as React.CSSProperties}
+        className="pointer-events-none absolute left-full top-1/2 -translate-y-1/2 z-50 ml-2 hidden max-w-[200px] rounded-lg border border-neutral-800
+                   bg-neutral-900/95 px-3 py-2 text-xs text-neutral-200 shadow-xl backdrop-blur-md
+                   group-hover/tooltip:block group-focus-within/tooltip:block whitespace-normal break-words"
         role="tooltip"
       >
         {text}
+        {/* Arrow pointing to the icon */}
+        <span className="absolute right-full top-1/2 -translate-y-1/2 -mr-px">
+          <span className="block w-0 h-0 border-y-4 border-y-transparent border-r-4 border-r-neutral-800"></span>
+        </span>
       </span>
     </span>
   );
@@ -53,18 +55,34 @@ function StatCard({
   label,
   value,
   rightIcon,
+  gradient,
 }: {
   label: React.ReactNode;
   value: React.ReactNode;
   rightIcon?: React.ReactNode;
+  gradient?: string;
 }) {
   return (
-    <div className="rounded-2xl border border-neutral-800 bg-neutral-900/60 p-4">
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-neutral-400">{label}</p>
-        {rightIcon ?? null}
+    <div className="group relative rounded-2xl border border-neutral-800/50 bg-neutral-900/60 backdrop-blur-sm p-5 transition-all duration-300 hover:border-neutral-700 hover:shadow-lg hover:shadow-purple-900/10 hover:-translate-y-1">
+      {/* Gradient background on hover */}
+      <div className={`absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 ${gradient || 'bg-gradient-to-br from-purple-600/5 via-blue-600/5 to-pink-600/5'}`} />
+      
+      <div className="relative">
+        <div className="flex items-center justify-between">
+          <p className="text-sm font-medium text-neutral-400 group-hover:text-neutral-300 transition-colors">
+            {label}
+          </p>
+          <div className="text-neutral-500 group-hover:text-purple-400 transition-colors">
+            {rightIcon ?? null}
+          </div>
+        </div>
+        <p className="mt-3 text-2xl font-bold bg-gradient-to-br from-neutral-50 to-neutral-300 bg-clip-text text-transparent group-hover:from-purple-300 group-hover:to-blue-300 transition-all">
+          {value}
+        </p>
       </div>
-      <p className="mt-2 text-lg font-semibold text-neutral-50">{value}</p>
+      
+      {/* Bottom accent line */}
+      <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-purple-500/0 to-transparent group-hover:via-purple-500/50 transition-all duration-300 rounded-b-2xl" />
     </div>
   );
 }
@@ -82,6 +100,7 @@ export default function StudioStats({ totals }: { totals: Totals }) {
         }
         value={fmtInt(totals.videos)}
         rightIcon={<MI name="video_library" />}
+        gradient="bg-gradient-to-br from-purple-600/5 via-violet-600/5 to-fuchsia-600/5"
       />
 
       {/* Campaigns */}
@@ -94,6 +113,7 @@ export default function StudioStats({ totals }: { totals: Totals }) {
         }
         value={fmtInt(totals.campaigns)}
         rightIcon={<MI name="campaign" />}
+        gradient="bg-gradient-to-br from-blue-600/5 via-cyan-600/5 to-teal-600/5"
       />
 
       {/* Buyers (replaces Points) */}
@@ -106,6 +126,7 @@ export default function StudioStats({ totals }: { totals: Totals }) {
         }
         value={fmtInt(totals.buyers)}
         rightIcon={<MI name="shopping_bag" />}
+        gradient="bg-gradient-to-br from-pink-600/5 via-rose-600/5 to-red-600/5"
       />
 
       {/* Earnings */}
@@ -118,6 +139,7 @@ export default function StudioStats({ totals }: { totals: Totals }) {
         }
         value={fmtUsd(totals.earningsUsd)}
         rightIcon={<MI name="paid" />}
+        gradient="bg-gradient-to-br from-emerald-600/5 via-green-600/5 to-lime-600/5"
       />
     </div>
   );

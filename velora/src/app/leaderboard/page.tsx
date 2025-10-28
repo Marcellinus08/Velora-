@@ -250,13 +250,7 @@ export default function LeaderboardPage() {
                     <tr
                       key={e.rank}
                       className={`cursor-pointer transition-all duration-300 ${
-                        isFirst
-                          ? "bg-yellow-900/20 hover:bg-yellow-900/30"
-                          : isSecond
-                          ? "bg-gray-800/20 hover:bg-gray-800/30"
-                          : isThird
-                          ? "bg-amber-900/20 hover:bg-amber-900/30"
-                          : isCurrentUser
+                        isCurrentUser
                           ? "bg-purple-900/20 hover:bg-purple-900/30"
                           : "hover:bg-neutral-800/40"
                       }`}
@@ -264,13 +258,9 @@ export default function LeaderboardPage() {
                     >
                       <td className="whitespace-nowrap py-5 pl-6 pr-3">
                         <div
-                          className={`inline-flex h-10 w-10 items-center justify-center rounded-lg text-base font-bold transition-transform hover:scale-105 ${
-                            isFirst
-                              ? "bg-gradient-to-br from-yellow-500 to-yellow-600 text-white shadow-lg shadow-yellow-600/30"
-                              : isSecond
-                              ? "bg-gradient-to-br from-gray-500 to-gray-600 text-white shadow-lg shadow-gray-600/30"
-                              : isThird
-                              ? "bg-gradient-to-br from-amber-600 to-amber-700 text-white shadow-lg shadow-amber-600/30"
+                          className={`inline-flex h-10 w-10 items-center justify-center rounded-lg text-base font-bold ${
+                            isFirst || isSecond || isThird
+                              ? "bg-neutral-800/80 text-neutral-200"
                               : "text-neutral-400"
                           }`}
                         >

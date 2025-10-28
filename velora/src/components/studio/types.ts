@@ -15,10 +15,14 @@ export type StudioVideo = {
 
 export type StudioAd = {
   id: string;
-  name: string;
-  status: "Active" | "Paused" | "Ended";
-  budget: string;        // "$150"
-  spend: string;         // "$64"
-  ctr: number;           // 3.4
-  date: string;          // "Running" | "Paused yesterday" | etc
+  title: string;
+  banner_url: string | null;
+  status: "active" | "paused" | "ended";
+  clicks: number;
+  duration_days: number;
+  start_date: string;
+  end_date: string;
+  created_at: string;
+  cta_text: string | null;
+  description: string | null;
 };

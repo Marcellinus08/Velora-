@@ -7,7 +7,7 @@ import StudioHeader from "@/components/studio/header";
 import StudioStats from "@/components/studio/stats";
 import StudioActions from "@/components/studio/actions";
 import StudioRecentPanel from "@/components/studio/recent";
-import type { StudioVideo } from "@/components/studio/types";
+import type { StudioVideo, StudioAd } from "@/components/studio/types";
 
 /* ===== Helpers kecil ===== */
 function secondsToDuration(sec?: number | null) {
@@ -54,6 +54,7 @@ export default function StudioPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [videos, setVideos] = useState<StudioVideo[]>([]);
+  const [ads, setAds] = useState<StudioAd[]>([]);
   const [buyersTotal, setBuyersTotal] = useState(0);
   const [earningsUsd, setEarningsUsd] = useState(0);
 
@@ -85,12 +86,81 @@ export default function StudioPage() {
 
       // Fetch buyers and earnings data from video_purchases
       await fetchStudioStats(items);
+      
+      // Fetch campaigns/ads
+      await fetchCampaigns();
     } catch (e: any) {
       console.error("[studio page] load videos failed:", e);
       setError(e?.message || "Failed to load videos");
       setVideos([]);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function fetchCampaigns() {
+    if (!me) return;
+    
+    try {
+      const { supabase } = await import("@/lib/supabase");
+      
+      const { data: campaigns, error } = await supabase
+        .from("campaigns")
+        .select("*")
+        .eq("creator_addr", me)
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        console.error("[Studio] Failed to fetch campaigns:", error);
+        setAds([]);
+        return;
+      }
+
+      if (campaigns && campaigns.length > 0) {
+        // Fetch clicks for each campaign
+        const campaignIds = campaigns.map(c => c.id);
+        
+        const { data: clicks, error: clicksError } = await supabase
+          .from("campaign_clicks")
+          .select("campaign_id")
+          .in("campaign_id", campaignIds);
+
+        if (clicksError) {
+          console.error("[Studio] Failed to fetch clicks:", clicksError);
+        }
+
+        // Count clicks per campaign
+        const clicksPerCampaign = new Map<string, number>();
+        if (clicks) {
+          clicks.forEach(click => {
+            const count = clicksPerCampaign.get(click.campaign_id) || 0;
+            clicksPerCampaign.set(click.campaign_id, count + 1);
+          });
+        }
+
+        const campaignAds: StudioAd[] = campaigns.map(c => ({
+          id: c.id,
+          title: c.title,
+          banner_url: c.banner_url,
+          status: c.status,
+          clicks: clicksPerCampaign.get(c.id) || 0, // Use actual clicks from campaign_clicks table
+          duration_days: c.duration_days || 0,
+          start_date: c.start_date,
+          end_date: c.end_date,
+          created_at: c.created_at,
+          cta_text: c.cta_text,
+          description: c.description,
+        }));
+        
+        setAds(campaignAds);
+        console.log("[Studio] Loaded campaigns:", campaignAds.length);
+        console.log("[Studio] Clicks per campaign:", Array.from(clicksPerCampaign.entries()));
+      } else {
+        setAds([]);
+      }
+    } catch (error) {
+      console.error("[Studio] Error fetching campaigns:", error);
+      setAds([]);
     }
   }
 
@@ -192,42 +262,87 @@ export default function StudioPage() {
 
   return (
     <div className="flex h-full grow flex-row">
-      <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8">
-        <StudioHeader />
-
-        {/* Stats — contoh agregasi sederhana dari data yang ada */}
-        <div className="mt-6">
-          <StudioStats
-            totals={{
-              videos: videos.length,
-              campaigns: 0,                 // belum ada data campaign di contoh
-              buyers: buyersTotal,
-              earningsUsd: earningsUsd,
-            }}
-          />
+      <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8 relative overflow-hidden">
+        {/* Background decorative elements - matching home page */}
+        <div className="fixed inset-0 overflow-hidden opacity-5 pointer-events-none">
+          <div className="absolute -top-10 -right-10 w-40 h-40 bg-purple-500 rounded-full blur-3xl animate-pulse" style={{ animationDuration: '4s' }} />
+          <div className="absolute top-1/3 -left-20 w-32 h-32 bg-blue-500 rounded-full blur-2xl animate-pulse" style={{ animationDelay: '2s', animationDuration: '5s' }} />
+          <div className="absolute bottom-1/4 right-1/4 w-24 h-24 bg-pink-500 rounded-full blur-xl animate-pulse" style={{ animationDelay: '1s', animationDuration: '3s' }} />
         </div>
 
-        <div className="mt-6">
-          <StudioActions />
+        {/* Header with gradient background */}
+        <div className="relative animate-in fade-in duration-700">
+          <div className="absolute inset-0 bg-gradient-to-r from-purple-500/5 via-transparent to-blue-500/5 rounded-2xl blur-xl" />
+          <div className="relative">
+            <StudioHeader />
+          </div>
         </div>
 
-        <div className="mt-8">
+        {/* Stats with enhanced styling */}
+        <div className="relative mt-6 animate-in slide-in-from-bottom duration-700" style={{ animationDelay: '100ms' }}>
+          <div className="absolute inset-0 bg-gradient-to-r from-purple-500/3 via-blue-500/3 to-pink-500/3 rounded-2xl blur-xl opacity-0 hover:opacity-100 transition-opacity duration-500" />
+          <div className="relative">
+            <StudioStats
+              totals={{
+                videos: videos.length,
+                campaigns: ads.length,
+                buyers: buyersTotal,
+                earningsUsd: earningsUsd,
+              }}
+            />
+          </div>
+        </div>
+
+        {/* Actions with staggered animation */}
+        <div className="relative mt-6 animate-in slide-in-from-left duration-700" style={{ animationDelay: '200ms' }}>
+          <div className="absolute inset-0 bg-gradient-to-r from-violet-500/5 via-transparent to-emerald-500/5 rounded-2xl" />
+          <div className="relative">
+            <StudioActions />
+          </div>
+        </div>
+
+        {/* Recent panel with fade in */}
+        <div className="relative mt-8 animate-in fade-in duration-1000" style={{ animationDelay: '300ms' }}>
           {error && (
-            <div className="rounded-md border border-red-700 bg-red-900/30 p-3 text-sm text-red-200">
-              {error}
+            <div className="rounded-xl border border-red-700/50 bg-gradient-to-r from-red-900/30 via-red-800/20 to-red-900/30 p-4 text-sm text-red-200 backdrop-blur-sm shadow-lg shadow-red-900/20 mb-4">
+              <div className="flex items-center gap-2">
+                <svg className="w-5 h-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                </svg>
+                {error}
+              </div>
             </div>
           )}
           {loading ? (
-            <div className="rounded-2xl border border-neutral-800 bg-neutral-900/40 p-6 text-neutral-400">
-              Loading…
+            <div className="rounded-2xl border border-neutral-800/50 bg-gradient-to-br from-neutral-900/60 via-neutral-900/40 to-neutral-900/60 p-8 backdrop-blur-sm">
+              <div className="flex flex-col items-center justify-center gap-4">
+                <div className="relative">
+                  <div className="w-12 h-12 border-4 border-purple-500/20 border-t-purple-500 rounded-full animate-spin" />
+                  <div className="absolute inset-0 w-12 h-12 border-4 border-transparent border-r-blue-500 rounded-full animate-spin" style={{ animationDirection: 'reverse', animationDuration: '1.5s' }} />
+                </div>
+                <p className="text-neutral-400 font-medium">Loading your studio...</p>
+              </div>
             </div>
           ) : (
-            <StudioRecentPanel
-              // panelmu sudah menerima prop "videos" dan akan meneruskan ke StudioRecentUploads
-              videos={videos}
-              ads={[]} // belum ada
-            />
+            <div className="relative">
+              <div className="absolute inset-0 bg-gradient-to-br from-purple-500/3 via-transparent to-blue-500/3 rounded-2xl" />
+              <div className="relative">
+                <StudioRecentPanel
+                  videos={videos}
+                  ads={ads}
+                />
+              </div>
+            </div>
           )}
+        </div>
+
+        {/* Floating decorative elements */}
+        <div className="fixed bottom-8 right-8 opacity-20 hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+          <div className="flex flex-col gap-3">
+            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500/20 to-blue-500/20 backdrop-blur-sm border border-purple-500/20 animate-pulse" style={{ animationDuration: '3s' }} />
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-pink-500/20 to-purple-500/20 backdrop-blur-sm border border-pink-500/20 animate-pulse" style={{ animationDelay: '1s', animationDuration: '2s' }} />
+            <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-500/20 to-cyan-500/20 backdrop-blur-sm border border-blue-500/20 animate-pulse" style={{ animationDelay: '2s', animationDuration: '4s' }} />
+          </div>
         </div>
       </main>
     </div>

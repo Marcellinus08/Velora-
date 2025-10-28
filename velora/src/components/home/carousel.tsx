@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useAccount } from "wagmi";
+import { useRouter } from "next/navigation";
 
 // Default slide - ajakan untuk membuat iklan
 const defaultSlide: SlideItem[] = [
@@ -24,6 +25,7 @@ type Campaign = {
   cta_link: string | null;
   total_clicks: number;
   status: string;
+  creator_addr: string;
 };
 
 type SlideItem = {
@@ -35,6 +37,7 @@ type SlideItem = {
   cta: string;
   href: string;
   campaign_id?: string;
+  creator_addr?: string;
 };
 
 type CarouselProps = {
@@ -51,6 +54,7 @@ export default function Carousel({
   const [loading, setLoading] = useState(true);
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
   const { address } = useAccount();
+  const router = useRouter();
 
   // Fetch active campaigns and merge with default slide
   useEffect(() => {
@@ -62,7 +66,7 @@ export default function Carousel({
         
         const { data: campaigns, error } = await supabase
           .from("campaigns")
-          .select("id,title,description,banner_url,cta_text,cta_link,total_clicks,status,start_date,end_date")
+          .select("id,title,description,banner_url,cta_text,cta_link,total_clicks,status,start_date,end_date,creator_addr")
           .eq("status", "active")
           .lte("start_date", now)
           .gte("end_date", now)
@@ -81,6 +85,7 @@ export default function Carousel({
             cta: campaign.cta_text || "Learn More",
             href: campaign.cta_link || "/",
             campaign_id: campaign.id,
+            creator_addr: campaign.creator_addr,
           }));
 
           // Put default slide first, then campaigns after
@@ -109,32 +114,41 @@ export default function Carousel({
   const handleSlideClick = async (slide: SlideItem) => {
     // If it's a campaign, track the click
     if (slide.type === "campaign" && slide.campaign_id) {
-      try {
-        const { error: clickError } = await supabase.from("campaign_clicks").insert({
-          campaign_id: slide.campaign_id,
-          user_addr: address?.toLowerCase() || null,
-          user_agent: navigator.userAgent,
-        });
+      // Check if user is the campaign creator
+      const isCreator = address && slide.creator_addr && 
+                        address.toLowerCase() === slide.creator_addr.toLowerCase();
+      
+      // Only track clicks from users who are NOT the campaign creator
+      if (!isCreator) {
+        try {
+          const { error: clickError } = await supabase.from("campaign_clicks").insert({
+            campaign_id: slide.campaign_id,
+            user_addr: address?.toLowerCase() || null,
+            user_agent: navigator.userAgent,
+          });
 
-        if (!clickError) {
-          // Update total clicks manually (avoids function permission issues)
-          await supabase
-            .from("campaigns")
-            .update({ 
-              total_clicks: 0, // Will be incremented by trigger if available
-              updated_at: new Date().toISOString()
-            })
-            .eq("id", slide.campaign_id);
+          if (!clickError) {
+            // Update total clicks manually (avoids function permission issues)
+            await supabase
+              .from("campaigns")
+              .update({ 
+                total_clicks: 0, // Will be incremented by trigger if available
+                updated_at: new Date().toISOString()
+              })
+              .eq("id", slide.campaign_id);
+          }
+        } catch (error) {
+          console.error("Error tracking campaign click:", error);
+          // Continue with redirect even if tracking fails
         }
-      } catch (error) {
-        console.error("Error tracking campaign click:", error);
-        // Continue with redirect even if tracking fails
+      } else {
+        console.log("Click not tracked: User is the campaign creator");
       }
     }
     
-    // Redirect to the slide's href
+    // Navigate using Next.js router (same tab)
     if (slide.href) {
-      window.open(slide.href, "_blank");
+      router.push(slide.href);
     }
   };
 

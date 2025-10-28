@@ -222,15 +222,17 @@ export default function CommunityPage() {
           <div className="flex flex-col items-start gap-4 md:flex-row md:items-center md:justify-between">
             <h2 className="text-2xl font-bold text-neutral-50">Community Discussions</h2>
 
-            <button
-              onClick={() => setOpen(true)}
-              className="cursor-pointer group relative flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold text-white bg-[var(--primary-500)] transition-all duration-200 hover:bg-opacity-85 hover:ring-2 hover:ring-[rgba(124,58,237,0.85)] hover:ring-offset-2 hover:ring-offset-neutral-900 hover:shadow-[0_0_14px_7px_rgba(124,58,237,0.55)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary-500)]/40"
-            >
-              <svg className="size-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden>
-                <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
-              </svg>
-              <span>Create New Post</span>
-            </button>
+            {address && (
+              <button
+                onClick={() => setOpen(true)}
+                className="cursor-pointer group relative flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold text-white bg-[var(--primary-500)] transition-all duration-200 hover:bg-opacity-85 hover:ring-2 hover:ring-[rgba(124,58,237,0.85)] hover:ring-offset-2 hover:ring-offset-neutral-900 hover:shadow-[0_0_14px_7px_rgba(124,58,237,0.55)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary-500)]/40"
+              >
+                <svg className="size-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden>
+                  <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
+                </svg>
+                <span>Create New Post</span>
+              </button>
+            )}
           </div>
 
           <CommunityTabs value={category} onChange={setCategory} />
