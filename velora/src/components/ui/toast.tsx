@@ -37,9 +37,9 @@ function ToastItem({ toast, onClose }: ToastItemProps) {
   }, [toast.id, onClose, duration]);
 
   const bgColor = {
-    success: "bg-green-600/95 border-green-400/20",
-    error: "bg-red-600/95 border-red-400/20",
-    info: "bg-blue-600/95 border-blue-400/20",
+    success: "bg-green-600/50 border-green-400/40",
+    error: "bg-red-600/50 border-red-400/40",
+    info: "bg-blue-600/50 border-blue-400/40",
   }[toast.type];
 
   const progressColor = {
@@ -154,7 +154,7 @@ export function ToastContainer() {
   if (!mounted) return null;
 
   return createPortal(
-    <div className="fixed top-4 right-4 z-[9999] flex flex-col items-end pointer-events-none">
+    <div className="fixed top-20 right-4 z-[9999] flex flex-col items-end pointer-events-none">
       <div className="pointer-events-auto">
         {toasts.map((t) => (
           <ToastItem key={t.id} toast={t} onClose={toast.remove} />

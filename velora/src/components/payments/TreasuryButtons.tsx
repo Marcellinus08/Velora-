@@ -97,8 +97,8 @@ export function BuyVideoButton({
       const msg = pickMsg(e);
       toast.error(
         "Purchase Failed",
-        `User rejected the request\n${msg}`,
-        6000
+        msg,
+        5000
       );
       console.error(e);
     } finally {
@@ -169,8 +169,8 @@ export function PayAdsButton({
       const msg = pickMsg(e);
       toast.error(
         "Payment Failed",
-        `User rejected the request\n${msg}`,
-        6000
+        msg,
+        5000
       );
       console.error(e);
     } finally {
@@ -242,8 +242,8 @@ export function PayMeetButton({
       const msg = pickMsg(e);
       toast.error(
         "Payment Failed",
-        `User rejected the request\n${msg}`,
-        6000
+        msg,
+        5000
       );
       console.error(e);
     } finally {
