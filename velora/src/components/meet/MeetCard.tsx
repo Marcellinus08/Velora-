@@ -1,6 +1,10 @@
 // components/meet/MeetCard.tsx
-import React, { useMemo } from "react";
+"use client";
+
+import React, { useMemo, useState } from "react";
 import { AbstractProfile } from "@/components/abstract-profile";
+import { useAccount } from "wagmi";
+import { ConnectWalletDialog } from "@/components/ui/connect-wallet-dialog";
 
 const SESSION_MINUTES = 10; // hanya untuk tampilan; slotMinutes real ada di API sessions
 
@@ -21,6 +25,9 @@ type MeetCardProps = {
 };
 
 export const MeetCard: React.FC<MeetCardProps> = ({ creator, onCall }) => {
+  const { isConnected } = useAccount();
+  const [showConnectDialog, setShowConnectDialog] = useState(false);
+
   // alamat wallet untuk display & bayar
   const fullAddr = useMemo(() => {
     const cand = (creator as any).walletAddress || creator.id || "";
@@ -36,8 +43,18 @@ export const MeetCard: React.FC<MeetCardProps> = ({ creator, onCall }) => {
   const voiceSession = toSession(creator.pricing?.voice);
   const videoSession = toSession(creator.pricing?.video);
 
+  const handleBooking = () => {
+    // Check if wallet is connected
+    if (!isConnected) {
+      setShowConnectDialog(true);
+      return;
+    }
+    onCall(creator);
+  };
+
   return (
-    <div className="rounded-xl border border-neutral-800 bg-neutral-900 p-5 transition-all hover:border-[var(--primary-500)] hover:bg-neutral-900/80 hover:shadow-[0_0_0_1px_var(--primary-500),0_0_24px_2px_rgba(139,92,246,0.45)]">
+    <>
+      <div className="rounded-xl border border-neutral-800 bg-neutral-900 p-5 transition-all hover:border-[var(--primary-500)] hover:bg-neutral-900/80 hover:shadow-[0_0_0_1px_var(--primary-500),0_0_24px_2px_rgba(139,92,246,0.45)]">
       {/* Header: avatar + name + wallet */}
       <div className="mb-4 flex items-center gap-3">
         {creator.avatarUrl ? (
@@ -89,11 +106,13 @@ export const MeetCard: React.FC<MeetCardProps> = ({ creator, onCall }) => {
 
       <button
         className="w-full rounded-full bg-[var(--primary-500)] px-4 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-90"
-        onClick={() => onCall(creator)}
+        onClick={handleBooking}
       >
         Booking
       </button>
     </div>
+    <ConnectWalletDialog open={showConnectDialog} onOpenChange={setShowConnectDialog} />
+    </>
   );
 };
 

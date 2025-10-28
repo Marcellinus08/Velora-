@@ -3,6 +3,7 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 import { useGlonicTreasury } from "@/hooks/use-glonic-treasury";
+import { useAccount } from "wagmi";
 
 type MeetCreator = {
   id: string; 

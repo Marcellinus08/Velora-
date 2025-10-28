@@ -5,6 +5,7 @@ import type { Address } from "viem";
 import { useGlonicTreasury } from "@/hooks/use-glonic-treasury";
 import { useLoginWithAbstract } from "@abstract-foundation/agw-react";
 import { useAccount } from "wagmi";
+import { ConnectWalletDialog } from "@/components/ui/connect-wallet-dialog";
 
 /* helpers */
 function pickMsg(e: unknown) {
@@ -56,10 +57,17 @@ export function BuyVideoButton({
 }) {
   const { loading, purchaseVideo } = useGlonicTreasury();
   const { login } = useLoginWithAbstract();
-  const { address } = useAccount();
+  const { address, isConnected } = useAccount();
   const [busy, setBusy] = useState(false);
+  const [showConnectDialog, setShowConnectDialog] = useState(false);
 
   const onClick = async () => {
+    // Check if wallet is connected
+    if (!isConnected) {
+      setShowConnectDialog(true);
+      return;
+    }
+
     if (disabled) return;
     setBusy(true);
     try {
@@ -93,15 +101,18 @@ export function BuyVideoButton({
   };
 
   return (
-    <button
-      type="button"
-      disabled={!!disabled || busy || loading}
-      onClick={onClick}
-      aria-busy={busy || loading}
-      className={className}
-    >
-      {busy || loading ? "Processing..." : children}
-    </button>
+    <>
+      <button
+        type="button"
+        disabled={!!disabled || busy || loading}
+        onClick={onClick}
+        aria-busy={busy || loading}
+        className={className}
+      >
+        {busy || loading ? "Processing..." : children}
+      </button>
+      <ConnectWalletDialog open={showConnectDialog} onOpenChange={setShowConnectDialog} />
+    </>
   );
 }
 
@@ -123,9 +134,17 @@ export function PayAdsButton({
 }) {
   const { loading, payAds } = useGlonicTreasury();
   const { login } = useLoginWithAbstract();
+  const { isConnected } = useAccount();
   const [busy, setBusy] = useState(false);
+  const [showConnectDialog, setShowConnectDialog] = useState(false);
 
   const onClick = async () => {
+    // Check if wallet is connected
+    if (!isConnected) {
+      setShowConnectDialog(true);
+      return;
+    }
+
     if (disabled) return;
     setBusy(true);
     const id =
@@ -143,15 +162,18 @@ export function PayAdsButton({
   };
 
   return (
-    <button
-      type="button"
-      disabled={!!disabled || busy || loading}
-      onClick={onClick}
-      aria-busy={busy || loading}
-      className={className}
-    >
-      {busy || loading ? "Processing..." : children}
-    </button>
+    <>
+      <button
+        type="button"
+        disabled={!!disabled || busy || loading}
+        onClick={onClick}
+        aria-busy={busy || loading}
+        className={className}
+      >
+        {busy || loading ? "Processing..." : children}
+      </button>
+      <ConnectWalletDialog open={showConnectDialog} onOpenChange={setShowConnectDialog} />
+    </>
   );
 }
 
@@ -177,9 +199,17 @@ export function PayMeetButton({
 }) {
   const { loading, payMeet } = useGlonicTreasury();
   const { login } = useLoginWithAbstract();
+  const { isConnected } = useAccount();
   const [busy, setBusy] = useState(false);
+  const [showConnectDialog, setShowConnectDialog] = useState(false);
 
   const onClick = async () => {
+    // Check if wallet is connected
+    if (!isConnected) {
+      setShowConnectDialog(true);
+      return;
+    }
+
     if (disabled) return;
     setBusy(true);
     try {
@@ -195,14 +225,17 @@ export function PayMeetButton({
   };
 
   return (
-    <button
-      type="button"
-      disabled={!!disabled || busy || loading}
-      onClick={onClick}
-      aria-busy={busy || loading}
-      className={className}
-    >
-      {busy || loading ? "Processing..." : children}
-    </button>
+    <>
+      <button
+        type="button"
+        disabled={!!disabled || busy || loading}
+        onClick={onClick}
+        aria-busy={busy || loading}
+        className={className}
+      >
+        {busy || loading ? "Processing..." : children}
+      </button>
+      <ConnectWalletDialog open={showConnectDialog} onOpenChange={setShowConnectDialog} />
+    </>
   );
 }
