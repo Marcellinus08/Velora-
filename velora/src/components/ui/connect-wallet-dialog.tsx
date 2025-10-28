@@ -68,12 +68,12 @@ export function ConnectWalletDialog({ open, onOpenChange }: ConnectWalletDialogP
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md bg-neutral-900 border-neutral-800">
+      <DialogContent className="sm:max-w-md bg-black/95 border-neutral-800/50 backdrop-blur-sm">
         <DialogHeader className="text-center space-y-4">
-          <DialogTitle className="text-xl text-neutral-100">
+          <DialogTitle className="text-xl text-white font-medium">
             Connect your wallet to get started
           </DialogTitle>
-          <DialogDescription className="text-neutral-400">
+          <DialogDescription className="text-neutral-400 text-sm">
             Sign in to make purchases and access all features
           </DialogDescription>
         </DialogHeader>
@@ -82,10 +82,10 @@ export function ConnectWalletDialog({ open, onOpenChange }: ConnectWalletDialogP
           <Button
             onClick={handleSignIn}
             disabled={isConnecting}
-            className="w-full h-11 bg-white hover:bg-neutral-200 text-neutral-900 font-semibold rounded-full flex items-center justify-center gap-2 transition-all"
+            className="w-full h-11 bg-white hover:bg-neutral-100 text-black font-semibold rounded-full flex items-center justify-center gap-2 transition-all"
           >
             <span>{isConnecting ? "Connecting..." : "Sign In"}</span>
-            <AbstractLogo className="h-4 w-4" />
+            <AbstractLogo className="h-4 w-4 animate-spin" />
           </Button>
 
           <p className="text-xs text-neutral-500 text-center">
