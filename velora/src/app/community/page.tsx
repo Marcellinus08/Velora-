@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useAccount } from "wagmi";
 import Swal from "sweetalert2";
 import { toast } from "@/components/ui/toast";
+import { useConfirmDialog } from "@/components/ui/confirm-dialog";
 
 import Sidebar from "@/components/sidebar";
 import CommunityTabs from "@/components/community/tabs";
@@ -16,6 +17,7 @@ import { CommunityPost, NewPostPayload } from "@/components/community/types";
 export default function CommunityPage() {
   const { address } = useAccount();
   const me = (address ?? "").toLowerCase();
+  const { confirm, Dialog } = useConfirmDialog();
 
   const [open, setOpen] = useState(false);
   const [category, setCategory] = useState<string>("All Topics");
@@ -178,21 +180,15 @@ export default function CommunityPage() {
   async function handleDelete(id: string) {
     if (!me) return;
 
-    const { isConfirmed } = await Swal.fire({
-      icon: "warning",
+    const confirmed = await confirm({
       title: "Delete this post?",
-      text: "Aksi ini tidak bisa dibatalkan.",
-      showCancelButton: true,
-      confirmButtonText: "Yes, delete",
-      cancelButtonText: "Cancel",
-      reverseButtons: true,
-      confirmButtonColor: "#ef4444",
-      position: "top-end",
-      toast: true,
-      timer: 3000,
-      timerProgressBar: true,
+      message: "This action cannot be undone.",
+      confirmText: "Yes, delete",
+      cancelText: "Cancel",
+      variant: "danger",
     });
-    if (!isConfirmed) return;
+
+    if (!confirmed) return;
 
     const prev = posts;
     setPosts((p) => p.filter((x) => x.id !== id));
@@ -276,6 +272,7 @@ export default function CommunityPage() {
       </main>
 
       <CreatePostModal open={open} onClose={() => setOpen(false)} onSubmit={handleCreate} />
+      <Dialog />
     </div>
   );
 }

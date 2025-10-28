@@ -4,6 +4,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import Swal from "sweetalert2";
 import { toast } from "@/components/ui/toast";
+import { useConfirmDialog } from "@/components/ui/confirm-dialog";
 import { supabase } from "@/lib/supabase";
 import { AbstractProfile } from "@/components/abstract-profile";
 
@@ -223,6 +224,7 @@ function CommentNode({
   sort: "newest" | "top";
   getAvatarUrl: (addr: string) => string | null;
 }) {
+  const { confirm, Dialog } = useConfirmDialog();
   const [openReply, setOpenReply] = useState(false);
   const [showChildren, setShowChildren] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -248,17 +250,15 @@ function CommentNode({
     );
 
   const confirmDelete = async () => {
-    const ok = await Swal.fire({
-      icon: "warning",
+    const confirmed = await confirm({
       title: "Delete this comment?",
-      text: "This action cannot be undone.",
-      showCancelButton: true,
-      confirmButtonText: "Delete",
-      cancelButtonText: "Cancel",
-      confirmButtonColor: "#ef4444",
-      reverseButtons: true,
+      message: "This action cannot be undone.",
+      confirmText: "Delete",
+      cancelText: "Cancel",
+      variant: "danger",
     });
-    if (ok.isConfirmed) {
+
+    if (confirmed) {
       await onDelete(node.id);
       setMenuOpen(false);
       toast.success(
@@ -450,6 +450,8 @@ function CommentNode({
           ))}
         </div>
       )}
+
+      <Dialog />
     </div>
   );
 }

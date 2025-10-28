@@ -6,6 +6,7 @@ import { useAccount } from "wagmi";
 import { AbstractProfile } from "@/components/abstract-profile";
 import Swal from "sweetalert2";
 import { toast } from "@/components/ui/toast";
+import { useConfirmDialog } from "@/components/ui/confirm-dialog";
 
 // Add styles to head
 if (typeof document !== 'undefined') {
@@ -173,6 +174,7 @@ const MI = ({ name, className = "" }: { name: string; className?: string }) => (
 export default function Replies({ postId, onPosted }: { postId: string; onPosted?: () => void }) {
   const { address } = useAccount();
   const me = useMemo(() => (address ? address.toLowerCase() : ""), [address]);
+  const { confirm, Dialog } = useConfirmDialog();
 
   const [items, setItems] = useState<ReplyNode[]>([]);
   const [loading, setLoading] = useState(false);
@@ -265,37 +267,13 @@ export default function Replies({ postId, onPosted }: { postId: string; onPosted
   }
 
   const showToast = (type: 'success' | 'error' | 'warning', message: string) => {
-    const iconColors = {
-      success: '#10b981',
-      error: '#ef4444',
-      warning: '#f59e0b'
-    };
-
-    const icons = {
-      success: `
-        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-        </svg>
-      `,
-      error: `
-        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-        </svg>
-      `,
-      warning: `
-        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
-        </svg>
-      `
-    };
-
-    // Use our custom toast system
+    // Use our custom toast system with appropriate titles
     if (type === 'success') {
-      toast.success(title, message, 4000);
+      toast.success("Success", message, 4000);
     } else if (type === 'error') {
-      toast.error(title, message, 5000);
+      toast.error("Error", message, 5000);
     } else {
-      toast.info(title, message, 4000);
+      toast.info("Warning", message, 4000);
     }
   };
 
@@ -340,38 +318,16 @@ export default function Replies({ postId, onPosted }: { postId: string; onPosted
   async function handleDelete(id: string) {
     if (!me) return;
     
-    // Konfirmasi dengan SweetAlert
-    const result = await Swal.fire({
-      html: `
-        <div class="flex flex-col items-center">
-          <svg class="w-12 h-12 mb-4 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
-          </svg>
-          <div class="text-lg font-semibold mb-2">Delete Reply?</div>
-          <div class="text-sm text-neutral-400">This action cannot be undone</div>
-        </div>
-      `,
-      showCancelButton: true,
-      confirmButtonText: 'Delete',
-      cancelButtonText: 'Cancel',
-      confirmButtonColor: '#ef4444',
-      cancelButtonColor: '#3f3f46',
-      background: '#18181b',
-      color: '#fff',
-      customClass: {
-        popup: 'animated-popup',
-        confirmButton: 'confirm-button',
-        cancelButton: 'cancel-button'
-      },
-      showClass: {
-        popup: 'animate__animated animate__fadeInDown animate__faster'
-      },
-      hideClass: {
-        popup: 'animate__animated animate__fadeOutUp animate__faster'
-      }
+    // Konfirmasi dengan custom dialog
+    const confirmed = await confirm({
+      title: "Delete Reply?",
+      message: "This action cannot be undone",
+      confirmText: "Delete",
+      cancelText: "Cancel",
+      variant: "danger",
     });
 
-    if (!result.isConfirmed) return;
+    if (!confirmed) return;
     
     try {
       const r = await fetch(`/api/community/replies/${id}`, {
@@ -625,6 +581,8 @@ export default function Replies({ postId, onPosted }: { postId: string; onPosted
           <Item key={n.id} node={n} />
         ))}
       </div>
+
+      <Dialog />
     </div>
   );
 }
