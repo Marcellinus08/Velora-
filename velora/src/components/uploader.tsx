@@ -3,12 +3,13 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Swal from "sweetalert2"; 
+import { toast } from "@/components/ui/toast";
 import { supabase } from "@/lib/supabase"; 
 
 /* ---------- Config ---------- */
 const ACCEPT =
   "video/mp4,video/webm,video/ogg,video/quicktime,video/x-matroska,video/avi,video/mov,video/wmv,video/flv";
-const MAX_SIZE_MB = 4096; // 4GB untuk Supabase Pro
+const MAX_SIZE_MB = 4096; 
 const CATEGORIES = [
   "Education",
   "Technology",
@@ -268,15 +269,14 @@ export default function UploadVideoForm() {
       }
       setUploading(false);
 
-      // ★ SweetAlert success + reset the form back to initial
-      await Swal.fire({
-        icon: "success",
-        title: "Upload complete!",
-        text: "Your video was uploaded successfully.",
-        confirmButtonText: "OK",
-      });
+      // ★ Toast success notification
+      toast.success(
+        "Upload complete!",
+        `Video: ${title}\nYour video was uploaded successfully`,
+        6000
+      );
 
-      resetAll(); // ★ reset everything after user closes the alert
+      resetAll(); // ★ reset everything after upload
     } catch (e: any) {
       console.error(e);
       if (timer.current) {
@@ -287,13 +287,12 @@ export default function UploadVideoForm() {
       setProgress(0);
       setError(e?.message || "Upload failed. Please try again.");
 
-      // ★ Optional: SweetAlert error
-      Swal.fire({
-        icon: "error",
-        title: "Upload failed",
-        text: e?.message || "Please try again.",
-        confirmButtonText: "OK",
-      });
+      // ★ Toast error notification
+      toast.error(
+        "Upload failed",
+        `Error: ${e?.message || "Unknown error"}\nPlease try again`,
+        6000
+      );
     }
   }
 

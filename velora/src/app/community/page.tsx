@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useAccount } from "wagmi";
 import Swal from "sweetalert2";
+import { toast } from "@/components/ui/toast";
 
 import Sidebar from "@/components/sidebar";
 import CommunityTabs from "@/components/community/tabs";
@@ -54,7 +55,14 @@ export default function CommunityPage() {
   }, [category, me]);
 
   async function handleCreate(data: NewPostPayload) {
-    if (!me) return alert("Connect wallet dulu.");
+    if (!me) {
+      toast.error(
+        "Wallet Not Connected",
+        "Please connect your wallet to create posts\nSign in to start posting",
+        5000
+      );
+      return;
+    }
     setError(null);
     try {
       const res = await fetch("/api/community/posts", {
@@ -64,16 +72,36 @@ export default function CommunityPage() {
       });
       const json = await safeJson(res);
       if (!res.ok) throw new Error(json?.error || res.statusText);
+      
+      // Show success notification
+      toast.success(
+        "Post Created!",
+        `Category: ${data.category}\nYour post was published successfully`,
+        5000
+      );
+      
       setOpen(false);
       await load();
     } catch (e: any) {
       console.error("Create post failed:", e);
       setError(e?.message || "Failed to create post");
+      toast.error(
+        "Failed to Create Post",
+        `Error: ${e?.message || "Unknown error"}\nPlease try again`,
+        5000
+      );
     }
   }
 
   async function toggleLike(id: string) {
-    if (!me) return alert("Connect wallet dulu.");
+    if (!me) {
+      toast.error(
+        "Wallet Not Connected",
+        "Please connect your wallet to like posts\nSign in to interact with content",
+        5000
+      );
+      return;
+    }
     setPosts((prev) =>
       prev.map((p) => (p.id === id ? { ...p, liked: !p.liked, likes: p.liked ? p.likes - 1 : p.likes + 1 } : p))
     );
@@ -128,31 +156,22 @@ export default function CommunityPage() {
       }
 
       // Toast notification untuk sukses
-      Swal.fire({
-        icon: "success",
-        title: "Changes saved!",
-        position: "top-end",
-        toast: true,
-        timer: 2000,
-        timerProgressBar: true,
-        showConfirmButton: false
-      });
+      toast.success(
+        "Changes saved!",
+        `Post updated successfully\nYour changes have been saved`,
+        4000
+      );
     } catch (e: any) {
       console.error("Edit failed:", e);
       // Rollback on error
       setPosts(prevPosts);
       
       // Toast notification untuk error
-      Swal.fire({
-        icon: "error",
-        title: "Failed to save changes",
-        text: e?.message || "Unknown error",
-        position: "top-end",
-        toast: true,
-        timer: 3000,
-        timerProgressBar: true,
-        showConfirmButton: false
-      });
+      toast.error(
+        "Failed to save changes",
+        `Error: ${e?.message || "Unknown error"}\nPlease try again`,
+        5000
+      );
     }
   }
 
@@ -188,29 +207,20 @@ export default function CommunityPage() {
       if (!res.ok) throw new Error(json?.error || res.statusText);
 
       // Toast notification untuk sukses
-      Swal.fire({ 
-        icon: "success", 
-        title: "Post deleted successfully",
-        position: "top-end",
-        toast: true,
-        timer: 2000,
-        timerProgressBar: true,
-        showConfirmButton: false 
-      });
+      toast.success(
+        "Post deleted successfully",
+        "Your post has been removed from the community",
+        4000
+      );
     } catch (e: any) {
       console.error("Delete failed:", e);
       setPosts(prev);
       // Toast notification untuk error
-      Swal.fire({ 
-        icon: "error", 
-        title: "Failed to delete post", 
-        text: e?.message || "Unknown error",
-        position: "top-end",
-        toast: true,
-        timer: 3000,
-        timerProgressBar: true,
-        showConfirmButton: false 
-      });
+      toast.error(
+        "Failed to delete post",
+        `Error: ${e?.message || "Unknown error"}\nPlease try again`,
+        5000
+      );
     }
   }
 

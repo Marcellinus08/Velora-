@@ -6,6 +6,7 @@ import AdSummary from "./summary";
 import PayPreviewModal from "./paymodal";
 import { TREASURY_ADDRESS } from "@/config/abstract-contracts";
 import type { CreateAdProps } from "./types";
+import { toast } from "@/components/ui/toast";
 
 const DURATION_DAYS = 3;
 const PRICE_USD = 1;
@@ -257,11 +258,10 @@ export default function CreateAd({
           })
         : 'Unknown';
 
-      alert(
-        `🚫 You Already Have an Active Campaign!\n\n` +
-        `📢 Active Campaign: "${campaign?.title}"\n\n` +
-        `⏰ Campaign ends:\n${endDate}\n\n` +
-        `💡 You can only have one active campaign at a time. Please wait for your current campaign to end before creating a new one.`
+      toast.error(
+        "You Already Have an Active Campaign!",
+        `Active Campaign: "${campaign?.title}"\nCampaign ends: ${endDate}\n\nYou can only have one active campaign at a time. Please wait for your current campaign to end before creating a new one.`,
+        6000
       );
       return;
     }
@@ -279,11 +279,10 @@ export default function CreateAd({
           })
         : 'Unknown';
 
-      alert(
-        `🚫 All Campaign Slots Are Full!\n\n` +
-        `📊 Current Status: ${slotsInfo.activeCount}/5 slots occupied\n\n` +
-        `⏰ Next available slot:\n${nextDate}\n\n` +
-        `💡 Please wait for an active campaign to end before creating a new one.`
+      toast.error(
+        "All Campaign Slots Are Full!",
+        `Current Status: ${slotsInfo.activeCount}/5 slots occupied\nNext available slot: ${nextDate}\n\nPlease wait for an active campaign to end before creating a new one.`,
+        6000
       );
       return;
     }
@@ -296,12 +295,10 @@ export default function CreateAd({
     if (typeof window !== "undefined") sessionStorage.setItem(PAID_FLAG, "1");
     setShowPayModal(false);
 
-    alert(
-      `✅ Preview Payment Confirmed!\n\n` +
-        `💰 Amount: ${fmtUSD(PRICE_USD)}\n` +
-        `⏰ Duration: ${DURATION_DAYS} days\n\n` +
-        `🚀 Publishing your campaign now...\n` +
-        `📝 Form will be reset after success.`
+    toast.info(
+      "Preview Payment Confirmed!",
+      `Amount: ${fmtUSD(PRICE_USD)}\nDuration: ${DURATION_DAYS} days\n\nPublishing your campaign now...\nForm will be reset after success.`,
+      5000
     );
 
     onPublishWithTx("preview" as `0x${string}`);
@@ -312,12 +309,10 @@ export default function CreateAd({
     setLocalTx(tx);
     onPaid?.(tx);
 
-    alert(
-      `✅ Payment Successful!\n\n` +
-        `🔗 Transaction Hash: ${tx.slice(0, 10)}...${tx.slice(-8)}\n` +
-        `💰 Amount: ${fmtUSD(PRICE_USD)}\n\n` +
-        `🚀 Publishing your campaign now...\n` +
-        `📝 Form will be reset after success.`
+    toast.success(
+      "Payment Successful!",
+      `Transaction Hash: ${tx.slice(0, 10)}...${tx.slice(-8)}\nAmount: ${fmtUSD(PRICE_USD)}\n\nPublishing your campaign now...\nForm will be reset after success.`,
+      6000
     );
 
     onPublishWithTx(tx);
@@ -327,7 +322,11 @@ export default function CreateAd({
     console.log("onPublish called! canPublish:", canPublish, "saving:", saving);
     if (!canPublish) {
       console.log("Cannot publish - canPublish is false. isPaid:", isPaid, "formValid:", formValid);
-      alert("❌ Cannot publish: Form not valid or payment not completed!");
+      toast.error(
+        "Cannot Publish",
+        "Form not valid or payment not completed!",
+        4000
+      );
       return;
     }
     if (saving) return;
@@ -353,11 +352,10 @@ export default function CreateAd({
           })
         : 'Unknown';
 
-      alert(
-        `🚫 Cannot publish: You already have an active campaign!\n\n` +
-        `📢 Active Campaign: "${campaign?.title}"\n` +
-        `⏰ Ends: ${endDate}\n\n` +
-        `Please wait for your current campaign to end.`
+      toast.error(
+        "Cannot Publish",
+        `You already have an active campaign!\n\nActive Campaign: "${campaign?.title}"\nEnds: ${endDate}\n\nPlease wait for your current campaign to end.`,
+        6000
       );
       setSaving(false);
       return;
@@ -365,16 +363,21 @@ export default function CreateAd({
     
     // Double-check slots before publishing
     if (slotsInfo?.isFull) {
-      alert(
-        `🚫 Cannot publish: All campaign slots are full!\n\n` +
-        `Please wait for an active campaign to end.`
+      toast.error(
+        "Cannot Publish",
+        "All campaign slots are full!\n\nPlease wait for an active campaign to end.",
+        5000
       );
       setSaving(false);
       return;
     }
 
     if (!formValid) {
-      alert("❌ Cannot publish: Form not valid!");
+      toast.error(
+        "Cannot Publish",
+        "Form not valid!",
+        3000
+      );
       return;
     }
     if (saving) return;
@@ -411,25 +414,18 @@ export default function CreateAd({
       // Reset form first (clean state)
       resetForm();
 
-      // Success alert with detailed information
-      alert(
-        `🎉 Campaign Created Successfully! 🎉\n\n` +
-          `📋 Title: ${json.campaign?.title || title}\n` +
-          `⏰ Duration: ${DURATION_DAYS} ${daysLabel}\n` +
-          `💰 Investment: ${fmtUSD(PRICE_USD)}\n` +
-          `🎯 Status: Active & Live\n` +
-          `📊 Campaign ID: ${json.campaign?.id || campaignId}\n\n` +
-          `🚀 Your ad is now displayed on the homepage!\n` +
-          `👥 Users can see and click your campaign\n\n` +
-          `📝 The form has been reset.\n` +
-          `✨ You can create another campaign right away!`
+      // Success toast with detailed information
+      toast.success(
+        "Campaign Created Successfully!",
+        `Title: ${json.campaign?.title || title}\nDuration: ${DURATION_DAYS} ${daysLabel}\nInvestment: ${fmtUSD(PRICE_USD)}\nStatus: Active & Live\n\nYour ad is now displayed on the homepage!\nUsers can see and click your campaign\n\nThe form has been reset.\nYou can create another campaign right away!`,
+        8000
       );
     } catch (err: any) {
       console.error("Publish error:", err);
-      alert(
-        `❌ Failed to publish campaign!\n\n` +
-        `Error: ${err?.message || err}\n\n` +
-        `Please try again or contact support.`
+      toast.error(
+        "Failed to Publish Campaign",
+        `Error: ${err?.message || err}\n\nPlease try again or contact support.`,
+        6000
       );
       setSaving(false);
     }

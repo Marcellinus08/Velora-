@@ -6,6 +6,7 @@ import Image from "next/image";
 import { supabase } from "@/lib/supabase";
 import { AbstractProfile } from "@/components/abstract-profile";
 import RecommendationPanel from "./recommendationpanel";
+import { toast } from "@/components/ui/toast";
 import type { VideoInfo, RecommendedVideo } from "./types";
 
 /* ================= Helpers ================= */
@@ -150,7 +151,11 @@ export default function VideoInfoSection({
   const onToggleLikeVideo = async () => {
     const me = getAbstractAddressFromSession();
     if (!me) {
-      alert("Please connect your wallet to like this video.");
+      toast.error(
+        "Login Required",
+        "Please connect your wallet to like this video\nSign in to interact with content",
+        5000
+      );
       return;
     }
     if (likeBusy) return;
@@ -195,12 +200,20 @@ export default function VideoInfoSection({
   const onToggleFollow = async () => {
     const me = getAbstractAddressFromSession();
     if (!me) {
-      alert("Please connect your wallet to follow this creator.");
+      toast.error(
+        "Login Required",
+        "Please connect your wallet to follow this creator\nSign in to start following",
+        5000
+      );
       return;
     }
     if (!walletLower) return;
     if (me === walletLower) {
-      alert("You cannot follow your own profile.");
+      toast.info(
+        "Not Allowed",
+        "You cannot follow your own profile\nTry following other creators instead",
+        4000
+      );
       return;
     }
 
@@ -224,7 +237,11 @@ export default function VideoInfoSection({
       }
     } catch (e: any) {
       console.error("Follow toggle failed:", e);
-      alert(e?.message || "Failed to update follow status.");
+      toast.error(
+        "Follow Failed",
+        `Error: ${e?.message || "Unknown error"}\nFailed to update follow status`,
+        5000
+      );
     } finally {
       setFollowBusy(false);
     }

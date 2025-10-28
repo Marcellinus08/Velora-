@@ -6,6 +6,7 @@ import { useGlonicTreasury } from "@/hooks/use-glonic-treasury";
 import { useLoginWithAbstract } from "@abstract-foundation/agw-react";
 import { useAccount } from "wagmi";
 import { ConnectWalletDialog } from "@/components/ui/connect-wallet-dialog";
+import { toast } from "@/components/ui/toast";
 
 /* helpers */
 function pickMsg(e: unknown) {
@@ -15,11 +16,6 @@ function pickMsg(e: unknown) {
     err?.message ||
     (typeof err === "string" ? err : "Transaction failed")
   );
-}
-function alertErr(e: unknown) {
-  const msg = pickMsg(e);
-  if (typeof window !== "undefined") alert(msg);
-  console.error(e);
 }
 
 /** Generic retry saat init gagal */
@@ -92,9 +88,19 @@ export function BuyVideoButton({
         console.warn("record purchase failed:", err);
       }
 
-      alert(`Purchase success\nTx: ${tx}`);
+      toast.success(
+        "Purchase Successful!",
+        `Transaction: ${tx.slice(0, 10)}...${tx.slice(-8)}\nVideo unlocked and ready to watch`,
+        6000
+      );
     } catch (e) {
-      alertErr(e);
+      const msg = pickMsg(e);
+      toast.error(
+        "Purchase Failed",
+        `User rejected the request\n${msg}`,
+        6000
+      );
+      console.error(e);
     } finally {
       setBusy(false);
     }
@@ -154,8 +160,19 @@ export function PayAdsButton({
       const run = () => payAds({ campaignId: id, amountUsd });
       const tx = await withInitRetry(run, async () => login());
       onPaid?.(tx);
+      toast.success(
+        "Ad Payment Successful!",
+        `Transaction: ${tx.slice(0, 10)}...${tx.slice(-8)}\nYour campaign is now active`,
+        6000
+      );
     } catch (e) {
-      alertErr(e);
+      const msg = pickMsg(e);
+      toast.error(
+        "Payment Failed",
+        `User rejected the request\n${msg}`,
+        6000
+      );
+      console.error(e);
     } finally {
       setBusy(false);
     }
@@ -216,9 +233,19 @@ export function PayMeetButton({
       const run = () => payMeet({ bookingId, creator, rateUsdPerMin, minutes });
       const tx = await withInitRetry(run, async () => login());
       onPaid?.(tx);
-      alert(`Meet payment success\nTx: ${tx}`);
+      toast.success(
+        "Meeting Payment Successful!",
+        `Transaction: ${tx.slice(0, 10)}...${tx.slice(-8)}\nBooking confirmed - ${minutes} minutes`,
+        6000
+      );
     } catch (e) {
-      alertErr(e);
+      const msg = pickMsg(e);
+      toast.error(
+        "Payment Failed",
+        `User rejected the request\n${msg}`,
+        6000
+      );
+      console.error(e);
     } finally {
       setBusy(false);
     }

@@ -4,6 +4,7 @@ import SiteHeader from "@/components/header/index";
 import { NextAbstractWalletProvider } from "@/components/agw-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import ProfileUpsertOnLogin from "@/components/auth/profile-upsert-on-login";
+import { ToastContainer } from "@/components/ui/toast";
 import type { ReactNode } from "react";
 
 export const metadata = {
@@ -60,6 +61,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             <SiteHeader />
             {children}
           </TooltipProvider>
+          
+          {/* Toast notifications */}
+          <ToastContainer />
         </NextAbstractWalletProvider>
       </body>
     </html>

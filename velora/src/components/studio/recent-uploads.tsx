@@ -3,7 +3,8 @@
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import type { StudioVideo } from "./types";
-import Swal from "sweetalert2"; // Import SweetAlert2
+import Swal from "sweetalert2"; // Import SweetAlert2 for confirmation dialogs
+import { toast } from "@/components/ui/toast"; // Import toast for notifications
 import EditVideoModal from "@/components/studio/edit-video-modal";
 
 /* ===== Helpers ===== */
