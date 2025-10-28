@@ -3,6 +3,7 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import Swal from "sweetalert2";
+import { toast } from "@/components/ui/toast";
 import { supabase } from "@/lib/supabase";
 import { AbstractProfile } from "@/components/abstract-profile";
 
@@ -240,15 +241,11 @@ function CommentNode({
   }, [node.children, sort]);
 
   const askConnect = () =>
-    Swal.fire({
-      icon: "info",
-      title: "Please connect your wallet",
-      text: "Connect or sign in to interact.",
-      timer: 1800,
-      toast: true,
-      position: "top-end",
-      showConfirmButton: false,
-    });
+    toast.info(
+      "Please connect your wallet",
+      "Connect or sign in to interact\nYou need to be logged in",
+      4000
+    );
 
   const confirmDelete = async () => {
     const ok = await Swal.fire({
@@ -264,41 +261,32 @@ function CommentNode({
     if (ok.isConfirmed) {
       await onDelete(node.id);
       setMenuOpen(false);
-      Swal.fire({
-        icon: "success",
-        title: "Comment deleted",
-        timer: 1200,
-        toast: true,
-        position: "top-end",
-        showConfirmButton: false,
-      });
+      toast.success(
+        "Comment deleted",
+        "Your comment has been removed successfully",
+        4000
+      );
     }
   };
 
   const saveEdit = async () => {
     const v = draft.trim();
     if (!v) {
-      Swal.fire({
-        icon: "warning",
-        title: "Content cannot be empty",
-        timer: 1200,
-        toast: true,
-        position: "top-end",
-        showConfirmButton: false,
-      });
+      toast.error(
+        "Content cannot be empty",
+        "Please write something before saving",
+        4000
+      );
       return;
     }
     await onEdit(node.id, v);
     setIsEditing(false);
     setMenuOpen(false);
-    Swal.fire({
-      icon: "success",
-      title: "Comment updated",
-      timer: 1000,
-      toast: true,
-      position: "top-end",
-      showConfirmButton: false,
-    });
+    toast.success(
+      "Comment updated",
+      "Your changes have been saved successfully",
+      4000
+    );
   };
 
   const menuRef = useClickOutside<HTMLDivElement>(menuOpen, () => setMenuOpen(false));
@@ -608,15 +596,11 @@ export default function Comments({
   /* -------- actions: delete (soft) -------- */
   const onDelete = async (commentId: string) => {
     if (!myAddr) {
-      await Swal.fire({
-        icon: "info",
-        title: "Please connect your wallet",
-        text: "Connect or sign in to interact.",
-        timer: 1800,
-        toast: true,
-        position: "top-end",
-        showConfirmButton: false,
-      });
+      toast.info(
+        "Please connect your wallet",
+        "Connect or sign in to interact\nYou need to be logged in",
+        4000
+      );
       return;
     }
     const { error } = await supabase
@@ -628,7 +612,11 @@ export default function Comments({
     if (!error) {
       setRoots((prev) => removeAndPromote(prev, commentId));
     } else {
-      await Swal.fire({ icon: "error", title: "Failed to delete", text: error.message });
+      toast.error(
+        "Failed to delete",
+        `Error: ${error.message}\nPlease try again`,
+        5000
+      );
     }
   };
 
@@ -656,22 +644,22 @@ export default function Comments({
         return clone;
       });
     } else {
-      await Swal.fire({ icon: "error", title: "Failed to save", text: error.message });
+      toast.error(
+        "Failed to save",
+        `Error: ${error.message}\nPlease try again`,
+        5000
+      );
     }
   };
 
   /* -------- actions: add root comment -------- */
   const onSend = async (text: string) => {
     if (!myAddr) {
-      await Swal.fire({
-        icon: "info",
-        title: "Please connect your wallet",
-        text: "Connect your wallet to post a comment.",
-        timer: 1800,
-        toast: true,
-        position: "top-end",
-        showConfirmButton: false,
-      });
+      toast.info(
+        "Please connect your wallet",
+        "Connect your wallet to post a comment\nYou need to be logged in",
+        4000
+      );
       return;
     }
     const { data, error } = await supabase
@@ -710,15 +698,11 @@ export default function Comments({
   /* -------- actions: reply (multi-level) -------- */
   const onReply = async (parentId: string, text: string) => {
     if (!myAddr) {
-      await Swal.fire({
-        icon: "info",
-        title: "Please connect your wallet",
-        text: "Connect your wallet to reply.",
-        timer: 1800,
-        toast: true,
-        position: "top-end",
-        showConfirmButton: false,
-      });
+      toast.info(
+        "Please connect your wallet",
+        "Connect your wallet to reply\nYou need to be logged in",
+        4000
+      );
       return;
     }
     const { data, error } = await supabase
@@ -772,15 +756,11 @@ export default function Comments({
   /* -------- actions: like/unlike -------- */
   const onToggleLike = async (commentId: string, liked: boolean) => {
     if (!myAddr) {
-      await Swal.fire({
-        icon: "info",
-        title: "Please connect your wallet",
-        text: "Connect or sign in to continue.",
-        timer: 1800,
-        toast: true,
-        position: "top-end",
-        showConfirmButton: false,
-      });
+      toast.info(
+        "Please connect your wallet",
+        "Connect or sign in to continue.",
+        3000
+      );
       return;
     }
     if (!liked) {

@@ -3,6 +3,7 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import Swal from "sweetalert2";
+import { toast } from "@/components/ui/toast";
 
 const daysOfWeek = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
 
@@ -112,12 +113,11 @@ const SchedulePicker: React.FC<SchedulePickerProps> = ({
   const toggleKind = (dayId: string, hourId: string, kind: CallKind) => {
     const allowed = kind === "voice" ? hasVoicePrice : hasVideoPrice;
     if (!allowed) {
-      Swal.fire({
-        icon: "warning",
-        title: `Set ${kind === "voice" ? "Voice" : "Video"} pricing first`,
-        text: "Open the pricing card above to set your price.",
-        position: "top-end", toast: true, timer: 2500, showConfirmButton: false,
-      });
+      toast.error(
+        `Set ${kind === "voice" ? "Voice" : "Video"} pricing first`,
+        "Open the pricing card above to set your price\nConfigure pricing before scheduling",
+        4000
+      );
       return;
     }
     setDays(prev => prev.map(d => d.id===dayId ? { ...d, hours: d.hours.map(h => h.id===hourId ? { ...h, kinds: { ...h.kinds, [kind]: !h.kinds[kind] } } : h) } : d));
@@ -164,8 +164,12 @@ const SchedulePicker: React.FC<SchedulePickerProps> = ({
       }
     }));
     if (missing.size) {
-      const list = Array.from(missing).map(k => `<li>${k === "voice" ? "Voice calls" : "Video calls"}</li>`).join("");
-      await Swal.fire({ icon: "error", title: "Pricing required", html: `<ul style="margin-top:6px">${list}</ul>` });
+      const list = Array.from(missing).map(k => `${k === "voice" ? "Voice calls" : "Video calls"}`).join("\n• ");
+      toast.error(
+        "Pricing Required",
+        `Please set pricing for:\n• ${list}\n\nConfigure pricing before scheduling`,
+        5000
+      );
       return;
     }
 
@@ -208,19 +212,24 @@ const SchedulePicker: React.FC<SchedulePickerProps> = ({
       const affected = voiceItems.length + videoItems.length;
       setSavedCount(c => c + affected);
 
-      Swal.fire({
-        icon:"success",
-        title:"Schedule saved!",
-        text: affected > 0 ? `${affected} time block(s) updated.` : "All schedules cleared.",
-        position:"top-end", toast:true, timer:3000, showConfirmButton:false
-      });
+      toast.success(
+        "Schedule saved!",
+        affected > 0 
+          ? `${affected} time block(s) updated\nYour availability has been saved` 
+          : "All schedules cleared\nYour calendar has been reset",
+        5000
+      );
 
       // update baseline → tombol jadi mati lagi sampai ada perubahan berikutnya
       setBaselineSig(currentSig);
 
       onResetPrices?.();
     } catch (e: any) {
-      Swal.fire({ icon:"error", title:"Save failed", text:e?.message || "Unknown error" });
+      toast.error(
+        "Save Failed",
+        `Error: ${e?.message || "Unknown error"}\nPlease try again`,
+        5000
+      );
     } finally {
       setSaving(false);
     }

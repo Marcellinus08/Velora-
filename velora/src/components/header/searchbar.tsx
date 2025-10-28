@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "@/components/ui/toast";
 import { MI } from "./MI";
 
 const RECENT_KEY = "vh_recent_queries";
@@ -123,12 +124,20 @@ export default function SearchBar() {
               const w = window as any;
               const SR = w.SpeechRecognition || w.webkitSpeechRecognition;
               if (!SR) {
-                alert("Voice search is not supported by this browser. Try Chrome/Edge desktop.");
+                toast.error(
+                  "Voice Search Not Supported",
+                  "This feature requires Chrome/Edge desktop browser\nPlease use a compatible browser",
+                  5000
+                );
                 return;
               }
               const isSecure = location.protocol === "https:" || location.hostname === "localhost";
               if (!isSecure) {
-                alert("Voice search requires HTTPS (except on localhost).");
+                toast.error(
+                  "HTTPS Required",
+                  "Voice search requires HTTPS connection\nPlease use a secure connection",
+                  5000
+                );
                 return;
               }
               try {
@@ -144,11 +153,19 @@ export default function SearchBar() {
                   router.push(`/search?q=${encodeURIComponent(text)}`);
                 };
                 rec.onerror = () => {
-                  alert("Voice search failed. Please try again.");
+                  toast.error(
+                    "Voice Search Failed",
+                    "Could not recognize your voice\nPlease try again",
+                    4000
+                  );
                 };
                 rec.start();
               } catch {
-                alert("Voice search failed to initialize.");
+                toast.error(
+                  "Voice Search Error",
+                  "Failed to initialize voice recognition\nPlease check your microphone",
+                  5000
+                );
               }
             }}
             className="ml-3 cursor-pointer flex h-10 w-10 items-center justify-center rounded-full bg-neutral-800 text-neutral-200 hover:bg-neutral-700"

@@ -1,11 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import Swal from "sweetalert2";
+import { toast } from "@/components/ui/toast";
 
 /** Modal sederhana untuk edit title & description video.
  *  Saat Save berhasil:
- *   - tampilkan SweetAlert (toast "Updated!"),
+ *   - tampilkan toast notification "Updated!",
  *   - panggil onSaved(updated) agar list langsung berubah TANPA refresh.
  */
 export default function EditVideoModal({
@@ -44,26 +44,20 @@ export default function EditVideoModal({
       const json = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(json?.error || res.statusText);
 
-      // SweetAlert2 success toast
-      void Swal.fire({
-        icon: "success",
-        title: "Updated!",
-        text: "Your video has been saved.",
-        toast: true,
-        timer: 1400,
-        timerProgressBar: true,
-        position: "top-end",
-        showConfirmButton: false,
-      });
+      // Success toast notification
+      toast.success(
+        "Updated!",
+        `Video: ${title.trim()}\nYour video has been saved successfully`,
+        4000
+      );
 
       onSaved?.({ id: videoId, title: title.trim(), description: description.trim() || null });
     } catch (err: any) {
-      void Swal.fire({
-        icon: "error",
-        title: "Update failed",
-        text: err?.message || "Something went wrong",
-        confirmButtonText: "OK",
-      });
+      toast.error(
+        "Update Failed",
+        `Error: ${err?.message || "Unknown error"}\nFailed to save video changes`,
+        5000
+      );
     } finally {
       setSaving(false);
     }

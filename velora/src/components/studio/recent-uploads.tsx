@@ -3,7 +3,8 @@
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import type { StudioVideo } from "./types";
-import Swal from "sweetalert2"; // Import SweetAlert2
+import Swal from "sweetalert2"; // Import SweetAlert2 for confirmation dialogs
+import { toast } from "@/components/ui/toast"; // Import toast for notifications
 import EditVideoModal from "@/components/studio/edit-video-modal";
 
 /* ===== Helpers ===== */
@@ -119,25 +120,19 @@ export default function StudioRecentUploads({
         }).then((res) => res.json());
 
         if (error) {
-          Swal.fire({
-            text: 'There was an error deleting the video.',
-            icon: 'error',
-            position: 'top-end',
-            toast: true,
-            timer: 3000,
-            showConfirmButton: false,
-          });
+          toast.error(
+            "Delete Failed",
+            "There was an error deleting the video\nPlease try again",
+            5000
+          );
         } else {
-          // After successful deletion, update state and show success alert
+          // After successful deletion, update state and show success toast
           setRows((prev) => prev.filter((v) => v.id !== videoId));
-          Swal.fire({
-            text: 'The video has been deleted successfully.',
-            icon: 'success',
-            position: 'top-end',
-            toast: true,
-            timer: 3000,
-            showConfirmButton: false,
-          });
+          toast.success(
+            "Video Deleted!",
+            "The video has been deleted successfully\nYour content has been removed",
+            4000
+          );
         }
       }
     });

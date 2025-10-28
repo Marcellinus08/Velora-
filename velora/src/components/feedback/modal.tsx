@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Swal from "sweetalert2";
+import { toast } from "@/components/ui/toast";
 import { useAccount } from "wagmi";
 import { MI } from "@/components/header/MI"; // sesuaikan jika path MI berbeda
 import { FeedbackResponse } from "@/types/feedback";
@@ -26,34 +27,22 @@ export default function FeedbackModal({ open, onClose }: Props) {
     if (file) {
       // Validasi ukuran file (maksimal 5MB)
       if (file.size > 5 * 1024 * 1024) {
-        const toast = Swal.mixin({
-          toast: true,
-          position: "top-end",
-          showConfirmButton: false,
-          timer: 2200,
-          timerProgressBar: true,
-        });
-        toast.fire({
-          icon: "error",
-          title: "File size must be less than 5MB",
-        });
+        toast.error(
+          "File Too Large",
+          "File size must be less than 5MB\nPlease choose a smaller file",
+          4000
+        );
         return;
       }
       
       // Validasi tipe file
       const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'video/mp4', 'video/webm'];
       if (!allowedTypes.includes(file.type)) {
-        const toast = Swal.mixin({
-          toast: true,
-          position: "top-end",
-          showConfirmButton: false,
-          timer: 2200,
-          timerProgressBar: true,
-        });
-        toast.fire({
-          icon: "error",
-          title: "Please upload images (JPEG, PNG, GIF, WebP) or videos (MP4, WebM)",
-        });
+        toast.error(
+          "Invalid File Type",
+          "Please upload images (JPEG, PNG, GIF, WebP)\nor videos (MP4, WebM)",
+          4000
+        );
         return;
       }
       
@@ -103,18 +92,12 @@ export default function FeedbackModal({ open, onClose }: Props) {
 
       const result: FeedbackResponse = await r.json();
 
-      // Toast kecil di pojok kanan atas (sesuai preferensi kamu)
-      const toast = Swal.mixin({
-        toast: true,
-        position: "top-end",
-        showConfirmButton: false,
-        timer: 1800,
-        timerProgressBar: true,
-      });
-      await toast.fire({
-        icon: "success",
-        title: "Thank you for your feedback!",
-      });
+      // Success toast notification
+      toast.success(
+        "Thank you for your feedback!",
+        `Type: ${type}\nYour feedback has been submitted successfully`,
+        5000
+      );
 
       // Reset + tutup
       setMessage("");
@@ -123,17 +106,11 @@ export default function FeedbackModal({ open, onClose }: Props) {
       setMedia(null);
       onClose();
     } catch (err: any) {
-      const toast = Swal.mixin({
-        toast: true,
-        position: "top-end",
-        showConfirmButton: false,
-        timer: 2200,
-        timerProgressBar: true,
-      });
-      await toast.fire({
-        icon: "error",
-        title: err?.message || "Failed to send feedback",
-      });
+      toast.error(
+        "Submission Failed",
+        `Error: ${err?.message || "Unknown error"}\nFailed to send feedback`,
+        5000
+      );
     } finally {
       setBusy(false);
     }

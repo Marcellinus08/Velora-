@@ -5,19 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useAccount } from "wagmi";
 import { AbstractProfile } from "@/components/abstract-profile";
 import Swal from "sweetalert2";
-
-// Configure SweetAlert2 defaults
-const Toast = Swal.mixin({
-  toast: true,
-  position: 'top',
-  showConfirmButton: false,
-  timer: 3000,
-  timerProgressBar: true,
-  customClass: {
-    container: 'sweet-alert-container',
-    popup: 'sweet-alert-popup',
-  }
-});
+import { toast } from "@/components/ui/toast";
 
 // Add styles to head
 if (typeof document !== 'undefined') {
@@ -301,35 +289,14 @@ export default function Replies({ postId, onPosted }: { postId: string; onPosted
       `
     };
 
-    Swal.fire({
-      html: `
-        <div class="flex items-center">
-          <div class="mr-3" style="color: ${iconColors[type]}">${icons[type]}</div>
-          <div>${message}</div>
-        </div>
-      `,
-      toast: true,
-      position: 'top-end',
-      showConfirmButton: false,
-      timer: 3000,
-      timerProgressBar: true,
-      background: '#18181b',
-      color: '#fff',
-      customClass: {
-        popup: 'animated-toast',
-        timerProgressBar: 'timer-progress'
-      },
-      showClass: {
-        popup: 'animate__animated animate__fadeInRight animate__faster'
-      },
-      hideClass: {
-        popup: 'animate__animated animate__fadeOutRight animate__faster'
-      },
-      didOpen: (toast) => {
-        toast.addEventListener('mouseenter', Swal.stopTimer);
-        toast.addEventListener('mouseleave', Swal.resumeTimer);
-      }
-    });
+    // Use our custom toast system
+    if (type === 'success') {
+      toast.success(title, message, 4000);
+    } else if (type === 'error') {
+      toast.error(title, message, 5000);
+    } else {
+      toast.info(title, message, 4000);
+    }
   };
 
   async function handleEdit(id: string, newContent: string) {

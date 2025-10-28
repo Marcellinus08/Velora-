@@ -3,6 +3,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Swal from "sweetalert2";
+import { toast } from "@/components/ui/toast";
 import { supabase } from "@/lib/supabase";
 import UploadFilePanel from "./file-panel";
 import UploadDetailsPanel from "./details-panel";
@@ -415,16 +416,11 @@ export default function UploadCreate() {
       setProgress(100);
       setUploading(false);
 
-      await Swal.fire({
-        icon: "success",
-        title: "Upload complete!",
-        text: "Your video was uploaded successfully.",
-        position: "top-end",
-        toast: true,
-        timer: 3000,
-        timerProgressBar: true,
-        showConfirmButton: false,
-      });
+      toast.success(
+        "Upload complete!",
+        `Video: ${title}\nYour video was uploaded successfully`,
+        6000
+      );
 
       resetAll();
     } catch (e: any) {
@@ -438,16 +434,11 @@ export default function UploadCreate() {
       setUploading(false);
       setProgress(0);
       setError(msg);
-      Swal.fire({
-        icon: "error",
-        title: "Upload failed",
-        text: msg,
-        position: "top-end",
-        toast: true,
-        timer: 4000,
-        timerProgressBar: true,
-        showConfirmButton: false,
-      });
+      toast.error(
+        "Upload failed",
+        `Error: ${msg}\nPlease try again or check your file`,
+        6000
+      );
     }
   }
 

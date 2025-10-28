@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import type { NewPostPayload } from "./types";
+import { toast } from "@/components/ui/toast";
 import Swal from "sweetalert2";
 
 type LocalFile = { id: string; file: File; url: string };
@@ -109,19 +110,15 @@ export default function CreatePostModal({
       items.forEach((i) => URL.revokeObjectURL(i.url));
       setItems([]);
 
-      // Show success alert with Toast
-      Swal.fire({
-        icon: "success",
-        title: "Post Created!",
-        text: "Your post was published successfully.",
-        position: "top-end",
-        toast: true,
-        timer: 3000,
-        timerProgressBar: true,
-        showConfirmButton: false,
-      });
+      // Success notification handled by parent component (page.tsx)
+      // Don't show toast here to avoid double notification
     } catch (err: any) {
-      alert(err?.message || "Failed to publish");
+      // Only show error toast here since parent won't know about upload errors
+      toast.error(
+        "Failed to Publish",
+        `Error: ${err?.message || "Unknown error"}\nPlease try again`,
+        5000
+      );
     } finally {
       setSubmitting(false);
     }

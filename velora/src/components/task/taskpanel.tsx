@@ -2,6 +2,7 @@
 
 import React, { useMemo, useState, useEffect } from "react";
 import Swal from "sweetalert2";
+import { toast } from "@/components/ui/toast";
 
 export type TaskItem = {
   id?: string | number;
@@ -87,29 +88,28 @@ export default function TaskPanel({
   const isLast = step >= tasks.length - 1;
 
   function toastWarn(msg: string) {
-    Swal.fire({
-      icon: "warning",
-      title: msg,
-      position: "top-end",
-      toast: true,
-      timer: 2200,
-      showConfirmButton: false,
-    });
+    toast.error(
+      "Selection Required",
+      `${msg}\nPlease choose an option to continue`,
+      4000
+    );
   }
 
   function toastResult(correct: number, wrong: number, pts: number, total: number) {
     const allCorrect = correct === total;
-    Swal.fire({
-      icon: allCorrect ? "success" : "info",
-      title: allCorrect ? "Perfect Score! 🎉" : "Task Results",
-      html: `<div style="font-size:13px;line-height:18px">
-        Correct: <b>${correct}</b> • Wrong: <b>${wrong}</b><br/>Points: <b>+${pts}</b>
-      </div>`,
-      position: "top-end",
-      toast: true,
-      timer: 3000,
-      showConfirmButton: false,
-    });
+    if (allCorrect) {
+      toast.success(
+        "Perfect Score! 🎉",
+        `All answers correct!\nCorrect: ${correct} • Points: +${pts}`,
+        5000
+      );
+    } else {
+      toast.info(
+        "Task Results",
+        `Correct: ${correct} • Wrong: ${wrong}\nPoints: +${pts}`,
+        4000
+      );
+    }
   }
 
   const handleNext = () => {
@@ -175,44 +175,27 @@ export default function TaskPanel({
         
         if (!response.ok) {
           // Error dari server (misalnya belum purchase)
-          Swal.fire({
-            icon: "error",
-            title: "Cannot Complete Task",
-            text: data.error || "Failed to award points",
-            position: "top-end",
-            toast: true,
-            timer: 3000,
-            showConfirmButton: false,
-          });
+          toast.error(
+            "Cannot Complete Task",
+            `Error: ${data.error || "Failed to award points"}\nPlease complete the required steps first`,
+            5000
+          );
           return;
         }
         
         // Show completion toast
         if (allCorrect) {
-          Swal.fire({
-            icon: "success",
-            title: "Perfect Score! 🎉",
-            html: `<div style="font-size:13px;line-height:18px">
-              All answers correct!<br/>You've earned <b>${data.pointsAwarded || pointsEarned}</b> points!
-            </div>`,
-            position: "top-end",
-            toast: true,
-            timer: 3000,
-            showConfirmButton: false,
-          });
+          toast.success(
+            "Task Completed!",
+            `Perfect Score! All answers correct!\nYou've earned ${data.pointsAwarded || pointsEarned} points`,
+            6000
+          );
         } else {
-          Swal.fire({
-            icon: "warning",
-            title: "Task Completed",
-            html: `<div style="font-size:13px;line-height:18px">
-              Correct: <b>${correctCount}</b> / <b>${totalWithAnswer}</b><br/>
-              You need all correct answers to earn points.
-            </div>`,
-            position: "top-end",
-            toast: true,
-            timer: 3500,
-            showConfirmButton: false,
-          });
+          toast.info(
+            "Task Completed",
+            `Correct: ${correctCount} / ${totalWithAnswer}\nYou need all correct answers to earn points`,
+            5000
+          );
         }
         
         // Notify parent component
@@ -231,43 +214,26 @@ export default function TaskPanel({
       } catch (error) {
         console.error("Error awarding points:", error);
         // Show error toast
-        Swal.fire({
-          icon: "error",
-          title: "Error",
-          text: "Failed to complete task. Please try again.",
-          position: "top-end",
-          toast: true,
-          timer: 3000,
-          showConfirmButton: false,
-        });
+        toast.error(
+          "Error",
+          "Failed to complete task\nPlease try again later",
+          5000
+        );
       }
     } else {
       // Show completion toast
       if (allCorrect) {
-        Swal.fire({
-          icon: "success",
-          title: "Perfect Score! 🎉",
-          html: `<div style="font-size:13px;line-height:18px">
-            All answers correct!<br/>You've earned <b>${pointsEarned}</b> points!
-          </div>`,
-          position: "top-end",
-          toast: true,
-          timer: 3000,
-          showConfirmButton: false,
-        });
+        toast.success(
+          "Task Completed!",
+          `Perfect Score! All answers correct!\nYou've earned ${pointsEarned} points`,
+          6000
+        );
       } else {
-        Swal.fire({
-          icon: "warning",
-          title: "Task Completed",
-          html: `<div style="font-size:13px;line-height:18px">
-            Correct: <b>${correctCount}</b> / <b>${totalWithAnswer}</b><br/>
-            You need all correct answers to earn points.
-          </div>`,
-          position: "top-end",
-          toast: true,
-          timer: 3500,
-          showConfirmButton: false,
-        });
+        toast.info(
+          "Task Completed",
+          `Correct: ${correctCount} / ${totalWithAnswer}\nYou need all correct answers to earn points`,
+          5000
+        );
       }
       
       // Notify parent component
