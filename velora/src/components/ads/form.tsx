@@ -122,27 +122,6 @@ export default function AdForm({
             <div className="w-2 h-2 rounded-full bg-pink-400"></div>
             Upload Campaign Banner <span className="text-red-400">*</span>
           </label>
-          
-          {/* Carousel Size Info */}
-          <div className="mb-3 p-3 rounded-lg bg-gradient-to-r from-blue-900/20 to-purple-900/20 border border-blue-500/20">
-            <div className="flex items-start gap-3">
-              <div className="w-6 h-6 rounded-full bg-blue-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-                <svg className="w-3 h-3 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <div className="text-sm">
-                <p className="font-medium text-blue-300 mb-1">🎯 Carousel Display Info</p>
-                <p className="text-blue-100/80 text-xs leading-relaxed">
-                  Your banner will be displayed in the homepage carousel with these dimensions:<br/>
-                  <span className="font-medium text-blue-200">
-                    📱 Mobile: 320px height | 💻 Desktop: 420-520px height
-                  </span><br/>
-                  <span className="text-blue-300">Recommended: 1200x500px or 16:9 ratio for best quality</span>
-                </p>
-              </div>
-            </div>
-          </div>
 
           <div className="relative">
             <input
@@ -160,8 +139,8 @@ export default function AdForm({
                 </div>
                 <div>
                   <p className="text-neutral-200 font-medium">Click to upload carousel banner</p>
-                  <p className="text-xs text-neutral-400 mt-1">PNG, JPG, MP4 up to 10MB • 1200x500px recommended</p>
-                  <p className="text-xs text-pink-400 mt-1">Will be shown in homepage carousel to all users</p>
+                  <p className="text-xs text-neutral-400 mt-1">PNG, JPG, MP4 up to 10MB • 16:9 ratio recommended</p>
+                  <p className="text-xs text-pink-400 mt-1">Preview shows exactly how it will appear in carousel</p>
                 </div>
               </div>
             </div>
@@ -182,13 +161,42 @@ export default function AdForm({
           )}
 
           {mediaURL && (
-            <div className="mt-4 overflow-hidden rounded-xl border border-neutral-600/50 bg-neutral-800/30 p-3">
-              {media?.type.startsWith("image/") ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={mediaURL} alt="Preview" className="w-full h-48 rounded-lg object-cover" />
-              ) : (
-                <video src={mediaURL} controls className="w-full h-48 rounded-lg object-cover" />
-              )}
+            <div className="mt-4 rounded-xl overflow-hidden border border-neutral-600/50 bg-neutral-900">
+              <p className="text-xs text-neutral-400 py-2 text-center bg-neutral-800/50">
+                Preview (Same view as carousel)
+              </p>
+              {/* Container dengan aspect ratio yang sama dengan carousel */}
+              <div className="relative w-full">
+                <div className="relative w-full h-[200px] sm:h-[280px] lg:h-[360px]">
+                  {media?.type.startsWith("image/") ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img 
+                      src={mediaURL} 
+                      alt="Carousel Preview" 
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <video 
+                      src={mediaURL} 
+                      controls 
+                      className="h-full w-full object-cover"
+                    />
+                  )}
+                  {/* Overlay gradient sama seperti carousel */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-black/60 via-black/40 to-black/50 pointer-events-none" />
+                  <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-black/80 via-black/40 to-transparent pointer-events-none" />
+                  
+                  {/* Sponsored badge preview */}
+                  <div className="absolute top-3 right-3 bg-gradient-to-r from-purple-600 to-pink-600 px-2.5 py-1 rounded-full text-[11px] font-medium text-white shadow-lg">
+                    <span className="flex items-center gap-1">
+                      <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
+                      </svg>
+                      Sponsored
+                    </span>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
         </div>

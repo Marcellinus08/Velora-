@@ -52,6 +52,18 @@ export type SummaryProps = {
 
   /** Status saving to database */
   saving?: boolean;
+
+  /** User active campaign info */
+  userActiveCampaign?: {
+    hasActiveCampaign: boolean;
+    activeCampaign: {
+      id: string;
+      title: string;
+      start_date: string;
+      end_date: string;
+    } | null;
+    message: string;
+  } | null;
 };
 
 /** Props untuk form input iklan */

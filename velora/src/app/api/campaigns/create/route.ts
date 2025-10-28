@@ -52,6 +52,68 @@ export async function POST(req: NextRequest) {
 
     const supabase = getSupabaseAdmin();
 
+    const now = new Date().toISOString();
+
+    // Check if user already has an active campaign
+    const { data: userActiveCampaigns, error: userCheckError } = await supabase
+      .from("campaigns")
+      .select("id, title, end_date")
+      .eq("creator_addr", creatorAddr)
+      .eq("status", "active")
+      .gte("end_date", now)
+      .lte("start_date", now);
+
+    if (userCheckError) {
+      console.error("Error checking user active campaigns:", userCheckError);
+    }
+
+    if (userActiveCampaigns && userActiveCampaigns.length > 0) {
+      const activeCampaign = userActiveCampaigns[0];
+      const endDate = new Date(activeCampaign.end_date);
+      const formattedEndDate = endDate.toLocaleString('id-ID', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+      
+      return NextResponse.json(
+        { 
+          ok: false, 
+          error: `You already have an active campaign: "${activeCampaign.title}". Please wait until ${formattedEndDate} before creating a new one.`,
+          hasActiveCampaign: true,
+          activeCampaign
+        },
+        { status: 400 }
+      );
+    }
+
+    // Check if campaign slots are full (max 5 active campaigns)
+    const { data: activeCampaigns, error: checkError } = await supabase
+      .from("campaigns")
+      .select("id")
+      .eq("status", "active")
+      .gte("end_date", now)
+      .lte("start_date", now);
+
+    if (checkError) {
+      console.error("Error checking active campaigns:", checkError);
+    }
+
+    const activeCount = activeCampaigns?.length || 0;
+    if (activeCount >= 5) {
+      return NextResponse.json(
+        { 
+          ok: false, 
+          error: "Maximum 5 active campaigns reached. Please wait for an active campaign to end.",
+          activeCount,
+          maxSlots: 5
+        },
+        { status: 400 }
+      );
+    }
+
     // Pastikan bucket ada (id harus sama dengan name)
     try {
       await supabase.storage.createBucket("campaign-banners", { public: true });

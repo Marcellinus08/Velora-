@@ -24,6 +24,30 @@ export default function CreateAd({
   myVideos = [],
   creatorAddr = "",
 }: CreateAdProps) {
+  // Slot availability state
+  const [slotsInfo, setSlotsInfo] = useState<{
+    activeCount: number;
+    maxSlots: number;
+    isFull: boolean;
+    availableSlots: number;
+    nextAvailableDate: string | null;
+    message: string;
+  } | null>(null);
+  const [loadingSlots, setLoadingSlots] = useState(true);
+
+  // User active campaign state
+  const [userActiveCampaign, setUserActiveCampaign] = useState<{
+    hasActiveCampaign: boolean;
+    activeCampaign: {
+      id: string;
+      title: string;
+      start_date: string;
+      end_date: string;
+    } | null;
+    message: string;
+  } | null>(null);
+  const [loadingUserCampaign, setLoadingUserCampaign] = useState(true);
+
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [media, setMedia] = useState<File | null>(null);
@@ -37,6 +61,61 @@ export default function CreateAd({
   const [saving, setSaving] = useState(false);
 
   const ONCHAIN_ENABLED = Boolean(TREASURY_ADDRESS) && PRICE_USD > 0;
+
+  // Check if user already has an active campaign
+  useEffect(() => {
+    const checkUserCampaign = async () => {
+      if (!creatorAddr) {
+        setLoadingUserCampaign(false);
+        return;
+      }
+
+      try {
+        const response = await fetch(`/api/campaigns/check-user-active?creatorAddr=${encodeURIComponent(creatorAddr)}`);
+        const data = await response.json();
+        
+        if (response.ok && data.ok) {
+          setUserActiveCampaign(data);
+          console.log("👤 User campaign status:", data);
+          
+          if (data.hasActiveCampaign) {
+            console.warn("⚠️ User already has an active campaign:", data.activeCampaign.title);
+          }
+        }
+      } catch (error) {
+        console.error("Failed to check user active campaign:", error);
+      } finally {
+        setLoadingUserCampaign(false);
+      }
+    };
+
+    checkUserCampaign();
+  }, [creatorAddr]);
+
+  // Check campaign slots on mount
+  useEffect(() => {
+    const checkSlots = async () => {
+      try {
+        const response = await fetch('/api/campaigns/check-slots');
+        const data = await response.json();
+        
+        if (response.ok && data.success) {
+          setSlotsInfo(data);
+          console.log("📊 Campaign slots:", data);
+          
+          if (data.isFull) {
+            console.warn("⚠️ All campaign slots are full!");
+          }
+        }
+      } catch (error) {
+        console.error("Failed to check campaign slots:", error);
+      } finally {
+        setLoadingSlots(false);
+      }
+    };
+
+    checkSlots();
+  }, []);
 
   useEffect(() => {
     if (!ONCHAIN_ENABLED) {
@@ -80,7 +159,7 @@ export default function CreateAd({
   const paidOnChain = Boolean(paidTx || localTx);
   const isPaid = paidOnChain || paidPreview;
 
-  const payDisabled = !formValid;
+  const payDisabled = !formValid || userActiveCampaign?.hasActiveCampaign || slotsInfo?.isFull || false;
   const canPublish = formValid && isPaid;
 
   useEffect(() => {
@@ -96,7 +175,7 @@ export default function CreateAd({
   }, [paidTx, localTx, paidOnChain, paidPreview, isPaid, canPublish, formValid]);
 
   const totalUsdText = useMemo(() => fmtUSD(PRICE_USD), []);
-  const daysLabel = DURATION_DAYS === 1 ? "day" : "days";
+  const daysLabel = "days"; // Always plural since DURATION_DAYS = 3
 
   // Function to reset all form inputs
   function resetForm() {
@@ -121,6 +200,42 @@ export default function CreateAd({
       sessionStorage.removeItem(PAID_FLAG);
     }
     
+    // Refresh user campaign status after creating a campaign
+    const refreshUserCampaign = async () => {
+      if (!creatorAddr) return;
+
+      try {
+        const response = await fetch(`/api/campaigns/check-user-active?creatorAddr=${encodeURIComponent(creatorAddr)}`);
+        const data = await response.json();
+        
+        if (response.ok && data.ok) {
+          setUserActiveCampaign(data);
+          console.log("🔄 User campaign status refreshed:", data);
+        }
+      } catch (error) {
+        console.error("Failed to refresh user campaign status:", error);
+      }
+    };
+
+    // Refresh slots info after creating a campaign
+    const refreshSlots = async () => {
+      try {
+        const response = await fetch('/api/campaigns/check-slots');
+        const data = await response.json();
+        
+        if (response.ok && data.success) {
+          setSlotsInfo(data);
+          console.log("🔄 Campaign slots refreshed:", data);
+        }
+      } catch (error) {
+        console.error("Failed to refresh campaign slots:", error);
+      }
+    };
+
+    // Execute refresh operations
+    refreshUserCampaign();
+    refreshSlots();
+    
     console.log("✅ Form reset completed - ready for new campaign!");
   }
 
@@ -129,6 +244,50 @@ export default function CreateAd({
   }
 
   function openPaymentPreview() {
+    // Check if user already has an active campaign
+    if (userActiveCampaign?.hasActiveCampaign) {
+      const campaign = userActiveCampaign.activeCampaign;
+      const endDate = campaign 
+        ? new Date(campaign.end_date).toLocaleString('id-ID', {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+          })
+        : 'Unknown';
+
+      alert(
+        `🚫 You Already Have an Active Campaign!\n\n` +
+        `📢 Active Campaign: "${campaign?.title}"\n\n` +
+        `⏰ Campaign ends:\n${endDate}\n\n` +
+        `💡 You can only have one active campaign at a time. Please wait for your current campaign to end before creating a new one.`
+      );
+      return;
+    }
+
+    // Check if slots are full before allowing payment
+    if (slotsInfo?.isFull) {
+      const nextDate = slotsInfo.nextAvailableDate 
+        ? new Date(slotsInfo.nextAvailableDate).toLocaleString('en-US', {
+            month: 'long',
+            day: 'numeric',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true
+          })
+        : 'Unknown';
+
+      alert(
+        `🚫 All Campaign Slots Are Full!\n\n` +
+        `📊 Current Status: ${slotsInfo.activeCount}/5 slots occupied\n\n` +
+        `⏰ Next available slot:\n${nextDate}\n\n` +
+        `💡 Please wait for an active campaign to end before creating a new one.`
+      );
+      return;
+    }
+
     setShowPayModal(true);
   }
   function confirmPaymentPreview() {
@@ -180,6 +339,40 @@ export default function CreateAd({
   // === Main change: send data to server API (service role) ===
   async function onPublishWithTx(txHash: `0x${string}`) {
     console.log("onPublishWithTx called with tx:", txHash, "formValid:", formValid);
+    
+    // Check if user already has an active campaign before publishing
+    if (userActiveCampaign?.hasActiveCampaign) {
+      const campaign = userActiveCampaign.activeCampaign;
+      const endDate = campaign 
+        ? new Date(campaign.end_date).toLocaleString('id-ID', {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+          })
+        : 'Unknown';
+
+      alert(
+        `🚫 Cannot publish: You already have an active campaign!\n\n` +
+        `📢 Active Campaign: "${campaign?.title}"\n` +
+        `⏰ Ends: ${endDate}\n\n` +
+        `Please wait for your current campaign to end.`
+      );
+      setSaving(false);
+      return;
+    }
+    
+    // Double-check slots before publishing
+    if (slotsInfo?.isFull) {
+      alert(
+        `🚫 Cannot publish: All campaign slots are full!\n\n` +
+        `Please wait for an active campaign to end.`
+      );
+      setSaving(false);
+      return;
+    }
+
     if (!formValid) {
       alert("❌ Cannot publish: Form not valid!");
       return;
@@ -227,7 +420,7 @@ export default function CreateAd({
           `🎯 Status: Active & Live\n` +
           `📊 Campaign ID: ${json.campaign?.id || campaignId}\n\n` +
           `🚀 Your ad is now displayed on the homepage!\n` +
-          `� Users can see and click your campaign\n\n` +
+          `👥 Users can see and click your campaign\n\n` +
           `📝 The form has been reset.\n` +
           `✨ You can create another campaign right away!`
       );
@@ -281,18 +474,113 @@ export default function CreateAd({
           onChangeCtaText={setCtaText}
         />
 
-        <AdSummary
-          paid={isPaid}
-          canPublish={canPublish}
-          priceUsd={PRICE_USD}
-          durationDays={DURATION_DAYS}
-          onOpenPayment={openPaymentPreview}
-          onPublish={onPublish}
-          campaignId={campaignId}
-          onPaid={handlePaidOnChain}
-          payDisabled={payDisabled}
-          saving={saving}
-        />
+        <aside className="space-y-6">
+          {/* Campaign Slots Status - At the Top */}
+          {loadingSlots ? (
+            <div className="rounded-3xl border border-neutral-700/50 bg-gradient-to-br from-neutral-900/80 to-neutral-800/40 backdrop-blur-sm p-6 shadow-2xl">
+              <div className="flex items-center gap-2 text-sm text-neutral-400">
+                <div className="h-4 w-4 animate-spin rounded-full border-2 border-neutral-600 border-t-purple-500"></div>
+                <span>Checking slots...</span>
+              </div>
+            </div>
+          ) : slotsInfo ? (
+            <div className={`rounded-3xl border backdrop-blur-sm p-6 shadow-2xl ${
+              slotsInfo.isFull 
+                ? 'border-red-500/30 bg-gradient-to-br from-red-900/20 to-red-800/10' 
+                : slotsInfo.availableSlots <= 2
+                ? 'border-yellow-500/30 bg-gradient-to-br from-yellow-900/20 to-yellow-800/10'
+                : 'border-green-500/30 bg-gradient-to-br from-green-900/20 to-green-800/10'
+            }`}>
+              <div className="flex items-center gap-3 mb-4">
+                {slotsInfo.isFull ? (
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center">
+                    <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                  </div>
+                ) : slotsInfo.availableSlots <= 2 ? (
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-yellow-500 to-yellow-600 flex items-center justify-center">
+                    <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                ) : (
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-green-500 to-teal-500 flex items-center justify-center">
+                    <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                )}
+                <h3 className="text-lg font-bold text-white">Campaign Slots Status</h3>
+              </div>
+              
+              <p className={`text-sm mb-4 ${
+                slotsInfo.isFull 
+                  ? 'text-red-200' 
+                  : slotsInfo.availableSlots <= 2
+                  ? 'text-yellow-200'
+                  : 'text-green-200'
+              }`}>
+                {slotsInfo.message}
+              </p>
+
+              <div className="space-y-3">
+                <div className="flex items-center justify-between p-3 rounded-xl bg-neutral-800/40">
+                  <span className="text-neutral-300 text-sm">Active Campaigns</span>
+                  <span className={`font-bold ${
+                    slotsInfo.isFull ? 'text-red-400' : 'text-neutral-100'
+                  }`}>
+                    {slotsInfo.activeCount}/{slotsInfo.maxSlots}
+                  </span>
+                </div>
+                
+                {!slotsInfo.isFull && (
+                  <div className="flex items-center justify-between p-3 rounded-xl bg-green-500/10 border border-green-500/20">
+                    <span className="text-green-200 text-sm">Available Slots</span>
+                    <span className="font-bold text-green-100 text-lg">{slotsInfo.availableSlots}</span>
+                  </div>
+                )}
+              </div>
+
+              {slotsInfo.isFull && slotsInfo.nextAvailableDate && (
+                <div className="mt-4 pt-4 border-t border-red-500/20">
+                  <p className="text-xs text-red-200 mb-2 font-medium flex items-center gap-1">
+                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Next Available Slot:
+                  </p>
+                  <p className="text-sm text-red-100 font-semibold mb-1">
+                    {new Date(slotsInfo.nextAvailableDate).toLocaleString('en-US', {
+                      month: 'short',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                      hour12: true
+                    })}
+                  </p>
+                  <p className="text-xs text-red-300">
+                    (In {Math.ceil((new Date(slotsInfo.nextAvailableDate).getTime() - Date.now()) / (1000 * 60 * 60))} hours)
+                  </p>
+                </div>
+              )}
+            </div>
+          ) : null}
+
+          <AdSummary
+            paid={isPaid}
+            canPublish={canPublish}
+            priceUsd={PRICE_USD}
+            durationDays={DURATION_DAYS}
+            onOpenPayment={openPaymentPreview}
+            onPublish={onPublish}
+            campaignId={campaignId}
+            onPaid={handlePaidOnChain}
+            payDisabled={payDisabled}
+            saving={saving}
+            userActiveCampaign={userActiveCampaign}
+          />
+        </aside>
       </div>
 
       <PayPreviewModal

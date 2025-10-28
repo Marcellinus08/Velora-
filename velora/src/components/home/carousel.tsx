@@ -62,11 +62,12 @@ export default function Carousel({
         
         const { data: campaigns, error } = await supabase
           .from("campaigns")
-          .select("id,title,description,banner_url,cta_text,cta_link,total_clicks,status")
+          .select("id,title,description,banner_url,cta_text,cta_link,total_clicks,status,start_date,end_date")
           .eq("status", "active")
           .lte("start_date", now)
           .gte("end_date", now)
-          .order("created_at", { ascending: false });
+          .order("created_at", { ascending: false })
+          .limit(5); // Maksimal 5 campaign yang ditampilkan
 
         if (!mounted) return;
 
