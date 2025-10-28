@@ -113,4 +113,24 @@ body {
 .skel{position:relative;overflow:hidden;background-color:rgba(38,38,38,.6)}
 .skel::after{content:"";position:absolute;inset:0;background-image:linear-gradient(90deg,transparent,rgba(255,255,255,.06),transparent);background-size:200% 100%;animation:shimmer 1.25s infinite linear}
 
+/* Global cursor pointer untuk semua elemen interaktif */
+button:not(:disabled),
+a,
+[role="button"],
+[onclick],
+label[for],
+input[type="button"],
+input[type="submit"],
+input[type="reset"],
+input[type="checkbox"],
+input[type="radio"],
+select,
+summary {
+  cursor: pointer !important;
+}
+
+button:disabled,
+[disabled] {
+  cursor: not-allowed !important;
+}
 

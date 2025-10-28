@@ -418,7 +418,7 @@ export default function CardsGrid() {
             </div>
 
             {/* Clean Info Section */}
-            <div className="flex flex-1 flex-col gap-2 p-3">
+            <div className="flex flex-1 flex-col gap-2 p-3 pb-4">
               <h3 className="text-base font-semibold leading-snug text-neutral-50 group-hover:text-[var(--primary-500)] transition-colors duration-200">
                 {v.title}
               </h3>
@@ -454,10 +454,10 @@ export default function CardsGrid() {
 
                 {/* Simple Action Buttons */}
                 {isOwned ? (
-                  <Link href={`/task?id=${v.id}`} prefetch={false}>
+                  <Link href={`/task?id=${v.id}`} prefetch={false} className="relative z-10">
                     <button
                       type="button"
-                      className="group relative inline-flex items-center gap-2 rounded-full bg-neutral-700 px-4 py-2 text-sm font-semibold text-white transition-all duration-200 ease-out hover:-translate-y-0.5 hover:bg-neutral-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[var(--primary-500)] focus-visible:ring-offset-neutral-900"
+                      className="group relative inline-flex items-center gap-2 rounded-full bg-neutral-700 px-4 py-2 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-neutral-600 hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[var(--primary-500)] focus-visible:ring-offset-neutral-900"
                       title="Watch this video"
                     >
                       <span className="material-icons-round text-[16px]" aria-hidden>
@@ -467,14 +467,16 @@ export default function CardsGrid() {
                     </button>
                   </Link>
                 ) : canBuy ? (
-                  <BuyVideoButton
-                    videoId={v.id}
-                    creator={creatorAddress}
-                    priceUsd={priceUsd}
-                    className="group relative inline-flex items-center gap-2 rounded-full bg-[var(--primary-500)] px-4 py-2 text-sm font-semibold text-white transition-all duration-200 ease-out hover:-translate-y-0.5 hover:bg-[var(--primary-600)] focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[var(--primary-500)] focus-visible:ring-offset-neutral-900"
-                  >
-                    Buy
-                  </BuyVideoButton>
+                  <div className="relative z-10">
+                    <BuyVideoButton
+                      videoId={v.id}
+                      creator={creatorAddress}
+                      priceUsd={priceUsd}
+                      className="group relative inline-flex items-center gap-2 rounded-full bg-purple-600 px-4 py-2 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-purple-700 hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-purple-500 focus-visible:ring-offset-neutral-900"
+                    >
+                      Buy
+                    </BuyVideoButton>
+                  </div>
                 ) : (
                   <button
                     type="button"
