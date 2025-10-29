@@ -13,14 +13,14 @@ export function LeaderboardEmptyState() {
     icon: Trophy,
     title: "No Rankings Yet",
     description: "Complete tasks and earn points to appear on the leaderboard",
-    gradient: "from-yellow-900/20 via-neutral-900/50 to-neutral-800/30",
-    borderColor: "border-yellow-500/40 hover:border-yellow-400/60",
-    iconGradient: "from-yellow-500/15 to-yellow-600/20",
-    ringColor: "ring-yellow-500/30",
-    shadowColor: "shadow-yellow-500/10 group-hover:shadow-yellow-500/20",
-    iconColor: "text-yellow-300 group-hover:text-yellow-200",
-    glowColor: "from-yellow-500/5 via-transparent to-yellow-400/5",
-    pulseColor: "bg-yellow-400"
+    gradient: "from-violet-900/20 via-neutral-900/50 to-neutral-800/30",
+    borderColor: "border-violet-500/40 hover:border-violet-400/60",
+    iconGradient: "from-violet-500/15 to-violet-600/20",
+    ringColor: "ring-violet-500/30",
+    shadowColor: "shadow-violet-500/10 group-hover:shadow-violet-500/20",
+    iconColor: "text-violet-300 group-hover:text-violet-200",
+    glowColor: "from-violet-500/5 via-transparent to-violet-400/5",
+    pulseColor: "bg-violet-400"
   };
 
   const Icon = config.icon;

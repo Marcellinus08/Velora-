@@ -20,14 +20,14 @@ export function CommunityEmptyState({ category }: CommunityEmptyStateProps) {
     description: isAllTopics 
       ? "Community discussions will appear here once members start sharing" 
       : `No discussions found for ${category} category yet`,
-    gradient: "from-indigo-900/20 via-neutral-900/50 to-neutral-800/30",
-    borderColor: "border-indigo-500/40 hover:border-indigo-400/60",
-    iconGradient: "from-indigo-500/15 to-indigo-600/20",
-    ringColor: "ring-indigo-500/30",
-    shadowColor: "shadow-indigo-500/10 group-hover:shadow-indigo-500/20",
-    iconColor: "text-indigo-300 group-hover:text-indigo-200",
-    glowColor: "from-indigo-500/5 via-transparent to-indigo-400/5",
-    pulseColor: "bg-indigo-400"
+    gradient: "from-violet-900/20 via-neutral-900/50 to-neutral-800/30",
+    borderColor: "border-violet-500/40 hover:border-violet-400/60",
+    iconGradient: "from-violet-500/15 to-violet-600/20",
+    ringColor: "ring-violet-500/30",
+    shadowColor: "shadow-violet-500/10 group-hover:shadow-violet-500/20",
+    iconColor: "text-violet-300 group-hover:text-violet-200",
+    glowColor: "from-violet-500/5 via-transparent to-violet-400/5",
+    pulseColor: "bg-violet-400"
   };
 
   const Icon = config.icon;

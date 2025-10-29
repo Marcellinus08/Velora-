@@ -15,16 +15,16 @@ export function SubscriptionEmptyState({ type }: EmptyStateProps) {
       buttonText: "Explore Videos",
       buttonLink: "/",
       buttonIcon: PlayCircle,
-      gradient: "from-purple-900/20 via-neutral-900/50 to-neutral-800/30",
-      borderColor: "border-purple-500/40 hover:border-purple-400/60",
-      iconGradient: "from-purple-500/15 to-purple-600/20",
-      ringColor: "ring-purple-500/30",
-      shadowColor: "shadow-purple-500/10 group-hover:shadow-purple-500/20",
-      buttonGradient: "from-purple-600 to-purple-700 hover:from-purple-500 hover:to-purple-600",
-      buttonShadow: "hover:shadow-purple-500/20",
-      iconColor: "text-purple-300 group-hover:text-purple-200",
-      glowColor: "from-purple-500/5 via-transparent to-purple-400/5",
-      pulseColor: "bg-purple-400"
+      gradient: "from-violet-900/20 via-neutral-900/50 to-neutral-800/30",
+      borderColor: "border-violet-500/40 hover:border-violet-400/60",
+      iconGradient: "from-violet-500/15 to-violet-600/20",
+      ringColor: "ring-violet-500/30",
+      shadowColor: "shadow-violet-500/10 group-hover:shadow-violet-500/20",
+      buttonGradient: "from-violet-600 to-violet-700 hover:from-violet-500 hover:to-violet-600",
+      buttonShadow: "hover:shadow-violet-500/20",
+      iconColor: "text-violet-300 group-hover:text-violet-200",
+      glowColor: "from-violet-500/5 via-transparent to-violet-400/5",
+      pulseColor: "bg-violet-400"
     },
     completed: {
       icon: CheckCircle2,
@@ -33,16 +33,16 @@ export function SubscriptionEmptyState({ type }: EmptyStateProps) {
       buttonText: "Leaderboard",
       buttonLink: "/leaderboard",
       buttonIcon: BookOpen,
-      gradient: "from-purple-900/20 via-neutral-900/50 to-neutral-800/30",
-      borderColor: "border-purple-500/40 hover:border-purple-400/60",
-      iconGradient: "from-purple-500/15 to-purple-600/20",
-      ringColor: "ring-purple-500/30",
-      shadowColor: "shadow-purple-500/10 group-hover:shadow-purple-500/20",
-      buttonGradient: "from-purple-600 to-purple-700 hover:from-purple-500 hover:to-purple-600",
-      buttonShadow: "hover:shadow-purple-500/20",
-      iconColor: "text-purple-300 group-hover:text-purple-200",
-      glowColor: "from-purple-500/5 via-transparent to-purple-400/5",
-      pulseColor: "bg-purple-400"
+      gradient: "from-violet-900/20 via-neutral-900/50 to-neutral-800/30",
+      borderColor: "border-violet-500/40 hover:border-violet-400/60",
+      iconGradient: "from-violet-500/15 to-violet-600/20",
+      ringColor: "ring-violet-500/30",
+      shadowColor: "shadow-violet-500/10 group-hover:shadow-violet-500/20",
+      buttonGradient: "from-violet-600 to-violet-700 hover:from-violet-500 hover:to-violet-600",
+      buttonShadow: "hover:shadow-violet-500/20",
+      iconColor: "text-violet-300 group-hover:text-violet-200",
+      glowColor: "from-violet-500/5 via-transparent to-violet-400/5",
+      pulseColor: "bg-violet-400"
     }
   };
 
