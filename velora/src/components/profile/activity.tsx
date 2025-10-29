@@ -39,14 +39,14 @@ export default function ProfileHistory({ items = [] }: { items?: HistoryItem[] }
 
   return (
     <section>
-      <div className="mb-3 flex items-center justify-between">
+      <div className="mb-4 flex items-center justify-between">
         <h2 className="text-xl font-semibold text-neutral-50">History</h2>
         <div className="flex flex-wrap gap-2">
           {(["all", "order", "watched", "quiz", "reward"] as const).map((k) => (
             <button
               key={k}
               onClick={() => setFilter(k)}
-              className={`rounded-full px-3 py-1 text-xs font-semibold ${
+              className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
                 filter === k
                   ? "bg-[var(--primary-500)] text-white"
                   : "bg-neutral-800 text-neutral-200 hover:bg-neutral-700"
@@ -58,23 +58,23 @@ export default function ProfileHistory({ items = [] }: { items?: HistoryItem[] }
         </div>
       </div>
 
-      <div className="rounded-2xl border border-neutral-800 bg-neutral-900/60 p-4">
+      <div className="rounded-lg border border-neutral-800 bg-neutral-900 p-4">
         {filtered.length === 0 ? (
-          <p className="text-neutral-400">No history yet.</p>
+          <p className="py-8 text-center text-neutral-400">No history yet.</p>
         ) : (
           <ul className="divide-y divide-neutral-800">
             {filtered.map((h) => (
-              <li key={h.id} className="flex items-start gap-3 py-3">
-                <span className="mt-0.5 text-neutral-300">{kindIcon[h.kind]}</span>
+              <li key={h.id} className="flex items-start gap-3 py-3 first:pt-0 last:pb-0">
+                <span className="mt-0.5 text-neutral-400">{kindIcon[h.kind]}</span>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-neutral-200">{h.title}</p>
-                  <p className="text-sm text-neutral-500">
+                  <p className="truncate text-sm font-medium text-neutral-200">{h.title}</p>
+                  <p className="mt-0.5 text-xs text-neutral-500">
                     {h.time}
                     {h.meta ? ` • ${h.meta}` : ""}
                   </p>
                 </div>
                 {h.amount ? (
-                  <span className="shrink-0 rounded-md bg-neutral-800 px-2 py-1 text-xs text-neutral-100">
+                  <span className="shrink-0 rounded-md bg-neutral-800 px-2 py-1 text-xs font-medium text-neutral-100">
                     {h.amount}
                   </span>
                 ) : null}

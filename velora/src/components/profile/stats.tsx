@@ -23,38 +23,38 @@ export default function ProfileStatsCard({
   return (
     <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
       {/* Followers */}
-      <div className="rounded-lg bg-neutral-800/60 p-3 text-center">
-        <p className="text-neutral-400">Followers</p>
-        <p className="font-semibold text-neutral-50">{fmt(stats.followers)}</p>
+      <div className="rounded-lg border border-neutral-800 bg-neutral-900 p-4 text-center">
+        <p className="text-xs font-medium text-neutral-400">Followers</p>
+        <p className="mt-2 text-xl font-semibold text-neutral-50">{fmt(stats.followers)}</p>
       </div>
 
       {/* Following */}
-      <div className="rounded-lg bg-neutral-800/60 p-3 text-center">
-        <p className="text-neutral-400">Following</p>
-        <p className="font-semibold text-neutral-50">{fmt(stats.following)}</p>
+      <div className="rounded-lg border border-neutral-800 bg-neutral-900 p-4 text-center">
+        <p className="text-xs font-medium text-neutral-400">Following</p>
+        <p className="mt-2 text-xl font-semibold text-neutral-50">{fmt(stats.following)}</p>
       </div>
 
       {/* Points */}
-      <div className="rounded-lg bg-neutral-800/60 p-3 text-center">
-        <p className="text-neutral-400">Points</p>
-        <p className="font-semibold text-yellow-400">{fmt(stats.points)}</p>
+      <div className="rounded-lg border border-neutral-800 bg-neutral-900 p-4 text-center">
+        <p className="text-xs font-medium text-neutral-400">Points</p>
+        <p className="mt-2 text-xl font-semibold text-yellow-400">{fmt(stats.points)}</p>
       </div>
 
       {/* Rank (menggantikan ETH) */}
       {rank ? (
-        <div className="rounded-lg bg-neutral-800/60 p-3 text-center">
-          <p className="text-neutral-400">Rank</p>
+        <div className="rounded-lg border border-neutral-800 bg-neutral-900 p-4 text-center">
+          <p className="text-xs font-medium text-neutral-400">Rank</p>
           {rank.rank > 0 ? (
-            <p className="font-semibold text-neutral-50">#{fmt(rank.rank)}</p>
+            <p className="mt-2 text-xl font-semibold text-neutral-50">#{fmt(rank.rank)}</p>
           ) : (
-            <p className="font-semibold text-neutral-500">Unranked</p>
+            <p className="mt-2 text-xl font-semibold text-neutral-500">Unranked</p>
           )}
         </div>
       ) : (
         // fallback kalau belum ada data rank (opsional, biar tidak pecah)
-        <div className="rounded-lg bg-neutral-800/60 p-3 text-center">
-          <p className="text-neutral-400">Rank</p>
-          <p className="font-semibold text-neutral-500">Unranked</p>
+        <div className="rounded-lg border border-neutral-800 bg-neutral-900 p-4 text-center">
+          <p className="text-xs font-medium text-neutral-400">Rank</p>
+          <p className="mt-2 text-xl font-semibold text-neutral-500">Unranked</p>
         </div>
       )}
     </div>
