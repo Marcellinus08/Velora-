@@ -88,7 +88,7 @@ export function useGlonicTreasury() {
         functionName: "balanceOf",
         args: [owner],
       })) as bigint;
-      if (bal < need) throw new Error("USDC.e .");
+      if (bal < need) throw new Error("USDC.e balance too low.");
     },
     []
   );
