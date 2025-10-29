@@ -97,7 +97,7 @@ export default function SiteHeader() {
             </div>
 
             <AddMenu />
-            <NotificationsMenu unreadCount={0} />
+            <NotificationsMenu />
             <WalletDropdown address={address as `0x${string}`} avatarUrl={avatarUrl} username={username} />
           </>
         )}

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { sbService } from "@/lib/supabase-server";
+import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -141,6 +142,66 @@ export async function POST(req: Request, { params }: { params: { id: string } })
       .select("id")
       .single();
     if (error) throw new Error(error.message);
+
+    // ✅ KIRIM NOTIFIKASI saat comment/reply
+    try {
+      let recipientAddr: string | null = null;
+      let message = "";
+
+      if (parentId) {
+        // Ini adalah reply ke comment lain
+        const { data: parentReply } = await sbService
+          .from("community_replies")
+          .select("abstract_id")
+          .eq("id", parentId)
+          .single();
+
+        if (parentReply && parentReply.abstract_id) {
+          recipientAddr = parentReply.abstract_id.toLowerCase();
+          message = `replied to your comment: "${content.slice(0, 50)}${content.length > 50 ? '...' : ''}"`;
+        }
+      } else {
+        // Ini adalah comment ke post
+        const { data: postData } = await sbService
+          .from("community_posts")
+          .select("abstract_id, title")
+          .eq("id", postId)
+          .single();
+
+        if (postData && postData.abstract_id) {
+          recipientAddr = postData.abstract_id.toLowerCase();
+          const postTitle = postData.title 
+            ? `"${postData.title.slice(0, 50)}${postData.title.length > 50 ? '...' : ''}"`
+            : "your post";
+          message = `commented on ${postTitle}: "${content.slice(0, 50)}${content.length > 50 ? '...' : ''}"`;
+        }
+      }
+
+      // Jangan kirim notifikasi jika comment/reply ke diri sendiri
+      if (recipientAddr && recipientAddr !== abstractId) {
+        const { data: insertedNotif, error: notifErr } = await supabaseAdmin
+          .from("notifications")
+          .insert({
+            abstract_id: recipientAddr,
+            user_id: recipientAddr,
+            actor_addr: abstractId,
+            type: parentId ? "reply" : "comment",
+            target_id: parentId || postId,
+            target_type: parentId ? "comment" : "post",
+            message,
+          })
+          .select()
+          .single();
+
+        if (notifErr) {
+          console.error("[Comment/Reply notification] Error:", notifErr);
+        } else {
+          console.log("[Comment/Reply] Created notification:", insertedNotif.id);
+        }
+      }
+    } catch (notifError) {
+      console.error("[Comment/Reply notification] Error:", notifError);
+    }
 
     return NextResponse.json({ ok: true, id: data?.id || null }, { status: 201 });
   } catch (e: any) {

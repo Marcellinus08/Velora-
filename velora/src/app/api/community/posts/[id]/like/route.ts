@@ -1,6 +1,7 @@
 // src/app/api/community/posts/[id]/like/route.ts
 import { NextResponse } from "next/server";
 import { sbService } from "@/lib/supabase-server";
+import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -47,6 +48,34 @@ export async function POST(req: Request, { params }: RouteCtx) {
         .eq("abstract_id", abstractId);
       if (delErr) throw new Error(delErr.message);
       liked = false;
+
+      // ✅ HAPUS NOTIFIKASI saat unlike
+      try {
+        const { data: postData } = await sbService
+          .from("community_posts")
+          .select("abstract_id")
+          .eq("id", postId)
+          .single();
+
+        if (postData && postData.abstract_id) {
+          const postOwnerAddr = postData.abstract_id.toLowerCase();
+          
+          if (postOwnerAddr !== abstractId) {
+            await supabaseAdmin
+              .from("notifications")
+              .delete()
+              .eq("abstract_id", postOwnerAddr)
+              .eq("actor_addr", abstractId)
+              .eq("type", "like")
+              .eq("target_id", postId)
+              .eq("target_type", "post");
+            
+            console.log(`[Unlike] Deleted notification for post ${postId}`);
+          }
+        }
+      } catch (notifError) {
+        console.error("[Unlike notification] Error:", notifError);
+      }
     } else {
       // Belum like → insert
       const { error: insErr } = await sbService
@@ -54,6 +83,46 @@ export async function POST(req: Request, { params }: RouteCtx) {
         .insert({ post_id: postId, abstract_id: abstractId });
       if (insErr) throw new Error(insErr.message);
       liked = true;
+
+      // ✅ KIRIM NOTIFIKASI saat like
+      try {
+        const { data: postData } = await sbService
+          .from("community_posts")
+          .select("abstract_id, title")
+          .eq("id", postId)
+          .single();
+
+        if (postData && postData.abstract_id) {
+          const postOwnerAddr = postData.abstract_id.toLowerCase();
+          
+          // Jangan kirim notifikasi jika like post sendiri
+          if (postOwnerAddr !== abstractId) {
+            const { data: insertedNotif, error: notifErr } = await supabaseAdmin
+              .from("notifications")
+              .insert({
+                abstract_id: postOwnerAddr,
+                user_id: postOwnerAddr,
+                actor_addr: abstractId,
+                type: "like",
+                target_id: postId,
+                target_type: "post",
+                message: postData.title 
+                  ? `liked your post "${postData.title.slice(0, 50)}${postData.title.length > 50 ? '...' : ''}"`
+                  : "liked your post",
+              })
+              .select()
+              .single();
+
+            if (notifErr) {
+              console.error("[Like notification] Error:", notifErr);
+            } else {
+              console.log("[Like] Created notification:", insertedNotif.id);
+            }
+          }
+        }
+      } catch (notifError) {
+        console.error("[Like notification] Error:", notifError);
+      }
     }
 
     // Hitung ulang total like untuk post ini
