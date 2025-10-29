@@ -31,6 +31,8 @@ export default function AddMenu() {
               <span>Create ads</span>
             </DropdownMenuItem>
 
+            <div className="h-px my-2 bg-neutral-800" />
+
             <DropdownMenuItem onClick={() => router.push("/upload")} className="cursor-pointer hover:text-neutral-50 hover:bg-neutral-800 rounded-lg transition-all text-neutral-200 text-sm font-medium py-3 px-4 flex items-center gap-3 group">
               <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-neutral-800/60 group-hover:bg-purple-500/20 transition-colors">
                 <MI name="file_upload" className="text-[18px] text-neutral-400 group-hover:text-purple-400 transition-colors" />

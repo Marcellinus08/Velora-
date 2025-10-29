@@ -27,7 +27,7 @@ export default function NotificationsMenu({ unreadCount = 0 }: { unreadCount?: n
           </button>
         </DropdownMenuTrigger>
 
-        <DropdownMenuContent align="end" side="bottom" className="w-80">
+        <DropdownMenuContent align="end" side="bottom" className="w-80 p-0 border-neutral-800 bg-neutral-900">
           <div className="px-4 py-3 border-b border-neutral-800">
             <h3 className="text-sm font-semibold text-neutral-100">Notifications</h3>
           </div>
