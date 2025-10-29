@@ -183,9 +183,13 @@ export function WalletSheet({
           amount={balanceText}
           right={
             <div className="flex items-center gap-2">
-              <button className="rounded-xl border border-neutral-700 bg-neutral-900 px-3 py-1.5 text-sm text-neutral-200 hover:bg-neutral-800">
+              <Link
+                href="/profile"
+                onClick={onClose}
+                className="rounded-xl border border-neutral-700 bg-neutral-900 px-3 py-1.5 text-sm text-neutral-200 hover:bg-neutral-800 transition-colors"
+              >
                 View portfolio
-              </button>
+              </Link>
               <button className="inline-flex items-center gap-1 rounded-xl bg-[var(--primary-500)] px-3 py-1.5 text-sm font-semibold text-white hover:brightness-110">
                 <MI name="add" className="text-[18px]" />
                 Fund
