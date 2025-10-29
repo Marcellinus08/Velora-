@@ -22,16 +22,22 @@ export default function AddMenu() {
           </button>
         </DropdownMenuTrigger>
 
-        <DropdownMenuContent align="end" side="bottom" className="w-48">
-          <DropdownMenuItem onClick={() => router.push("/ads")} className="cursor-pointer hover:text-purple-600">
-            <MI name="ads_click" className="text-[16px]" />
-            Create ads
-          </DropdownMenuItem>
+        <DropdownMenuContent align="end" side="bottom" className="w-52 p-0 border-neutral-800 bg-neutral-900">
+          <div className="py-2 px-2">
+            <DropdownMenuItem onClick={() => router.push("/ads")} className="cursor-pointer hover:text-neutral-50 hover:bg-neutral-800 rounded-lg transition-all text-neutral-200 text-sm font-medium py-3 px-4 flex items-center gap-3 group">
+              <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-neutral-800/60 group-hover:bg-purple-500/20 transition-colors">
+                <MI name="ads_click" className="text-[18px] text-neutral-400 group-hover:text-purple-400 transition-colors" />
+              </div>
+              <span>Create ads</span>
+            </DropdownMenuItem>
 
-          <DropdownMenuItem onClick={() => router.push("/upload")} className="cursor-pointer hover:text-purple-600">
-            <MI name="file_upload" className="text-[16px]" />
-            Upload video
-          </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => router.push("/upload")} className="cursor-pointer hover:text-neutral-50 hover:bg-neutral-800 rounded-lg transition-all text-neutral-200 text-sm font-medium py-3 px-4 flex items-center gap-3 group">
+              <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-neutral-800/60 group-hover:bg-purple-500/20 transition-colors">
+                <MI name="file_upload" className="text-[18px] text-neutral-400 group-hover:text-purple-400 transition-colors" />
+              </div>
+              <span>Upload video</span>
+            </DropdownMenuItem>
+          </div>
         </DropdownMenuContent>
       </DropdownMenu>
     </div>
