@@ -13,6 +13,7 @@ interface VideoPlayerProps {
   };
   points?: number;
   onUnlock?: () => void;
+  unlockButtonElement?: React.ReactNode;
 }
 
 export default function VideoPlayer({
@@ -21,7 +22,8 @@ export default function VideoPlayer({
   isLocked = false,
   price,
   points,
-  onUnlock
+  onUnlock,
+  unlockButtonElement
 }: VideoPlayerProps) {
   return (
     <div 
@@ -40,7 +42,7 @@ export default function VideoPlayer({
           <div className="absolute inset-0 bg-black/60" />
           
           {/* Lock overlay */}
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 text-white">
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 text-white z-10">
             <div className="bg-neutral-800/80 p-4 rounded-full">
               <svg 
                 className="w-8 h-8" 
@@ -56,7 +58,7 @@ export default function VideoPlayer({
                 />
               </svg>
             </div>
-            <div className="text-center px-4">
+            <div className="text-center px-4 pointer-events-auto">
               <h3 className="text-xl font-bold mb-2">Video Locked</h3>
               {(price || points) && (
                 <div className="space-y-2 text-neutral-200">
@@ -73,12 +75,19 @@ export default function VideoPlayer({
                   )}
                 </div>
               )}
-              <button
-                onClick={onUnlock}
-                className="mt-4 px-6 py-2 bg-[var(--primary-500)] text-white rounded-full font-semibold hover:bg-opacity-90 transition-colors"
-              >
-                Unlock Now
-              </button>
+              {unlockButtonElement || (
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('Default unlock button clicked');
+                    onUnlock?.();
+                  }}
+                  className="mt-4 px-6 py-2 bg-[var(--primary-500)] text-white rounded-full font-semibold hover:bg-opacity-90 transition-colors cursor-pointer"
+                >
+                  Unlock Now
+                </button>
+              )}
             </div>
           </div>
         </div>

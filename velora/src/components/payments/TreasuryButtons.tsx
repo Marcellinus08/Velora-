@@ -43,6 +43,7 @@ export function BuyVideoButton({
   disabled,
   className = "",
   children = "Buy",
+  onSuccess,
 }: {
   videoId: number | string | bigint;
   creator: Address;
@@ -50,6 +51,7 @@ export function BuyVideoButton({
   disabled?: boolean;
   className?: string;
   children?: React.ReactNode;
+  onSuccess?: (tx: `0x${string}`) => void;
 }) {
   const { loading, purchaseVideo } = useGlonicTreasury();
   const { login } = useLoginWithAbstract();
@@ -58,16 +60,29 @@ export function BuyVideoButton({
   const [showConnectDialog, setShowConnectDialog] = useState(false);
 
   const onClick = async () => {
+    console.log('🔘 Unlock Now button clicked!');
+    console.log('🔐 Wallet connected:', isConnected);
+    console.log('💰 Price USD:', priceUsd);
+    console.log('👤 Creator:', creator);
+    console.log('🎥 Video ID:', videoId);
+    
     // Check if wallet is connected
     if (!isConnected) {
+      console.log('❌ Wallet not connected, showing dialog...');
       setShowConnectDialog(true);
       return;
     }
 
-    if (disabled) return;
+    if (disabled) {
+      console.log('⛔ Button is disabled');
+      return;
+    }
+    
+    console.log('✅ Starting purchase process...');
     setBusy(true);
     try {
       const run = () => purchaseVideo({ videoId, creator, priceUsd });
+      console.log('📞 Calling purchaseVideo...');
       const tx = await withInitRetry(run, async () => login());
 
       // Rekam pembelian ke DB
@@ -93,6 +108,11 @@ export function BuyVideoButton({
         `Transaction: ${tx.slice(0, 10)}...${tx.slice(-8)}\nVideo unlocked and ready to watch`,
         6000
       );
+
+      // Call onSuccess callback if provided
+      if (onSuccess) {
+        onSuccess(tx);
+      }
     } catch (e) {
       const msg = pickMsg(e);
       toast.error(
@@ -111,9 +131,14 @@ export function BuyVideoButton({
       <button
         type="button"
         disabled={!!disabled || busy || loading}
-        onClick={onClick}
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          console.log('🖱️ BuyVideoButton onClick triggered');
+          onClick();
+        }}
         aria-busy={busy || loading}
-        className={className}
+        className={`${className} cursor-pointer`}
       >
         {busy || loading ? "Processing..." : children}
       </button>

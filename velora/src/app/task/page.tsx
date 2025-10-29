@@ -8,7 +8,9 @@ import TaskPanel, { TaskItem } from "@/components/task/taskpanel";
 import VideoInfoSection from "@/components/task/videoinfo";
 import Comments from "@/components/task/comments";
 import VideoPlayer from "@/components/task/videoplayer";
+import { BuyVideoButton } from "@/components/payments/TreasuryButtons";
 import type { RecommendedVideo, VideoInfo } from "@/components/task/types";
+import type { Address } from "viem";
 
 /* ============== Helpers ============== */
 const safe = (s?: string | null, fb = "") => (typeof s === "string" && s.trim() ? s : fb);
@@ -50,6 +52,7 @@ type VideoRow = {
   video_path?: string | null;
   thumb_url: string | null;
   abstract_id: string | null;
+  creator_addr?: string | null;
   points_total?: number | null;
   tasks_json?: any;
   likes_count?: number | null;
@@ -541,10 +544,24 @@ export default function TaskPage() {
                   currency: row.currency || 'USD'
                 } : undefined}
                 points={totalPoints}
-                onUnlock={() => {
-                  // Redirect ke halaman pembelian
-                  window.location.href = `/purchase/${row.id}`;
-                }}
+                unlockButtonElement={
+                  isLocked && (row.abstract_id || row.creator_addr) && row.price_cents ? (
+                    <BuyVideoButton
+                      videoId={row.id}
+                      creator={(row.creator_addr || row.abstract_id) as Address}
+                      priceUsd={row.price_cents / 100}
+                      className="mt-4 px-6 py-2 bg-[var(--primary-500)] text-white rounded-full font-semibold hover:bg-opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      onSuccess={() => {
+                        // Reload halaman setelah 2 detik agar toast terlihat
+                        setTimeout(() => {
+                          window.location.reload();
+                        }, 2000);
+                      }}
+                    >
+                      Unlock Now
+                    </BuyVideoButton>
+                  ) : undefined
+                }
               />
             </section>
 
