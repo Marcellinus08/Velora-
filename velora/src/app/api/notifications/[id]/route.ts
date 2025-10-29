@@ -26,8 +26,14 @@ export async function PATCH(req: Request, { params }: RouteContext) {
     }
 
     const updateData: any = { is_read };
+    
+    // Try to include read_at if column exists
     if (is_read) {
-      updateData.read_at = new Date().toISOString();
+      try {
+        updateData.read_at = new Date().toISOString();
+      } catch (e) {
+        console.warn("[Notifications API] read_at column might not exist");
+      }
     }
 
     const { data, error } = await supabaseAdmin
@@ -38,6 +44,28 @@ export async function PATCH(req: Request, { params }: RouteContext) {
       .single();
 
     if (error) {
+      // If error is about read_at column, try without it
+      if (error.message?.includes("read_at") || error.code === "42703") {
+        console.warn("[Notifications API] Retrying without read_at column");
+        
+        const { data: retryData, error: retryError } = await supabaseAdmin
+          .from("notifications")
+          .update({ is_read })
+          .eq("id", id)
+          .select()
+          .single();
+
+        if (retryError) {
+          throw retryError;
+        }
+
+        return NextResponse.json({
+          notification: retryData,
+          message: "Notification updated successfully",
+          note: "read_at column not available - consider running migration 004",
+        });
+      }
+
       throw error;
     }
 

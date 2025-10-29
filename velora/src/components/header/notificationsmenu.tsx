@@ -21,8 +21,24 @@ export default function NotificationsMenu() {
   } = useNotifications(abstractId);
 
   const handleNotificationClick = async (id: string, isRead: boolean) => {
+    console.log("[NotificationsMenu] Clicked notification:", { id, isRead });
     if (!isRead) {
-      await markAsRead(id);
+      try {
+        await markAsRead(id);
+        console.log("[NotificationsMenu] Marked as read successfully");
+      } catch (error) {
+        console.error("[NotificationsMenu] Failed to mark as read:", error);
+      }
+    }
+  };
+
+  const handleMarkAllAsRead = async () => {
+    console.log("[NotificationsMenu] Mark all as read clicked");
+    try {
+      await markAllAsRead();
+      console.log("[NotificationsMenu] Marked all as read successfully");
+    } catch (error) {
+      console.error("[NotificationsMenu] Failed to mark all as read:", error);
     }
   };
 
@@ -50,8 +66,8 @@ export default function NotificationsMenu() {
             <h3 className="text-sm font-semibold text-neutral-100">Notifications</h3>
             {unreadCount > 0 && (
               <button
-                onClick={markAllAsRead}
-                className="text-xs text-[var(--primary-500)] hover:text-[var(--primary-400)] transition-colors"
+                onClick={handleMarkAllAsRead}
+                className="text-xs text-[var(--primary-500)] hover:text-[var(--primary-400)] transition-colors font-medium hover:underline"
               >
                 Mark all read
               </button>
@@ -77,8 +93,9 @@ export default function NotificationsMenu() {
                   key={notif.id}
                   onClick={() => handleNotificationClick(notif.id, notif.isRead)}
                   className={`
-                    flex items-start gap-3 px-4 py-3 border-b border-neutral-800 hover:bg-neutral-800/50 cursor-pointer transition-colors
-                    ${!notif.isRead ? "bg-neutral-800/30" : ""}
+                    group relative flex items-start gap-3 px-4 py-3 border-b border-neutral-800 
+                    hover:bg-neutral-800/70 cursor-pointer transition-all duration-200
+                    ${!notif.isRead ? "bg-[var(--primary-500)]/5 border-l-2 border-l-[var(--primary-500)]" : "border-l-2 border-l-transparent"}
                   `}
                 >
                   <AbstractProfile
@@ -91,8 +108,12 @@ export default function NotificationsMenu() {
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex-1 min-w-0">
                         <p className="text-sm text-neutral-200">
-                          <span className="font-semibold">{notif.actorName || "Someone"}</span>{" "}
-                          <span className="text-neutral-400">{notif.message}</span>
+                          <span className={`font-semibold ${!notif.isRead ? "text-white" : ""}`}>
+                            {notif.actorName || "Someone"}
+                          </span>{" "}
+                          <span className={!notif.isRead ? "text-neutral-300" : "text-neutral-400"}>
+                            {notif.message}
+                          </span>
                         </p>
                         <p className="text-xs text-neutral-500 mt-1">
                           {formatDistanceToNow(new Date(notif.createdAt), { addSuffix: true })}
@@ -100,7 +121,7 @@ export default function NotificationsMenu() {
                       </div>
                       
                       {!notif.isRead && (
-                        <span className="block h-2 w-2 rounded-full bg-[var(--primary-500)] shrink-0 mt-1" />
+                        <span className="block h-2 w-2 rounded-full bg-[var(--primary-500)] shrink-0 mt-1 animate-pulse" />
                       )}
                     </div>
                   </div>
@@ -110,7 +131,7 @@ export default function NotificationsMenu() {
                       e.stopPropagation();
                       deleteNotification(notif.id);
                     }}
-                    className="text-neutral-500 hover:text-neutral-300 transition-colors shrink-0"
+                    className="opacity-0 group-hover:opacity-100 text-neutral-500 hover:text-red-400 transition-all shrink-0"
                     aria-label="Delete notification"
                   >
                     <MI name="close" className="text-[16px]" />

@@ -1,6 +1,23 @@
 # Notification System Setup
 
-## Step 1: Enable Foreign Key Relationship
+## 🚨 IMPORTANT: Run SQL Migrations First!
+
+Jalankan SQL berikut di **Supabase SQL Editor** secara berurutan:
+
+### Step 1: Add `read_at` column (REQUIRED!)
+
+```sql
+-- Add read_at column to notifications table
+ALTER TABLE notifications 
+  ADD COLUMN IF NOT EXISTS read_at TIMESTAMPTZ;
+
+-- Update existing read notifications
+UPDATE notifications 
+SET read_at = created_at 
+WHERE is_read = true AND read_at IS NULL;
+```
+
+### Step 2: Add Foreign Key Relationship
 
 Jalankan SQL berikut di **Supabase SQL Editor**:
 
@@ -24,7 +41,7 @@ CREATE INDEX IF NOT EXISTS idx_notifications_created_at ON notifications(created
 ALTER PUBLICATION supabase_realtime ADD TABLE notifications;
 ```
 
-## Step 2: Verify Tables Exist
+## Step 3: Verify Tables Exist
 
 Pastikan tabel-tabel ini sudah ada:
 
@@ -45,15 +62,15 @@ Pastikan tabel-tabel ini sudah ada:
 - `metadata` (JSONB)
 - `is_read` (BOOLEAN, default false)
 - `created_at` (TIMESTAMP)
-- `read_at` (TIMESTAMP)
+- `read_at` (TIMESTAMPTZ) ⚠️ **Must be added via Step 1!**
 
-## Step 3: Enable Realtime di Supabase Dashboard
+## Step 4: Enable Realtime di Supabase Dashboard
 
 1. Buka **Supabase Dashboard** → **Database** → **Replication**
 2. Cari table `notifications`
 3. Toggle **Enable Realtime** ON
 
-## Step 4: Test Notifikasi
+## Step 5: Test Notifikasi
 
 1. Login dengan 2 akun berbeda (gunakan 2 browser/incognito)
 2. User A: Buat post

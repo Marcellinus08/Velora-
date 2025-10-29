@@ -79,13 +79,21 @@ export function useNotifications(abstractId: string | undefined) {
   // Mark as read
   const markAsRead = useCallback(async (notificationId: string) => {
     try {
+      console.log("[useNotifications] Marking as read:", notificationId);
+      
       const response = await fetch(`/api/notifications/${notificationId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ isRead: true }),
+        body: JSON.stringify({ is_read: true }),
       });
 
-      if (!response.ok) throw new Error("Failed to mark as read");
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error("[useNotifications] Mark as read API error:", errorData);
+        throw new Error(errorData.error || "Failed to mark as read");
+      }
+
+      console.log("[useNotifications] Successfully marked as read");
 
       // Optimistically update local state
       setNotifications((prev) =>
@@ -99,16 +107,29 @@ export function useNotifications(abstractId: string | undefined) {
 
   // Mark all as read
   const markAllAsRead = useCallback(async () => {
-    if (!abstractId) return;
+    if (!abstractId) {
+      console.warn("[useNotifications] No abstractId for mark all as read");
+      return;
+    }
 
     try {
+      console.log("[useNotifications] Marking all as read for:", abstractId);
+      
       const response = await fetch("/api/notifications/mark-all-read", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ abstract_id: abstractId }),
       });
 
-      if (!response.ok) throw new Error("Failed to mark all as read");
+      console.log("[useNotifications] Mark all response status:", response.status);
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error("[useNotifications] Mark all API error:", errorData);
+        throw new Error(errorData.error || "Failed to mark all as read");
+      }
+
+      console.log("[useNotifications] Successfully marked all as read");
 
       // Optimistically update local state
       const now = new Date().toISOString();
