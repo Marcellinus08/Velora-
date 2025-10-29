@@ -4,7 +4,7 @@ import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 
 // Factory function to create client
 export function createClient() {
-  return createSupabaseClient(
+  const client = createSupabaseClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
@@ -25,6 +25,9 @@ export function createClient() {
       },
     }
   );
+
+  console.log("🔧 Supabase Client created with Realtime enabled");
+  return client;
 }
 
 // Browser singleton untuk komponen client (pakai public keys saja)
@@ -35,4 +38,5 @@ if (typeof window !== "undefined") {
   console.log("🔧 Supabase Client Initialized");
   console.log("📍 URL:", process.env.NEXT_PUBLIC_SUPABASE_URL);
   console.log("🔑 Key:", process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? "✅ Present" : "❌ Missing");
+  console.log("🔴 Realtime enabled: ✅");
 }

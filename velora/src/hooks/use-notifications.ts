@@ -172,13 +172,22 @@ export function useNotifications(abstractId: string | undefined) {
 
   // Real-time subscription
   useEffect(() => {
-    if (!abstractId) return;
+    if (!abstractId) {
+      console.log("[useNotifications] No abstractId, skipping real-time subscription");
+      return;
+    }
 
     const supabase = createClient();
-    console.log("[useNotifications] Setting up real-time subscription for:", abstractId);
+    console.log("[useNotifications] 🔄 Setting up real-time subscription for:", abstractId);
 
+    const channelName = `notifications-${abstractId}`;
+    
     const channel = supabase
-      .channel(`notifications:${abstractId}`)
+      .channel(channelName, {
+        config: {
+          broadcast: { self: true },
+        },
+      })
       .on(
         "postgres_changes",
         {
@@ -188,7 +197,8 @@ export function useNotifications(abstractId: string | undefined) {
           filter: `abstract_id=eq.${abstractId}`,
         },
         (payload) => {
-          console.log("[useNotifications] Real-time INSERT:", payload);
+          console.log("[useNotifications] ✅ Real-time INSERT detected:", payload);
+          console.log("[useNotifications] New notification ID:", payload.new.id);
           
           const newNotif = {
             id: payload.new.id,
@@ -205,12 +215,20 @@ export function useNotifications(abstractId: string | undefined) {
             readAt: payload.new.read_at,
           };
 
-          setNotifications((prev) => [newNotif, ...prev]);
+          setNotifications((prev) => {
+            console.log("[useNotifications] Adding notification to list, current count:", prev.length);
+            return [newNotif, ...prev];
+          });
+          
           if (!newNotif.isRead) {
-            setUnreadCount((prev) => prev + 1);
+            setUnreadCount((prev) => {
+              console.log("[useNotifications] Incrementing unread count:", prev, "→", prev + 1);
+              return prev + 1;
+            });
           }
 
-          // Fetch full notification with profile
+          // Fetch full notification with profile in background
+          console.log("[useNotifications] Fetching complete notification data...");
           fetchNotifications();
         }
       )
@@ -223,23 +241,28 @@ export function useNotifications(abstractId: string | undefined) {
           filter: `abstract_id=eq.${abstractId}`,
         },
         (payload) => {
-          console.log("[useNotifications] Real-time UPDATE:", payload);
+          console.log("[useNotifications] 🔄 Real-time UPDATE detected:", payload);
+          console.log("[useNotifications] Updated notification ID:", payload.new.id);
           
           setNotifications((prev) =>
-            prev.map((n) =>
-              n.id === payload.new.id
-                ? {
-                    ...n,
-                    isRead: payload.new.is_read,
-                    readAt: payload.new.read_at,
-                  }
-                : n
-            )
+            prev.map((n) => {
+              if (n.id === payload.new.id) {
+                console.log("[useNotifications] Updating notification:", n.id);
+                return {
+                  ...n,
+                  isRead: payload.new.is_read,
+                  readAt: payload.new.read_at,
+                };
+              }
+              return n;
+            })
           );
 
           // Recalculate unread count
           setNotifications((prev) => {
-            setUnreadCount(prev.filter((n) => !n.isRead).length);
+            const newUnreadCount = prev.filter((n) => !n.isRead).length;
+            console.log("[useNotifications] Recalculated unread count:", newUnreadCount);
+            setUnreadCount(newUnreadCount);
             return prev;
           });
         }
@@ -253,26 +276,43 @@ export function useNotifications(abstractId: string | undefined) {
           filter: `abstract_id=eq.${abstractId}`,
         },
         (payload) => {
-          console.log("[useNotifications] Real-time DELETE:", payload);
+          console.log("[useNotifications] 🗑️ Real-time DELETE detected:", payload);
+          console.log("[useNotifications] Deleted notification ID:", payload.old.id);
           
           setNotifications((prev) => {
             const deleted = prev.find((n) => n.id === payload.old.id);
             const newNotifs = prev.filter((n) => n.id !== payload.old.id);
             
-            if (deleted && !deleted.isRead) {
-              setUnreadCount((count) => Math.max(0, count - 1));
+            console.log("[useNotifications] Removing notification from list");
+            console.log("[useNotifications] Previous count:", prev.length, "→ New count:", newNotifs.length);
+            
+            if (deleted) {
+              console.log("[useNotifications] Deleted notification was unread:", !deleted.isRead);
+              if (!deleted.isRead) {
+                setUnreadCount((count) => {
+                  const newCount = Math.max(0, count - 1);
+                  console.log("[useNotifications] Decrementing unread count:", count, "→", newCount);
+                  return newCount;
+                });
+              }
             }
             
             return newNotifs;
           });
         }
       )
-      .subscribe((status) => {
-        console.log("[useNotifications] Subscription status:", status);
+      .subscribe((status, err) => {
+        console.log("[useNotifications] 📡 Subscription status:", status);
+        if (err) {
+          console.error("[useNotifications] ❌ Subscription error:", err);
+        }
+        if (status === 'SUBSCRIBED') {
+          console.log("[useNotifications] ✅ Successfully subscribed to channel:", channelName);
+        }
       });
 
     return () => {
-      console.log("[useNotifications] Cleaning up subscription");
+      console.log("[useNotifications] 🧹 Cleaning up subscription for channel:", channelName);
       supabase.removeChannel(channel);
     };
   }, [abstractId, fetchNotifications]);
