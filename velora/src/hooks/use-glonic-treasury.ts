@@ -70,8 +70,8 @@ export function useGlonicTreasury() {
   const { data: agw } = useAbstractClient();
 
   const requireWallet = useCallback(() => {
-    if (!agw) throw new Error("Silakan Sign In dengan Abstract Wallet dulu.");
-    if (!agw.account?.address) throw new Error("Wallet AGW belum siap.");
+    if (!agw) throw new Error("Please sign in with your Abstract Wallet first.");
+    if (!agw.account?.address) throw new Error("AGW Wallet is not ready .");
     return agw;
   }, [agw]);
 
@@ -88,7 +88,7 @@ export function useGlonicTreasury() {
         functionName: "balanceOf",
         args: [owner],
       })) as bigint;
-      if (bal < need) throw new Error("Saldo USDC.e tidak cukup.");
+      if (bal < need) throw new Error("USDC.e .");
     },
     []
   );
@@ -129,7 +129,7 @@ export function useGlonicTreasury() {
       creator: Address;
       priceUsd: number | string;
     }): Promise<Hex> => {
-      if (!TREASURY_ADDRESS) throw new Error("TREASURY_ADDRESS belum diset.");
+      if (!TREASURY_ADDRESS) throw new Error("TREASURY_ADDRESS has not been set.");
       setLoading(true);
       try {
         const w = requireWallet();
@@ -166,7 +166,7 @@ export function useGlonicTreasury() {
       campaignId: number | string | bigint;
       amountUsd: number | string;
     }): Promise<Hex> => {
-      if (!TREASURY_ADDRESS) throw new Error("TREASURY_ADDRESS belum diset.");
+      if (!TREASURY_ADDRESS) throw new Error("TREASURY_ADDRESS has not been set.");
       setLoading(true);
       try {
         const w = requireWallet();
@@ -209,7 +209,7 @@ export function useGlonicTreasury() {
       rateUsdPerMin?: number | string;
       minutes?: number;
     }): Promise<Hex> => {
-      if (!TREASURY_ADDRESS) throw new Error("TREASURY_ADDRESS belum diset.");
+      if (!TREASURY_ADDRESS) throw new Error("TREASURY_ADDRESS has not been set.");
       setLoading(true);
       try {
         const w = requireWallet();
@@ -221,7 +221,7 @@ export function useGlonicTreasury() {
           : safeNumber(rateUsdPerMin) * Math.max(1, Math.ceil(safeNumber(minutes)));
 
         usd = Number(usd.toFixed(6));
-        if (!(usd > 0)) throw new Error("Nominal meet tidak valid.");
+        if (!(usd > 0)) throw new Error("Invalid nominal meet.");
 
         const amount = toUSDCAmount(usd);
         const idU256 = toUint256Id(bookingId);
