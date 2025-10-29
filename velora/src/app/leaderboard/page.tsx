@@ -132,7 +132,7 @@ export default function LeaderboardPage() {
     currentUserIndex >= 0
       ? {
           rank: currentUserIndex + 1,
-          name: "You",
+          name: leaderboardData[currentUserIndex].username || shortenAddress(leaderboardData[currentUserIndex].user_addr),
           handle: leaderboardData[currentUserIndex].user_addr, // Kirim alamat wallet lengkap
           score: leaderboardData[currentUserIndex].total_points,
           avatarUrl: leaderboardData[currentUserIndex].avatar_url,
@@ -150,18 +150,25 @@ export default function LeaderboardPage() {
   const fmt = (n: number) => Intl.NumberFormat("en-US").format(n);
 
   function openProfile(u: { name: string; handle: string; rank?: number; score?: number; avatarUrl?: string }) {
+    // Cek apakah ada data dummy di PROFILE_DB
     const found = PROFILE_DB[u.handle];
-    setSelected(
-      found ?? {
+    
+    if (found) {
+      setSelected(found);
+    } else {
+      // Buat profile dengan data yang tersedia, tanpa purchases dan activity untuk sementara
+      setSelected({
         name: u.name,
         handle: u.handle,
         rank: u.rank,
         score: u.score,
         avatarUrl: u.avatarUrl,
         purchases: [],
-        activity: [],
-      },
-    );
+        activity: [
+          { time: new Date().toISOString().slice(0, 16).replace('T', ' '), text: "User data loaded from leaderboard." }
+        ],
+      });
+    }
   }
 
   if (loading) {
@@ -203,13 +210,22 @@ export default function LeaderboardPage() {
 
           {/* Current user highlight */}
           {currentUser && (
-            <div className="flex items-center justify-between rounded-xl border border-purple-500/30 bg-purple-500/5 px-6 py-4">
+            <div 
+              className="flex items-center justify-between rounded-xl border border-purple-500/30 bg-purple-500/5 px-6 py-4 cursor-pointer hover:bg-purple-500/10 transition-all duration-300 hover:border-purple-500/50 group"
+              onClick={() => openProfile({ 
+                name: currentUser.name, 
+                handle: currentUser.handle, 
+                rank: currentUser.rank, 
+                score: currentUser.score, 
+                avatarUrl: currentUser.avatarUrl 
+              })}
+            >
               <div className="flex items-center gap-4">
                 <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full border-2 border-purple-500/40 bg-neutral-800">
                   {currentUser.avatarNode}
                 </div>
                 <div>
-                  <div className="text-lg font-bold text-neutral-50">You</div>
+                  <div className="text-lg font-bold text-neutral-50">{currentUser.name}</div>
                   <div className="text-sm text-neutral-400">Your ranking position</div>
                 </div>
               </div>
@@ -279,7 +295,6 @@ export default function LeaderboardPage() {
                                 <span className="rounded-full bg-purple-500/20 px-2.5 py-0.5 text-xs font-medium text-purple-400 ring-1 ring-purple-500/30">You</span>
                               )}
                             </div>
-                            <div className="mt-0.5 text-xs text-neutral-500">@{shortenAddress(e.handle)}</div>
                           </div>
                         </div>
                       </td>

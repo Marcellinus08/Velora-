@@ -39,6 +39,13 @@ export default function ProfileModal({ profile, onClose }: { profile: UserProfil
   const [tab, setTab] = React.useState<"history" | "activity">("history");
   const [q, setQ] = React.useState("");
   const [sort, setSort] = React.useState<"newest" | "oldest">("newest");
+  const [copied, setCopied] = React.useState(false);
+
+  const copyAddress = () => {
+    navigator.clipboard.writeText(profile.handle);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   const spent = React.useMemo(() => {
     const num = (s: string) => Number((s || "").replace(/[^0-9.]/g, "")) || 0;
@@ -90,8 +97,25 @@ export default function ProfileModal({ profile, onClose }: { profile: UserProfil
               <div className="text-lg font-semibold text-neutral-50">
                 {profile.name}
               </div>
-              <div className="mt-1 text-sm text-neutral-400">
-                @{shortenAddress(profile.handle)}
+              <div 
+                className="mt-1 flex items-center gap-2 text-sm text-neutral-400 group cursor-pointer hover:text-neutral-300 transition-colors"
+                onClick={copyAddress}
+                title="Click to copy full address"
+              >
+                <span className="font-mono">{shortenAddress(profile.handle)}</span>
+                <svg 
+                  className={`h-4 w-4 transition-all ${copied ? 'text-green-400' : 'text-neutral-500 group-hover:text-neutral-400'}`} 
+                  fill="none" 
+                  viewBox="0 0 24 24" 
+                  stroke="currentColor"
+                >
+                  {copied ? (
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  ) : (
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                  )}
+                </svg>
+                {copied && <span className="text-xs text-green-400 font-medium">Copied!</span>}
               </div>
             </div>
           </div>
