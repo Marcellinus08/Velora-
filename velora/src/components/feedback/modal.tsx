@@ -14,7 +14,7 @@ type Props = {
 
 export default function FeedbackModal({ open, onClose }: Props) {
   const { address } = useAccount(); // Get user's wallet address
-  const [type, setType] = useState<"Bug" | "Idea" | "Other">("Bug");
+  const [type, setType] = useState<"Bug" | "Idea" | "Other">("Idea");
   const [message, setMessage] = useState("");
   const [email, setEmail] = useState("");
   const [media, setMedia] = useState<File | null>(null);
@@ -102,7 +102,7 @@ export default function FeedbackModal({ open, onClose }: Props) {
       // Reset + tutup
       setMessage("");
       setEmail("");
-      setType("Bug");
+      setType("Idea");
       setMedia(null);
       onClose();
     } catch (err: any) {
@@ -149,7 +149,7 @@ export default function FeedbackModal({ open, onClose }: Props) {
           <div>
             <label className="mb-1 block text-sm text-neutral-300">Type</label>
             <div className="grid grid-cols-3 gap-2">
-              {(["Bug", "Idea", "Other"] as const).map((t) => (
+              {(["Idea", "Bug", "Other"] as const).map((t) => (
                 <button
                   key={t}
                   type="button"
