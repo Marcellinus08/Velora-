@@ -58,6 +58,10 @@ export default function ProfilePage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [sortOrder, setSortOrder] = useState<"newest" | "oldest">("newest");
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+
   // API data state
   const [historyData, setHistoryData] = useState<LeaderboardHistoryItem[]>([]);
   const [historyStats, setHistoryStats] = useState<HistoryStats | null>(null);
@@ -69,6 +73,7 @@ export default function ProfilePage() {
   useEffect(() => {
     if (activeTab === "history" && targetAddress) {
       setLoadingTabData(true);
+      setCurrentPage(1); // Reset to page 1
       fetch(`/api/leaderboard/history?userAddr=${targetAddress}&type=${historyFilter}&limit=100`)
         .then((res) => res.json())
         .then((data) => {
@@ -86,6 +91,7 @@ export default function ProfilePage() {
   useEffect(() => {
     if (activeTab === "activity" && targetAddress) {
       setLoadingTabData(true);
+      setCurrentPage(1); // Reset to page 1
       fetch(`/api/leaderboard/activity?userAddr=${targetAddress}&type=${activityFilter}&limit=100`)
         .then((res) => res.json())
         .then((data) => {
@@ -400,112 +406,190 @@ export default function ProfilePage() {
               </div>
             ) : activeTab === "history" ? (
               historyData.length > 0 ? (
-                <div className="space-y-3">
-                  {historyData
-                    .filter((item) => {
-                      if (!searchQuery) return true;
-                      if (item.type === "video_purchase") {
-                        return item.video.title.toLowerCase().includes(searchQuery.toLowerCase());
-                      }
-                      if (item.type === "meet_purchase") {
-                        return item.meet.creator.toLowerCase().includes(searchQuery.toLowerCase());
-                      }
-                      return true;
-                    })
-                    .sort((a, b) => {
-                      const ta = new Date(a.date).getTime();
-                      const tb = new Date(b.date).getTime();
-                      return sortOrder === "newest" ? tb - ta : ta - tb;
-                    })
-                    .map((item) => {
-                      // Navigation URL based on type
-                      const getNavigationUrl = () => {
-                        if (item.type === "video_purchase" && item.video.id) {
-                          return `/task?id=${item.video.id}`;
-                        }
-                        if (item.type === "meet_purchase" && item.meet.id) {
-                          return `/meet/${item.meet.id}`;
-                        }
-                        return null;
-                      };
+                <>
+                  {/* History Table */}
+                  <div className="overflow-hidden rounded-xl border border-neutral-800 bg-neutral-900/60">
+                    <table className="w-full">
+                      <thead className="border-b border-neutral-800 bg-neutral-900/80">
+                        <tr>
+                          <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-400">
+                            Content
+                          </th>
+                          <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-400">
+                            Type
+                          </th>
+                          <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-400">
+                            Price
+                          </th>
+                          <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-400">
+                            Status
+                          </th>
+                          <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-400">
+                            Date
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-neutral-800">
+                        {historyData
+                          .filter((item) => {
+                            if (!searchQuery) return true;
+                            if (item.type === "video_purchase") {
+                              return item.video.title.toLowerCase().includes(searchQuery.toLowerCase());
+                            }
+                            if (item.type === "meet_purchase") {
+                              return item.meet.creator.toLowerCase().includes(searchQuery.toLowerCase());
+                            }
+                            return true;
+                          })
+                          .sort((a, b) => {
+                            const ta = new Date(a.date).getTime();
+                            const tb = new Date(b.date).getTime();
+                            return sortOrder === "newest" ? tb - ta : ta - tb;
+                          })
+                          .slice((currentPage - 1) * rowsPerPage, currentPage * rowsPerPage)
+                          .map((item) => {
+                            const getNavigationUrl = () => {
+                              if (item.type === "video_purchase" && item.video.id) {
+                                return `/task?id=${item.video.id}`;
+                              }
+                              if (item.type === "meet_purchase" && item.meet.id) {
+                                return `/meet/${item.meet.id}`;
+                              }
+                              return null;
+                            };
+                            const navUrl = getNavigationUrl();
 
-                      const navUrl = getNavigationUrl();
-
-                      return (
-                        <div
-                          key={item.id}
-                          onClick={() => navUrl && (window.location.href = navUrl)}
-                          className={`group rounded-xl border border-neutral-800 bg-neutral-900/60 p-4 transition-all hover:border-neutral-700 hover:bg-neutral-900/80 hover:shadow-lg ${
-                            navUrl ? "cursor-pointer" : ""
-                          }`}
-                        >
-                          <div className="flex items-center justify-between gap-4">
-                            <div className="flex items-center gap-4 flex-1">
-                              {/* Icon/Thumbnail */}
-                              {item.type === "video_purchase" && item.video.thumbnail && (
-                                <img
-                                  src={item.video.thumbnail}
-                                  alt={item.video.title}
-                                  className="h-16 w-24 rounded-lg object-cover flex-shrink-0"
-                                />
-                              )}
-                              {item.type === "meet_purchase" && (
-                                <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-lg bg-purple-500/20 ring-1 ring-purple-500/30">
-                                  <MI name="video_call" className="text-2xl text-purple-400" />
-                                </div>
-                              )}
-
-                              {/* Content */}
-                              <div className="flex-1 min-w-0">
-                                {item.type === "video_purchase" && (
-                                  <>
-                                    <div className="font-semibold text-neutral-50 group-hover:text-white truncate">
-                                      {item.video.title}
+                            return (
+                              <tr
+                                key={item.id}
+                                onClick={() => navUrl && (window.location.href = navUrl)}
+                                className={`group transition-colors hover:bg-neutral-800/50 ${navUrl ? "cursor-pointer" : ""}`}
+                              >
+                                {/* Content Column */}
+                                <td className="px-4 py-4">
+                                  <div className="flex items-center gap-3">
+                                    {item.type === "video_purchase" && item.video.thumbnail && (
+                                      <img
+                                        src={item.video.thumbnail}
+                                        alt={item.video.title}
+                                        className="h-12 w-20 rounded-md object-cover flex-shrink-0"
+                                      />
+                                    )}
+                                    {item.type === "meet_purchase" && (
+                                      <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-md bg-purple-500/20">
+                                        <MI name="video_call" className="text-xl text-purple-400" />
+                                      </div>
+                                    )}
+                                    <div className="min-w-0 flex-1">
+                                      {item.type === "video_purchase" && (
+                                        <>
+                                          <div className="font-medium text-neutral-50 truncate group-hover:text-white">
+                                            {item.video.title}
+                                          </div>
+                                          <div className="text-xs text-neutral-400">by {item.video.creator}</div>
+                                        </>
+                                      )}
+                                      {item.type === "meet_purchase" && (
+                                        <>
+                                          <div className="font-medium text-neutral-50 group-hover:text-white">
+                                            Call with {item.meet.creator}
+                                          </div>
+                                          <div className="text-xs text-neutral-400">{item.meet.duration} minutes</div>
+                                        </>
+                                      )}
                                     </div>
-                                    <div className="mt-1 text-xs text-neutral-400">by {item.video.creator}</div>
-                                  </>
-                                )}
-                                {item.type === "meet_purchase" && (
-                                  <>
-                                    <div className="font-semibold text-neutral-50 group-hover:text-white">
-                                      Call with {item.meet.creator}
-                                    </div>
-                                    <div className="mt-1 text-xs text-neutral-400">
-                                      {item.meet.duration} minutes
-                                      {item.meet.scheduledAt && ` • ${formatDate(item.meet.scheduledAt)}`}
-                                    </div>
-                                  </>
-                                )}
+                                  </div>
+                                </td>
 
-                                {/* Date and Status */}
-                                <div className="mt-2 flex items-center gap-2 flex-wrap">
-                                  <span className="text-xs text-neutral-500">{formatDate(item.date)}</span>
+                                {/* Type Column */}
+                                <td className="px-4 py-4">
                                   <span
-                                    className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                                      item.status === "completed"
-                                        ? "bg-green-500/20 text-green-400"
+                                    className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${
+                                      item.type === "video_purchase"
+                                        ? "bg-blue-500/10 text-blue-400 ring-1 ring-blue-500/20"
+                                        : "bg-purple-500/10 text-purple-400 ring-1 ring-purple-500/20"
+                                    }`}
+                                  >
+                                    {item.type === "video_purchase" ? "Video" : "Meet"}
+                                  </span>
+                                </td>
+
+                                {/* Price Column */}
+                                <td className="px-4 py-4">
+                                  <div className="font-semibold text-green-400">
+                                    ${item.price.toFixed(2)}
+                                  </div>
+                                  <div className="text-xs text-neutral-500">{item.currency}</div>
+                                </td>
+
+                                {/* Status Column */}
+                                <td className="px-4 py-4">
+                                  <span
+                                    className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${
+                                      item.status === "completed" || item.status === "active"
+                                        ? "bg-green-500/10 text-green-400 ring-1 ring-green-500/20"
                                         : item.status === "scheduled"
-                                        ? "bg-blue-500/20 text-blue-400"
-                                        : "bg-green-500/20 text-green-400"
+                                        ? "bg-blue-500/10 text-blue-400 ring-1 ring-blue-500/20"
+                                        : "bg-yellow-500/10 text-yellow-400 ring-1 ring-yellow-500/20"
                                     }`}
                                   >
                                     {item.status === "active" || item.status === "completed" ? "Purchased" : item.status}
                                   </span>
-                                </div>
-                              </div>
-                            </div>
+                                </td>
 
-                            {/* Price - Center Aligned */}
-                            <div className="flex items-center">
-                              <div className="text-lg font-bold text-green-400 whitespace-nowrap">
-                                {formatCurrency(item.price, item.currency)}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                </div>
+                                {/* Date Column */}
+                                <td className="px-4 py-4 text-sm text-neutral-400">
+                                  {formatDate(item.date)}
+                                </td>
+                              </tr>
+                            );
+                          })}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Pagination */}
+                  <div className="mt-4 flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-sm text-neutral-400">
+                      <span>Rows per page:</span>
+                      <select
+                        value={rowsPerPage}
+                        onChange={(e) => {
+                          setRowsPerPage(Number(e.target.value));
+                          setCurrentPage(1);
+                        }}
+                        className="rounded-md border border-neutral-700 bg-neutral-800 px-2 py-1 text-neutral-50 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
+                      >
+                        <option value={5}>5</option>
+                        <option value={10}>10</option>
+                        <option value={25}>25</option>
+                        <option value={50}>50</option>
+                      </select>
+                    </div>
+
+                    <div className="flex items-center gap-4">
+                      <span className="text-sm text-neutral-400">
+                        Page {currentPage} of {Math.max(1, Math.ceil(historyData.length / rowsPerPage))}
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                          disabled={currentPage === 1}
+                          className="rounded-md border border-neutral-700 bg-neutral-800 px-3 py-1.5 text-sm text-neutral-50 transition-colors hover:bg-neutral-700 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          Prev
+                        </button>
+                        <button
+                          onClick={() => setCurrentPage((p) => Math.min(Math.ceil(historyData.length / rowsPerPage), p + 1))}
+                          disabled={currentPage >= Math.ceil(historyData.length / rowsPerPage)}
+                          className="rounded-md border border-neutral-700 bg-neutral-800 px-3 py-1.5 text-sm text-neutral-50 transition-colors hover:bg-neutral-700 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          Next
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </>
               ) : (
                 <div className="rounded-xl border border-neutral-800 bg-neutral-900/40 py-16 text-center">
                   <MI name="receipt_long" className="mb-3 text-6xl text-neutral-700" />
@@ -517,93 +601,160 @@ export default function ProfilePage() {
               )
             ) : (
               activityData.length > 0 ? (
-                <div className="space-y-3">
-                  {activityData
-                    .filter((item) => {
-                      if (!searchQuery) return true;
-                      return item.description.toLowerCase().includes(searchQuery.toLowerCase());
-                    })
-                    .sort((a, b) => {
-                      const ta = new Date(a.date).getTime();
-                      const tb = new Date(b.date).getTime();
-                      return sortOrder === "newest" ? tb - ta : ta - tb;
-                    })
-                    .map((item) => (
-                      <div
-                        key={item.id}
-                        className="group rounded-xl border border-neutral-800 bg-neutral-900/60 p-4 transition-all hover:border-neutral-700 hover:bg-neutral-900/80 hover:shadow-lg"
+                <>
+                  {/* Activity Table */}
+                  <div className="overflow-hidden rounded-xl border border-neutral-800 bg-neutral-900/60">
+                    <table className="w-full">
+                      <thead className="border-b border-neutral-800 bg-neutral-900/80">
+                        <tr>
+                          <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-400">
+                            Type
+                          </th>
+                          <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-400">
+                            Activity
+                          </th>
+                          <th className="px-4 py-3 text-center text-xs font-medium uppercase tracking-wider text-neutral-400">
+                            Points
+                          </th>
+                          <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-400">
+                            Date
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-neutral-800">
+                        {activityData
+                          .filter((item) => {
+                            if (!searchQuery) return true;
+                            return item.description.toLowerCase().includes(searchQuery.toLowerCase());
+                          })
+                          .sort((a, b) => {
+                            const ta = new Date(a.date).getTime();
+                            const tb = new Date(b.date).getTime();
+                            return sortOrder === "newest" ? tb - ta : ta - tb;
+                          })
+                          .slice((currentPage - 1) * rowsPerPage, currentPage * rowsPerPage)
+                          .map((item) => (
+                            <tr
+                              key={item.id}
+                              className="group transition-colors hover:bg-neutral-800/50"
+                            >
+                              {/* Type Column */}
+                              <td className="px-4 py-4">
+                                <div
+                                  className={`inline-flex h-10 w-10 items-center justify-center rounded-lg ring-1 ${
+                                    item.type === "video_upload"
+                                      ? "bg-blue-500/20 ring-blue-500/30"
+                                      : item.type === "task_completed"
+                                      ? "bg-green-500/20 ring-green-500/30"
+                                      : item.type === "meet_hosted"
+                                      ? "bg-purple-500/20 ring-purple-500/30"
+                                      : item.type === "video_shared"
+                                      ? "bg-orange-500/20 ring-orange-500/30"
+                                      : "bg-neutral-700/50 ring-neutral-600/30"
+                                  }`}
+                                >
+                                  <MI
+                                    name={item.icon}
+                                    className={`text-xl ${
+                                      item.type === "video_upload"
+                                        ? "text-blue-400"
+                                        : item.type === "task_completed"
+                                        ? "text-green-400"
+                                        : item.type === "meet_hosted"
+                                        ? "text-purple-400"
+                                        : item.type === "video_shared"
+                                        ? "text-orange-400"
+                                        : "text-neutral-400"
+                                    }`}
+                                  />
+                                </div>
+                              </td>
+
+                              {/* Activity Column */}
+                              <td className="px-4 py-4">
+                                <div className="font-medium text-neutral-50 group-hover:text-white">
+                                  {item.description}
+                                </div>
+                                <div className="mt-1 flex items-center gap-4 text-xs text-neutral-400">
+                                  {"video" in item && item.video && "views" in item.video && (
+                                    <span>
+                                      {item.video.views !== undefined && `${fmtNum(item.video.views)} views`}
+                                      {item.video.likes !== undefined && ` • ${fmtNum(item.video.likes)} likes`}
+                                    </span>
+                                  )}
+                                  {"post" in item && item.post && (
+                                    <span>
+                                      {item.post.likes} likes • {item.post.comments} comments
+                                    </span>
+                                  )}
+                                  {"earnings" in item && item.earnings !== undefined && item.earnings > 0 && (
+                                    <span className="font-semibold text-green-400">
+                                      <MI name="payments" className="inline text-xs" /> Earned: ${fmtNum(item.earnings)}
+                                    </span>
+                                  )}
+                                </div>
+                              </td>
+
+                              {/* Points Column */}
+                              <td className="px-4 py-4 text-center">
+                                <div className="inline-flex items-center gap-1.5 rounded-lg bg-yellow-500/10 px-3 py-1.5 ring-1 ring-yellow-500/20">
+                                  <MI name="star" className="text-sm text-yellow-400" />
+                                  <span className="text-sm font-bold text-yellow-400">+{item.points}</span>
+                                </div>
+                              </td>
+
+                              {/* Date Column */}
+                              <td className="px-4 py-4 text-sm text-neutral-400">
+                                {formatDate(item.date)}
+                              </td>
+                            </tr>
+                          ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Pagination */}
+                  <div className="mt-4 flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-sm text-neutral-400">
+                      <span>Rows per page:</span>
+                      <select
+                        value={rowsPerPage}
+                        onChange={(e) => {
+                          setRowsPerPage(Number(e.target.value));
+                          setCurrentPage(1);
+                        }}
+                        className="rounded-md border border-neutral-700 bg-neutral-800 px-2 py-1 text-neutral-50 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
                       >
-                        <div className="flex items-start gap-4">
-                          {/* Icon */}
-                          <div
-                            className={`flex h-12 w-12 items-center justify-center rounded-lg ring-1 ${
-                              item.type === "video_upload"
-                                ? "bg-blue-500/20 ring-blue-500/30"
-                                : item.type === "task_completed"
-                                ? "bg-green-500/20 ring-green-500/30"
-                                : item.type === "meet_hosted"
-                                ? "bg-purple-500/20 ring-purple-500/30"
-                                : item.type === "milestone"
-                                ? "bg-yellow-500/20 ring-yellow-500/30"
-                                : "bg-neutral-700/50 ring-neutral-600/30"
-                            }`}
-                          >
-                            <MI
-                              name={item.icon}
-                              className={`text-2xl ${
-                                item.type === "video_upload"
-                                  ? "text-blue-400"
-                                  : item.type === "task_completed"
-                                  ? "text-green-400"
-                                  : item.type === "meet_hosted"
-                                  ? "text-purple-400"
-                                  : item.type === "milestone"
-                                  ? "text-yellow-400"
-                                  : "text-neutral-400"
-                              }`}
-                            />
-                          </div>
+                        <option value={5}>5</option>
+                        <option value={10}>10</option>
+                        <option value={25}>25</option>
+                        <option value={50}>50</option>
+                      </select>
+                    </div>
 
-                          {/* Content */}
-                          <div className="flex-1">
-                            <div className="font-medium text-neutral-50 group-hover:text-white">
-                              {item.description}
-                            </div>
-
-                            {/* Additional Info */}
-                            {"video" in item && item.video && "views" in item.video && (
-                              <div className="mt-2 text-xs text-neutral-400">
-                                {item.video.views !== undefined && `${fmtNum(item.video.views)} views`}
-                                {item.video.likes !== undefined && ` • ${fmtNum(item.video.likes)} likes`}
-                              </div>
-                            )}
-
-                            {"post" in item && item.post && (
-                              <div className="mt-2 text-xs text-neutral-400">
-                                {item.post.likes} likes • {item.post.comments} comments
-                              </div>
-                            )}
-
-                            {"earnings" in item && item.earnings !== undefined && (
-                              <div className="mt-2 flex items-center gap-1 text-xs font-semibold text-green-400">
-                                <MI name="payments" className="text-sm" />
-                                Earned: ${fmtNum(item.earnings)}
-                              </div>
-                            )}
-
-                            {/* Date */}
-                            <div className="mt-2 text-xs text-neutral-500">{formatDate(item.date)}</div>
-                          </div>
-
-                          {/* Points */}
-                          <div className="flex items-center gap-1.5 rounded-lg bg-yellow-500/10 px-3 py-1.5 ring-1 ring-yellow-500/20">
-                            <MI name="star" className="text-sm text-yellow-400" />
-                            <span className="text-sm font-bold text-yellow-400">+{item.points}</span>
-                          </div>
-                        </div>
+                    <div className="flex items-center gap-4">
+                      <span className="text-sm text-neutral-400">
+                        Page {currentPage} of {Math.max(1, Math.ceil(activityData.length / rowsPerPage))}
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                          disabled={currentPage === 1}
+                          className="rounded-md border border-neutral-700 bg-neutral-800 px-3 py-1.5 text-sm text-neutral-50 transition-colors hover:bg-neutral-700 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          Prev
+                        </button>
+                        <button
+                          onClick={() => setCurrentPage((p) => Math.min(Math.ceil(activityData.length / rowsPerPage), p + 1))}
+                          disabled={currentPage >= Math.ceil(activityData.length / rowsPerPage)}
+                          className="rounded-md border border-neutral-700 bg-neutral-800 px-3 py-1.5 text-sm text-neutral-50 transition-colors hover:bg-neutral-700 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          Next
+                        </button>
                       </div>
-                    ))}
-                </div>
+                    </div>
+                  </div>
+                </>
               ) : (
                 <div className="rounded-xl border border-neutral-800 bg-neutral-900/40 py-16 text-center">
                   <MI name="history" className="mb-3 text-6xl text-neutral-700" />
