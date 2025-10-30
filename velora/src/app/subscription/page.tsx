@@ -65,19 +65,14 @@ export default function SubscriptionPage() {
   const [err, setErr] = useState("");
   const [available, setAvailable] = useState<VideoItem[]>([]);
   const [completed, setCompleted] = useState<VideoItem[]>([]);
+  const [manualRefresh, setManualRefresh] = useState(0);
 
-  // Add refresh on visibility change to catch updates from task page
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (!document.hidden && !loading && isAddr(buyer)) {
-        // Refresh data when user returns to this page
-        window.location.reload();
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, [buyer, loading]);
+  // Removed auto-refresh on visibility change to prevent unwanted refreshes when switching tabs
+  
+  // Manual refresh function for retry button
+  const handleManualRefresh = () => {
+    setManualRefresh(prev => prev + 1);
+  };
 
   useEffect(() => {
     let alive = true;
@@ -204,7 +199,7 @@ export default function SubscriptionPage() {
     return () => {
       alive = false;
     };
-  }, [buyer]);
+  }, [buyer, manualRefresh]); // Re-fetch when buyer changes or manual refresh triggered
 
   return (
     <div className="flex h-full grow flex-row">
@@ -218,7 +213,7 @@ export default function SubscriptionPage() {
           {err && (
             <SubscriptionErrorState 
               error={err} 
-              onRetry={() => window.location.reload()} 
+              onRetry={handleManualRefresh} 
             />
           )}
 
