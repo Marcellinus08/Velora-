@@ -2,7 +2,6 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useAccount } from "wagmi";
 import type { ProfileUser } from "./types";
 import { AbstractProfile } from "@/components/abstract-profile";
 
@@ -79,22 +78,37 @@ function useDbProfile(address?: `0x${string}`) {
 }
 
 /* ===== Component ===== */
-export default function ProfileHeader({ user }: { user: ProfileUser }) {
-  const { address } = useAccount();
+export default function ProfileHeader({ 
+  user, 
+  address 
+}: { 
+  user: ProfileUser; 
+  address?: string | null;
+}) {
+  const [copied, setCopied] = useState(false);
 
-  // 1) Data dari DB
+  // 1) Data dari DB menggunakan address dari props
   const { username: dbUsername, avatarUrl: dbAvatar } = useDbProfile(
     address as `0x${string}` | undefined
   );
 
-  // 2) Nama ditampilkan: DB → dummy prop → short wallet
+  // 2) Nama ditampilkan: DB → short wallet (tidak gunakan dummy name)
   const displayName =
-    dbUsername?.trim() || user?.name || shortAddr(address) || "Velora User";
+    dbUsername?.trim() || shortAddr(address) || "Velora User";
 
   // 3) Bio (sementara tetap dari dummy)
   const bio =
     user?.bio ||
     "Content creator and photography enthusiast. Sharing my journey and skills with the world.";
+
+  // Copy address function
+  const copyAddress = () => {
+    if (address) {
+      navigator.clipboard.writeText(address);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
 
   return (
     <div className="rounded-2xl border border-neutral-800 bg-neutral-900/60 p-6 flex flex-col md:flex-row items-start md:items-center gap-6">
@@ -114,6 +128,7 @@ export default function ProfileHeader({ user }: { user: ProfileUser }) {
         ) : address ? (
           // Fallback: avatar dari Abstract (sama seperti di header utama)
           <AbstractProfile
+            address={address as `0x${string}`}
             size="lg"
             showTooltip={false}
             className="!h-24 !w-24 !rounded-full object-cover"
@@ -133,7 +148,24 @@ export default function ProfileHeader({ user }: { user: ProfileUser }) {
         <h1 className="truncate text-2xl font-bold text-neutral-50">
           {displayName}
         </h1>
-        <p className="text-sm text-neutral-400">{shortAddr(address)}</p>
+        <button
+          onClick={copyAddress}
+          className="group mt-1 flex items-center gap-2 text-sm text-neutral-400 transition-colors hover:text-neutral-300"
+        >
+          <span className="font-mono">{shortAddr(address)}</span>
+          {copied ? (
+            <>
+              <svg className="h-4 w-4 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+              <span className="text-xs font-medium text-green-400">Copied!</span>
+            </>
+          ) : (
+            <svg className="h-4 w-4 text-neutral-500 group-hover:text-neutral-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+            </svg>
+          )}
+        </button>
       </div>
     </div>
   );

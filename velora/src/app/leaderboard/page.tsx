@@ -4,17 +4,15 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useAccount } from "wagmi";
+import { useRouter } from "next/navigation";
 import Sidebar from "@/components/sidebar";
 import { AbstractProfile } from "@/components/abstract-profile";
 
-import ProfileModal from "@/components/leaderboard/profilemodal";
 import { LeaderboardEmptyState } from "@/components/leaderboard/empty-state";
 
-import { PROFILE_DB } from "@/components/leaderboard/data";
 import type {
   TableEntry,
   CurrentUser,
-  UserProfile,
 } from "@/components/leaderboard/types";
 
 interface LeaderboardUser {
@@ -32,12 +30,12 @@ const shortenAddress = (addr: string): string => {
 
 export default function LeaderboardPage() {
   const { address } = useAccount();
+  const router = useRouter();
 
   const [leaderboardData, setLeaderboardData] = useState<LeaderboardUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  const [selected, setSelected] = useState<UserProfile | null>(null);
 
   // Fetch leaderboard data
   useEffect(() => {
@@ -149,26 +147,9 @@ export default function LeaderboardPage() {
   const pageEntries = entries.slice(start, start + pageSize);
   const fmt = (n: number) => Intl.NumberFormat("en-US").format(n);
 
-  function openProfile(u: { name: string; handle: string; rank?: number; score?: number; avatarUrl?: string }) {
-    // Cek apakah ada data dummy di PROFILE_DB
-    const found = PROFILE_DB[u.handle];
-    
-    if (found) {
-      setSelected(found);
-    } else {
-      // Buat profile dengan data yang tersedia, tanpa purchases dan activity untuk sementara
-      setSelected({
-        name: u.name,
-        handle: u.handle,
-        rank: u.rank,
-        score: u.score,
-        avatarUrl: u.avatarUrl,
-        purchases: [],
-        activity: [
-          { time: new Date().toISOString().slice(0, 16).replace('T', ' '), text: "User data loaded from leaderboard." }
-        ],
-      });
-    }
+  function openProfile(u: { handle: string }) {
+    // Redirect to profile page dengan wallet address
+    router.push(`/profile?addr=${u.handle}`);
   }
 
   if (loading) {
@@ -212,13 +193,7 @@ export default function LeaderboardPage() {
           {currentUser && (
             <div 
               className="flex items-center justify-between rounded-xl border border-purple-500/30 bg-purple-500/5 px-6 py-4 cursor-pointer hover:bg-purple-500/10 transition-all duration-300 hover:border-purple-500/50 group"
-              onClick={() => openProfile({ 
-                name: currentUser.name, 
-                handle: currentUser.handle, 
-                rank: currentUser.rank, 
-                score: currentUser.score, 
-                avatarUrl: currentUser.avatarUrl 
-              })}
+              onClick={() => openProfile({ handle: currentUser.handle })}
             >
               <div className="flex items-center gap-4">
                 <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full border-2 border-purple-500/40 bg-neutral-800">
@@ -270,7 +245,7 @@ export default function LeaderboardPage() {
                           ? "bg-purple-900/20 hover:bg-purple-900/30"
                           : "hover:bg-neutral-800/40"
                       }`}
-                      onClick={() => openProfile({ name: e.name, handle: e.handle, rank: e.rank, score: e.score, avatarUrl: e.avatarUrl })}
+                      onClick={() => openProfile({ handle: e.handle })}
                     >
                       <td className="whitespace-nowrap py-5 pl-6 pr-3">
                         <div
@@ -362,8 +337,6 @@ export default function LeaderboardPage() {
           )}
         </div>
       </main>
-
-      {selected && <ProfileModal profile={selected} onClose={() => setSelected(null)} />}
     </div>
   );
 }
