@@ -28,20 +28,20 @@ export function SubscriptionVideoRow({
   );
 
   return (
-    <div className="rounded-lg border border-neutral-800 bg-neutral-800/50 p-4">
+    <div className="group rounded-lg border border-neutral-800 bg-neutral-800/50 p-4 transition-all duration-200 hover:border-neutral-700 hover:bg-neutral-800/80 hover:shadow-lg">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-4">
-          <div className="relative h-16 w-28 overflow-hidden rounded-md">
+          <div className="relative h-16 w-28 overflow-hidden rounded-md ring-1 ring-neutral-700/50 transition-all duration-200 group-hover:ring-2 group-hover:ring-purple-500/50">
             <Image
               src={thumb}
               alt={`${title} thumbnail`}
               fill
-              className="object-cover"
+              className="object-cover transition-transform duration-200 group-hover:scale-105"
               sizes="112px"
             />
           </div>
           <div>
-            <h3 className="font-semibold text-neutral-50">{title}</h3>
+            <h3 className="font-semibold text-neutral-50 transition-colors duration-200 group-hover:text-white">{title}</h3>
             <p className="text-sm text-neutral-400">{subtext}</p>
           </div>
         </div>
