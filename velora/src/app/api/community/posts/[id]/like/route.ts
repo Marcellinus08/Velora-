@@ -62,15 +62,13 @@ export async function POST(req: Request, { params }: RouteCtx) {
           
           if (postOwnerAddr !== abstractId) {
             await supabaseAdmin
-              .from("notifications")
+              .from("notification_community_likes")
               .delete()
-              .eq("abstract_id", postOwnerAddr)
+              .eq("post_id", postId)
               .eq("actor_addr", abstractId)
-              .eq("type", "like")
-              .eq("target_id", postId)
-              .eq("target_type", "post");
+              .eq("recipient_addr", postOwnerAddr);
             
-            console.log(`[Unlike] Deleted notification for post ${postId}`);
+            console.log(`[Unlike] Deleted notification from notification_community_likes for post ${postId}`);
           }
         }
       } catch (notifError) {
@@ -98,14 +96,12 @@ export async function POST(req: Request, { params }: RouteCtx) {
           // Jangan kirim notifikasi jika like post sendiri
           if (postOwnerAddr !== abstractId) {
             const { data: insertedNotif, error: notifErr } = await supabaseAdmin
-              .from("notifications")
+              .from("notification_community_likes")
               .insert({
-                abstract_id: postOwnerAddr,
-                user_id: postOwnerAddr,
+                post_id: postId,
                 actor_addr: abstractId,
+                recipient_addr: postOwnerAddr,
                 type: "like",
-                target_id: postId,
-                target_type: "post",
                 message: postData.title 
                   ? `liked your post "${postData.title.slice(0, 50)}${postData.title.length > 50 ? '...' : ''}"`
                   : "liked your post",
@@ -116,7 +112,7 @@ export async function POST(req: Request, { params }: RouteCtx) {
             if (notifErr) {
               console.error("[Like notification] Error:", notifErr);
             } else {
-              console.log("[Like] Created notification:", insertedNotif.id);
+              console.log("[Like] Created notification in notification_community_likes:", insertedNotif.id);
             }
           }
         }

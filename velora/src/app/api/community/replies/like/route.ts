@@ -40,7 +40,7 @@ export async function POST(req: Request) {
       try {
         const { data: replyData } = await sbService
           .from("community_replies")
-          .select("abstract_id")
+          .select("abstract_id, post_id")
           .eq("id", replyId)
           .single();
 
@@ -49,15 +49,13 @@ export async function POST(req: Request) {
           
           if (replyOwnerAddr !== abstractId) {
             await supabaseAdmin
-              .from("notifications")
+              .from("notification_reply_likes")
               .delete()
-              .eq("abstract_id", replyOwnerAddr)
+              .eq("reply_id", replyId)
               .eq("actor_addr", abstractId)
-              .eq("type", "like")
-              .eq("target_id", replyId)
-              .eq("target_type", "comment");
+              .eq("recipient_addr", replyOwnerAddr);
             
-            console.log(`[Unlike Reply] Deleted notification for reply ${replyId}`);
+            console.log(`[Unlike Reply] Deleted notification from notification_reply_likes for reply ${replyId}`);
           }
         }
       } catch (notifError) {
@@ -75,7 +73,7 @@ export async function POST(req: Request) {
       try {
         const { data: replyData } = await sbService
           .from("community_replies")
-          .select("abstract_id, content")
+          .select("abstract_id, content, post_id")
           .eq("id", replyId)
           .single();
 
@@ -85,14 +83,13 @@ export async function POST(req: Request) {
           // Jangan kirim notifikasi jika like comment sendiri
           if (replyOwnerAddr !== abstractId) {
             const { data: insertedNotif, error: notifErr } = await supabaseAdmin
-              .from("notifications")
+              .from("notification_reply_likes")
               .insert({
-                abstract_id: replyOwnerAddr,
-                user_id: replyOwnerAddr,
+                reply_id: replyId,
+                post_id: replyData.post_id,
                 actor_addr: abstractId,
-                type: "like",
-                target_id: replyId,
-                target_type: "comment",
+                recipient_addr: replyOwnerAddr,
+                type: "like_reply",
                 message: replyData.content 
                   ? `liked your comment: "${replyData.content.slice(0, 50)}${replyData.content.length > 50 ? '...' : ''}"`
                   : "liked your comment",
@@ -103,7 +100,7 @@ export async function POST(req: Request) {
             if (notifErr) {
               console.error("[Like reply notification] Error:", notifErr);
             } else {
-              console.log("[Like Reply] Created notification:", insertedNotif.id);
+              console.log("[Like Reply] Created notification in notification_reply_likes:", insertedNotif.id);
             }
           }
         }

@@ -106,54 +106,31 @@ export async function DELETE(
     try {
       console.log(`[Delete Reply] Starting notification cleanup for reply ${replyId}`);
 
-      // 1. Hapus notifikasi "comment" atau "reply" yang dibuat saat user ini comment/reply
-      // Ini adalah notifikasi yang diterima oleh pemilik post/parent comment
-      const { data: deletedCommentNotifs, error: err1 } = await supabaseAdmin
-        .from("notifications")
+      // 1. Hapus notifikasi reply dari tabel notification_community_replies
+      const { data: deletedReplyNotifs, error: err1 } = await supabaseAdmin
+        .from("notification_community_replies")
         .delete()
-        .eq("actor_addr", abstractId.toLowerCase())
-        .eq("target_id", replyId)
-        .in("target_type", ["comment", "post"])
+        .eq("reply_id", replyId)
         .select();
 
       if (!err1) {
-        console.log(`[Delete Reply] Deleted ${deletedCommentNotifs?.length || 0} comment/reply notifications`);
+        console.log(`[Delete Reply] Deleted ${deletedReplyNotifs?.length || 0} reply notifications from notification_community_replies`);
       }
 
-      // 2. Hapus SEMUA notifikasi "like" pada reply ini
-      // Ini adalah notifikasi yang diterima oleh user yang comment (pemilik reply)
-      // dari semua user yang like reply ini
+      // 2. Hapus SEMUA notifikasi like pada reply ini dari notification_reply_likes
       const { data: deletedLikeNotifs, error: err2 } = await supabaseAdmin
-        .from("notifications")
+        .from("notification_reply_likes")
         .delete()
-        .eq("target_id", replyId)
-        .eq("target_type", "comment")
-        .eq("type", "like")
+        .eq("reply_id", replyId)
         .select();
 
       if (!err2) {
-        console.log(`[Delete Reply] Deleted ${deletedLikeNotifs?.length || 0} like notifications on this reply`);
-      }
-
-      // 3. BONUS: Hapus notifikasi "reply" dari child replies (jika ada nested replies)
-      // Jika ada user yang reply ke reply ini, hapus juga notifikasi tersebut
-      const { data: deletedChildNotifs, error: err3 } = await supabaseAdmin
-        .from("notifications")
-        .delete()
-        .eq("abstract_id", abstractId.toLowerCase())
-        .eq("type", "reply")
-        .eq("target_id", replyId)
-        .eq("target_type", "comment")
-        .select();
-
-      if (!err3) {
-        console.log(`[Delete Reply] Deleted ${deletedChildNotifs?.length || 0} nested reply notifications`);
+        console.log(`[Delete Reply] Deleted ${deletedLikeNotifs?.length || 0} like notifications from notification_reply_likes`);
       }
 
       const totalDeleted = 
-        (deletedCommentNotifs?.length || 0) + 
-        (deletedLikeNotifs?.length || 0) +
-        (deletedChildNotifs?.length || 0);
+        (deletedReplyNotifs?.length || 0) + 
+        (deletedLikeNotifs?.length || 0);
 
       console.log(`[Delete Reply] ✅ Total ${totalDeleted} notifications deleted for reply ${replyId}`);
     } catch (notifError) {

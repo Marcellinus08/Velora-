@@ -107,6 +107,42 @@ export async function DELETE(req: Request, { params }: RouteContext) {
 
     if (delErr) throw new Error(delErr.message);
 
+    // ✅ HAPUS SEMUA NOTIFIKASI yang terkait dengan post ini
+    try {
+      console.log(`[Delete Post] Starting notification cleanup for post ${postId}`);
+
+      // 1. Hapus notifikasi like pada post ini dari notification_community_likes
+      const { data: deletedLikeNotifs, error: err1 } = await sbService
+        .from("notification_community_likes")
+        .delete()
+        .eq("post_id", postId)
+        .select();
+
+      if (!err1) {
+        console.log(`[Delete Post] Deleted ${deletedLikeNotifs?.length || 0} like notifications from notification_community_likes`);
+      }
+
+      // 2. Hapus notifikasi reply pada post ini dari notification_community_replies
+      const { data: deletedReplyNotifs, error: err2 } = await sbService
+        .from("notification_community_replies")
+        .delete()
+        .eq("post_id", postId)
+        .select();
+
+      if (!err2) {
+        console.log(`[Delete Post] Deleted ${deletedReplyNotifs?.length || 0} reply notifications from notification_community_replies`);
+      }
+
+      const totalDeleted = 
+        (deletedLikeNotifs?.length || 0) + 
+        (deletedReplyNotifs?.length || 0);
+
+      console.log(`[Delete Post] ✅ Total ${totalDeleted} notifications deleted for post ${postId}`);
+    } catch (notifError) {
+      console.error("[Delete Post] Notification cleanup error:", notifError);
+      // Don't fail the whole request if notification deletion fails
+    }
+
     return NextResponse.json({ ok: true, deletedId: postId });
   } catch (e: any) {
     return NextResponse.json({ error: e?.message || "Server error" }, { status: 500 });

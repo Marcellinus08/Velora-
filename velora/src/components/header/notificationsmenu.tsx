@@ -20,6 +20,23 @@ export default function NotificationsMenu() {
     deleteNotification,
   } = useNotifications(abstractId);
 
+  const getNotificationIcon = (type: string) => {
+    switch (type) {
+      case "like":
+        return "❤️";
+      case "like_reply":
+        return "❤️";
+      case "reply":
+        return "💬";
+      case "nested_reply":
+        return "↩️";
+      case "follow":
+        return "👥";
+      default:
+        return "🔔";
+    }
+  };
+
   const handleNotificationClick = async (id: string, isRead: boolean) => {
     console.log("[NotificationsMenu] Clicked notification:", { id, isRead });
     if (!isRead) {
@@ -120,9 +137,14 @@ export default function NotificationsMenu() {
                         </p>
                       </div>
                       
-                      {!notif.isRead && (
-                        <span className="block h-2 w-2 rounded-full bg-[var(--primary-500)] shrink-0 mt-1 animate-pulse" />
-                      )}
+                      <div className="flex items-center gap-1 shrink-0">
+                        <span className="text-lg" title={notif.type}>
+                          {getNotificationIcon(notif.type)}
+                        </span>
+                        {!notif.isRead && (
+                          <span className="h-2 w-2 rounded-full bg-[var(--primary-500)] animate-pulse" />
+                        )}
+                      </div>
                     </div>
                   </div>
 

@@ -147,6 +147,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     try {
       let recipientAddr: string | null = null;
       let message = "";
+      let notifData: any = null;
 
       if (parentId) {
         // Ini adalah reply ke comment lain
@@ -159,6 +160,16 @@ export async function POST(req: Request, { params }: { params: { id: string } })
         if (parentReply && parentReply.abstract_id) {
           recipientAddr = parentReply.abstract_id.toLowerCase();
           message = `replied to your comment: "${content.slice(0, 50)}${content.length > 50 ? '...' : ''}"`;
+          
+          notifData = {
+            reply_id: data?.id,
+            post_id: postId,
+            parent_reply_id: parentId,
+            actor_addr: abstractId,
+            recipient_addr: recipientAddr,
+            type: "nested_reply",
+            message,
+          };
         }
       } else {
         // Ini adalah comment ke post
@@ -174,29 +185,30 @@ export async function POST(req: Request, { params }: { params: { id: string } })
             ? `"${postData.title.slice(0, 50)}${postData.title.length > 50 ? '...' : ''}"`
             : "your post";
           message = `commented on ${postTitle}: "${content.slice(0, 50)}${content.length > 50 ? '...' : ''}"`;
+          
+          notifData = {
+            reply_id: data?.id,
+            post_id: postId,
+            actor_addr: abstractId,
+            recipient_addr: recipientAddr,
+            type: "reply",
+            message,
+          };
         }
       }
 
       // Jangan kirim notifikasi jika comment/reply ke diri sendiri
-      if (recipientAddr && recipientAddr !== abstractId) {
+      if (recipientAddr && recipientAddr !== abstractId && notifData) {
         const { data: insertedNotif, error: notifErr } = await supabaseAdmin
-          .from("notifications")
-          .insert({
-            abstract_id: recipientAddr,
-            user_id: recipientAddr,
-            actor_addr: abstractId,
-            type: parentId ? "reply" : "comment",
-            target_id: parentId || postId,
-            target_type: parentId ? "comment" : "post",
-            message,
-          })
+          .from("notification_community_replies")
+          .insert(notifData)
           .select()
           .single();
 
         if (notifErr) {
           console.error("[Comment/Reply notification] Error:", notifErr);
         } else {
-          console.log("[Comment/Reply] Created notification:", insertedNotif.id);
+          console.log("[Comment/Reply] Created notification in notification_community_replies:", insertedNotif.id);
         }
       }
     } catch (notifError) {
