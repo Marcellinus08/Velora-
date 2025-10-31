@@ -249,7 +249,7 @@ export default function Carousel({
                 </p>
                 <button 
                   onClick={() => handleSlideClick(slide)}
-                  className={`mt-4 w-fit rounded-full px-6 py-2.5 text-sm font-semibold text-white transition-all duration-300 hover:shadow-lg hover:scale-105 active:scale-95 ${
+                  className={`mt-4 w-fit rounded-full px-6 py-2.5 text-sm font-semibold text-white transition-all duration-300 hover:shadow-lg hover:scale-105 active:scale-95 cursor-pointer ${
                     slide.type === "campaign" 
                       ? "bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
                       : "bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 shadow-lg shadow-purple-500/30"
@@ -298,7 +298,7 @@ export default function Carousel({
       {!loading && allSlides.length > 1 && (
         <>
           <button
-            className="absolute left-4 top-1/2 -translate-y-1/2 rounded-full bg-black/30 backdrop-blur-sm p-3 text-white hover:bg-black/50 transition-all duration-200 hover:scale-110 active:scale-95"
+            className="absolute left-4 top-1/2 -translate-y-1/2 rounded-full bg-black/30 backdrop-blur-sm p-3 text-white hover:bg-black/50 transition-all duration-200 hover:scale-110 active:scale-95 cursor-pointer"
             aria-label="Previous slide"
             onClick={() => {
               prev();
@@ -310,7 +310,7 @@ export default function Carousel({
             </svg>
           </button>
           <button
-            className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full bg-black/30 backdrop-blur-sm p-3 text-white hover:bg-black/50 transition-all duration-200 hover:scale-110 active:scale-95"
+            className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full bg-black/30 backdrop-blur-sm p-3 text-white hover:bg-black/50 transition-all duration-200 hover:scale-110 active:scale-95 cursor-pointer"
             aria-label="Next slide"
             onClick={() => {
               next();

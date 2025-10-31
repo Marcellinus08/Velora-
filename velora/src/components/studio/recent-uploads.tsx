@@ -35,7 +35,7 @@ function CrudMenu({
       <button
         onClick={() => setOpen((v) => !v)}
         onBlur={() => setOpen(false)}
-        className="rounded-full p-1.5 text-neutral-300 hover:bg-neutral-800 hover:text-neutral-100"
+        className="rounded-full p-1.5 text-neutral-300 hover:bg-neutral-800 hover:text-neutral-100 cursor-pointer"
         aria-label="Open menu"
         aria-expanded={open}
         type="button"
@@ -52,7 +52,7 @@ function CrudMenu({
               setOpen(false);
               onEdit();
             }}
-            className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-[13px] text-neutral-200 hover:bg-neutral-800/70"
+            className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-[13px] text-neutral-200 hover:bg-neutral-800/70 cursor-pointer"
           >
             <MI name="edit" className="text-[14px] leading-none align-middle" />
             <span>Edit</span>

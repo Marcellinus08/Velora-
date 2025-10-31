@@ -457,7 +457,7 @@ export default function CardsGrid() {
                   <Link href={`/task?id=${v.id}`} prefetch={false} className="relative z-10">
                     <button
                       type="button"
-                      className="group relative inline-flex items-center gap-2 rounded-full bg-neutral-700 px-4 py-2 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-neutral-600 hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[var(--primary-500)] focus-visible:ring-offset-neutral-900"
+                      className="group relative inline-flex items-center gap-2 rounded-full bg-neutral-700 px-4 py-2 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-neutral-600 hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[var(--primary-500)] focus-visible:ring-offset-neutral-900 cursor-pointer"
                       title="Watch this video"
                     >
                       <span className="material-icons-round text-[16px]" aria-hidden>
@@ -472,7 +472,7 @@ export default function CardsGrid() {
                       videoId={v.id}
                       creator={creatorAddress}
                       priceUsd={priceUsd}
-                      className="group relative inline-flex items-center gap-2 rounded-full bg-purple-600 px-4 py-2 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-purple-700 hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-purple-500 focus-visible:ring-offset-neutral-900"
+                      className="group relative inline-flex items-center gap-2 rounded-full bg-purple-600 px-4 py-2 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-purple-700 hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-purple-500 focus-visible:ring-offset-neutral-900 cursor-pointer"
                     >
                       Buy
                     </BuyVideoButton>
@@ -481,7 +481,7 @@ export default function CardsGrid() {
                   <button
                     type="button"
                     disabled
-                    className="inline-flex items-center gap-2 rounded-full bg-neutral-700 px-4 py-2 text-sm font-semibold text-white opacity-60"
+                    className="inline-flex items-center gap-2 rounded-full bg-neutral-700 px-4 py-2 text-sm font-semibold text-white opacity-60 cursor-not-allowed"
                     title={priceUsd <= 0 ? "Free video" : "Invalid creator address"}
                   >
                     {priceUsd <= 0 ? "Free" : "Buy"}

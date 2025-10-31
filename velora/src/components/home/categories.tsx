@@ -17,7 +17,7 @@ export default function Categories() {
         {cats.map((cat, i) => (
           <button
             key={cat.name}
-            className={`group relative whitespace-nowrap rounded-xl px-4 py-2.5 text-sm font-medium transition-all duration-300 hover:scale-105 hover:-translate-y-1 ${
+            className={`group relative whitespace-nowrap rounded-xl px-4 py-2.5 text-sm font-medium transition-all duration-300 hover:scale-105 hover:-translate-y-1 cursor-pointer ${
               i === 0
                 ? `bg-gradient-to-r ${cat.color} text-white shadow-lg hover:shadow-xl animate-pulse hover:animate-none`
                 : "bg-neutral-800/60 text-neutral-200 hover:bg-neutral-700/80 border border-neutral-700/50 hover:border-neutral-600"

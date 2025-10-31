@@ -299,7 +299,7 @@ export default function CommunityPostRow({
                 {contentText.length > 220 ? "…" : ""}
                 {showReadMore && (
                   <button
-                    className="ml-1 inline text-[var(--primary-500)] hover:underline"
+                    className="ml-1 inline text-[var(--primary-500)] hover:underline cursor-pointer"
                     onClick={() => setExpanded(true)}
                   >
                     Read more
@@ -310,7 +310,7 @@ export default function CommunityPostRow({
               <>
                 <span className="whitespace-pre-wrap">{contentText}</span>{" "}
                 <button
-                  className="ml-1 inline text-[var(--primary-500)] hover:underline"
+                  className="ml-1 inline text-[var(--primary-500)] hover:underline cursor-pointer"
                   onClick={() => setExpanded(false)}
                 >
                   Show less
@@ -327,7 +327,7 @@ export default function CommunityPostRow({
             <button
               onClick={onLike}
               className={
-                "flex items-center gap-1.5 hover:text-neutral-50 " +
+                "flex items-center gap-1.5 hover:text-neutral-50 cursor-pointer " +
                 (post.liked ? "text-[var(--primary-500)] hover:text-opacity-80" : "")
               }
             >
@@ -337,13 +337,13 @@ export default function CommunityPostRow({
 
             <button
               onClick={() => setOpenReplies((v) => !v)}
-              className="flex items-center gap-1.5 hover:text-neutral-50"
+              className="flex items-center gap-1.5 hover:text-neutral-50 cursor-pointer"
             >
               <MI name="chat_bubble_outline" />
               <span>{replyCount} Replies</span>
             </button>
 
-            <button onClick={handleShare} className="flex items-center gap-1.5 hover:text-neutral-50">
+            <button onClick={handleShare} className="flex items-center gap-1.5 hover:text-neutral-50 cursor-pointer">
               <MI name="share" />
               <span>Share</span>
             </button>

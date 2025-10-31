@@ -52,10 +52,10 @@ export default function AdminDashboardPage() {
 
           {/* Tombol aksi cepat */}
           <div className="flex items-center gap-2">
-            <button className="rounded-full bg-neutral-800 px-4 py-2 text-sm font-semibold text-neutral-50 hover:bg-neutral-700">
+            <button className="rounded-full bg-neutral-800 px-4 py-2 text-sm font-semibold text-neutral-50 hover:bg-neutral-700 cursor-pointer">
               Export CSV
             </button>
-            <button className="rounded-full bg-[var(--primary-500)] px-4 py-2 text-sm font-semibold text-white hover:bg-opacity-90">
+            <button className="rounded-full bg-[var(--primary-500)] px-4 py-2 text-sm font-semibold text-white hover:bg-opacity-90 cursor-pointer">
               + New Course
             </button>
           </div>
@@ -148,7 +148,7 @@ export default function AdminDashboardPage() {
           <AdminSection
             title="Latest Users"
             right={
-              <button className="rounded-full bg-neutral-800 px-3 py-1.5 text-xs font-semibold text-neutral-50 hover:bg-neutral-700">
+              <button className="rounded-full bg-neutral-800 px-3 py-1.5 text-xs font-semibold text-neutral-50 hover:bg-neutral-700 cursor-pointer">
                 View all
               </button>
             }
@@ -177,7 +177,7 @@ export default function AdminDashboardPage() {
           <AdminSection
             title="Support Tickets"
             right={
-              <button className="rounded-full bg-neutral-800 px-3 py-1.5 text-xs font-semibold text-neutral-50 hover:bg-neutral-700">
+              <button className="rounded-full bg-neutral-800 px-3 py-1.5 text-xs font-semibold text-neutral-50 hover:bg-neutral-700 cursor-pointer">
                 Open helpdesk
               </button>
             }

@@ -62,7 +62,7 @@ function PricingDrawer({
         aria-modal="true"
       >
         <div className="flex items-center gap-3 border-b border-neutral-800 px-4 py-4">
-          <button onClick={onClose} className="rounded-xl p-2 text-neutral-300 hover:bg-neutral-800/60" aria-label="Close">
+          <button onClick={onClose} className="rounded-xl p-2 text-neutral-300 hover:bg-neutral-800/60 cursor-pointer" aria-label="Close">
             <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M18 6 6 18M6 6l12 12" />
             </svg>
@@ -97,7 +97,7 @@ function PricingDrawer({
                 <button
                   key={v}
                   onClick={() => setPerMinuteStr(String(v))}
-                  className="h-11 rounded-2xl border border-neutral-700 bg-neutral-900 px-4 text-sm text-neutral-200 hover:bg-neutral-800"
+                  className="h-11 rounded-2xl border border-neutral-700 bg-neutral-900 px-4 text-sm text-neutral-200 hover:bg-neutral-800 cursor-pointer"
                 >
                   {fmtUSD(v)}
                 </button>
@@ -117,7 +117,7 @@ function PricingDrawer({
 
         <div className="border-t border-neutral-800 p-6">
           <button
-            className="h-12 w-full rounded-2xl bg-[var(--primary-500)] font-semibold text-white hover:opacity-90 disabled:opacity-60 disabled:cursor-not-allowed"
+            className="h-12 w-full rounded-2xl bg-[var(--primary-500)] font-semibold text-white hover:opacity-90 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
             onClick={() => {
               onConfirm(perMinute);
               onClose();

@@ -313,7 +313,7 @@ export default function LeaderboardPage() {
 
                 <div className="flex items-center gap-2">
                   <button
-                    className="rounded-lg border border-neutral-700 bg-neutral-800/50 px-4 py-1.5 text-sm font-medium text-neutral-50 transition-all hover:border-neutral-600 hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-40"
+                    className="rounded-lg border border-neutral-700 bg-neutral-800/50 px-4 py-1.5 text-sm font-medium text-neutral-50 transition-all hover:border-neutral-600 hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer"
                     disabled={page === 1}
                     onClick={() => setPage((p) => Math.max(1, p - 1))}
                   >
@@ -324,7 +324,7 @@ export default function LeaderboardPage() {
                     <span className="font-semibold text-neutral-200">{totalPages}</span>
                   </span>
                   <button
-                    className="rounded-lg border border-neutral-700 bg-neutral-800/50 px-4 py-1.5 text-sm font-medium text-neutral-50 transition-all hover:border-neutral-600 hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-40"
+                    className="rounded-lg border border-neutral-700 bg-neutral-800/50 px-4 py-1.5 text-sm font-medium text-neutral-50 transition-all hover:border-neutral-600 hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer"
                     disabled={page === totalPages}
                     onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                   >

@@ -29,7 +29,7 @@ export default function StudioRecentPanel({
           <div className="flex rounded-lg bg-neutral-800 p-1">
             <button
               onClick={() => setTab("uploads")}
-              className={`rounded-md px-3 py-1 text-sm transition-colors ${
+              className={`rounded-md px-3 py-1 text-sm transition-colors cursor-pointer ${
                 tab === "uploads"
                   ? "bg-neutral-700 text-neutral-50"
                   : "text-neutral-300 hover:text-neutral-100"
@@ -40,7 +40,7 @@ export default function StudioRecentPanel({
             </button>
             <button
               onClick={() => setTab("ads")}
-              className={`rounded-md px-3 py-1 text-sm transition-colors ${
+              className={`rounded-md px-3 py-1 text-sm transition-colors cursor-pointer ${
                 tab === "ads"
                   ? "bg-neutral-700 text-neutral-50"
                   : "text-neutral-300 hover:text-neutral-100"
@@ -55,7 +55,7 @@ export default function StudioRecentPanel({
         {/* View all / Show less */}
         <button
           onClick={() => setExpanded((v) => !v)}
-          className="rounded-full bg-[var(--primary-500)] px-3 py-1.5 text-sm font-semibold text-white transition hover:bg-opacity-90"
+          className="rounded-full bg-[var(--primary-500)] px-3 py-1.5 text-sm font-semibold text-white transition hover:bg-opacity-90 cursor-pointer"
         >
           {expanded ? "Show less" : "View all"}
         </button>

@@ -39,7 +39,7 @@ const Card = ({
 }: React.PropsWithChildren<{ className?: string; neon?: boolean }>) => {
   const base =
     "group min-w-[200px] rounded-xl border border-neutral-800 bg-neutral-900/70 px-3 py-2 " +
-    "text-neutral-300 shadow-[0_1px_0_0_rgba(255,255,255,0.02)_inset] transition hover:bg-neutral-900/80 ";
+    "text-neutral-300 shadow-[0_1px_0_0_rgba(255,255,255,0.02)_inset] transition hover:bg-neutral-900/80 cursor-pointer ";
   const hoverNeon = neon
     ? "hover:border-[var(--primary-500)] hover:shadow-[0_0_14px_rgba(124,58,237,0.45)]"
     : "hover:border-neutral-700";
@@ -184,7 +184,7 @@ export default function HomeMeetRibbon() {
             </div>
           </div>
           <button
-            className="mt-2 w-fit rounded-md border border-neutral-700/70 px-2 py-1 text-[11px] font-medium text-[var(--primary-500)] hover:opacity-90"
+            className="mt-2 w-fit rounded-md border border-neutral-700/70 px-2 py-1 text-[11px] font-medium text-[var(--primary-500)] hover:opacity-90 cursor-pointer"
             onClick={() => (window.location.href = "/meet")}
           >
             View all →

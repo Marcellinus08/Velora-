@@ -303,7 +303,7 @@ export default function SettingsAccount() {
         <div>
           <button
             onClick={onPickAvatar}
-            className="rounded-lg bg-neutral-800 px-3 py-2 text-sm font-semibold text-neutral-100 hover:bg-neutral-700"
+            className="rounded-lg bg-neutral-800 px-3 py-2 text-sm font-semibold text-neutral-100 hover:bg-neutral-700 cursor-pointer"
             disabled={!address || saving}
           >
             Choose Avatar
@@ -349,7 +349,7 @@ export default function SettingsAccount() {
         <button
           onClick={onSaveAll}
           disabled={!canSave}
-          className="rounded-xl bg-[var(--primary-500)] px-4 py-2 text-sm font-semibold text-white hover:bg-opacity-90 disabled:cursor-not-allowed disabled:bg-neutral-700"
+          className="rounded-xl bg-[var(--primary-500)] px-4 py-2 text-sm font-semibold text-white hover:bg-opacity-90 disabled:cursor-not-allowed disabled:bg-neutral-700 cursor-pointer"
         >
           {saving ? "Saving..." : "Save"}
         </button>

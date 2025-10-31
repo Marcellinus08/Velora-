@@ -126,7 +126,7 @@ export default function FeedbackModal({ open, onClose }: Props) {
       {/* Backdrop */}
       <button
         aria-label="Close backdrop"
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+        className="absolute inset-0 bg-black/60 backdrop-blur-sm cursor-pointer"
         onClick={onClose}
       />
 
@@ -136,7 +136,7 @@ export default function FeedbackModal({ open, onClose }: Props) {
           <h3 className="text-lg font-semibold text-neutral-50">Send Feedback</h3>
           <button
             onClick={onClose}
-            className="rounded-full p-2 text-neutral-400 hover:bg-neutral-800 hover:text-neutral-50"
+            className="rounded-full p-2 text-neutral-400 hover:bg-neutral-800 hover:text-neutral-50 cursor-pointer"
             aria-label="Close"
             type="button"
           >
@@ -154,7 +154,7 @@ export default function FeedbackModal({ open, onClose }: Props) {
                   key={t}
                   type="button"
                   onClick={() => setType(t)}
-                  className={`rounded-lg border px-3 py-2 text-sm ${
+                  className={`rounded-lg border px-3 py-2 text-sm cursor-pointer ${
                     type === t
                       ? "border-[var(--primary-500)] bg-neutral-800 text-neutral-50"
                       : "border-neutral-700 bg-neutral-900 text-neutral-300 hover:border-neutral-600"
@@ -190,7 +190,7 @@ export default function FeedbackModal({ open, onClose }: Props) {
                 type="file"
                 accept="image/*,video/mp4,video/webm"
                 onChange={handleMediaChange}
-                className="w-full rounded-lg border border-neutral-700 bg-neutral-800 px-3 py-2 text-neutral-50 file:mr-3 file:rounded-md file:border-0 file:bg-[var(--primary-500)] file:px-3 file:py-1 file:text-sm file:text-white hover:file:bg-opacity-90"
+                className="w-full rounded-lg border border-neutral-700 bg-neutral-800 px-3 py-2 text-neutral-50 file:mr-3 file:rounded-md file:border-0 file:bg-[var(--primary-500)] file:px-3 file:py-1 file:text-sm file:text-white hover:file:bg-opacity-90 file:cursor-pointer cursor-pointer"
               />
               <p className="text-xs text-neutral-400">
                 Images (JPEG, PNG, GIF, WebP) or videos (MP4, WebM). Max 5MB.
@@ -211,7 +211,7 @@ export default function FeedbackModal({ open, onClose }: Props) {
                   <button
                     type="button"
                     onClick={removeMedia}
-                    className="rounded-full p-1 text-neutral-400 hover:bg-neutral-700 hover:text-neutral-50"
+                    className="rounded-full p-1 text-neutral-400 hover:bg-neutral-700 hover:text-neutral-50 cursor-pointer"
                     aria-label="Remove file"
                   >
                     <MI name="close" className="text-sm" />
@@ -238,7 +238,7 @@ export default function FeedbackModal({ open, onClose }: Props) {
             <button
               type="button"
               onClick={onClose}
-              className="rounded-full px-4 py-2 text-sm font-semibold text-neutral-300 hover:bg-neutral-800"
+              className="rounded-full px-4 py-2 text-sm font-semibold text-neutral-300 hover:bg-neutral-800 cursor-pointer"
               disabled={busy}
             >
               Cancel
@@ -246,7 +246,7 @@ export default function FeedbackModal({ open, onClose }: Props) {
             <button
               type="submit"
               disabled={busy || !message.trim()}
-              className="rounded-full bg-[var(--primary-500)] px-4 py-2 text-sm font-semibold text-white hover:bg-opacity-90 disabled:opacity-60"
+              className="rounded-full bg-[var(--primary-500)] px-4 py-2 text-sm font-semibold text-white hover:bg-opacity-90 disabled:opacity-60 cursor-pointer"
             >
               {busy ? "Sending…" : "Send"}
             </button>

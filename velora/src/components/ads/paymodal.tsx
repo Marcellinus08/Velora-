@@ -46,13 +46,13 @@ export default function PayPreviewModal({
         <div className="flex items-center justify-end gap-2 border-t border-neutral-800 px-5 py-3">
           <button
             onClick={onClose}
-            className="rounded-lg bg-neutral-800 px-3 py-2 text-sm text-neutral-200 hover:bg-neutral-700"
+            className="rounded-lg bg-neutral-800 px-3 py-2 text-sm text-neutral-200 hover:bg-neutral-700 cursor-pointer"
           >
             Cancel
           </button>
           <button
             onClick={onConfirm}
-            className="rounded-lg bg-[var(--primary-500)] px-3 py-2 text-sm font-semibold text-white hover:bg-opacity-90"
+            className="rounded-lg bg-[var(--primary-500)] px-3 py-2 text-sm font-semibold text-white hover:bg-opacity-90 cursor-pointer"
           >
             Mark as Paid (Preview)
           </button>

@@ -100,7 +100,7 @@ export default function SearchBar() {
               <button
                 type="button"
                 onClick={clear}
-                className="absolute inset-y-0 right-16 my-1 flex h-8 w-8 items-center justify-center rounded-full text-neutral-400 hover:bg-neutral-800 hover:text-neutral-200"
+                className="absolute inset-y-0 right-16 my-1 flex h-8 w-8 items-center justify-center rounded-full text-neutral-400 hover:bg-neutral-800 hover:text-neutral-200 cursor-pointer"
                 aria-label="Clear text"
                 title="Clear"
               >
@@ -184,7 +184,7 @@ export default function SearchBar() {
                 <button
                   onMouseDown={(e) => e.preventDefault()}
                   onClick={clearAllRecent}
-                  className="rounded-md px-2 py-1 text-neutral-300 hover:bg-neutral-800 hover:text-neutral-100"
+                  className="rounded-md px-2 py-1 text-neutral-300 hover:bg-neutral-800 hover:text-neutral-100 cursor-pointer"
                 >
                   Clear all
                 </button>
@@ -204,7 +204,7 @@ export default function SearchBar() {
                           setQ(s);
                           saveRecent(s);
                         }}
-                        className="flex w-full items-center gap-3 px-4 py-2 pr-12 text-left text-sm text-neutral-200 hover:bg-neutral-800"
+                        className="flex w-full items-center gap-3 px-4 py-2 pr-12 text-left text-sm text-neutral-200 hover:bg-neutral-800 cursor-pointer"
                       >
                         <span className="truncate">{s}</span>
                       </button>
@@ -218,7 +218,7 @@ export default function SearchBar() {
                           }}
                           aria-label="Remove from history"
                           title="Remove from history"
-                          className="absolute right-2 top-1/2 hidden h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full text-neutral-400 hover:bg-neutral-700 hover:text-neutral-100 group-hover:flex"
+                          className="absolute right-2 top-1/2 hidden h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full text-neutral-400 hover:bg-neutral-700 hover:text-neutral-100 group-hover:flex cursor-pointer"
                         >
                           <MI name="close" className="text-[16px]" />
                         </button>

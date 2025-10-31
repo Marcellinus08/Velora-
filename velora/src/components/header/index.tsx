@@ -37,14 +37,14 @@ export default function SiteHeader() {
       {/* Column 1: Logo */}
       <div className="flex items-center gap-4">
         <button
-          className="flex items-center justify-center rounded-full p-2 text-neutral-50 hover:bg-neutral-800 md:hidden"
+          className="flex items-center justify-center rounded-full p-2 text-neutral-50 hover:bg-neutral-800 md:hidden cursor-pointer"
           aria-label="Open menu"
           type="button"
         >
           <MI name="menu" className="text-[18px] leading-none" />
         </button>
 
-        <Link href="/" aria-label="Home" className="flex items-center gap-2 select-none">
+        <Link href="/" aria-label="Home" className="flex items-center gap-2 select-none cursor-pointer">
           <Image
             src="/glonic_logo_main.png"
             alt="Glonic Logo"
@@ -73,7 +73,7 @@ export default function SiteHeader() {
             <div className="hidden items-center gap-4 rounded-full bg-neutral-800 px-4 py-1.5 sm:flex">
               <button
                 onClick={() => setOpenPoints(true)}
-                className="group flex items-center gap-2 rounded-full px-2 py-1 outline-none transition hover:bg-neutral-700"
+                className="group flex items-center gap-2 rounded-full px-2 py-1 outline-none transition hover:bg-neutral-700 cursor-pointer"
                 aria-label="Open points"
                 title="Open points"
               >
@@ -87,7 +87,7 @@ export default function SiteHeader() {
 
               <button
                 onClick={() => setOpenWallet(true)}
-                className="group flex items-center gap-2 rounded-full px-2 py-1 outline-none transition hover:bg-neutral-700"
+                className="group flex items-center gap-2 rounded-full px-2 py-1 outline-none transition hover:bg-neutral-700 cursor-pointer"
                 aria-label="Open wallet"
                 title="Open wallet"
               >

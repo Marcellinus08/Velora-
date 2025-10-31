@@ -105,7 +105,7 @@ export const MeetCard: React.FC<MeetCardProps> = ({ creator, onCall }) => {
       </div>
 
       <button
-        className="w-full rounded-full bg-[var(--primary-500)] px-4 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-90"
+        className="w-full rounded-full bg-[var(--primary-500)] px-4 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-90 cursor-pointer"
         onClick={handleBooking}
       >
         Booking

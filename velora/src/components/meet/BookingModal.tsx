@@ -236,7 +236,7 @@ export const BookingModal = ({
   return (
     <div className="fixed inset-0 z-50 grid place-items-center">
       <div
-        className="absolute inset-0 bg-black/60"
+        className="absolute inset-0 bg-black/60 cursor-pointer"
         onClick={() => !loading && onClose()}
       />
       <div className="relative w-full max-w-lg rounded-2xl border border-neutral-800 bg-neutral-900 p-5 shadow-xl">
@@ -267,7 +267,7 @@ export const BookingModal = ({
             type="button"
             onClick={() => { setKind("voice"); setSelectedTimes(new Set()); }}
             disabled={loading}
-            className={`rounded-xl px-3 py-2 text-sm font-semibold transition ${
+            className={`rounded-xl px-3 py-2 text-sm font-semibold transition cursor-pointer ${
               kind === "voice"
                 ? "bg-[var(--primary-500)] text-white"
                 : "bg-neutral-800 text-neutral-200 hover:bg-neutral-700"
@@ -279,7 +279,7 @@ export const BookingModal = ({
             type="button"
             onClick={() => { setKind("video"); setSelectedTimes(new Set()); }}
             disabled={loading}
-            className={`rounded-xl px-3 py-2 text-sm font-semibold transition ${
+            className={`rounded-xl px-3 py-2 text-sm font-semibold transition cursor-pointer ${
               kind === "video"
                 ? "bg-[var(--primary-500)] text-white"
                 : "bg-neutral-800 text-neutral-200 hover:bg-neutral-700"
@@ -299,7 +299,7 @@ export const BookingModal = ({
               <button
                 key={d.day}
                 onClick={() => { setDayIdx(i); setSelectedTimes(new Set()); }}
-                className={`rounded-full px-3 py-1.5 text-sm ${
+                className={`rounded-full px-3 py-1.5 text-sm cursor-pointer ${
                   i === dayIdx
                     ? "bg-[var(--primary-500)] text-white"
                     : "border border-neutral-700 bg-neutral-900 text-neutral-200 hover:bg-neutral-800"
@@ -324,7 +324,7 @@ export const BookingModal = ({
                   <button
                     key={t}
                     onClick={() => toggleTime(t)}
-                    className={`rounded-full px-3 py-1 text-sm ${
+                    className={`rounded-full px-3 py-1 text-sm cursor-pointer ${
                       active
                         ? "border border-black bg-black text-white"
                         : "border border-neutral-700 bg-neutral-900 text-neutral-300 hover:bg-neutral-800"
@@ -362,7 +362,7 @@ export const BookingModal = ({
             type="button"
             onClick={onClose}
             disabled={loading}
-            className="rounded-xl bg-neutral-800 px-4 py-2 text-sm font-semibold text-neutral-100 hover:bg-neutral-700 disabled:cursor-not-allowed disabled:opacity-60"
+            className="rounded-xl bg-neutral-800 px-4 py-2 text-sm font-semibold text-neutral-100 hover:bg-neutral-700 disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer"
           >
             Cancel
           </button>
@@ -371,7 +371,7 @@ export const BookingModal = ({
             onClick={submit}
             disabled={confirmDisabled}
             title={!fullAddr ? "Invalid creator wallet" : ""}
-            className="rounded-xl bg-[var(--primary-500)] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-opacity-90 disabled:cursor-not-allowed disabled:bg-neutral-700"
+            className="rounded-xl bg-[var(--primary-500)] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-opacity-90 disabled:cursor-not-allowed disabled:bg-neutral-700 cursor-pointer"
           >
             {loading ? "Booking..." : "Confirm & Pay"}
           </button>

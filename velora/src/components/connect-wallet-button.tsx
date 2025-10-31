@@ -173,6 +173,7 @@ export function ConnectWalletButton({
           "inline-flex h-9 items-center justify-center gap-2 rounded-full bg-white px-5",
           "text-sm font-semibold text-neutral-900 shadow-sm transition hover:bg-neutral-200",
           "disabled:cursor-not-allowed disabled:opacity-70",
+          "cursor-pointer",
           className
         )}
       >

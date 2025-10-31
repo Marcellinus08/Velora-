@@ -275,7 +275,7 @@ export default function ProfilePage() {
           <div className="flex items-center gap-3 border-b border-neutral-800 pb-4">
             <button
               onClick={() => setActiveTab("history")}
-              className={`rounded-full px-6 py-2.5 text-sm font-medium transition-all ${
+              className={`rounded-full px-6 py-2.5 text-sm font-medium transition-all cursor-pointer ${
                 activeTab === "history"
                   ? "bg-purple-500 text-white shadow-lg shadow-purple-500/30"
                   : "border border-neutral-700 text-neutral-300 hover:bg-neutral-800 hover:border-neutral-600"
@@ -285,7 +285,7 @@ export default function ProfilePage() {
             </button>
             <button
               onClick={() => setActiveTab("activity")}
-              className={`rounded-full px-6 py-2.5 text-sm font-medium transition-all ${
+              className={`rounded-full px-6 py-2.5 text-sm font-medium transition-all cursor-pointer ${
                 activeTab === "activity"
                   ? "bg-purple-500 text-white shadow-lg shadow-purple-500/30"
                   : "border border-neutral-700 text-neutral-300 hover:bg-neutral-800 hover:border-neutral-600"

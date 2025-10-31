@@ -133,7 +133,7 @@ export default function CreatePostModal({
     >
       <button
         aria-label="Close modal backdrop"
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+        className="absolute inset-0 bg-black/60 backdrop-blur-sm cursor-pointer"
         onClick={onClose}
       />
       <div className="relative z-10 w-full max-w-2xl rounded-2xl border border-neutral-800 bg-neutral-900 p-5 shadow-xl">
@@ -143,7 +143,7 @@ export default function CreatePostModal({
           </h3>
           <button
             onClick={onClose}
-            className="rounded-full p-2 text-neutral-400 hover:bg-neutral-800 hover:text-neutral-50"
+            className="rounded-full p-2 text-neutral-400 hover:bg-neutral-800 hover:text-neutral-50 cursor-pointer"
             aria-label="Close"
             type="button"
           >
@@ -265,7 +265,7 @@ export default function CreatePostModal({
                       <button
                         type="button"
                         onClick={() => removeItem(it.id)}
-                        className="absolute right-1 top-1 hidden rounded-full bg-black/60 p-1 text-white group-hover:block"
+                        className="absolute right-1 top-1 hidden rounded-full bg-black/60 p-1 text-white group-hover:block cursor-pointer"
                         aria-label="Remove"
                       >
                         <MI name="close" className="text-[14px] leading-none" />

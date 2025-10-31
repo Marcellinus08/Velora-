@@ -13,7 +13,7 @@ export default function Sidebar() {
   };
 
   const base =
-    "flex items-center gap-4 rounded-lg px-3 py-3 text-base font-medium transition-all duration-300 ease-out"; // Meningkatkan padding dan ukuran font
+    "flex items-center gap-4 rounded-lg px-3 py-3 text-base font-medium transition-all duration-300 ease-out cursor-pointer"; // Meningkatkan padding dan ukuran font
 
   // Menggunakan warna ungu untuk teks aktif dan background ungu saat aktif
   const activeCls =

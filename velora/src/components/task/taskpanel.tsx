@@ -317,7 +317,7 @@ export default function TaskPanel({
               {!completed && !hasCompletedTask && (
                 <button
                   onClick={() => setStarted(true)}
-                  className="w-48 rounded-full py-2.5 text-sm font-semibold text-white bg-[var(--primary-500)] hover:bg-violet-500 transition-colors"
+                  className="w-48 rounded-full py-2.5 text-sm font-semibold text-white bg-[var(--primary-500)] hover:bg-violet-500 transition-colors cursor-pointer"
                 >
                   Start Task
                 </button>

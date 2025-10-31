@@ -136,7 +136,7 @@ export default function AdSummary({
             }}
             disabled={!!payDisabled || saving}
             aria-disabled={!!payDisabled || saving}
-            className={`mt-6 inline-flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 px-6 py-4 text-sm font-bold text-white shadow-xl transition-all duration-200 transform hover:scale-105 ${disabledCls}`}
+            className={`mt-6 inline-flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 px-6 py-4 text-sm font-bold text-white shadow-xl transition-all duration-200 transform hover:scale-105 cursor-pointer ${disabledCls}`}
           >
             <div className="flex items-center gap-3">
               {saving ? (

@@ -84,7 +84,7 @@ export default function NotificationsMenu() {
             {unreadCount > 0 && (
               <button
                 onClick={handleMarkAllAsRead}
-                className="text-xs text-[var(--primary-500)] hover:text-[var(--primary-400)] transition-colors font-medium hover:underline"
+                className="text-xs text-[var(--primary-500)] hover:text-[var(--primary-400)] transition-colors font-medium hover:underline cursor-pointer"
               >
                 Mark all read
               </button>
@@ -153,7 +153,7 @@ export default function NotificationsMenu() {
                       e.stopPropagation();
                       deleteNotification(notif.id);
                     }}
-                    className="opacity-0 group-hover:opacity-100 text-neutral-500 hover:text-red-400 transition-all shrink-0"
+                    className="opacity-0 group-hover:opacity-100 text-neutral-500 hover:text-red-400 transition-all shrink-0 cursor-pointer"
                     aria-label="Delete notification"
                   >
                     <MI name="close" className="text-[16px]" />
