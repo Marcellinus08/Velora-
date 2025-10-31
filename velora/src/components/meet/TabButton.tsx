@@ -13,7 +13,12 @@ export function TabButton({
   return (
     <button
       onClick={onClick}
-      className={`px-3 py-3 text-sm font-medium transition-colors cursor-pointer ${active ? "border-b-2 border-purple-500 text-neutral-50" : "border-transparent text-neutral-400 hover:text-neutral-200"}`}
+      className={[
+        "whitespace-nowrap border-b-2 px-3 py-2 text-sm font-medium cursor-pointer transition-colors",
+        active
+          ? "border-[var(--primary-500)] text-neutral-50"
+          : "border-transparent text-neutral-400 hover:border-neutral-700 hover:text-neutral-50",
+      ].join(" ")}
     >
       {children}
     </button>

@@ -54,7 +54,7 @@ export const MeetCard: React.FC<MeetCardProps> = ({ creator, onCall }) => {
 
   return (
     <>
-      <div className="rounded-xl border border-neutral-800 bg-neutral-900 p-5 transition-all hover:border-[var(--primary-500)] hover:bg-neutral-900/80 hover:shadow-[0_0_0_1px_var(--primary-500),0_0_24px_2px_rgba(139,92,246,0.45)]">
+      <div className="rounded-xl border border-neutral-800 bg-neutral-900 p-5 transition-all duration-300 hover:shadow-lg hover:border-neutral-700 hover:scale-[1.01] transform">
       {/* Header: avatar + name + wallet */}
       <div className="mb-4 flex items-center gap-3">
         {creator.avatarUrl ? (

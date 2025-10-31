@@ -324,9 +324,9 @@ export const BookingModal = ({
                   <button
                     key={t}
                     onClick={() => toggleTime(t)}
-                    className={`rounded-full px-3 py-1 text-sm cursor-pointer ${
+                    className={`rounded-full px-3 py-1 text-sm cursor-pointer transition-all ${
                       active
-                        ? "border border-black bg-black text-white"
+                        ? "bg-[var(--primary-500)] text-white border-2 border-[var(--primary-500)]"
                         : "border border-neutral-700 bg-neutral-900 text-neutral-300 hover:bg-neutral-800"
                     }`}
                   >
@@ -362,7 +362,7 @@ export const BookingModal = ({
             type="button"
             onClick={onClose}
             disabled={loading}
-            className="rounded-xl bg-neutral-800 px-4 py-2 text-sm font-semibold text-neutral-100 hover:bg-neutral-700 disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer"
+            className="rounded-xl bg-neutral-800 px-4 py-2 text-sm font-semibold text-neutral-100 hover:bg-neutral-750 disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer transition-colors"
           >
             Cancel
           </button>
@@ -371,7 +371,7 @@ export const BookingModal = ({
             onClick={submit}
             disabled={confirmDisabled}
             title={!fullAddr ? "Invalid creator wallet" : ""}
-            className="rounded-xl bg-[var(--primary-500)] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-opacity-90 disabled:cursor-not-allowed disabled:bg-neutral-700 cursor-pointer"
+            className="rounded-xl bg-[var(--primary-500)] px-4 py-2 text-sm font-semibold text-white transition-all hover:bg-[var(--primary-500)]/90 disabled:cursor-not-allowed disabled:bg-neutral-700 cursor-pointer"
           >
             {loading ? "Booking..." : "Confirm & Pay"}
           </button>

@@ -63,13 +63,15 @@ export default function MeetPage() {
         <Header />
 
         {/* Tab Button for navigation */}
-        <div className="mb-4 flex gap-6">
-          <TabButton active={tab === "creators"} onClick={() => setTab("creators")}>Creators</TabButton>
-          <TabButton active={tab === "upcoming"} onClick={() => setTab("upcoming")}>Upcoming</TabButton>
-          <TabButton active={tab === "pending"} onClick={() => setTab("pending")}>Pending</TabButton>
-          <TabButton active={tab === "history"} onClick={() => setTab("history")}>History</TabButton>
-          <div className="ml-auto">
-            <TabButton active={tab === "orders"} onClick={() => setTab("orders")}>Orders</TabButton>
+        <div className="border-b border-neutral-800 mb-6">
+          <div className="flex items-center gap-x-2 overflow-x-auto">
+            <TabButton active={tab === "creators"} onClick={() => setTab("creators")}>Creators</TabButton>
+            <TabButton active={tab === "upcoming"} onClick={() => setTab("upcoming")}>Upcoming</TabButton>
+            <TabButton active={tab === "pending"} onClick={() => setTab("pending")}>Pending</TabButton>
+            <TabButton active={tab === "history"} onClick={() => setTab("history")}>History</TabButton>
+            <div className="ml-auto">
+              <TabButton active={tab === "orders"} onClick={() => setTab("orders")}>Orders</TabButton>
+            </div>
           </div>
         </div>
 
