@@ -31,19 +31,19 @@ const toCreator = (x: any): Creator => ({
 const isAddress = (s?: string) => !!s && /^0x[a-fA-F0-9]{40}$/.test(s);
 const shorten = (addr: string) => `${addr.slice(0, 6)}…${addr.slice(-4)}`;
 
-/** Kartu dasar. Jika `neon` true -> hover outline ungu. */
+/** Kartu dasar dengan hover effect seperti Featured Videos */
 const Card = ({
   children,
   className = "",
   neon = false,
 }: React.PropsWithChildren<{ className?: string; neon?: boolean }>) => {
   const base =
-    "group min-w-[200px] rounded-xl border border-neutral-800 bg-neutral-900/70 px-3 py-2 " +
-    "text-neutral-300 shadow-[0_1px_0_0_rgba(255,255,255,0.02)_inset] transition hover:bg-neutral-900/80 cursor-pointer ";
-  const hoverNeon = neon
-    ? "hover:border-[var(--primary-500)] hover:shadow-[0_0_14px_rgba(124,58,237,0.45)]"
-    : "hover:border-neutral-700";
-  return <div className={`${base} ${hoverNeon} ${className}`}>{children}</div>;
+    "group min-w-[200px] rounded-xl border border-neutral-800 bg-neutral-900 px-3 py-2 " +
+    "text-neutral-300 transition-all duration-300 cursor-pointer ";
+  const hoverEffect = neon
+    ? "hover:bg-neutral-800/50"
+    : "hover:bg-neutral-800/50";
+  return <div className={`${base} ${hoverEffect} ${className}`}>{children}</div>;
 };
 
 /** Skeleton ala CardsGrid (animate-pulse + bar-bar bg-neutral-800/60) */
@@ -129,43 +129,45 @@ export default function HomeMeetRibbon() {
     const displayAddr = wallet ? shorten(wallet) : "—";
 
     return (
-      <Card key={p.id} neon>
-        <div className="flex items-center gap-3">
-          <div className="overflow-hidden grayscale transition group-hover:grayscale-0">
-            {p.avatarUrl ? (
-              // User has avatar in database - use it
-              <div className="h-10 w-10 overflow-hidden rounded-full bg-neutral-800">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={p.avatarUrl} alt={p.name} className="h-full w-full object-cover" />
+      <div key={p.id} onClick={() => window.location.href = "/meet"}>
+        <Card neon>
+          <div className="flex items-center gap-3">
+            <div className="overflow-hidden grayscale transition group-hover:grayscale-0">
+              {p.avatarUrl ? (
+                // User has avatar in database - use it
+                <div className="h-10 w-10 overflow-hidden rounded-full bg-neutral-800">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={p.avatarUrl} alt={p.name} className="h-full w-full object-cover" />
+                </div>
+              ) : (
+                // User doesn't have avatar in database - use AbstractProfile
+                <AbstractProfile 
+                  address={isAddress(p.id) ? p.id as `0x${string}` : undefined}
+                  size="md"
+                  showTooltip={false}
+                  fallback={p.name.slice(0, 2).toUpperCase()}
+                />
+              )}
+            </div>
+            <div className="min-w-0">
+              <div className="truncate text-sm font-medium text-neutral-100">{p.name}</div>
+              {/* alamat wallet (bukan @handle) */}
+              <div className="truncate text-[11px] text-neutral-400" title={wallet || undefined}>
+                {displayAddr}
               </div>
-            ) : (
-              // User doesn't have avatar in database - use AbstractProfile
-              <AbstractProfile 
-                address={isAddress(p.id) ? p.id as `0x${string}` : undefined}
-                size="md"
-                showTooltip={false}
-                fallback={p.name.slice(0, 2).toUpperCase()}
-              />
-            )}
-          </div>
-          <div className="min-w-0">
-            <div className="truncate text-sm font-medium text-neutral-100">{p.name}</div>
-            {/* alamat wallet (bukan @handle) */}
-            <div className="truncate text-[11px] text-neutral-400" title={wallet || undefined}>
-              {displayAddr}
             </div>
           </div>
-        </div>
 
-        <div className="mt-2 flex items-center gap-2">
-          <span className="rounded-md border border-neutral-700/70 px-2 py-0.5 text-[10px] text-neutral-300">
-            Voice {voice}
-          </span>
-          <span className="rounded-md border border-neutral-700/70 px-2 py-0.5 text-[10px] text-neutral-300">
-            Video {video}
-          </span>
-        </div>
-      </Card>
+          <div className="mt-2 flex items-center gap-2">
+            <span className="rounded-md border border-neutral-700/70 px-2 py-0.5 text-[10px] text-neutral-300">
+              Voice {voice}
+            </span>
+            <span className="rounded-md border border-neutral-700/70 px-2 py-0.5 text-[10px] text-neutral-300">
+              Video {video}
+            </span>
+          </div>
+        </Card>
+      </div>
     );
   };
 
@@ -176,7 +178,7 @@ export default function HomeMeetRibbon() {
                    [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
         {/* Title-as-card (tanpa neon) */}
-        <Card className="flex min-w-[200px] flex-col justify-between">
+        <div className="group min-w-[200px] rounded-xl border border-neutral-800 bg-neutral-900 px-3 py-2 text-neutral-300 transition-all duration-300 flex flex-col justify-between">
           <div>
             <div className="text-sm font-semibold text-neutral-100">Meet</div>
             <div className="mt-0.5 text-[11px] text-neutral-400">
@@ -184,12 +186,12 @@ export default function HomeMeetRibbon() {
             </div>
           </div>
           <button
-            className="mt-2 w-fit rounded-md border border-neutral-700/70 px-2 py-1 text-[11px] font-medium text-[var(--primary-500)] hover:opacity-90 cursor-pointer"
+            className="mt-2 w-fit rounded-md border border-neutral-700/70 px-2 py-1 text-[11px] font-medium text-[var(--primary-500)] hover:opacity-90 cursor-pointer transition-opacity"
             onClick={() => (window.location.href = "/meet")}
           >
             View all →
           </button>
-        </Card>
+        </div>
 
         {/* Creator cards */}
         {items.map(renderCreatorCard)}
