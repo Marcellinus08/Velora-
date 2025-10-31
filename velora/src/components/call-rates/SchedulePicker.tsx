@@ -179,7 +179,7 @@ const SchedulePicker: React.FC<SchedulePickerProps> = ({
 
     days.forEach(d => d.hours.forEach(h => {
       const slots = h.sessions.filter(s=>s.active).map(s=>s.start);
-      if (!d.day || !h.start) return;
+      if (!d.day || !h.start || slots.length === 0) return;
       const base: Item = { day: dayNameToNum(d.day), start: h.start, duration: h.duration, slots };
       if (h.kinds.voice && hasVoicePrice) voiceItems.push(base);
       if (h.kinds.video && hasVideoPrice) videoItems.push(base);
@@ -254,7 +254,7 @@ const SchedulePicker: React.FC<SchedulePickerProps> = ({
                 className={[
                   "h-11 rounded-2xl border px-4 text-sm cursor-pointer",
                   active
-                    ? "border-violet-500 bg-violet-600 text-white"
+                    ? "border-[#9d00ff] bg-[#9d00ff] text-white"
                     : "border-neutral-700 bg-neutral-900 text-neutral-200 hover:bg-neutral-800",
                 ].join(" ")}
               >
@@ -296,19 +296,24 @@ const SchedulePicker: React.FC<SchedulePickerProps> = ({
                       <div key={h.id} className="rounded-xl border border-neutral-800 p-3">
                         <div className="flex flex-wrap items-end gap-3">
                           <label className="text-sm">
-                            <span className="mb-1 block font-medium">Start</span>
+                            <span className="mb-1 block font-medium text-white">Start</span>
                             <input
                               type="time"
                               step={slotMinutes * 60}
                               value={h.start}
-                              onChange={(e) => updateHour(d.id, h.id, "start", e.target.value)}
-                              onBlur={() => rebuildSessions(d.id, h.id)}
+                              onChange={(e) => {
+                                updateHour(d.id, h.id, "start", e.target.value);
+                                setTimeout(() => rebuildSessions(d.id, h.id), 0);
+                              }}
                               className="w-36 rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-1.5 text-neutral-100"
+                              style={{
+                                colorScheme: 'dark'
+                              }}
                             />
                           </label>
 
                           <label className="text-sm">
-                            <span className="mb-1 block font-medium">Duration (min)</span>
+                            <span className="mb-1 block font-medium text-white">Duration (min)</span>
                             <select
                               value={h.duration}
                               onChange={(e) => {
@@ -325,7 +330,7 @@ const SchedulePicker: React.FC<SchedulePickerProps> = ({
 
                           {/* Call type switches */}
                           <div className="ml-auto text-sm">
-                            <span className="mb-1 block font-medium">Call Type</span>
+                            <span className="mb-1 block font-medium text-white">Call Type</span>
                             <div className="inline-flex rounded-xl border border-neutral-700 bg-neutral-900 p-1">
                               <button
                                 type="button"
@@ -335,7 +340,7 @@ const SchedulePicker: React.FC<SchedulePickerProps> = ({
                                 className={[
                                   "px-3 py-1.5 text-xs rounded-lg",
                                   hasVoicePrice
-                                    ? (h.kinds.voice ? "bg-violet-600 text-white cursor-pointer" : "text-neutral-200 hover:bg-neutral-800 cursor-pointer")
+                                    ? (h.kinds.voice ? "bg-[#9d00ff] text-white cursor-pointer" : "text-neutral-200 hover:bg-neutral-800 cursor-pointer")
                                     : "opacity-50 cursor-not-allowed text-neutral-400",
                                 ].join(" ")}
                               >
@@ -349,7 +354,7 @@ const SchedulePicker: React.FC<SchedulePickerProps> = ({
                                 className={[
                                   "px-3 py-1.5 text-xs rounded-lg",
                                   hasVideoPrice
-                                    ? (h.kinds.video ? "bg-violet-600 text-white cursor-pointer" : "text-neutral-200 hover:bg-neutral-800 cursor-pointer")
+                                    ? (h.kinds.video ? "bg-[#9d00ff] text-white cursor-pointer" : "text-neutral-200 hover:bg-neutral-800 cursor-pointer")
                                     : "opacity-50 cursor-not-allowed text-neutral-400",
                                 ].join(" ")}
                               >
@@ -358,9 +363,6 @@ const SchedulePicker: React.FC<SchedulePickerProps> = ({
                             </div>
                           </div>
 
-                          <button onClick={() => rebuildSessions(d.id, h.id)} className="rounded-lg bg-black px-3 py-2 text-sm text-white hover:opacity-90 cursor-pointer">
-                            Generate {slotMinutes}-min
-                          </button>
                           <button onClick={() => removeHour(d.id, h.id)} className="rounded-lg px-3 py-2 text-sm text-red-600 hover:bg-red-50/10 cursor-pointer">
                             Remove
                           </button>
@@ -375,11 +377,11 @@ const SchedulePicker: React.FC<SchedulePickerProps> = ({
                                   {h.kinds.voice && h.kinds.video ? "Voice + Video" : h.kinds.voice ? "Voice only" : h.kinds.video ? "Video only" : "—"}
                                 </strong>
                               </span>
-                              <button onClick={() => selectAll(d.id, h.id, true)} className="underline decoration-neutral-600 underline-offset-2 hover:text-neutral-200 cursor-pointer">
+                              <button onClick={() => selectAll(d.id, h.id, true)} className="text-white hover:text-[#9d00ff] underline decoration-neutral-600 underline-offset-2 cursor-pointer transition-colors">
                                 Select all
                               </button>
                               <span>·</span>
-                              <button onClick={() => selectAll(d.id, h.id, false)} className="underline decoration-neutral-600 underline-offset-2 hover:text-neutral-200 cursor-pointer">
+                              <button onClick={() => selectAll(d.id, h.id, false)} className="text-white hover:text-[#9d00ff] underline decoration-neutral-600 underline-offset-2 cursor-pointer transition-colors">
                                 Clear all
                               </button>
                             </div>
@@ -388,8 +390,13 @@ const SchedulePicker: React.FC<SchedulePickerProps> = ({
                                 <button
                                   key={s.id}
                                   onClick={() => toggleSession(d.id, h.id, s.id)}
-                                  className={[chipCls, s.active ? "border-black bg-black text-white cursor-pointer" : "border-neutral-700 bg-neutral-900 text-neutral-300 hover:bg-neutral-800 cursor-pointer"].join(" ")}
-                                  title={`${s.start}–${s.end}`}
+                                  className={[
+                                    "rounded-full px-3 py-1 text-xs cursor-pointer transition-all",
+                                    s.active 
+                                      ? "border border-[#9d00ff] bg-[#9d00ff] text-white hover:opacity-80" 
+                                      : "border border-white bg-transparent text-white hover:bg-neutral-800"
+                                  ].join(" ")}
+                                  title={`${s.start}–${s.end} (Click to toggle)`}
                                 >
                                   {s.start}–{s.end}
                                 </button>
@@ -438,14 +445,14 @@ const SchedulePicker: React.FC<SchedulePickerProps> = ({
                       <div className="mb-2 flex items-center justify-between">
                         <div className="text-sm font-medium text-neutral-50">Start {b.start || "—"}</div>
                         <div className="flex items-center gap-2">
-                          {b.kinds.voice && <span className={`${badgeBase} border border-violet-700/60 text-violet-300`}>Voice</span>}
-                          {b.kinds.video && <span className={`${badgeBase} border border-sky-700/60 text-sky-300`}>Video</span>}
+                          {b.kinds.voice && <span className={`${badgeBase} border border-blue-500/60 bg-blue-500/10 text-blue-400`}>Voice</span>}
+                          {b.kinds.video && <span className={`${badgeBase} border border-[#9d00ff]/60 bg-[#9d00ff]/10 text-[#9d00ff]`}>Video</span>}
                           <div className="text-xs text-neutral-400">{b.duration} min</div>
                         </div>
                       </div>
                       <div className="flex flex-wrap gap-2">
                         {b.sessions.map((s) => (
-                          <span key={s.id} className="rounded-full border border-black bg-black px-2.5 py-1 text-xs text-white" title={`${s.start}–${s.end}`}>
+                          <span key={s.id} className="rounded-full border border-[#9d00ff] bg-[#9d00ff] px-2.5 py-1 text-xs text-white" title={`${s.start}–${s.end}`}>
                             {s.start}–{s.end}
                           </span>
                         ))}
