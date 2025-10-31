@@ -11,6 +11,8 @@ export default function NotificationsMenu() {
   const { address } = useAccount();
   const abstractId = address?.toLowerCase();
 
+  console.log("[NotificationsMenu] Current user address:", { address, abstractId });
+
   const {
     notifications,
     unreadCount,
@@ -32,6 +34,8 @@ export default function NotificationsMenu() {
         return "↩️";
       case "follow":
         return "👥";
+      case "video_purchase":
+        return "💰";
       default:
         return "🔔";
     }

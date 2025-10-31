@@ -74,6 +74,48 @@ export async function POST(req: NextRequest) {
 
     if (error) throw error;
 
+    // ✅ CREATE NOTIFICATION untuk video creator
+    try {
+      // Get video creator info
+      const { data: videoData } = await supabaseAdmin
+        .from("videos")
+        .select("abstract_id, title, points_total")
+        .eq("id", videoId)
+        .single();
+
+      if (videoData && videoData.abstract_id) {
+        const creatorAddr = videoData.abstract_id.toLowerCase();
+        
+        // Hanya buat notifikasi jika pembeli berbeda dari pencipta
+        if (creatorAddr !== buyer) {
+          const price_usd = price_cents / 100;
+          const { data: notifData, error: notifErr } = await supabaseAdmin
+            .from("notification_video_purchases")
+            .insert({
+              buyer_addr: buyer,
+              creator_addr: creatorAddr,
+              video_id: videoId,
+              price_cents: price_cents,
+              currency: currency,
+              tx_hash: txHash || null,
+              type: "video_purchase",
+              message: `${buyer.slice(0, 6)}...${buyer.slice(-4)} bought your video "${videoData.title || 'Untitled'}" for $${price_usd.toFixed(2)}`,
+            })
+            .select()
+            .single();
+
+          if (notifErr) {
+            console.error("[Video Purchase Notification] Error:", notifErr);
+          } else {
+            console.log("[Video Purchase] Created notification:", notifData?.id);
+          }
+        }
+      }
+    } catch (notifError) {
+      console.error("[Video Purchase Notification] Error:", notifError);
+      // Don't fail the purchase if notification fails
+    }
+
     // Create or update progress record for purchase (award 40% points)
     try {
       // Get video's total points
