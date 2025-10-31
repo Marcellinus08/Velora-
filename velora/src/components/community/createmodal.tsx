@@ -133,50 +133,54 @@ export default function CreatePostModal({
     >
       <button
         aria-label="Close modal backdrop"
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm cursor-pointer"
+        className="absolute inset-0 bg-black/70 backdrop-blur-sm cursor-pointer"
         onClick={onClose}
       />
-      <div className="relative z-10 w-full max-w-2xl rounded-2xl border border-neutral-800 bg-neutral-900 p-5 shadow-xl">
-        <div className="mb-4 flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-neutral-50">
+      <div className="relative z-10 w-full max-w-lg rounded-xl border border-neutral-700/50 bg-neutral-900 shadow-2xl">
+        {/* Header */}
+        <div className="flex items-center justify-between border-b border-neutral-800 px-5 py-3.5">
+          <h3 className="text-lg font-bold text-neutral-50">
             Create New Post
           </h3>
           <button
             onClick={onClose}
-            className="rounded-full p-2 text-neutral-400 hover:bg-neutral-800 hover:text-neutral-50 cursor-pointer"
+            className="rounded-full p-1.5 text-neutral-400 hover:bg-neutral-800 hover:text-neutral-50 cursor-pointer transition-colors"
             aria-label="Close"
             type="button"
           >
             <MI
               name="close"
-              className="text-[16px] leading-none align-middle"
+              className="text-[18px] leading-none"
             />
           </button>
         </div>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid max-h-[75vh] grid-rows-[auto_auto_1fr_auto_auto] gap-4 overflow-y-auto pr-1">
+        {/* Form Content */}
+        <form onSubmit={handleSubmit} className="px-5 py-4">
+          <div className="max-h-[65vh] space-y-4 overflow-y-auto pr-2">
+            {/* Title */}
             <div>
-              <label className="mb-1 block text-sm text-neutral-300">
+              <label className="mb-1.5 block text-sm font-medium text-neutral-200">
                 Title
               </label>
               <input
                 name="title"
                 required
-                className="form-input w-full rounded-lg border border-neutral-700 bg-neutral-800 text-neutral-50 placeholder:text-neutral-400 focus:border-[var(--primary-500)] focus:ring-0"
+                className="w-full rounded-lg border border-neutral-700 bg-neutral-800/50 px-3 py-2 text-sm text-neutral-50 placeholder:text-neutral-500 focus:border-[var(--primary-500)] focus:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-[var(--primary-500)]/20 transition-all"
                 placeholder="e.g. Tips for consistent knife cuts"
               />
             </div>
 
+            {/* Category */}
             <div>
-              <label className="mb-1 block text-sm text-neutral-300">
+              <label className="mb-1.5 block text-sm font-medium text-neutral-200">
                 Category
               </label>
               <select
                 name="category"
-                className="form-select w-full rounded-lg border border-neutral-700 bg-neutral-800 text-neutral-50 focus:border-[var(--primary-500)] focus:ring-0"
-                defaultValue="Cooking"
+                className="w-full rounded-lg border border-neutral-700 bg-neutral-800/50 px-3 py-2 text-sm text-neutral-50 focus:border-[var(--primary-500)] focus:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-[var(--primary-500)]/20 transition-all cursor-pointer [&>option]:text-neutral-50 [&>option]:bg-neutral-800 [&>option[value='']]:text-neutral-500"
+                defaultValue=""
               >
+                <option value="">Select a category</option>
                 <option>All Topics</option>
                 <option>Cooking</option>
                 <option>Business</option>
@@ -188,22 +192,24 @@ export default function CreatePostModal({
               </select>
             </div>
 
+            {/* Content */}
             <div>
-              <label className="mb-1 block text-sm text-neutral-300">
+              <label className="mb-1.5 block text-sm font-medium text-neutral-200">
                 Content
               </label>
               <textarea
                 name="content"
                 rows={5}
                 required
-                className="form-textarea w-full rounded-lg border border-neutral-700 bg-neutral-800 p-3 text-neutral-50 placeholder:text-neutral-400 focus:border-[var(--primary-500)] focus:ring-0"
+                className="w-full rounded-lg border border-neutral-700 bg-neutral-800/50 px-3 py-2.5 text-sm text-neutral-50 placeholder:text-neutral-500 focus:border-[var(--primary-500)] focus:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-[var(--primary-500)]/20 transition-all resize-none"
                 placeholder="Write your question or topic starter…"
               />
             </div>
 
+            {/* Attachments */}
             <div>
-              <label className="mb-1 block text-sm text-neutral-300">
-                Attachments (optional)
+              <label className="mb-1.5 block text-sm font-medium text-neutral-200">
+                Attachments <span className="text-neutral-500">(optional)</span>
               </label>
 
               <div
@@ -212,20 +218,22 @@ export default function CreatePostModal({
                   e.preventDefault();
                   addFiles(e.dataTransfer.files);
                 }}
-                className="flex cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed border-neutral-700 bg-neutral-900/60 py-7 text-center hover:border-neutral-500"
+                className="flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-neutral-700 bg-neutral-800/30 py-8 text-center hover:border-[var(--primary-500)]/50 hover:bg-neutral-800/50 transition-all"
                 onClick={() => fileRef.current?.click()}
               >
-                <MI
-                  name="cloud_upload"
-                  className="mb-2 text-[24px] opacity-70"
-                />
-                <div className="text-sm text-neutral-300">
-                  Drag &amp; drop file here, or{" "}
-                  <span className="text-[var(--primary-500)]">
+                <div className="rounded-full bg-neutral-800 p-3 mb-3">
+                  <MI
+                    name="cloud_upload"
+                    className="text-[28px] text-[var(--primary-500)]"
+                  />
+                </div>
+                <div className="text-sm font-medium text-neutral-200">
+                  Drag & drop file here, or{" "}
+                  <span className="text-[var(--primary-500)] hover:underline">
                     choose a file
                   </span>
                 </div>
-                <div className="mt-1 text-xs text-neutral-500">
+                <div className="mt-2 text-xs text-neutral-500">
                   PNG, JPG, GIF, MP4, WebM (max 25MB)
                 </div>
               </div>
@@ -240,16 +248,16 @@ export default function CreatePostModal({
               />
 
               {!!items.length && (
-                <div className="mt-3 grid grid-cols-2 gap-3 md:grid-cols-3">
+                <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-3">
                   {items.map((it) => (
                     <div
                       key={it.id}
-                      className="group relative overflow-hidden rounded-xl border border-neutral-800"
+                      className="group relative overflow-hidden rounded-lg border border-neutral-700 bg-neutral-800"
                     >
                       {it.file.type.startsWith("video/") ? (
                         <video
                           src={it.url}
-                          className="h-40 w-full object-cover"
+                          className="h-32 w-full object-cover"
                           muted
                           loop
                           playsInline
@@ -258,75 +266,58 @@ export default function CreatePostModal({
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
                           src={it.url}
-                          className="h-40 w-full object-cover"
+                          className="h-32 w-full object-cover"
                           alt=""
                         />
                       )}
                       <button
                         type="button"
                         onClick={() => removeItem(it.id)}
-                        className="absolute right-1 top-1 hidden rounded-full bg-black/60 p-1 text-white group-hover:block cursor-pointer"
+                        className="absolute right-2 top-2 rounded-full bg-black/70 p-1.5 text-white opacity-0 group-hover:opacity-100 hover:bg-black/90 cursor-pointer transition-all"
                         aria-label="Remove"
                       >
-                        <MI name="close" className="text-[14px] leading-none" />
+                        <MI name="close" className="text-[16px] leading-none" />
                       </button>
                     </div>
                   ))}
                 </div>
               )}
             </div>
+          </div>
 
-            <div className="flex items-center justify-end gap-2 pb-1">
-              <button
-                type="button"
-                onClick={() => {
-                  // Clean up URL on cancel
-                  items.forEach((i) => URL.revokeObjectURL(i.url));
-                  setItems([]);
-                  onClose();
-                }}
-                disabled={submitting}
-                className={[
-                  "group relative inline-flex items-center gap-2 rounded-full px-4 py-2",
-                  "text-sm font-semibold transition-all duration-200 ease-out",
-                  "text-neutral-200 bg-neutral-700 hover:bg-neutral-600",
-                  "hover:-translate-y-0.5 active:translate-y-0",
-                  "hover:shadow-[0_12px_24px_-6px_rgba(0,0,0,0.35)]",
-                  "before:content-[''] before:absolute before:inset-0 before:rounded-full before:opacity-0 before:transition-opacity before:duration-200",
-                  "before:bg-[radial-gradient(120px_80px_at_10%_10%,rgba(255,255,255,0.15),transparent)] group-hover:before:opacity-100",
-                  "focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[var(--primary-500)] focus-visible:ring-offset-neutral-900",
-                  "disabled:opacity-60 disabled:pointer-events-none cursor-pointer",
-                ].join(" ")}
-              >
-                {/* shimmer sweep */}
-                <span className="pointer-events-none absolute inset-0 overflow-hidden rounded-full">
-                  <span className="absolute -left-10 top-0 h-full w-8 skew-x-[-20deg] bg-white/15 opacity-0 transition-all duration-300 group-hover:left-[110%] group-hover:opacity-100" />
-                </span>
-                Cancel
-              </button>
+          {/* Footer Actions */}
+          <div className="mt-6 flex items-center justify-end gap-3 border-t border-neutral-800 pt-5">
+            <button
+              type="button"
+              onClick={() => {
+                // Clean up URL on cancel
+                items.forEach((i) => URL.revokeObjectURL(i.url));
+                setItems([]);
+                onClose();
+              }}
+              disabled={submitting}
+              className="rounded-lg px-5 py-2.5 text-sm font-medium text-neutral-300 bg-neutral-800 hover:bg-neutral-750 cursor-pointer transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Cancel
+            </button>
 
-              <button
-                type="submit"
-                disabled={submitting}
-                className={[
-                  "group relative inline-flex items-center gap-2 rounded-full px-4 py-2",
-                  "text-sm font-semibold text-white transition-all duration-200 ease-out",
-                  "focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[var(--primary-500)] focus-visible:ring-offset-neutral-900",
-                  "hover:-translate-y-0.5 active:translate-y-0",
-                  "bg-[var(--primary-500)] hover:bg-[var(--primary-500)]/90",
-                  "hover:shadow-[0_12px_24px_-6px_rgba(168,85,247,0.45)]",
-                  "before:content-[''] before:absolute before:inset-0 before:rounded-full before:opacity-0 before:transition-opacity before:duration-200",
-                  "before:bg-[radial-gradient(120px_80px_at_10%_10%,rgba(255,255,255,0.25),transparent)] group-hover:before:opacity-100",
-                  "disabled:opacity-60 disabled:pointer-events-none cursor-pointer",
-                ].join(" ")}
-              >
-                {/* shimmer sweep */}
-                <span className="pointer-events-none absolute inset-0 overflow-hidden rounded-full">
-                  <span className="absolute -left-10 top-0 h-full w-8 skew-x-[-20deg] bg-white/20 opacity-0 transition-all duration-300 group-hover:left-[110%] group-hover:opacity-100" />
+            <button
+              type="submit"
+              disabled={submitting}
+              className="rounded-lg px-5 py-2.5 text-sm font-medium text-white bg-[var(--primary-500)] hover:bg-[var(--primary-500)]/90 cursor-pointer transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {submitting ? (
+                <span className="flex items-center gap-2">
+                  <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Publishing…
                 </span>
-                {submitting ? "Publishing…" : "Publish"}
-              </button>
-            </div>
+              ) : (
+                "Publish"
+              )}
+            </button>
           </div>
         </form>
       </div>

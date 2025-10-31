@@ -340,7 +340,7 @@ export default function CommunityPostRow({
               className="flex items-center gap-1.5 hover:text-neutral-50 cursor-pointer"
             >
               <MI name="chat_bubble_outline" />
-              <span>{openReplies ? 'Hide' : replyCount} {replyCount === 1 ? 'Reply' : 'Replies'}</span>
+              <span>{openReplies ? `Hide ${replyCount}` : replyCount} {replyCount === 1 ? 'Reply' : 'Replies'}</span>
             </button>
 
             <button onClick={handleShare} className="flex items-center gap-1.5 hover:text-neutral-50 cursor-pointer">
