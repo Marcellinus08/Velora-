@@ -28,7 +28,7 @@ export default function CommunityTabs({
               key={t}
               onClick={() => onChange?.(t)}
               className={[
-                "whitespace-nowrap border-b-2 px-3 py-2 text-sm font-medium",
+                "whitespace-nowrap border-b-2 px-3 py-2 text-sm font-medium cursor-pointer transition-colors",
                 active
                   ? "border-[var(--primary-500)] text-neutral-50"
                   : "border-transparent text-neutral-400 hover:border-neutral-700 hover:text-neutral-50",

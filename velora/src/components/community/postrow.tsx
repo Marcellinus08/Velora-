@@ -267,7 +267,7 @@ export default function CommunityPostRow({
               <span>{post.timeAgo}</span>
               {canDelete && (
                 <DropdownMenu>
-                  <DropdownMenuTrigger className="flex items-center gap-1.5 hover:text-neutral-50">
+                  <DropdownMenuTrigger className="flex items-center gap-1.5 hover:text-neutral-50 cursor-pointer">
                     <MI name="more_vert" />
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
@@ -340,7 +340,7 @@ export default function CommunityPostRow({
               className="flex items-center gap-1.5 hover:text-neutral-50 cursor-pointer"
             >
               <MI name="chat_bubble_outline" />
-              <span>{replyCount} Replies</span>
+              <span>{openReplies ? 'Hide' : replyCount} {replyCount === 1 ? 'Reply' : 'Replies'}</span>
             </button>
 
             <button onClick={handleShare} className="flex items-center gap-1.5 hover:text-neutral-50 cursor-pointer">
@@ -365,7 +365,7 @@ export default function CommunityPostRow({
             />
           )}
 
-          {openReplies && <Replies postId={post.id} onPosted={() => setReplyCount((c) => c + 1)} />}
+          {openReplies && <Replies postId={post.id} onPosted={() => setReplyCount((c) => c + 1)} openReplyBox={openReplies} />}
         </div>
       </div>
     </div>

@@ -7,6 +7,12 @@ import { AbstractProfile } from "@/components/abstract-profile";
 import Swal from "sweetalert2";
 import { toast } from "@/components/ui/toast";
 import { useConfirmDialog } from "@/components/ui/confirm-dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 // Add styles to head
 if (typeof document !== 'undefined') {
@@ -171,7 +177,7 @@ const MI = ({ name, className = "" }: { name: string; className?: string }) => (
   </span>
 );
 
-export default function Replies({ postId, onPosted }: { postId: string; onPosted?: () => void }) {
+export default function Replies({ postId, onPosted, openReplyBox }: { postId: string; onPosted?: () => void; openReplyBox?: boolean }) {
   const { address } = useAccount();
   const me = useMemo(() => (address ? address.toLowerCase() : ""), [address]);
   const { confirm, Dialog } = useConfirmDialog();
@@ -180,8 +186,16 @@ export default function Replies({ postId, onPosted }: { postId: string; onPosted
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [text, setText] = useState("");
+  const [showTopReplyBox, setShowTopReplyBox] = useState(openReplyBox ?? false);
   const [editingReplyId, setEditingReplyId] = useState<string | null>(null);
   const [currentUserAvatar, setCurrentUserAvatar] = useState<string | null>(null);
+
+  // Update showTopReplyBox when openReplyBox prop changes
+  useEffect(() => {
+    if (openReplyBox !== undefined) {
+      setShowTopReplyBox(openReplyBox);
+    }
+  }, [openReplyBox]);
 
   // Fetch current user avatar from database
   useEffect(() => {
@@ -229,9 +243,10 @@ export default function Replies({ postId, onPosted }: { postId: string; onPosted
       const j = await r.json().catch(() => ({} as any));
       if (!r.ok) throw new Error(j?.error || "Failed to post reply");
       setText("");
+      setShowTopReplyBox(false); // Close the reply box after successful submit
       onPosted?.();
       await load();
-      showToast('success', 'Reply posted successfully');
+      // No success toast - removed as per user request
     } catch (e: any) {
       showToast('error', e?.message || "Failed to post reply");
     }
@@ -347,7 +362,6 @@ export default function Replies({ postId, onPosted }: { postId: string; onPosted
     const [openReplyBox, setOpenReplyBox] = useState(false);
     const [childText, setChildText] = useState("");
     const [showChildren, setShowChildren] = useState(false);
-    const [showOptions, setShowOptions] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [editContent, setEditContent] = useState(node.content);
     
@@ -370,7 +384,7 @@ export default function Replies({ postId, onPosted }: { postId: string; onPosted
         onPosted?.();
         await load();
         setShowChildren(true);
-        showToast('success', 'Reply posted successfully');
+        // No success toast - removed as per user request
       } catch (e: any) {
         showToast('error', e?.message || "Failed to post reply");
       }
@@ -379,57 +393,44 @@ export default function Replies({ postId, onPosted }: { postId: string; onPosted
     const likeIcon = node.liked ? "favorite" : "favorite_border";
 
     return (
-      <div className="mt-6">
+      <div className="mt-4 first:mt-0 bg-neutral-900/40 rounded-lg p-3 border border-neutral-800/30">
         <div className="flex items-start gap-3">
           <Avatar address={node.authorAddress} url={node.authorAvatar} />
-          <div className="flex-1">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
+          <div className="flex-1 min-w-0">
+            {/* Header: Author info and menu */}
+            <div className="flex items-center justify-between mb-1">
+              <div className="flex items-center gap-2 flex-wrap">
                 <span className="text-sm font-semibold text-neutral-100">
                   {node.authorName?.trim() || short(node.authorAddress)}
                 </span>
-                <span className="text-xs text-neutral-400">
+                <span className="text-xs text-neutral-500">
                   {new Date(node.createdAt).toLocaleString()}
                 </span>
               </div>
               
               {/* Menu Options (three dots) - Only show for reply owner */}
               {me === node.authorAddress.toLowerCase() && (
-                <div className="relative group">
-                  <button 
-                    className="p-1 hover:bg-neutral-800 rounded-full"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setShowOptions(prev => !prev);
-                    }}
-                  >
-                    <MI name="more_horiz" className="text-neutral-400" />
-                  </button>
-                  
-                  {/* Dropdown menu */}
-                  <div className={`absolute right-0 mt-1 w-32 bg-neutral-800 rounded-lg shadow-lg py-1 z-10 ${showOptions ? 'block' : 'hidden'}`}>
-                    <button
-                      onClick={() => {
-                        setShowOptions(false);
-                        setEditingReplyId(node.id);
-                      }}
-                      className="w-full px-4 py-2 text-sm text-left text-neutral-200 hover:bg-neutral-700 flex items-center gap-2"
+                <DropdownMenu>
+                  <DropdownMenuTrigger className="p-1.5 hover:bg-neutral-800 rounded-full cursor-pointer transition-colors">
+                    <MI name="more_horiz" className="text-neutral-400 text-lg" />
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem 
+                      onClick={() => setEditingReplyId(node.id)} 
+                      className="cursor-pointer"
                     >
-                      <MI name="edit" className="text-neutral-400" />
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => {
-                        setShowOptions(false);
-                        handleDelete(node.id);
-                      }}
-                      className="w-full px-4 py-2 text-sm text-left text-red-400 hover:bg-neutral-700 flex items-center gap-2"
+                      <MI name="edit" className="mr-2 text-neutral-400" />
+                      <span>Edit</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => handleDelete(node.id)}
+                      className="cursor-pointer text-red-500 focus:text-red-500 hover:text-red-400"
                     >
-                      <MI name="delete" className="text-red-400" />
-                      Delete
-                    </button>
-                  </div>
-                </div>
+                      <MI name="delete" className="mr-2" />
+                      <span>Delete</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               )}
             </div>
 
@@ -438,7 +439,20 @@ export default function Replies({ postId, onPosted }: { postId: string; onPosted
                 <textarea
                   value={editContent}
                   onChange={(e) => setEditContent(e.target.value)}
-                  className="w-full rounded-md border border-neutral-700 bg-neutral-950 p-2 text-sm text-neutral-50 outline-none"
+                  onKeyDown={async (e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      if (editContent.trim() && editContent !== node.content) {
+                        try {
+                          await handleEdit(node.id, editContent);
+                          await load();
+                        } catch (err) {
+                          console.error('Failed to edit:', err);
+                        }
+                      }
+                    }
+                  }}
+                  className="w-full rounded-lg border border-neutral-700 bg-neutral-900/50 p-3 text-sm text-neutral-50 outline-none focus:border-[var(--primary-500)] transition-colors"
                   rows={2}
                 />
                 <div className="mt-2 flex justify-end gap-2">
@@ -447,7 +461,7 @@ export default function Replies({ postId, onPosted }: { postId: string; onPosted
                       setEditingReplyId(null);
                       setEditContent(node.content);
                     }}
-                    className="px-3 py-1 text-sm text-neutral-400 hover:text-neutral-200"
+                    className="px-3 py-1 text-sm text-neutral-400 hover:text-neutral-200 cursor-pointer transition-colors"
                   >
                     Cancel
                   </button>
@@ -455,49 +469,51 @@ export default function Replies({ postId, onPosted }: { postId: string; onPosted
                     onClick={async () => {
                       try {
                         await handleEdit(node.id, editContent);
-                        await load(); // Reload setelah edit berhasil
+                        await load();
                       } catch (e) {
                         console.error('Failed to edit:', e);
                       }
                     }}
                     disabled={!editContent.trim() || editContent === node.content}
-                    className="px-3 py-1 text-sm bg-[var(--primary-600)] text-white rounded-md hover:bg-[var(--primary-500)] disabled:opacity-50 disabled:hover:bg-[var(--primary-600)]"
+                    className="px-3 py-1.5 text-sm bg-[var(--primary-500)] text-white rounded-md hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-opacity"
                   >
                     Save
                   </button>
                 </div>
               </div>
             ) : (
-              <div className="mt-1 whitespace-pre-wrap text-neutral-200">{node.content}</div>
+              <div className="mt-1 text-sm text-neutral-200 leading-relaxed whitespace-pre-wrap break-words">
+                {node.content}
+              </div>
             )}
 
             {/* actions: LIKE + REPLIES + REPLY */}
-            <div className="mt-2 flex items-center gap-6 text-sm text-neutral-400">
+            <div className="mt-3 flex items-center gap-5 text-xs">
               <button
                 onClick={() => toggleLike(node.id)}
                 disabled={pendingLikeId === node.id}
                 className={
-                  "flex items-center gap-1.5 hover:text-neutral-50 disabled:opacity-60 " +
-                  (node.liked ? "text-[var(--primary-500)] hover:text-opacity-80" : "")
+                  "flex items-center gap-1.5 transition-colors disabled:opacity-60 cursor-pointer " +
+                  (node.liked ? "text-[var(--primary-500)] hover:text-[var(--primary-400)]" : "text-neutral-400 hover:text-neutral-200")
                 }
                 aria-pressed={!!node.liked}
               >
-                <MI name={likeIcon} />
-                <span>{node.likes} Likes</span>
+                <MI name={likeIcon} className="text-base" />
+                <span className="font-medium">{node.likes > 0 ? node.likes : ''} {node.likes === 1 ? 'Like' : 'Likes'}</span>
               </button>
 
               {node.replies > 0 && (
                 <button
                   onClick={() => setShowChildren((v) => !v)}
-                  className="flex items-center gap-1.5 hover:text-neutral-50"
+                  className="flex items-center gap-1.5 text-neutral-400 hover:text-neutral-200 cursor-pointer transition-colors"
                 >
-                  <MI name="chat_bubble_outline" />
-                  <span>{showChildren ? "Hide" : `${node.replies} Replies`}</span>
+                  <MI name="chat_bubble_outline" className="text-base" />
+                  <span className="font-medium">{showChildren ? "Hide" : `${node.replies} ${node.replies === 1 ? 'Reply' : 'Replies'}`}</span>
                 </button>
               )}
 
               <button
-                className="flex items-center gap-1.5 text-[var(--primary-500)] hover:underline"
+                className="flex items-center gap-1.5 text-[var(--primary-500)] hover:text-[var(--primary-400)] cursor-pointer transition-colors font-medium"
                 onClick={() => setOpenReplyBox((v) => !v)}
               >
                 Reply
@@ -506,26 +522,38 @@ export default function Replies({ postId, onPosted }: { postId: string; onPosted
 
             {/* composer anak */}
             {openReplyBox && (
-              <div className="mt-2 flex items-start gap-2">
+              <div className="mt-3 ml-0 flex items-start gap-2 p-3 rounded-lg bg-neutral-900/30 border border-neutral-800/50">
                 <Avatar address={me} url={currentUserAvatar} />
                 <div className="flex-1">
                   <textarea
                     value={childText}
                     onChange={(e) => setChildText(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        if (childText.trim()) {
+                          postChild();
+                        }
+                      }
+                    }}
                     rows={2}
-                    className="w-full rounded-md border border-neutral-700 bg-neutral-950 p-2 text-sm text-neutral-50 outline-none"
+                    className="w-full rounded-lg border border-neutral-700 bg-neutral-950 p-2.5 text-sm text-neutral-50 outline-none focus:border-[var(--primary-500)] transition-colors"
                     placeholder="Write a reply…"
                   />
                   <div className="mt-2 flex justify-end gap-2">
                     <button
-                      className="rounded-md px-3 py-1 text-neutral-300 hover:bg-neutral-800"
-                      onClick={() => setOpenReplyBox(false)}
+                      className="rounded-md px-3 py-1 text-sm text-neutral-300 hover:bg-neutral-800 cursor-pointer transition-colors"
+                      onClick={() => {
+                        setOpenReplyBox(false);
+                        setChildText("");
+                      }}
                     >
                       Cancel
                     </button>
                     <button
-                      className="rounded-md bg-[var(--primary-600)] px-3 py-1 text-neutral-50 hover:bg-[var(--primary-500)]"
+                      className="rounded-md bg-[var(--primary-500)] px-3 py-1.5 text-sm text-neutral-50 hover:opacity-90 cursor-pointer transition-opacity"
                       onClick={postChild}
+                      disabled={!childText.trim()}
                     >
                       Reply
                     </button>
@@ -536,7 +564,7 @@ export default function Replies({ postId, onPosted }: { postId: string; onPosted
 
             {/* children (collapse/expand) */}
             {showChildren && node.children?.length > 0 && (
-              <div className="mt-3 border-l border-neutral-800 pl-4">
+              <div className="mt-4 ml-2 pl-4 border-l-2 border-neutral-800/60 space-y-0">
                 {node.children.map((c) => (
                   <Item key={c.id} node={c} />
                 ))}
@@ -551,27 +579,46 @@ export default function Replies({ postId, onPosted }: { postId: string; onPosted
   return (
     <div className="mt-4">
       {/* composer top-level */}
-      <div className="flex items-start gap-3">
-        <Avatar address={me} url={currentUserAvatar} />
-        <div className="flex-1">
-          <textarea
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            rows={2}
-            className="w-full rounded-md border border-neutral-700 bg-neutral-950 p-2 text-sm text-neutral-50 outline-none"
-            placeholder="Write a reply…"
-          />
-          <div className="mt-2 flex justify-end">
-            <button
-              onClick={() => postReply(null)}
-              disabled={!text.trim()}
-              className="rounded-md bg-[var(--primary-600)] px-4 py-1.5 text-sm text-neutral-50 hover:bg-[var(--primary-500)] disabled:opacity-50"
-            >
-              Reply
-            </button>
+      {showTopReplyBox && (
+        <div className="flex items-start gap-3">
+          <Avatar address={me} url={currentUserAvatar} />
+          <div className="flex-1">
+            <textarea
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  if (text.trim()) {
+                    postReply(null);
+                  }
+                }
+              }}
+              rows={2}
+              className="w-full rounded-md border border-neutral-700 bg-neutral-950 p-2 text-sm text-neutral-50 outline-none focus:border-[var(--primary-500)] transition-colors"
+              placeholder="Write a reply…"
+            />
+            <div className="mt-2 flex justify-end gap-2">
+              <button
+                onClick={() => {
+                  setText("");
+                  setShowTopReplyBox(false);
+                }}
+                className="rounded-md px-3 py-1 text-neutral-300 hover:bg-neutral-800 cursor-pointer transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => postReply(null)}
+                disabled={!text.trim()}
+                className="rounded-md bg-[var(--primary-500)] px-4 py-1.5 text-sm text-neutral-50 hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+              >
+                Reply
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {err && <p className="mt-2 text-xs text-red-400">{err}</p>}
       {loading && <p className="mt-3 text-sm text-neutral-400">Loading replies…</p>}
