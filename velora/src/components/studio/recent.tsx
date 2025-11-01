@@ -8,9 +8,11 @@ import StudioRecentAds from "./recent-ads";
 export default function StudioRecentPanel({
   videos = [],
   ads = [],
+  onAdsUpdate,
 }: {
   videos?: StudioVideo[];
   ads?: StudioAd[];
+  onAdsUpdate?: () => void;
 }) {
   const [tab, setTab] = useState<"uploads" | "ads">("uploads");
   const [expanded, setExpanded] = useState(false);
@@ -66,7 +68,7 @@ export default function StudioRecentPanel({
         {tab === "uploads" ? (
           <StudioRecentUploads items={videos} showCount={showCount} />
         ) : (
-          <StudioRecentAds items={ads} showCount={showCount} />
+          <StudioRecentAds items={ads} showCount={showCount} onStatusChange={onAdsUpdate} />
         )}
       </div>
     </section>

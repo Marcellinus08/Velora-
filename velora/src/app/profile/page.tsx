@@ -60,7 +60,7 @@ export default function ProfilePage() {
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [rowsPerPage, setRowsPerPage] = useState(5);
 
   // API data state
   const [historyData, setHistoryData] = useState<LeaderboardHistoryItem[]>([]);
@@ -439,6 +439,9 @@ export default function ProfilePage() {
                             if (item.type === "meet_purchase") {
                               return item.meet.creator.toLowerCase().includes(searchQuery.toLowerCase());
                             }
+                            if (item.type === "ad_campaign") {
+                              return item.campaign.title.toLowerCase().includes(searchQuery.toLowerCase());
+                            }
                             return true;
                           })
                           .sort((a, b) => {
@@ -454,6 +457,10 @@ export default function ProfilePage() {
                               }
                               if (item.type === "meet_purchase" && item.meet.id) {
                                 return `/meet/${item.meet.id}`;
+                              }
+                              if (item.type === "ad_campaign") {
+                                // Redirect to home page with campaign ID to scroll to the ad
+                                return `/?campaign=${item.campaign.id}`;
                               }
                               return null;
                             };
@@ -480,6 +487,21 @@ export default function ProfilePage() {
                                         <MI name="video_call" className="text-xl text-purple-400" />
                                       </div>
                                     )}
+                                    {item.type === "ad_campaign" && (
+                                      <>
+                                        {item.campaign.banner_url ? (
+                                          <img
+                                            src={item.campaign.banner_url}
+                                            alt={item.campaign.title}
+                                            className="h-12 w-20 rounded-md object-cover flex-shrink-0"
+                                          />
+                                        ) : (
+                                          <div className="flex h-12 w-20 flex-shrink-0 items-center justify-center rounded-md bg-yellow-500/20">
+                                            <MI name="campaign" className="text-xl text-yellow-400" />
+                                          </div>
+                                        )}
+                                      </>
+                                    )}
                                     <div className="min-w-0 flex-1">
                                       {item.type === "video_purchase" && (
                                         <>
@@ -497,6 +519,16 @@ export default function ProfilePage() {
                                           <div className="text-xs text-neutral-400">{item.meet.duration} minutes</div>
                                         </>
                                       )}
+                                      {item.type === "ad_campaign" && (
+                                        <>
+                                          <div className="font-medium text-neutral-50 truncate group-hover:text-white">
+                                            {item.campaign.title}
+                                          </div>
+                                          <div className="text-xs text-neutral-400">
+                                            {item.totalClicks || 0} clicks
+                                          </div>
+                                        </>
+                                      )}
                                     </div>
                                   </div>
                                 </td>
@@ -507,10 +539,12 @@ export default function ProfilePage() {
                                     className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${
                                       item.type === "video_purchase"
                                         ? "bg-blue-500/10 text-blue-400 ring-1 ring-blue-500/20"
-                                        : "bg-purple-500/10 text-purple-400 ring-1 ring-purple-500/20"
+                                        : item.type === "meet_purchase"
+                                        ? "bg-purple-500/10 text-purple-400 ring-1 ring-purple-500/20"
+                                        : "bg-yellow-500/10 text-yellow-400 ring-1 ring-yellow-500/20"
                                     }`}
                                   >
-                                    {item.type === "video_purchase" ? "Video" : "Meet"}
+                                    {item.type === "video_purchase" ? "Video" : item.type === "meet_purchase" ? "Meet" : "Ad"}
                                   </span>
                                 </td>
 
@@ -521,19 +555,30 @@ export default function ProfilePage() {
                                   </div>
                                   <div className="text-xs text-neutral-500">{item.currency}</div>
                                 </td>
-
                                 {/* Status Column */}
                                 <td className="px-4 py-4">
                                   <span
                                     className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${
-                                      item.status === "completed" || item.status === "active"
+                                      item.type === "ad_campaign"
+                                        ? item.status === "active"
+                                          ? "bg-green-500/10 text-green-400 ring-1 ring-green-500/20"
+                                          : item.status === "paused"
+                                          ? "bg-yellow-500/10 text-yellow-400 ring-1 ring-yellow-500/20"
+                                          : item.status === "ended"
+                                          ? "bg-red-500/10 text-red-400 ring-1 ring-red-500/20"
+                                          : "bg-neutral-500/10 text-neutral-400 ring-1 ring-neutral-500/20"
+                                        : item.status === "completed" || item.status === "active"
                                         ? "bg-green-500/10 text-green-400 ring-1 ring-green-500/20"
                                         : item.status === "scheduled"
                                         ? "bg-blue-500/10 text-blue-400 ring-1 ring-blue-500/20"
                                         : "bg-yellow-500/10 text-yellow-400 ring-1 ring-yellow-500/20"
                                     }`}
                                   >
-                                    {item.status === "active" || item.status === "completed" ? "Purchased" : item.status}
+                                    {item.type === "ad_campaign" 
+                                      ? item.status.charAt(0).toUpperCase() + item.status.slice(1)
+                                      : item.status === "active" || item.status === "completed" 
+                                      ? "Purchased" 
+                                      : item.status}
                                   </span>
                                 </td>
 

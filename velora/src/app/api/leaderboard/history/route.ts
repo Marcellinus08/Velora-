@@ -164,16 +164,79 @@ export async function GET(req: NextRequest) {
     // Sort all history by date (newest first)
     history.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
-    // Calculate total spent
-    const totalSpent = history.reduce((sum, item) => sum + (item.price || 0), 0);
-
-    // Get user's created ads count
+    // Get user's created ads count and add them to history
     const { data: userCampaigns } = await supabaseAdmin
       .from("campaigns")
-      .select("id")
-      .eq("creator_address", userAddr);
+      .select("*")
+      .eq("creator_addr", userAddr);
 
     const adsCreated = userCampaigns?.length || 0;
+
+    // Add campaigns to history if type is 'all' or 'ads'
+    if ((!type || type === "all" || type === "ads") && userCampaigns) {
+      // Get real-time click counts for each campaign
+      const now = new Date();
+      
+      for (const campaign of userCampaigns) {
+        const { count: clickCount } = await supabaseAdmin
+          .from("campaign_clicks")
+          .select("*", { count: "exact", head: true })
+          .eq("campaign_id", campaign.id);
+        
+        // Determine real-time status based on dates
+        let realStatus = campaign.status;
+        
+        if (campaign.end_date && campaign.start_date) {
+          const endDate = new Date(campaign.end_date);
+          const startDate = new Date(campaign.start_date);
+          
+          // If campaign has ended (past end_date), mark as ended
+          if (now > endDate) {
+            realStatus = "ended";
+          }
+          // If campaign hasn't started yet
+          else if (now < startDate) {
+            realStatus = campaign.status === "paused" ? "paused" : "pending";
+          }
+          // If currently within date range
+          else if (now >= startDate && now <= endDate) {
+            if (campaign.status === "paused") {
+              realStatus = "paused";
+            } else {
+              realStatus = "active";
+            }
+          }
+        }
+        
+        history.push({
+          type: "ad_campaign",
+          id: campaign.id,
+          date: campaign.created_at,
+          campaign: {
+            id: campaign.id,
+            title: campaign.title,
+            description: campaign.description,
+            banner_url: campaign.banner_url,
+            cta_text: campaign.cta_text,
+            cta_link: campaign.cta_link,
+            video_id: campaign.video_id,
+          },
+          price: (campaign.creation_fee_cents || 0) / 100,
+          currency: "USDC",
+          status: realStatus,
+          txHash: campaign.payment_tx_hash,
+          startDate: campaign.start_date,
+          endDate: campaign.end_date,
+          totalClicks: clickCount || 0,
+        });
+      }
+
+      // Re-sort after adding campaigns
+      history.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    }
+
+    // Calculate total spent - SEMUA pengeluaran (videos + meets + ads creation fee)
+    const totalSpent = history.reduce((sum, item) => sum + (item.price || 0), 0);
 
     return NextResponse.json({
       success: true,

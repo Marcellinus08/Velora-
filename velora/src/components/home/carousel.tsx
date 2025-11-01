@@ -43,11 +43,13 @@ type SlideItem = {
 type CarouselProps = {
   size?: string;
   interval?: number;
+  campaignId?: string;
 };
 
 export default function Carousel({
   size = "h-[320px] sm:h-[420px] lg:h-[520px]",
   interval = 4000,
+  campaignId,
 }: CarouselProps) {
   const [index, setIndex] = useState(0);
   const [allSlides, setAllSlides] = useState<SlideItem[]>(defaultSlide);
@@ -102,10 +104,21 @@ export default function Carousel({
         if (mounted) setLoading(false);
       }
     };
-
     fetchCampaigns();
     return () => { mounted = false; };
   }, []);
+
+  // Set index to campaign slide when campaignId changes
+  useEffect(() => {
+    if (campaignId && allSlides.length > 0) {
+      const campaignIndex = allSlides.findIndex(
+        slide => slide.type === "campaign" && slide.id === campaignId
+      );
+      if (campaignIndex !== -1) {
+        setIndex(campaignIndex);
+      }
+    }
+  }, [campaignId, allSlides]);
 
   const next = () => setIndex((i) => (i + 1) % allSlides.length);
   const prev = () => setIndex((i) => (i - 1 + allSlides.length) % allSlides.length);
@@ -183,7 +196,11 @@ export default function Carousel({
   return (
     <div className={`relative w-full ${size}`}>
       <div
-        className="h-full overflow-hidden rounded-xl"
+        className={`h-full overflow-hidden rounded-xl transition-all duration-300 ${
+          campaignId && allSlides[index]?.id === campaignId 
+            ? "ring-4 ring-yellow-400/50 shadow-2xl shadow-yellow-400/20" 
+            : ""
+        }`}
         onMouseEnter={stop}
         onMouseLeave={start}
       >

@@ -30,7 +30,7 @@ export type RangeKey = "today" | "week" | "month" | "all";
 /* Profile modal types */
 
 // History Types
-export type HistoryType = "video_purchase" | "subscription" | "meet_purchase" | "ad_purchase";
+export type HistoryType = "video_purchase" | "subscription" | "meet_purchase" | "ad_purchase" | "ad_campaign";
 
 export type VideoPurchaseHistory = {
   type: "video_purchase";
@@ -90,11 +90,34 @@ export type AdPurchaseHistory = {
   impressions?: number;
 };
 
+export type AdCampaignHistory = {
+  type: "ad_campaign";
+  id: string;
+  date: string;
+  campaign: {
+    id: string;
+    title: string;
+    description?: string;
+    banner_url?: string;
+    cta_text?: string;
+    cta_link?: string;
+    video_id?: string;
+  };
+  price: number;
+  currency: string;
+  status: string;
+  txHash?: string;
+  startDate?: string;
+  endDate?: string;
+  totalClicks?: number;
+};
+
 export type HistoryItem = 
   | VideoPurchaseHistory 
   | SubscriptionHistory 
   | MeetPurchaseHistory 
-  | AdPurchaseHistory;
+  | AdPurchaseHistory
+  | AdCampaignHistory;
 
 export type HistoryStats = {
   totalTransactions: number;
