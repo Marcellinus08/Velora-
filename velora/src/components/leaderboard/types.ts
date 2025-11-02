@@ -30,7 +30,7 @@ export type RangeKey = "today" | "week" | "month" | "all";
 /* Profile modal types */
 
 // History Types
-export type HistoryType = "video_purchase" | "subscription" | "meet_purchase" | "ad_purchase";
+export type HistoryType = "video_purchase" | "subscription" | "meet_purchase" | "ad_purchase" | "ad_campaign";
 
 export type VideoPurchaseHistory = {
   type: "video_purchase";
@@ -90,11 +90,34 @@ export type AdPurchaseHistory = {
   impressions?: number;
 };
 
+export type AdCampaignHistory = {
+  type: "ad_campaign";
+  id: string;
+  date: string;
+  campaign: {
+    id: string;
+    title: string;
+    description?: string;
+    banner_url?: string;
+    cta_text?: string;
+    cta_link?: string;
+    video_id?: string;
+  };
+  price: number;
+  currency: string;
+  status: string;
+  txHash?: string;
+  startDate?: string;
+  endDate?: string;
+  totalClicks?: number;
+};
+
 export type HistoryItem = 
   | VideoPurchaseHistory 
   | SubscriptionHistory 
   | MeetPurchaseHistory 
-  | AdPurchaseHistory;
+  | AdPurchaseHistory
+  | AdCampaignHistory;
 
 export type HistoryStats = {
   totalTransactions: number;
@@ -114,7 +137,12 @@ export type ActivityType =
   | "video_purchased"
   | "post_created" 
   | "meet_hosted" 
-  | "meet_attended" 
+  | "meet_attended"
+  | "campaign_created"
+  | "user_followed"
+  | "comment_posted"
+  | "video_liked"
+  | "video_sold"
   | "milestone";
 
 export type VideoUploadActivity = {
@@ -194,12 +222,98 @@ export type MilestoneActivity = {
   icon: string;
 };
 
+export type CampaignActivity = {
+  type: "campaign_created";
+  id: string;
+  date: string;
+  description: string;
+  campaign: {
+    id: string;
+    title: string;
+    banner_url?: string;
+    clicks: number;
+    status: string;
+  };
+  points: number;
+  icon: string;
+};
+
+export type FollowActivity = {
+  type: "user_followed";
+  id: string;
+  date: string;
+  description: string;
+  user: {
+    name: string;
+    avatar?: string;
+    addr: string;
+  };
+  points: number;
+  icon: string;
+};
+
+export type CommentActivity = {
+  type: "comment_posted";
+  id: string;
+  date: string;
+  description: string;
+  comment: {
+    id: string;
+    text: string;
+  };
+  video?: {
+    id: string;
+    title: string;
+    thumbnail?: string;
+  };
+  points: number;
+  icon: string;
+};
+
+export type LikeActivity = {
+  type: "video_liked";
+  id: string;
+  date: string;
+  description: string;
+  video: {
+    id: string;
+    title: string;
+    thumbnail?: string;
+  };
+  points: number;
+  icon: string;
+};
+
+export type SaleActivity = {
+  type: "video_sold";
+  id: string;
+  date: string;
+  description: string;
+  video: {
+    id: string;
+    title: string;
+    thumbnail?: string;
+  };
+  buyer: {
+    name: string;
+    avatar?: string;
+  };
+  earnings: number;
+  points: number;
+  icon: string;
+};
+
 export type ActivityItem = 
   | VideoUploadActivity 
   | TaskCompletedActivity 
   | SocialActivity 
   | MeetActivity 
-  | MilestoneActivity;
+  | MilestoneActivity
+  | CampaignActivity
+  | FollowActivity
+  | CommentActivity
+  | LikeActivity
+  | SaleActivity;
 
 export type ActivityStats = {
   totalActivities: number;
@@ -210,6 +324,11 @@ export type ActivityStats = {
   postsCreated: number;
   meetsHosted: number;
   meetsAttended: number;
+  campaignsCreated?: number;
+  usersFollowed?: number;
+  commentsPosted?: number;
+  videosLiked?: number;
+  videosSold?: number;
 };
 
 // Legacy types for backward compatibility

@@ -163,7 +163,205 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    // 4. Meet Activity (Hosted or Attended)
+    // 4. Campaign/Ads Creation Activity
+    if (!type || type === "all" || type === "content") {
+      const { data: campaigns, error: cError } = await supabaseAdmin
+        .from("campaigns")
+        .select("*")
+        .eq("creator_addr", userAddr)
+        .order("created_at", { ascending: false })
+        .limit(limit);
+
+      if (!cError && campaigns) {
+        for (const campaign of campaigns) {
+          // Get click count for this campaign
+          const { count: clickCount } = await supabaseAdmin
+            .from("campaign_clicks")
+            .select("*", { count: "exact", head: true })
+            .eq("campaign_id", campaign.id);
+
+          activities.push({
+            type: "campaign_created",
+            id: `campaign_${campaign.id}`,
+            date: campaign.created_at,
+            description: `Created ad campaign "${campaign.title}"`,
+            campaign: {
+              id: campaign.id,
+              title: campaign.title,
+              banner_url: campaign.banner_url,
+              clicks: clickCount || 0,
+              status: campaign.status,
+            },
+            points: 0, // No points for creating campaign
+            icon: "campaign",
+          });
+        }
+      }
+    }
+
+    // 5. Follow Activity
+    if (!type || type === "all" || type === "social") {
+      const { data: follows, error: fError } = await supabaseAdmin
+        .from("follows")
+        .select(`
+          *,
+          followed:profiles!follows_following_addr_fkey (
+            username,
+            avatar_url,
+            abstract_id
+          )
+        `)
+        .eq("follower_addr", userAddr)
+        .order("created_at", { ascending: false })
+        .limit(limit);
+
+      if (!fError && follows) {
+        follows.forEach((follow) => {
+          const followedName = 
+            follow.followed?.username || 
+            (follow.following_addr ? `${follow.following_addr.slice(0, 6)}…${follow.following_addr.slice(-4)}` : "user");
+
+          activities.push({
+            type: "user_followed",
+            id: `follow_${follow.id}`,
+            date: follow.created_at,
+            description: `Followed ${followedName}`,
+            user: {
+              name: followedName,
+              avatar: follow.followed?.avatar_url,
+              addr: follow.following_addr,
+            },
+            points: 0, // No points for following
+            icon: "person_add",
+          });
+        });
+      }
+    }
+
+    // 6. Comments Activity
+    if (!type || type === "all" || type === "social") {
+      const { data: comments, error: commError } = await supabaseAdmin
+        .from("video_comments")
+        .select(`
+          *,
+          video:videos (
+            id,
+            title,
+            thumb_url
+          )
+        `)
+        .eq("user_addr", userAddr)
+        .order("created_at", { ascending: false })
+        .limit(limit);
+
+      if (!commError && comments) {
+        comments.forEach((comment) => {
+          activities.push({
+            type: "comment_posted",
+            id: `comment_${comment.id}`,
+            date: comment.created_at,
+            description: `Commented on "${comment.video?.title || 'video'}"`,
+            comment: {
+              id: comment.id,
+              text: comment.comment?.substring(0, 100) || "",
+            },
+            video: {
+              id: comment.video_id,
+              title: comment.video?.title || "Unknown Video",
+              thumbnail: comment.video?.thumb_url,
+            },
+            points: 0, // No points for commenting
+            icon: "comment",
+          });
+        });
+      }
+    }
+
+    // 7. Likes Activity
+    if (!type || type === "all" || type === "social") {
+      const { data: likes, error: lError } = await supabaseAdmin
+        .from("video_likes")
+        .select(`
+          *,
+          video:videos (
+            id,
+            title,
+            thumb_url
+          )
+        `)
+        .eq("user_addr", userAddr)
+        .order("created_at", { ascending: false })
+        .limit(limit);
+
+      if (!lError && likes) {
+        likes.forEach((like) => {
+          activities.push({
+            type: "video_liked",
+            id: `like_${like.id}`,
+            date: like.created_at,
+            description: `Liked "${like.video?.title || 'video'}"`,
+            video: {
+              id: like.video_id,
+              title: like.video?.title || "Unknown Video",
+              thumbnail: like.video?.thumb_url,
+            },
+            points: 0, // No points for liking
+            icon: "favorite",
+          });
+        });
+      }
+    }
+
+    // 8. Earnings from Video Sales (detailed)
+    if (!type || type === "all" || type === "earnings") {
+      const { data: mySales, error: sError } = await supabaseAdmin
+        .from("video_purchases")
+        .select(`
+          *,
+          video:videos!video_purchases_video_id_fkey (
+            id,
+            title,
+            thumb_url,
+            abstract_id
+          ),
+          buyer:profiles!video_purchases_buyer_id_fkey (
+            username,
+            avatar_url
+          )
+        `)
+        .eq("video.abstract_id", userAddr)
+        .order("created_at", { ascending: false })
+        .limit(limit);
+
+      if (!sError && mySales) {
+        mySales.forEach((sale) => {
+          const buyerName = 
+            sale.buyer?.username || 
+            (sale.buyer_id ? `${sale.buyer_id.slice(0, 6)}…${sale.buyer_id.slice(-4)}` : "buyer");
+
+          activities.push({
+            type: "video_sold",
+            id: `sale_${sale.id}`,
+            date: sale.created_at,
+            description: `Sold "${sale.video?.title || 'video'}" to ${buyerName}`,
+            video: {
+              id: sale.video_id,
+              title: sale.video?.title || "Unknown Video",
+              thumbnail: sale.video?.thumb_url,
+            },
+            buyer: {
+              name: buyerName,
+              avatar: sale.buyer?.avatar_url,
+            },
+            earnings: (sale.price_cents || 0) / 100,
+            points: 0, // No points, but earnings
+            icon: "attach_money",
+          });
+        });
+      }
+    }
+
+    // 9. Meet Activity (Hosted or Attended)
     if (!type || type === "all" || type === "earnings") {
       // Meets as creator (earnings)
       const { data: hostedMeets, error: hmError } = await supabaseAdmin
@@ -259,19 +457,27 @@ export async function GET(req: NextRequest) {
       .filter((a) => a.earnings)
       .reduce((sum, item) => sum + (item.earnings || 0), 0);
 
+    const totalPoints = activities
+      .reduce((sum, item) => sum + (item.points || 0), 0);
+
     return NextResponse.json({
       success: true,
       userAddr,
       activities: activities.slice(0, limit),
       stats: {
         totalActivities: activities.length,
-        totalPointsEarned,
+        totalPointsEarned: totalPoints,
         totalEarnings,
         videosUploaded: activities.filter((a) => a.type === "video_upload").length,
         tasksCompleted: activities.filter((a) => a.type === "task_completed").length,
         postsCreated: activities.filter((a) => a.type === "post_created").length,
         meetsHosted: activities.filter((a) => a.type === "meet_hosted").length,
         meetsAttended: activities.filter((a) => a.type === "meet_attended").length,
+        campaignsCreated: activities.filter((a) => a.type === "campaign_created").length,
+        usersFollowed: activities.filter((a) => a.type === "user_followed").length,
+        commentsPosted: activities.filter((a) => a.type === "comment_posted").length,
+        videosLiked: activities.filter((a) => a.type === "video_liked").length,
+        videosSold: activities.filter((a) => a.type === "video_sold").length,
       },
     });
   } catch (e: any) {

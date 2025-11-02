@@ -134,3 +134,26 @@ button:disabled,
   cursor: not-allowed !important;
 }
 
+/* Custom styling untuk input time */
+input[type="time"] {
+  cursor: pointer !important;
+}
+
+input[type="time"]::-webkit-calendar-picker-indicator {
+  cursor: pointer !important;
+  opacity: 1;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: auto;
+  height: auto;
+  background: transparent;
+}
+
+input[type="time"]::-webkit-datetime-edit {
+  cursor: pointer !important;
+}
+
+

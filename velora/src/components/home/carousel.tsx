@@ -43,11 +43,13 @@ type SlideItem = {
 type CarouselProps = {
   size?: string;
   interval?: number;
+  campaignId?: string;
 };
 
 export default function Carousel({
   size = "h-[320px] sm:h-[420px] lg:h-[520px]",
   interval = 4000,
+  campaignId,
 }: CarouselProps) {
   const [index, setIndex] = useState(0);
   const [allSlides, setAllSlides] = useState<SlideItem[]>(defaultSlide);
@@ -102,10 +104,21 @@ export default function Carousel({
         if (mounted) setLoading(false);
       }
     };
-
     fetchCampaigns();
     return () => { mounted = false; };
   }, []);
+
+  // Set index to campaign slide when campaignId changes
+  useEffect(() => {
+    if (campaignId && allSlides.length > 0) {
+      const campaignIndex = allSlides.findIndex(
+        slide => slide.type === "campaign" && slide.id === campaignId
+      );
+      if (campaignIndex !== -1) {
+        setIndex(campaignIndex);
+      }
+    }
+  }, [campaignId, allSlides]);
 
   const next = () => setIndex((i) => (i + 1) % allSlides.length);
   const prev = () => setIndex((i) => (i - 1 + allSlides.length) % allSlides.length);
@@ -183,7 +196,11 @@ export default function Carousel({
   return (
     <div className={`relative w-full ${size}`}>
       <div
-        className="h-full overflow-hidden rounded-xl"
+        className={`h-full overflow-hidden rounded-xl transition-all duration-300 ${
+          campaignId && allSlides[index]?.id === campaignId 
+            ? "ring-4 ring-yellow-400/50 shadow-2xl shadow-yellow-400/20" 
+            : ""
+        }`}
         onMouseEnter={stop}
         onMouseLeave={start}
       >
@@ -210,7 +227,7 @@ export default function Carousel({
               
               {/* Campaign Sponsored Badge */}
               {slide.type === "campaign" && (
-                <div className="absolute top-4 right-4 bg-gradient-to-r from-purple-600 to-pink-600 px-3 py-1 rounded-full text-xs font-medium text-white shadow-lg">
+                <div className="absolute top-4 right-4 bg-gradient-to-r from-purple-600 to-purple-500 px-3 py-1 rounded-full text-xs font-medium text-white shadow-lg shadow-purple-500/30">
                   <span className="flex items-center gap-1">
                     <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
@@ -222,7 +239,7 @@ export default function Carousel({
 
               {/* Default Slide Badge (Ajakan Iklan) */}
               {slide.type === "static" && (
-                <div className="absolute top-4 right-4 bg-gradient-to-r from-purple-600 to-pink-600 px-3 py-1 rounded-full text-xs font-medium text-white shadow-lg shadow-purple-500/30">
+                <div className="absolute top-4 right-4 bg-gradient-to-r from-purple-600 to-purple-500 px-3 py-1 rounded-full text-xs font-medium text-white shadow-lg shadow-purple-500/30">
                   <span className="flex items-center gap-1">
                     <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
@@ -249,11 +266,7 @@ export default function Carousel({
                 </p>
                 <button 
                   onClick={() => handleSlideClick(slide)}
-                  className={`mt-4 w-fit rounded-full px-6 py-2.5 text-sm font-semibold text-white transition-all duration-300 hover:shadow-lg hover:scale-105 active:scale-95 cursor-pointer ${
-                    slide.type === "campaign" 
-                      ? "bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
-                      : "bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 shadow-lg shadow-purple-500/30"
-                  }`}
+                  className="mt-4 w-fit rounded-full bg-gradient-to-r from-purple-600 to-purple-500 px-6 py-2.5 text-sm font-semibold text-white transition-all duration-300 hover:from-purple-700 hover:to-purple-600 hover:shadow-xl shadow-lg shadow-purple-500/30 cursor-pointer"
                 >
                   {slide.type === "static" && (
                     <span className="flex items-center gap-2">
@@ -279,9 +292,7 @@ export default function Carousel({
               key={slide.id || i}
               className={`pointer-events-auto h-3 w-3 rounded-full transition-all duration-200 ${
                 i === index 
-                  ? slide.type === "static"
-                    ? "bg-gradient-to-r from-purple-400 to-pink-400 scale-110 shadow-lg shadow-purple-400/50"
-                    : "bg-white scale-110 shadow-lg" 
+                  ? "bg-purple-500 scale-110 shadow-lg shadow-purple-500/50"
                   : "bg-white/60 hover:bg-white/80 hover:scale-105"
               }`}
               aria-label={`Go to slide ${i + 1}: ${slide.title}`}

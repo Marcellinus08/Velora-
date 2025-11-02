@@ -138,19 +138,46 @@ export default function StudioPage() {
           });
         }
 
-        const campaignAds: StudioAd[] = campaigns.map(c => ({
-          id: c.id,
-          title: c.title,
-          banner_url: c.banner_url,
-          status: c.status,
-          clicks: clicksPerCampaign.get(c.id) || 0, // Use actual clicks from campaign_clicks table
-          duration_days: c.duration_days || 0,
-          start_date: c.start_date,
-          end_date: c.end_date,
-          created_at: c.created_at,
-          cta_text: c.cta_text,
-          description: c.description,
-        }));
+        const now = new Date();
+        
+        const campaignAds: StudioAd[] = campaigns.map(c => {
+          // Determine real-time status based on dates
+          let realStatus = c.status;
+          
+          const endDate = new Date(c.end_date);
+          const startDate = new Date(c.start_date);
+          
+          // If campaign has ended (past end_date), mark as ended
+          if (now > endDate) {
+            realStatus = "ended";
+          }
+          // If campaign hasn't started yet, keep as pending or original status
+          else if (now < startDate) {
+            realStatus = c.status === "paused" ? "paused" : "pending";
+          }
+          // If currently within date range and status is active, keep it active
+          else if (now >= startDate && now <= endDate) {
+            if (c.status === "paused") {
+              realStatus = "paused";
+            } else {
+              realStatus = "active";
+            }
+          }
+          
+          return {
+            id: c.id,
+            title: c.title,
+            banner_url: c.banner_url,
+            status: realStatus,
+            clicks: clicksPerCampaign.get(c.id) || 0,
+            duration_days: c.duration_days || 0,
+            start_date: c.start_date,
+            end_date: c.end_date,
+            created_at: c.created_at,
+            cta_text: c.cta_text,
+            description: c.description,
+          };
+        });
         
         setAds(campaignAds);
         console.log("[Studio] Loaded campaigns:", campaignAds.length);
@@ -330,6 +357,10 @@ export default function StudioPage() {
                 <StudioRecentPanel
                   videos={videos}
                   ads={ads}
+                  onAdsUpdate={() => {
+                    // Reload campaigns when status changes
+                    fetchCampaigns();
+                  }}
                 />
               </div>
             </div>

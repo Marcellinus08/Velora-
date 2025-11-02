@@ -1,3 +1,7 @@
+"use client";
+
+import { useSearchParams } from "next/navigation";
+import { useEffect, useRef } from "react";
 import Sidebar from "@/components/sidebar";
 import Carousel from "@/components/home/carousel";
 import Categories from "@/components/home/categories";
@@ -5,6 +9,22 @@ import CardsGrid from "@/components/home/cardsgrid";
 import HomeMeetRibbon from "@/components/home/meet";
 
 export default function Home() {
+  const searchParams = useSearchParams();
+  const campaignId = searchParams?.get("campaign");
+  const carouselRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    // Scroll to carousel when campaign parameter is present
+    if (campaignId && carouselRef.current) {
+      setTimeout(() => {
+        carouselRef.current?.scrollIntoView({ 
+          behavior: "smooth", 
+          block: "center" 
+        });
+      }, 500);
+    }
+  }, [campaignId]);
+
   return (
     <div className="flex h-full grow flex-row">
       <Sidebar />
@@ -17,9 +37,12 @@ export default function Home() {
         </div>
 
         {/* Hero Carousel Section */}
-        <div className="relative mb-8 w-full animate-in fade-in duration-700">
+        <div 
+          ref={carouselRef}
+          className="relative mb-8 w-full animate-in fade-in duration-700"
+        >
           <div className="absolute inset-0 bg-gradient-to-r from-purple-500/5 via-transparent to-blue-500/5 rounded-2xl opacity-0 hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
-          <Carousel size="h-[500px]" />
+          <Carousel size="h-[500px]" campaignId={campaignId || undefined} />
         </div>
 
         {/* Meet Section with Enhanced Design */}
