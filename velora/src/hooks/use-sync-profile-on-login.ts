@@ -28,6 +28,13 @@ export function useSyncProfileOnLogin() {
 
     (async () => {
       try {
+        // ✅ SAVE address to localStorage immediately (for NotificationsMenu)
+        const lowerAddr = address.toLowerCase();
+        if (typeof window !== "undefined") {
+          localStorage.setItem("abstract_id", lowerAddr);
+          console.log("[useSyncProfileOnLogin] 💾 Saved abstract_id to localStorage:", lowerAddr);
+        }
+
         const res = await fetch("/api/profiles/upsert", {
           method: "POST",
           headers: { "Content-Type": "application/json" },

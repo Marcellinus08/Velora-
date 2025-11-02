@@ -664,13 +664,28 @@ export default function Comments({
       );
       return;
     }
-    const { data, error } = await supabase
-      .from("video_comments")
-      .insert({ video_id: videoId, user_addr: myAddr, content: text })
-      .select("id, created_at, user_addr, content, parent_id")
-      .single();
+    
+    // Use API endpoint to create comment (handles notification creation)
+    try {
+      const response = await fetch(`/api/videos/${videoId}/comments`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userAddr: myAddr,
+          content: text,
+        }),
+      });
 
-    if (!error && data) {
+      if (!response.ok) {
+        const err = await response.json();
+        toast.error("Error", err.error || "Failed to create comment", 3000);
+        return;
+      }
+
+      const result = await response.json();
+      const data = result.comment;
+
+      if (!data) return;
       const addrLower = (data.user_addr || "anonymous").toLowerCase();
       const node: UiNode = {
         id: data.id,
@@ -694,6 +709,11 @@ export default function Comments({
           .maybeSingle();
         if (prof?.avatar_url) setAvatarMap((m) => ({ ...m, [addrLower]: prof.avatar_url }));
       }
+
+      toast.success("Comment posted!", "Your comment has been added", 2000);
+    } catch (err: any) {
+      console.error("Error creating comment:", err);
+      toast.error("Error", err?.message || "Failed to create comment", 3000);
     }
   };
 
@@ -707,13 +727,29 @@ export default function Comments({
       );
       return;
     }
-    const { data, error } = await supabase
-      .from("video_comments")
-      .insert({ video_id: videoId, user_addr: myAddr, content: text, parent_id: parentId })
-      .select("id, created_at, user_addr, content, parent_id")
-      .single();
+    
+    // Use API endpoint to create comment (handles notification creation)
+    try {
+      const response = await fetch(`/api/videos/${videoId}/comments`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userAddr: myAddr,
+          content: text,
+          parentId: parentId,
+        }),
+      });
 
-    if (!error && data) {
+      if (!response.ok) {
+        const err = await response.json();
+        toast.error("Error", err.error || "Failed to create comment", 3000);
+        return;
+      }
+
+      const result = await response.json();
+      const data = result.comment;
+
+      if (!data) return;
       const addrLower = (data.user_addr || "anonymous").toLowerCase();
       const node: UiNode = {
         id: data.id,
@@ -752,6 +788,11 @@ export default function Comments({
           .maybeSingle();
         if (prof?.avatar_url) setAvatarMap((m) => ({ ...m, [addrLower]: prof.avatar_url }));
       }
+
+      toast.success("Comment posted!", "Your comment has been added", 2000);
+    } catch (err: any) {
+      console.error("Error creating comment:", err);
+      toast.error("Error", err?.message || "Failed to create comment", 3000);
     }
   };
 

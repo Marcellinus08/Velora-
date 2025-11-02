@@ -2,9 +2,17 @@
 
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 
-// Factory function to create client
+let supabaseClient: ReturnType<typeof createSupabaseClient> | null = null;
+
+// Singleton pattern - return same instance
 export function createClient() {
-  const client = createSupabaseClient(
+  // If already created and still has valid connection, return it
+  if (supabaseClient) {
+    return supabaseClient;
+  }
+
+  // Create new client only once
+  supabaseClient = createSupabaseClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
@@ -26,8 +34,8 @@ export function createClient() {
     }
   );
 
-  console.log("🔧 Supabase Client created with Realtime enabled");
-  return client;
+  console.log("🔧 Supabase Client created with Realtime enabled (singleton)");
+  return supabaseClient;
 }
 
 // Browser singleton untuk komponen client (pakai public keys saja)

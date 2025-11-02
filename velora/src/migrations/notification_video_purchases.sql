@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS notification_video_purchases (
     creator_addr VARCHAR(42) NOT NULL,
     
     -- The purchased video
-    video_id UUID NOT NULL,
+    video_id TEXT NOT NULL,
     
     -- Purchase details
     price_cents INT NOT NULL DEFAULT 0,
@@ -28,11 +28,7 @@ CREATE TABLE IF NOT EXISTS notification_video_purchases (
     
     -- Timestamps
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    
-    -- Foreign Keys with CASCADE delete
-    CONSTRAINT fk_video FOREIGN KEY (video_id) 
-        REFERENCES videos(id) ON DELETE CASCADE
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 -- Create indexes for fast queries

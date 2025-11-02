@@ -7,11 +7,28 @@ import { useAccount } from "wagmi";
 import { formatDistanceToNow } from "date-fns";
 import { AbstractProfile } from "@/components/abstract-profile";
 
-export default function NotificationsMenu() {
-  const { address } = useAccount();
-  const abstractId = address?.toLowerCase();
+function getStoredAbstractAddress(): `0x${string}` | null {
+  try {
+    const raw =
+      localStorage.getItem("wagmi.store") ||
+      localStorage.getItem("abstract:session") ||
+      localStorage.getItem("abstract_id") ||
+      localStorage.getItem("wallet");
+    if (!raw) return null;
+    const m = raw.match(/0x[a-fA-F0-9]{40}/);
+    return m ? (m[0].toLowerCase() as `0x${string}`) : null;
+  } catch {
+    return null;
+  }
+}
 
-  console.log("[NotificationsMenu] Current user address:", { address, abstractId });
+export default function NotificationsMenu() {
+  const { address: wagmiAddress } = useAccount();
+  
+  // Fallback ke localStorage jika wagmi tidak return address
+  const abstractId = ((wagmiAddress?.toLowerCase() as `0x${string}` | undefined) || getStoredAbstractAddress()) as `0x${string}` | undefined;
+
+  console.log("[NotificationsMenu] Current user address:", { wagmiAddress, abstractId });
 
   const {
     notifications,
@@ -36,6 +53,10 @@ export default function NotificationsMenu() {
         return "👥";
       case "video_purchase":
         return "💰";
+      case "video_like":
+        return "👍";
+      case "video_comment":
+        return "💬";
       default:
         return "🔔";
     }

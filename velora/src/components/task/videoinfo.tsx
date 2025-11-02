@@ -166,25 +166,24 @@ export default function VideoInfoSection({
     if (likeBusy) return;
     setLikeBusy(true);
     try {
-      if (!liked) {
-        await supabase
-          .from("video_likes")
-          .upsert([{ video_id: videoId, user_addr: me.toLowerCase() }], {
-            onConflict: "video_id,user_addr",
-          });
-        setLiked(true);
-      } else {
-        await supabase.from("video_likes").delete().eq("video_id", videoId).eq("user_addr", me.toLowerCase());
-        setLiked(false);
-      }
-      const { count } = await supabase
-        .from("video_likes")
-        .select("*", { head: true, count: "exact" })
-        .eq("video_id", videoId);
-      setLikeCount(count ?? 0);
+      // Call API endpoint to handle like/unlike + notification creation
+      const response = await fetch(`/api/videos/${videoId}/like`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userAddr: me.toLowerCase() }),
+      });
 
-      // Optional: sinkronkan aggregate tabel videos
-      await supabase.from("videos").update({ likes_count: count ?? 0 }).eq("id", videoId);
+      if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.error || "Failed to toggle like");
+      }
+
+      const result = await response.json();
+      setLiked(result.liked);
+      setLikeCount(result.likeCount);
+    } catch (e: any) {
+      console.error("Like toggle failed:", e);
+      toast.error("Error", e.message || "Failed to toggle like", 3000);
     } finally {
       setLikeBusy(false);
     }
