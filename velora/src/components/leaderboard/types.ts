@@ -137,7 +137,12 @@ export type ActivityType =
   | "video_purchased"
   | "post_created" 
   | "meet_hosted" 
-  | "meet_attended" 
+  | "meet_attended"
+  | "campaign_created"
+  | "user_followed"
+  | "comment_posted"
+  | "video_liked"
+  | "video_sold"
   | "milestone";
 
 export type VideoUploadActivity = {
@@ -217,12 +222,98 @@ export type MilestoneActivity = {
   icon: string;
 };
 
+export type CampaignActivity = {
+  type: "campaign_created";
+  id: string;
+  date: string;
+  description: string;
+  campaign: {
+    id: string;
+    title: string;
+    banner_url?: string;
+    clicks: number;
+    status: string;
+  };
+  points: number;
+  icon: string;
+};
+
+export type FollowActivity = {
+  type: "user_followed";
+  id: string;
+  date: string;
+  description: string;
+  user: {
+    name: string;
+    avatar?: string;
+    addr: string;
+  };
+  points: number;
+  icon: string;
+};
+
+export type CommentActivity = {
+  type: "comment_posted";
+  id: string;
+  date: string;
+  description: string;
+  comment: {
+    id: string;
+    text: string;
+  };
+  video?: {
+    id: string;
+    title: string;
+    thumbnail?: string;
+  };
+  points: number;
+  icon: string;
+};
+
+export type LikeActivity = {
+  type: "video_liked";
+  id: string;
+  date: string;
+  description: string;
+  video: {
+    id: string;
+    title: string;
+    thumbnail?: string;
+  };
+  points: number;
+  icon: string;
+};
+
+export type SaleActivity = {
+  type: "video_sold";
+  id: string;
+  date: string;
+  description: string;
+  video: {
+    id: string;
+    title: string;
+    thumbnail?: string;
+  };
+  buyer: {
+    name: string;
+    avatar?: string;
+  };
+  earnings: number;
+  points: number;
+  icon: string;
+};
+
 export type ActivityItem = 
   | VideoUploadActivity 
   | TaskCompletedActivity 
   | SocialActivity 
   | MeetActivity 
-  | MilestoneActivity;
+  | MilestoneActivity
+  | CampaignActivity
+  | FollowActivity
+  | CommentActivity
+  | LikeActivity
+  | SaleActivity;
 
 export type ActivityStats = {
   totalActivities: number;
@@ -233,6 +324,11 @@ export type ActivityStats = {
   postsCreated: number;
   meetsHosted: number;
   meetsAttended: number;
+  campaignsCreated?: number;
+  usersFollowed?: number;
+  commentsPosted?: number;
+  videosLiked?: number;
+  videosSold?: number;
 };
 
 // Legacy types for backward compatibility

@@ -709,6 +709,16 @@ export default function ProfilePage() {
                                         ? "text-purple-400"
                                         : item.type === "video_shared"
                                         ? "text-orange-400"
+                                        : item.type === "campaign_created"
+                                        ? "text-yellow-400"
+                                        : item.type === "user_followed"
+                                        ? "text-pink-400"
+                                        : item.type === "comment_posted"
+                                        ? "text-cyan-400"
+                                        : item.type === "video_liked"
+                                        ? "text-red-400"
+                                        : item.type === "video_sold"
+                                        ? "text-green-400"
                                         : "text-neutral-400"
                                     }`}
                                   />
@@ -742,10 +752,14 @@ export default function ProfilePage() {
 
                               {/* Points Column */}
                               <td className="px-4 py-4 text-center">
-                                <div className="inline-flex items-center gap-1.5 rounded-lg bg-yellow-500/10 px-3 py-1.5 ring-1 ring-yellow-500/20">
-                                  <MI name="star" className="text-sm text-yellow-400" />
-                                  <span className="text-sm font-bold text-yellow-400">+{item.points}</span>
-                                </div>
+                                {item.points > 0 ? (
+                                  <div className="inline-flex items-center gap-1.5 rounded-lg bg-yellow-500/10 px-3 py-1.5 ring-1 ring-yellow-500/20">
+                                    <MI name="star" className="text-sm text-yellow-400" />
+                                    <span className="text-sm font-bold text-yellow-400">+{item.points}</span>
+                                  </div>
+                                ) : (
+                                  <span className="text-neutral-600">—</span>
+                                )}
                               </td>
 
                               {/* Date Column */}
