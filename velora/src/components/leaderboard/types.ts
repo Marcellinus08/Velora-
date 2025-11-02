@@ -136,8 +136,9 @@ export type ActivityType =
   | "video_shared" 
   | "video_purchased"
   | "post_created" 
+  | "community_comment"
   | "meet_hosted" 
-  | "meet_attended"
+  | "meet_purchase"
   | "campaign_created"
   | "user_followed"
   | "comment_posted"
@@ -176,7 +177,7 @@ export type TaskCompletedActivity = {
 };
 
 export type SocialActivity = {
-  type: "post_created" | "video_shared";
+  type: "post_created" | "video_shared" | "community_comment";
   id: string;
   date: string;
   description: string;
@@ -188,15 +189,19 @@ export type SocialActivity = {
   post?: {
     id: string;
     content: string;
-    likes: number;
-    comments: number;
+    likes?: number;
+    comments?: number;
+  };
+  comment?: {
+    id: string;
+    text: string;
   };
   points: number;
   icon: string;
 };
 
 export type MeetActivity = {
-  type: "meet_hosted" | "meet_attended";
+  type: "meet_hosted" | "meet_purchase";
   id: string;
   date: string;
   description: string;
@@ -207,6 +212,7 @@ export type MeetActivity = {
     participantAvatar?: string;
     creator?: string;
     creatorAvatar?: string;
+    status?: string;
   };
   earnings?: number;
   points: number;
@@ -322,8 +328,9 @@ export type ActivityStats = {
   videosUploaded: number;
   tasksCompleted: number;
   postsCreated: number;
+  communityComments: number;
   meetsHosted: number;
-  meetsAttended: number;
+  meetsPurchased: number;
   campaignsCreated?: number;
   usersFollowed?: number;
   commentsPosted?: number;

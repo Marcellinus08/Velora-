@@ -401,10 +401,9 @@ export default function UploadCreate() {
         currency: "USD",
         tasks_json: tasks, // kalau kolom tidak ada → akan di-trim otomatis
         
-        // Tambahkan pembagian points saja
-        points_buy_share: 40,  // 40% untuk pembeli
-        points_task_share: 20, // 20% untuk task
-        points_share_share: 40 // 40% untuk sharing
+        // Calculate total points: $1 = 10 points
+        // So points_total = (price_cents / 100) * 10
+        points_total: Math.floor((normalizedCents / 100) * 10),
       };
 
       await insertVideoRowSmart(payload);

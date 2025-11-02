@@ -47,14 +47,26 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { userAddr, videoId, action, totalPoints, isCorrect } = body;
 
-    if (!userAddr || !videoId || !action || totalPoints === undefined) {
+    if (!userAddr || !videoId || !action) {
       return NextResponse.json(
-        { error: "userAddr, videoId, action, and totalPoints are required" },
+        { error: "userAddr, videoId, and action are required" },
         { status: 400 }
       );
     }
 
     const userAddrLower = userAddr.toLowerCase();
+
+    // Get video's points_total from database if not provided
+    let videoTotalPoints = totalPoints;
+    if (!videoTotalPoints) {
+      const { data: videoData } = await supabaseAdmin
+        .from("videos")
+        .select("points_total")
+        .eq("id", videoId)
+        .single();
+      
+      videoTotalPoints = videoData?.points_total || 0;
+    }
 
     // Untuk action task dan share, cek apakah video berbayar dan apakah user sudah beli
     if (action === "task" || action === "share") {
@@ -89,7 +101,7 @@ export async function POST(req: NextRequest) {
 
     switch (action) {
       case "purchase":
-        pointsToAdd = Math.floor(totalPoints * 0.4); // 40%
+        pointsToAdd = Math.floor(videoTotalPoints * 0.4); // 40%
         updateFields.has_purchased = true;
         updateFields.points_from_purchase = pointsToAdd;
         updateFields.purchased_at = new Date().toISOString();
@@ -97,7 +109,7 @@ export async function POST(req: NextRequest) {
       case "task":
         // Hanya berikan poin jika jawaban benar (isCorrect === true)
         if (isCorrect === true) {
-          pointsToAdd = Math.floor(totalPoints * 0.2); // 20%
+          pointsToAdd = Math.floor(videoTotalPoints * 0.2); // 20%
         } else {
           pointsToAdd = 0; // Tidak dapat poin jika jawaban salah
         }
@@ -106,7 +118,7 @@ export async function POST(req: NextRequest) {
         updateFields.task_completed_at = new Date().toISOString();
         break;
       case "share":
-        pointsToAdd = Math.floor(totalPoints * 0.4); // 40%
+        pointsToAdd = Math.floor(videoTotalPoints * 0.4); // 40%
         updateFields.has_shared = true;
         updateFields.points_from_share = pointsToAdd;
         updateFields.shared_at = new Date().toISOString();
