@@ -26,3 +26,16 @@ export type StudioAd = {
   cta_text: string | null;
   description: string | null;
 };
+
+export type StudioMeet = {
+  id: string;
+  participant_addr: string;
+  participant_name?: string;
+  participant_avatar?: string;
+  status: "pending" | "confirmed" | "completed" | "cancelled";
+  scheduled_at: string;
+  duration_minutes: number;
+  rate_usd_per_min: number;
+  total_price_cents: number;
+  created_at: string;
+};
