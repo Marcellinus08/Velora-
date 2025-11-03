@@ -13,6 +13,7 @@ export type Notification = {
   type: "like" | "like_reply" | "reply" | "nested_reply" | "follow" | "video_purchase" | "video_like" | "video_comment";
   targetId: string; // post_id or reply_id or video_id depending on type
   targetType: "post" | "reply" | "video";
+  targetTitle?: string; // ✅ Title of the post/reply/video
   message: string;
   isRead: boolean;
   createdAt: string;
@@ -27,6 +28,35 @@ export function useNotifications(abstractId: string | undefined) {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
+
+  // ✅ Fetch actor profile data (avatar, username)
+  const fetchActorProfile = async (address: string): Promise<{ name: string | null; avatar: string | null }> => {
+    try {
+      const res = await fetch(`/api/profiles/${address}?t=${Date.now()}`, { cache: "no-store" });
+      if (!res.ok) return { name: null, avatar: null };
+      
+      const data = await res.json();
+      return {
+        name: data.username || null,
+        avatar: data.avatar_url || null,
+      };
+    } catch {
+      return { name: null, avatar: null };
+    }
+  };
+
+  // ✅ Fetch target title (post content, reply text, or video title)
+  const fetchTargetTitle = async (targetId: string, targetType: string): Promise<string> => {
+    try {
+      const res = await fetch(`/api/notifications/get-target-title?targetId=${targetId}&targetType=${targetType}`, { cache: "no-store" });
+      if (!res.ok) return "Unknown";
+      
+      const data = await res.json();
+      return data.title || "Unknown";
+    } catch {
+      return "Unknown";
+    }
+  };
 
   // Fetch notifications from all 6 tables
   const fetchNotifications = useCallback(async () => {
@@ -127,17 +157,70 @@ export function useNotifications(abstractId: string | undefined) {
       // Combine and normalize all notifications
       const allNotifs: Notification[] = [];
 
+      // ✅ Fetch actor profiles in parallel for all notifications
+      const allRawNotifs: any[] = [
+        ...(likesRes.data || []),
+        ...(repliesRes.data || []),
+        ...(replyLikesRes.data || []),
+        ...(videoPurchasesRes.data || []),
+        ...(videoLikesRes.data || []),
+        ...(videoCommentsRes.data || []),
+      ];
+
+      // Get unique actor addresses
+      const uniqueActors = new Set<string>();
+      allRawNotifs.forEach((n: any) => {
+        const actorAddr = n.actor_addr || n.buyer_addr || n.liker_addr || n.commenter_addr;
+        if (actorAddr) uniqueActors.add(actorAddr.toLowerCase());
+      });
+
+      // Fetch all actor profiles in parallel
+      const actorProfiles = new Map<string, { name: string | null; avatar: string | null }>();
+      await Promise.all(
+        Array.from(uniqueActors).map(async (addr) => {
+          const profile = await fetchActorProfile(addr);
+          actorProfiles.set(addr, profile);
+        })
+      );
+
+      // ✅ Get unique target titles to fetch
+      const uniqueTargets = new Set<string>();
+      allRawNotifs.forEach((n: any) => {
+        const targetId = n.post_id || n.reply_id || n.video_id;
+        const targetType = n.post_id ? "post" : n.reply_id ? "reply" : "video";
+        if (targetId) uniqueTargets.add(`${targetType}:${targetId}`);
+      });
+
+      // ✅ Fetch all target titles in parallel
+      const targetTitles = new Map<string, string>();
+      await Promise.all(
+        Array.from(uniqueTargets).map(async (key) => {
+          const [targetType, targetId] = key.split(":");
+          const title = await fetchTargetTitle(targetId, targetType);
+          targetTitles.set(key, title);
+          console.log("[useNotifications] Fetched target title:", { key, targetType, targetId, title });
+        })
+      );
+
+      console.log("[useNotifications] All target titles fetched:", {
+        count: targetTitles.size,
+        titles: Object.fromEntries(targetTitles),
+      });
+
       // Add likes
       (likesRes.data || []).forEach((n: any) => {
+        const actor = actorProfiles.get(n.actor_addr.toLowerCase()) || { name: null, avatar: null };
+        const titleKey = `post:${n.post_id}`;
         allNotifs.push({
           id: n.id,
           recipientAddr: n.recipient_addr,
           actorAddress: n.actor_addr,
-          actorName: null,
-          actorAvatar: null,
+          actorName: actor.name,
+          actorAvatar: actor.avatar,
           type: "like",
           targetId: n.post_id,
           targetType: "post",
+          targetTitle: targetTitles.get(titleKey),
           message: n.message,
           isRead: n.is_read,
           createdAt: n.created_at,
@@ -148,15 +231,18 @@ export function useNotifications(abstractId: string | undefined) {
 
       // Add replies
       (repliesRes.data || []).forEach((n: any) => {
+        const actor = actorProfiles.get(n.actor_addr.toLowerCase()) || { name: null, avatar: null };
+        const titleKey = `reply:${n.reply_id}`;
         allNotifs.push({
           id: n.id,
           recipientAddr: n.recipient_addr,
           actorAddress: n.actor_addr,
-          actorName: null,
-          actorAvatar: null,
+          actorName: actor.name,
+          actorAvatar: actor.avatar,
           type: n.type === "nested_reply" ? "nested_reply" : "reply",
           targetId: n.reply_id,
           targetType: "reply",
+          targetTitle: targetTitles.get(titleKey),
           message: n.message,
           isRead: n.is_read,
           createdAt: n.created_at,
@@ -167,15 +253,18 @@ export function useNotifications(abstractId: string | undefined) {
 
       // Add reply likes
       (replyLikesRes.data || []).forEach((n: any) => {
+        const actor = actorProfiles.get(n.actor_addr.toLowerCase()) || { name: null, avatar: null };
+        const titleKey = `reply:${n.reply_id}`;
         allNotifs.push({
           id: n.id,
           recipientAddr: n.recipient_addr,
           actorAddress: n.actor_addr,
-          actorName: null,
-          actorAvatar: null,
+          actorName: actor.name,
+          actorAvatar: actor.avatar,
           type: "like_reply",
           targetId: n.reply_id,
           targetType: "reply",
+          targetTitle: targetTitles.get(titleKey),
           message: n.message,
           isRead: n.is_read,
           createdAt: n.created_at,
@@ -186,15 +275,18 @@ export function useNotifications(abstractId: string | undefined) {
 
       // Add video purchases
       (videoPurchasesRes.data || []).forEach((n: any) => {
+        const actor = actorProfiles.get(n.buyer_addr.toLowerCase()) || { name: null, avatar: null };
+        const titleKey = `video:${n.video_id}`;
         allNotifs.push({
           id: n.id,
           recipientAddr: n.creator_addr,
           actorAddress: n.buyer_addr,
-          actorName: null,
-          actorAvatar: null,
+          actorName: actor.name,
+          actorAvatar: actor.avatar,
           type: "video_purchase",
           targetId: n.video_id,
           targetType: "video",
+          targetTitle: targetTitles.get(titleKey),
           message: n.message,
           isRead: n.is_read,
           createdAt: n.created_at,
@@ -205,15 +297,18 @@ export function useNotifications(abstractId: string | undefined) {
 
       // Add video likes
       (videoLikesRes.data || []).forEach((n: any) => {
+        const actor = actorProfiles.get(n.liker_addr.toLowerCase()) || { name: null, avatar: null };
+        const titleKey = `video:${n.video_id}`;
         allNotifs.push({
           id: n.id,
           recipientAddr: n.creator_addr,
           actorAddress: n.liker_addr,
-          actorName: null,
-          actorAvatar: null,
+          actorName: actor.name,
+          actorAvatar: actor.avatar,
           type: "video_like",
           targetId: n.video_id,
           targetType: "video",
+          targetTitle: targetTitles.get(titleKey),
           message: n.message,
           isRead: n.is_read,
           createdAt: n.created_at,
@@ -224,24 +319,25 @@ export function useNotifications(abstractId: string | undefined) {
 
       // Add video comments
       (videoCommentsRes.data || []).forEach((n: any) => {
-        // Get comment content from joined table
+        const actor = actorProfiles.get(n.commenter_addr.toLowerCase()) || { name: null, avatar: null };
         const commentContent = n.video_comments?.content || n.message;
+        const titleKey = `video:${n.video_id}`;
         
         allNotifs.push({
           id: n.id,
           recipientAddr: n.creator_addr,
           actorAddress: n.commenter_addr,
-          actorName: null,
-          actorAvatar: null,
+          actorName: actor.name,
+          actorAvatar: actor.avatar,
           type: "video_comment",
           targetId: n.video_id,
           targetType: "video",
+          targetTitle: targetTitles.get(titleKey),
           message: n.message,
           isRead: n.is_read,
           createdAt: n.created_at,
           readAt: n.read_at,
           source: "video_comments",
-          // Extra: Comment content from FK relationship
           commentText: commentContent,
           commentId: n.comment_id,
         });
