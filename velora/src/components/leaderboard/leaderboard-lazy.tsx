@@ -47,7 +47,7 @@ export function LeaderboardLazy({ allEntries, isLoading, onUserClick, currentUse
         avatarNode: user.avatar_url ? (
           <img src={user.avatar_url} alt="" className="h-full w-full object-cover" />
         ) : (
-          <AbstractProfile address={user.user_addr as `0x${string}`} size="sm" showTooltip={false} ring={false} />
+          <AbstractProfile address={user.user_addr as `0x${string}`} size="lg" showTooltip={false} ring={false} />
         ),
       })),
     [allEntries]
@@ -116,7 +116,7 @@ export function LeaderboardLazy({ allEntries, isLoading, onUserClick, currentUse
             return (
               <tr
                 key={e.rank}
-                className={`cursor-pointer transition-all duration-300 ${
+                className={`cursor-pointer transition-colors duration-200 ${
                   isCurrentUser
                     ? "bg-purple-900/20 hover:bg-purple-900/30"
                     : "hover:bg-neutral-800/40"
@@ -136,7 +136,7 @@ export function LeaderboardLazy({ allEntries, isLoading, onUserClick, currentUse
                 </td>
                 <td className="px-3 py-5">
                   <div className="flex items-center gap-4">
-                    <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-neutral-700/50 bg-neutral-800">
+                    <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-neutral-800">
                       {e.avatarNode}
                     </div>
                     <div>

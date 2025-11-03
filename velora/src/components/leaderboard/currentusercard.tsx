@@ -7,7 +7,7 @@ export default function CurrentUserCard({ user, fmt }: { user: CurrentUser; fmt:
   return (
     <div className="flex items-center justify-between rounded-lg border border-neutral-800 bg-neutral-900/60 px-4 py-3">
       <div className="flex items-center gap-3">
-        <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border border-neutral-600 bg-neutral-700">
+        <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-neutral-700">
           {user.avatarNode}
         </div>
         <div>
