@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import { AbstractProfile } from "@/components/abstract-profile";
 
 type Creator = {
@@ -129,7 +130,7 @@ export default function HomeMeetRibbon() {
     const displayAddr = wallet ? shorten(wallet) : "—";
 
     return (
-      <div key={p.id} onClick={() => window.location.href = "/meet"}>
+      <Link key={p.id} href="/meet">
         <Card neon>
           <div className="flex items-center gap-3">
             <div className="overflow-hidden grayscale transition group-hover:grayscale-0">
@@ -167,7 +168,7 @@ export default function HomeMeetRibbon() {
             </span>
           </div>
         </Card>
-      </div>
+      </Link>
     );
   };
 
@@ -178,20 +179,17 @@ export default function HomeMeetRibbon() {
                    [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
         {/* Title-as-card (tanpa neon) */}
-        <div className="group min-w-[200px] rounded-xl border border-neutral-800 bg-neutral-900 px-3 py-2 text-neutral-300 transition-all duration-300 flex flex-col justify-between">
+        <Link href="/meet" className="group min-w-[200px] rounded-xl border border-neutral-800 bg-neutral-900 px-3 py-2 text-neutral-300 transition-all duration-300 flex flex-col justify-between">
           <div>
             <div className="text-sm font-semibold text-neutral-100">Meet</div>
             <div className="mt-0.5 text-[11px] text-neutral-400">
               Find creators to talk with
             </div>
           </div>
-          <button
-            className="mt-2 w-fit rounded-md border border-neutral-700/70 px-2 py-1 text-[11px] font-medium text-[var(--primary-500)] hover:opacity-90 cursor-pointer transition-opacity"
-            onClick={() => (window.location.href = "/meet")}
-          >
+          <div className="mt-2 w-fit rounded-md border border-neutral-700/70 px-2 py-1 text-[11px] font-medium text-[var(--primary-500)] hover:opacity-90 transition-opacity">
             View all →
-          </button>
-        </div>
+          </div>
+        </Link>
 
         {/* Creator cards */}
         {items.map(renderCreatorCard)}

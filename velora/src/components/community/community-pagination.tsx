@@ -1,0 +1,83 @@
+// src/components/community/community-pagination.tsx
+"use client";
+
+import React from "react";
+
+interface CommunityPaginationProps {
+  currentPage: number;
+  itemsPerPage: number;
+  totalItems: number;
+  onPageChange: (page: number) => void;
+  onItemsPerPageChange?: (itemsPerPage: number) => void;
+}
+
+export function CommunityPagination({
+  currentPage,
+  itemsPerPage,
+  totalItems,
+  onPageChange,
+  onItemsPerPageChange,
+}: CommunityPaginationProps) {
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+  const startItem = (currentPage - 1) * itemsPerPage + 1;
+  const endItem = Math.min(currentPage * itemsPerPage, totalItems);
+
+  const hasPrevious = currentPage > 1;
+  const hasNext = currentPage < totalPages;
+
+  const handlePrevious = () => {
+    if (hasPrevious) {
+      onPageChange(currentPage - 1);
+    }
+  };
+
+  const handleNext = () => {
+    if (hasNext) {
+      onPageChange(currentPage + 1);
+    }
+  };
+
+  return (
+    <div className="flex items-center justify-between rounded-lg border border-neutral-800/50 bg-neutral-900/30 px-6 py-4">
+      <div className="flex items-center gap-4">
+        {onItemsPerPageChange && (
+          <div className="flex items-center gap-2">
+            <label className="text-sm text-neutral-500">Posts per page:</label>
+            <select
+              value={itemsPerPage}
+              onChange={(e) => onItemsPerPageChange(Number(e.target.value))}
+              className="rounded border border-neutral-700 bg-neutral-800 px-3 py-1 text-sm text-neutral-200 focus:border-purple-500 focus:outline-none"
+            >
+              <option value={5}>5</option>
+              <option value={10}>10</option>
+              <option value={20}>20</option>
+              <option value={50}>50</option>
+            </select>
+          </div>
+        )}
+      </div>
+
+      <div className="flex items-center gap-2">
+        <span className="text-sm text-neutral-500">
+          Page {currentPage} of {totalPages}
+        </span>
+        
+        <button
+          onClick={handlePrevious}
+          disabled={!hasPrevious}
+          className="rounded border border-neutral-700 bg-neutral-800 px-4 py-2 text-sm font-medium text-neutral-200 transition-all duration-200 hover:bg-neutral-700 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          Prev
+        </button>
+
+        <button
+          onClick={handleNext}
+          disabled={!hasNext}
+          className="rounded border border-neutral-700 bg-neutral-800 px-4 py-2 text-sm font-medium text-neutral-200 transition-all duration-200 hover:bg-neutral-700 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          Next
+        </button>
+      </div>
+    </div>
+  );
+}

@@ -59,6 +59,14 @@ export async function POST(req: Request, { params }: RouteCtx) {
     const content = String(body.content || "").trim();
     const parentId = body.parentId || null;
 
+    console.log("🔴 [POST /api/videos/[id]/comments] ===== START POST REQUEST =====");
+    console.log("🔴 [POST /api/videos/[id]/comments] Received:", {
+      videoId,
+      userAddr,
+      content: content.substring(0, 50),
+      timestamp: new Date().toISOString(),
+    });
+
     if (!videoId) {
       return NextResponse.json({ error: "videoId required" }, { status: 400 });
     }

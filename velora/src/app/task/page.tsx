@@ -9,6 +9,7 @@ import VideoInfoSection from "@/components/task/videoinfo";
 import Comments from "@/components/task/comments";
 import VideoPlayer from "@/components/task/videoplayer";
 import { BuyVideoButton } from "@/components/payments/TreasuryButtons";
+import { TaskPageSkeleton } from "@/components/skeletons/task-skeleton";
 import type { RecommendedVideo, VideoInfo } from "@/components/task/types";
 import type { Address } from "viem";
 
@@ -519,16 +520,7 @@ export default function TaskPage() {
         </div>
       )}
 
-      {loading && (
-        <div className="grid grid-cols-12 gap-8">
-          <div className="col-span-12 lg:col-span-8">
-            <div className="aspect-video w-full animate-pulse rounded-2xl bg-neutral-800" />
-          </div>
-          <div className="col-span-12 lg:col-span-4">
-            <div className="h-[420px] animate-pulse rounded-2xl bg-neutral-800" />
-          </div>
-        </div>
-      )}
+      {loading && <TaskPageSkeleton />}
 
       {!loading && row && (
         <>

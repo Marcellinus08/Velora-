@@ -5,7 +5,7 @@ import { useEffect, useRef } from "react";
 import Sidebar from "@/components/sidebar";
 import Carousel from "@/components/home/carousel";
 import Categories from "@/components/home/categories";
-import CardsGrid from "@/components/home/cardsgrid";
+import CardsGridLazy from "@/components/home/cardsgrid-lazy";
 import HomeMeetRibbon from "@/components/home/meet";
 
 export default function Home() {
@@ -65,7 +65,7 @@ export default function Home() {
         <div className="relative animate-in fade-in duration-1000" style={{ animationDelay: '600ms' }}>
           <div className="absolute inset-0 bg-gradient-to-br from-purple-500/3 via-transparent to-blue-500/3 rounded-2xl" />
           <div className="relative">
-            <CardsGrid />
+            <CardsGridLazy />
           </div>
         </div>
 

@@ -5,7 +5,7 @@ import React, { useEffect, useState } from "react";
 import Sidebar from "@/components/sidebar";
 import { Header } from "@/components/meet/Header";
 import { TabButton } from "@/components/meet/TabButton";
-import { MeetCard, MeetCardSkeleton } from "@/components/meet/MeetCard";
+import { CreatorsLazy } from "@/components/meet/creators-lazy";
 import { BookingModal } from "@/components/meet/BookingModal";
 import { MeetEmptyState } from "@/components/meet/empty-state";
 
@@ -77,23 +77,11 @@ export default function MeetPage() {
 
         {/* Creators tab */}
         {tab === "creators" && (
-          <>
-            {loading ? (
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                {Array.from({ length: 6 }).map((_, i) => (
-                  <MeetCardSkeleton key={i} />
-                ))}
-              </div>
-            ) : creators.length === 0 ? (
-              <MeetEmptyState type="creators" />
-            ) : (
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                {creators.map((c) => (
-                  <MeetCard key={c.id} creator={c} onCall={openBooking} />
-                ))}
-              </div>
-            )}
-          </>
+          <CreatorsLazy
+            allCreators={creators}
+            isLoading={loading}
+            onCreatorSelect={openBooking}
+          />
         )}
 
         {tab === "upcoming" && <MeetEmptyState type="upcoming" />}

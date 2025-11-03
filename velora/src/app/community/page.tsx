@@ -8,10 +8,10 @@ import { useConfirmDialog } from "@/components/ui/confirm-dialog";
 
 import Sidebar from "@/components/sidebar";
 import CommunityTabs from "@/components/community/tabs";
-// ⬇️ gunakan komponen yang mendukung prop `loading`
-import CommunityPostRow from "@/components/community/postrow";
+import { CommunityLazy } from "@/components/community/community-lazy";
 import CreatePostModal from "@/components/community/createmodal";
 import { CommunityEmptyState } from "@/components/community/empty-state";
+import { CommunityPageSkeleton } from "@/components/skeletons/community-skeleton";
 import { CommunityPost, NewPostPayload } from "@/components/community/types";
 
 export default function CommunityPage() {
@@ -245,29 +245,20 @@ export default function CommunityPage() {
 
           {error && <div className="rounded-md border border-red-700 bg-red-900/30 p-3 text-sm text-red-200">{error}</div>}
 
-          {/* ⬇️ SKELETON saat loading */}
-          <div className="flex flex-col gap-4">
-            {loading
-              ? Array.from({ length: 3 }).map((_, i) => (
-                  <CommunityPostRow key={i} post={{} as any} loading />
-                ))
-              : posts.length
-              ? posts.map((p) => (
-                  <CommunityPostRow
-                    key={p.id}
-                    post={p}
-                    currentAddress={me}
-                    onLike={() => toggleLike(p.id)}
-                    onDelete={handleDelete} // parent yang konfirmasi
-                    onEdit={handleEdit} // tambahkan handler edit
-                  />
-                ))
-              : !error && (
-                  <CommunityEmptyState 
-                    category={category}
-                  />
-                )}
-          </div>
+          {/* Loading State dengan Skeleton */}
+          {loading ? (
+            <CommunityPageSkeleton count={5} />
+          ) : (
+            <CommunityLazy
+              allPosts={posts}
+              isLoading={loading}
+              currentAddress={me}
+              onLike={toggleLike}
+              onDelete={handleDelete}
+              onEdit={handleEdit}
+              error={error}
+            />
+          )}
         </div>
       </main>
 
