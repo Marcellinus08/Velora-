@@ -10,10 +10,13 @@ function fmt(n: number) {
 export default function ProfileStatsCard({
   stats,
   rank,
+  profit,
 }: {
   stats: ProfileStats;
   /** Overall rank info untuk menggantikan ETH card */
   rank?: { rank: number; total: number };
+  /** Total earnings from video sales + meets */
+  profit?: number;
 }) {
   const topPercent =
     rank && rank.total > 0
@@ -21,7 +24,7 @@ export default function ProfileStatsCard({
       : null;
 
   return (
-    <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+    <div className="grid grid-cols-2 gap-4 sm:grid-cols-5">
       {/* Followers */}
       <div className="rounded-lg border border-neutral-800 bg-neutral-900 p-4 text-center">
         <p className="text-xs font-medium text-neutral-400">Followers</p>
@@ -32,6 +35,14 @@ export default function ProfileStatsCard({
       <div className="rounded-lg border border-neutral-800 bg-neutral-900 p-4 text-center">
         <p className="text-xs font-medium text-neutral-400">Following</p>
         <p className="mt-2 text-xl font-semibold text-neutral-50">{fmt(stats.following)}</p>
+      </div>
+
+      {/* Profit - NEW */}
+      <div className="rounded-lg border border-neutral-800 bg-neutral-900 p-4 text-center">
+        <p className="text-xs font-medium text-neutral-400">Profit</p>
+        <p className="mt-2 text-xl font-semibold text-green-400">
+          ${(profit || 0).toFixed(2)}
+        </p>
       </div>
 
       {/* Points */}

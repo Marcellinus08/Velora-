@@ -50,6 +50,9 @@ export default function ProfilePage() {
     user: ProfileUser;
     rank: { rank: number; total: number } | null;
   } | null>(null);
+  
+  // State for profit (total earnings from video sales + meets)
+  const [totalProfit, setTotalProfit] = useState<number>(0);
 
   // Tab state for History/Activity (default to history)
   const [activeTab, setActiveTab] = useState<"history" | "activity">("history");
@@ -98,12 +101,30 @@ export default function ProfilePage() {
           if (data.success) {
             setActivityData(data.activities || []);
             setActivityStats(data.stats || null);
+            // Update total profit from activity stats
+            if (data.stats?.totalEarnings) {
+              setTotalProfit(data.stats.totalEarnings);
+            }
           }
         })
         .catch((err) => console.error("Error fetching activity:", err))
         .finally(() => setLoadingTabData(false));
     }
   }, [activeTab, targetAddress, activityFilter]);
+  
+  // Also fetch profit on component mount for header display
+  useEffect(() => {
+    if (targetAddress) {
+      fetch(`/api/leaderboard/activity?userAddr=${targetAddress}&limit=1`)
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.success && data.stats?.totalEarnings) {
+            setTotalProfit(data.stats.totalEarnings);
+          }
+        })
+        .catch((err) => console.error("Error fetching profit:", err));
+    }
+  }, [targetAddress]);
 
   useEffect(() => {
     async function fetchProfileData() {
@@ -267,7 +288,7 @@ export default function ProfilePage() {
 
         {/* Stats + Rank */}
         <div className="mt-6">
-          <ProfileStatsCard stats={profileData.user.stats} rank={profileData.rank || undefined} />
+          <ProfileStatsCard stats={profileData.user.stats} rank={profileData.rank || undefined} profit={totalProfit} />
         </div>
 
         {/* Tabs: History / Activity */}
@@ -383,17 +404,26 @@ export default function ProfilePage() {
                 <div className="text-xs font-medium text-neutral-400">Points Earned</div>
                 <div className="mt-1 text-lg font-bold text-yellow-400">{fmtNum(activityStats.totalPointsEarned)}</div>
               </div>
-              <div className="rounded-xl border border-neutral-700/50 bg-neutral-800/50 p-4 text-center backdrop-blur-sm">
-                <div className="text-xs font-medium text-neutral-400">Videos</div>
-                <div className="mt-1 text-lg font-bold text-blue-400">{activityStats.videosUploaded}</div>
+              <div className="rounded-xl border border-neutral-700/50 bg-neutral-800/50 p-4 backdrop-blur-sm">
+                <div className="text-xs font-medium text-neutral-400 text-center">Videos Purchased</div>
+                <div className="mt-1 text-lg font-bold text-blue-400 text-center">{activityStats.videoPurchases}</div>
+                <div className="mt-0.5 text-[10px] text-neutral-500 text-center">
+                  {activityStats.videoPurchases * 4} pts
+                </div>
               </div>
-              <div className="rounded-xl border border-neutral-700/50 bg-neutral-800/50 p-4 text-center backdrop-blur-sm">
-                <div className="text-xs font-medium text-neutral-400">Tasks</div>
-                <div className="mt-1 text-lg font-bold text-green-400">{activityStats.tasksCompleted}</div>
+              <div className="rounded-xl border border-neutral-700/50 bg-neutral-800/50 p-4 backdrop-blur-sm">
+                <div className="text-xs font-medium text-neutral-400 text-center">Tasks Completed</div>
+                <div className="mt-1 text-lg font-bold text-green-400 text-center">{activityStats.tasksCompleted}</div>
+                <div className="mt-0.5 text-[10px] text-neutral-500 text-center">
+                  ~{activityStats.tasksCompleted * 2} pts
+                </div>
               </div>
-              <div className="rounded-xl border border-neutral-700/50 bg-neutral-800/50 p-4 text-center backdrop-blur-sm">
-                <div className="text-xs font-medium text-neutral-400">Money Earned</div>
-                <div className="mt-1 text-lg font-bold text-green-400">${fmtNum(activityStats.totalEarnings)}</div>
+              <div className="rounded-xl border border-neutral-700/50 bg-neutral-800/50 p-4 backdrop-blur-sm">
+                <div className="text-xs font-medium text-neutral-400 text-center">Shared Videos</div>
+                <div className="mt-1 text-lg font-bold text-orange-400 text-center">{activityStats.videoShares}</div>
+                <div className="mt-0.5 text-[10px] text-neutral-500 text-center">
+                  {activityStats.videoShares * 4} pts
+                </div>
               </div>
             </div>
           )}
@@ -760,6 +790,12 @@ export default function ProfilePage() {
                                   <div className="inline-flex items-center gap-1.5 rounded-lg bg-yellow-500/10 px-3 py-1.5 ring-1 ring-yellow-500/20">
                                     <MI name="star" className="text-sm text-yellow-400" />
                                     <span className="text-sm font-bold text-yellow-400">+{item.points}</span>
+                                  </div>
+                                ) : item.type === "task_completed" ? (
+                                  // Task with 0 points (wrong answer) - still show badge
+                                  <div className="inline-flex items-center gap-1.5 rounded-lg bg-neutral-800/50 px-3 py-1.5 ring-1 ring-neutral-700/30">
+                                    <MI name="star" className="text-sm text-neutral-500" />
+                                    <span className="text-sm font-bold text-neutral-500">+0</span>
                                   </div>
                                 ) : (
                                   <span className="text-neutral-600">—</span>
