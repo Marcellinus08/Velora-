@@ -92,7 +92,7 @@ export function LeaderboardLazy({ allEntries, isLoading, onUserClick, currentUse
   }
 
   return (
-    <div className="overflow-hidden rounded-xl border border-neutral-800/50 bg-neutral-900/30 shadow-lg shadow-black/50">
+    <div className="overflow-hidden rounded-xl border border-neutral-800/50 bg-neutral-900/30">
       {/* Table */}
       <table className="min-w-full">
         <thead>
