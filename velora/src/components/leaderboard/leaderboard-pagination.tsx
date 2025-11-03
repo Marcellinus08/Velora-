@@ -38,19 +38,19 @@ export function LeaderboardPagination({
   };
 
   return (
-    <div className="flex items-center justify-between rounded-lg border border-neutral-800/50 bg-neutral-900/30 px-6 py-4">
+    <div className="flex items-center justify-between">
+      <div className="text-sm text-neutral-400">
+        Showing {startItem}-{endItem} of {totalItems.toLocaleString()} players
+      </div>
+
       <div className="flex items-center gap-4">
-        <span className="text-sm text-neutral-400">
-          Showing {startItem}-{endItem} of {totalItems.toLocaleString()} players
-        </span>
-        
         {onItemsPerPageChange && (
           <div className="flex items-center gap-2">
             <label className="text-sm text-neutral-500">Rows per page:</label>
             <select
               value={itemsPerPage}
               onChange={(e) => onItemsPerPageChange(Number(e.target.value))}
-              className="rounded border border-neutral-700 bg-neutral-800 px-3 py-1 text-sm text-neutral-200 focus:border-purple-500 focus:outline-none"
+              className="rounded border border-neutral-700 bg-neutral-800 px-3 py-1.5 text-sm text-neutral-200 focus:border-purple-500 focus:outline-none"
             >
               <option value={10}>10</option>
               <option value={20}>20</option>
@@ -59,9 +59,7 @@ export function LeaderboardPagination({
             </select>
           </div>
         )}
-      </div>
 
-      <div className="flex items-center gap-2">
         <span className="text-sm text-neutral-500">
           Page {currentPage} of {totalPages}
         </span>
