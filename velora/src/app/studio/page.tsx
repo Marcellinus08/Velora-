@@ -264,17 +264,51 @@ export default function StudioPage() {
 
         setVideos(updatedVideos);
 
-        // Calculate total earnings
-        const totalEarnings = Array.from(revenuePerVideo.values()).reduce((sum, rev) => sum + rev, 0);
+        // Calculate total video earnings (60% creator share)
+        const totalVideoEarnings = Array.from(revenuePerVideo.values()).reduce((sum, rev) => sum + rev, 0);
         
         console.log('[Studio Stats] Buyers per video:', Array.from(buyersPerVideo.entries()));
         console.log('[Studio Stats] Revenue per video:', Array.from(revenuePerVideo.entries()));
-        console.log('[Studio Stats] Total Earnings:', totalEarnings);
+        console.log('[Studio Stats] Total Video Earnings:', totalVideoEarnings);
+        
+        // Fetch meet earnings (80% creator share)
+        const { data: completedMeets } = await supabase
+          .from("meets")
+          .select("total_price_cents")
+          .eq("creator_addr", me)
+          .eq("status", "completed");
+        
+        const totalMeetEarnings = completedMeets?.reduce((sum, meet) => {
+          const meetTotal = (meet.total_price_cents || 0) / 100;
+          return sum + (meetTotal * 0.8); // 80% for creator (payMeet: 80/20)
+        }, 0) || 0;
+        
+        console.log('[Studio Stats] Total Meet Earnings:', totalMeetEarnings);
+        
+        // Total earnings = video sales + meet bookings
+        const totalEarnings = totalVideoEarnings + totalMeetEarnings;
+        console.log('[Studio Stats] Total Earnings (Video + Meet):', totalEarnings);
+        
         setEarningsUsd(totalEarnings);
       } else {
         console.log('[Studio Stats] No purchases found');
+        
+        // Still check for meet earnings even if no video sales
+        const { data: completedMeets } = await supabase
+          .from("meets")
+          .select("total_price_cents")
+          .eq("creator_addr", me)
+          .eq("status", "completed");
+        
+        const totalMeetEarnings = completedMeets?.reduce((sum, meet) => {
+          const meetTotal = (meet.total_price_cents || 0) / 100;
+          return sum + (meetTotal * 0.8); // 80% for creator (payMeet: 80/20)
+        }, 0) || 0;
+        
+        console.log('[Studio Stats] Total Meet Earnings (no video sales):', totalMeetEarnings);
+        
         setBuyersTotal(0);
-        setEarningsUsd(0);
+        setEarningsUsd(totalMeetEarnings);
       }
     } catch (error) {
       console.error("[Studio Stats] Error:", error);

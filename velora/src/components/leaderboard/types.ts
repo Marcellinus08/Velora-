@@ -325,8 +325,14 @@ export type ActivityStats = {
   totalActivities: number;
   totalPointsEarned: number;
   totalEarnings: number;
+  
+  // Activities that earned points
+  videoPurchases: number; // Videos purchased (with points)
+  tasksCompleted: number; // Tasks completed with correct answer (with points)
+  videoShares: number; // Videos shared (with points)
+  
+  // Additional stats
   videosUploaded: number;
-  tasksCompleted: number;
   postsCreated: number;
   communityComments: number;
   meetsHosted: number;

@@ -40,7 +40,9 @@ export async function GET(req: NextRequest) {
             .select("price_cents")
             .eq("video_id", video.id);
 
-          const videoEarnings = sales?.reduce((sum, sale) => sum + ((sale.price_cents || 0) / 100), 0) || 0;
+          // Creator gets 60% of video sales (40% goes to platform)
+          const videoSalesTotal = sales?.reduce((sum, sale) => sum + ((sale.price_cents || 0) / 100), 0) || 0;
+          const videoEarnings = videoSalesTotal * 0.6; // 60% for creator
 
           activities.push({
             type: "video_upload",
@@ -80,8 +82,8 @@ export async function GET(req: NextRequest) {
 
       if (!pError && progress) {
         progress.forEach((p) => {
-          // Task completion
-          if (p.has_completed_task && p.points_from_task > 0) {
+          // Task completion (include both correct and wrong answers)
+          if (p.has_completed_task) {
             activities.push({
               type: "task_completed",
               id: `task_${p.video_id}`,
@@ -92,7 +94,7 @@ export async function GET(req: NextRequest) {
                 title: p.video?.title || "Unknown Video",
                 thumbnail: p.video?.thumb_url,
               },
-              points: p.points_from_task,
+              points: p.points_from_task || 0, // 0 if wrong answer
               icon: "check_circle",
             });
           }
@@ -458,6 +460,10 @@ export async function GET(req: NextRequest) {
             meet.participant?.username || 
             (meet.participant_addr ? `${meet.participant_addr.slice(0, 6)}…${meet.participant_addr.slice(-4)}` : "participant");
           
+          // Creator gets 80% of meet earnings (20% goes to platform)
+          const meetTotal = (meet.total_price_cents || 0) / 100;
+          const creatorEarnings = meetTotal * 0.8; // 80% for creator (payMeet: 80/20)
+          
           activities.push({
             type: "meet_hosted",
             id: `meet_host_${meet.id}`,
@@ -469,7 +475,7 @@ export async function GET(req: NextRequest) {
               participant: participantName,
               participantAvatar: meet.participant?.avatar_url,
             },
-            earnings: (meet.total_price_cents || 0) / 100,
+            earnings: creatorEarnings,
             points: 0, // No points for hosting meet
             icon: "video_call",
           });
@@ -488,13 +494,53 @@ export async function GET(req: NextRequest) {
     // Sort all activities by date (newest first)
     activities.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
-    // Calculate stats
+    // Calculate total profit separately (always, regardless of filter)
+    // 1. Get ALL video sales earnings
+    const { data: allVideos } = await supabaseAdmin
+      .from("videos")
+      .select("id")
+      .eq("abstract_id", userAddr);
+
+    let totalVideoEarnings = 0;
+    if (allVideos) {
+      for (const video of allVideos) {
+        const { data: sales } = await supabaseAdmin
+          .from("video_purchases")
+          .select("price_cents")
+          .eq("video_id", video.id);
+        
+        // Creator gets 60% of video sales (40% goes to platform)
+        const videoSalesTotal = sales?.reduce((sum, sale) => sum + ((sale.price_cents || 0) / 100), 0) || 0;
+        totalVideoEarnings += videoSalesTotal * 0.6; // 60% for creator
+      }
+    }
+
+    // 2. Get ALL completed meets earnings
+    const { data: allMeets } = await supabaseAdmin
+      .from("meets")
+      .select("total_price_cents")
+      .eq("creator_addr", userAddr)
+      .eq("status", "completed");
+
+    // Creator gets 80% of meet earnings (20% goes to platform)
+    const meetTotal = allMeets?.reduce((sum, meet) => sum + ((meet.total_price_cents || 0) / 100), 0) || 0;
+    const totalMeetEarnings = meetTotal * 0.8; // 80% for creator (payMeet: 80/20)
+
+    // Total profit = video sales (60%) + meet earnings (80%)
+    const totalProfit = totalVideoEarnings + totalMeetEarnings;
+
+    // Calculate stats from activities (for display in cards)
     const totalEarnings = activities
       .filter((a) => a.earnings)
       .reduce((sum, item) => sum + (item.earnings || 0), 0);
 
     const totalPoints = activities
       .reduce((sum, item) => sum + (item.points || 0), 0);
+
+    // Count only activities that earned points (purchases, tasks with correct answers, shares)
+    const videoPurchasesWithPoints = activities.filter((a) => a.type === "video_purchased" && a.points > 0).length;
+    const tasksCompletedWithPoints = activities.filter((a) => a.type === "task_completed" && a.points > 0).length;
+    const videoSharesWithPoints = activities.filter((a) => a.type === "video_shared" && a.points > 0).length;
 
     return NextResponse.json({
       success: true,
@@ -503,9 +549,15 @@ export async function GET(req: NextRequest) {
       stats: {
         totalActivities: activities.length,
         totalPointsEarned: totalPoints,
-        totalEarnings,
+        totalEarnings: totalProfit, // Use calculated profit instead
+        
+        // Only count activities that earned points
+        videoPurchases: videoPurchasesWithPoints,
+        tasksCompleted: tasksCompletedWithPoints,
+        videoShares: videoSharesWithPoints,
+        
+        // Additional stats
         videosUploaded: activities.filter((a) => a.type === "video_upload").length,
-        tasksCompleted: activities.filter((a) => a.type === "task_completed").length,
         postsCreated: activities.filter((a) => a.type === "post_created").length,
         communityComments: activities.filter((a) => a.type === "community_comment").length,
         meetsHosted: activities.filter((a) => a.type === "meet_hosted").length,
