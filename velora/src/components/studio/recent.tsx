@@ -1,20 +1,23 @@
 "use client";
 
 import { useState } from "react";
-import type { StudioVideo, StudioAd } from "./types";
+import type { StudioVideo, StudioAd, StudioMeet } from "./types";
 import StudioRecentUploads from "./recent-uploads";
 import StudioRecentAds from "./recent-ads";
+import StudioRecentMeets from "./recent-meets";
 
 export default function StudioRecentPanel({
   videos = [],
   ads = [],
+  meets = [],
   onAdsUpdate,
 }: {
   videos?: StudioVideo[];
   ads?: StudioAd[];
+  meets?: StudioMeet[];
   onAdsUpdate?: () => void;
 }) {
-  const [tab, setTab] = useState<"uploads" | "ads">("uploads");
+  const [tab, setTab] = useState<"uploads" | "ads" | "meets">("uploads");
   const [expanded, setExpanded] = useState(false);
 
   // jumlah item yg ditampilkan
@@ -51,6 +54,17 @@ export default function StudioRecentPanel({
             >
               Ads
             </button>
+            <button
+              onClick={() => setTab("meets")}
+              className={`rounded-md px-3 py-1 text-sm transition-colors cursor-pointer ${
+                tab === "meets"
+                  ? "bg-neutral-700 text-neutral-50"
+                  : "text-neutral-300 hover:text-neutral-100"
+              }`}
+              aria-pressed={tab === "meets"}
+            >
+              Meets
+            </button>
           </div>
         </div>
 
@@ -67,8 +81,10 @@ export default function StudioRecentPanel({
       <div className="p-4">
         {tab === "uploads" ? (
           <StudioRecentUploads items={videos} showCount={showCount} />
-        ) : (
+        ) : tab === "ads" ? (
           <StudioRecentAds items={ads} showCount={showCount} onStatusChange={onAdsUpdate} />
+        ) : (
+          <StudioRecentMeets items={meets} showCount={showCount} />
         )}
       </div>
     </section>

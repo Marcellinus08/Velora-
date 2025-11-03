@@ -195,59 +195,6 @@ export default function StudioRecentAds({
                           {ad.status.charAt(0).toUpperCase() + ad.status.slice(1)}
                         </span>
                       </div>
-
-                      {/* Kebab Menu (3 dots) - Only show if not ended */}
-                      {!isEnded && (
-                        <div className="relative">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setOpenMenuId(openMenuId === ad.id ? null : ad.id);
-                            }}
-                            disabled={updating === ad.id}
-                            className="p-2 hover:bg-neutral-700/50 rounded-lg transition-colors disabled:opacity-50"
-                          >
-                            <svg className="w-5 h-5 text-neutral-400" fill="currentColor" viewBox="0 0 20 20">
-                              <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
-                            </svg>
-                          </button>
-
-                          {/* Dropdown Menu */}
-                          {openMenuId === ad.id && (
-                            <>
-                              {/* Backdrop to close menu */}
-                              <div 
-                                className="fixed inset-0 z-10" 
-                                onClick={() => setOpenMenuId(null)}
-                              />
-                              
-                              <div className="absolute right-0 mt-2 w-48 bg-neutral-800 border border-neutral-700 rounded-lg shadow-xl z-20 overflow-hidden">
-                                <button
-                                  onClick={() => handleToggleStatus(ad)}
-                                  className="w-full px-4 py-3 text-left text-sm hover:bg-neutral-700/50 transition-colors flex items-center gap-3"
-                                >
-                                  {isActive ? (
-                                    <>
-                                      <svg className="w-4 h-4 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                      </svg>
-                                      <span className="text-neutral-200">Pause Campaign</span>
-                                    </>
-                                  ) : (
-                                    <>
-                                      <svg className="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                      </svg>
-                                      <span className="text-neutral-200">Activate Campaign</span>
-                                    </>
-                                  )}
-                                </button>
-                              </div>
-                            </>
-                          )}
-                        </div>
-                      )}
                     </div>
                   </div>
                 </li>

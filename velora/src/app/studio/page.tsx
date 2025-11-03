@@ -7,7 +7,7 @@ import StudioHeader from "@/components/studio/header";
 import StudioStats from "@/components/studio/stats";
 import StudioActions from "@/components/studio/actions";
 import StudioRecentPanel from "@/components/studio/recent";
-import type { StudioVideo, StudioAd } from "@/components/studio/types";
+import type { StudioVideo, StudioAd, StudioMeet } from "@/components/studio/types";
 
 /* ===== Helpers kecil ===== */
 function secondsToDuration(sec?: number | null) {
@@ -55,7 +55,8 @@ export default function StudioPage() {
   const [error, setError] = useState<string | null>(null);
   const [videos, setVideos] = useState<StudioVideo[]>([]);
   const [ads, setAds] = useState<StudioAd[]>([]);
-  const [buyersTotal, setBuyersTotal] = useState(0);
+  const [meets, setMeets] = useState<StudioMeet[]>([]);
+  const [meetsTotal, setMeetsTotal] = useState(0);
   const [earningsUsd, setEarningsUsd] = useState(0);
 
   async function load() {
@@ -84,11 +85,10 @@ export default function StudioPage() {
 
       setVideos(items);
 
-      // Fetch buyers and earnings data from video_purchases
+      // Fetch stats and related data
       await fetchStudioStats(items);
-      
-      // Fetch campaigns/ads
       await fetchCampaigns();
+      await fetchMeets();
     } catch (e: any) {
       console.error("[studio page] load videos failed:", e);
       setError(e?.message || "Failed to load videos");
@@ -191,6 +191,65 @@ export default function StudioPage() {
     }
   }
 
+  async function fetchMeets() {
+    if (!me) return;
+    
+    try {
+      const { supabase } = await import("@/lib/supabase");
+      
+      // Fetch all meets where user is the creator
+      const { data: meetsData, error: fetchError } = await supabase
+        .from("meets")
+        .select(`
+          *,
+          participant:profiles!meets_participant_addr_fkey (
+            username,
+            avatar_url
+          )
+        `)
+        .eq("creator_addr", me)
+        .order("created_at", { ascending: false });
+
+      if (fetchError) {
+        console.error("[Studio] Error fetching meets:", fetchError);
+        setMeets([]);
+        setMeetsTotal(0);
+        return;
+      }
+
+      if (meetsData && meetsData.length > 0) {
+        const meetItems = meetsData.map((m): StudioMeet => ({
+          id: m.id,
+          participant_addr: m.participant_addr,
+          participant_name: m.participant?.username,
+          participant_avatar: m.participant?.avatar_url,
+          status: m.status,
+          scheduled_at: m.scheduled_at,
+          duration_minutes: m.duration_minutes || 0,
+          rate_usd_per_min: (m.rate_cents_per_min || 0) / 100,
+          total_price_cents: m.total_price_cents || 0,
+          created_at: m.created_at,
+        }));
+
+        setMeets(meetItems);
+        
+        // Count only completed meets
+        const completedCount = meetItems.filter(m => m.status === "completed").length;
+        setMeetsTotal(completedCount);
+        
+        console.log("[Studio] Loaded meets:", meetItems.length);
+        console.log("[Studio] Completed meets:", completedCount);
+      } else {
+        setMeets([]);
+        setMeetsTotal(0);
+      }
+    } catch (error) {
+      console.error("[Studio] Error fetching meets:", error);
+      setMeets([]);
+      setMeetsTotal(0);
+    }
+  }
+
   async function fetchStudioStats(videoItems: StudioVideo[]) {
     if (!me || videoItems.length === 0) return;
     
@@ -209,7 +268,6 @@ export default function StudioPage() {
       
       if (!myVideos || myVideos.length === 0) {
         console.log('[Studio Stats] No videos found for user:', me);
-        setBuyersTotal(0);
         setEarningsUsd(0);
         return;
       }
@@ -229,10 +287,8 @@ export default function StudioPage() {
 
       if (purchases && purchases.length > 0) {
         // Count total purchases (not unique buyers)
-        // If User A buys 3 videos = counted as 3 buyers
         const totalPurchases = purchases.length;
         console.log('[Studio Stats] Total Purchases:', totalPurchases);
-        setBuyersTotal(totalPurchases);
 
         // Create price map
         const priceMap = new Map<string, number>();
@@ -307,12 +363,10 @@ export default function StudioPage() {
         
         console.log('[Studio Stats] Total Meet Earnings (no video sales):', totalMeetEarnings);
         
-        setBuyersTotal(0);
         setEarningsUsd(totalMeetEarnings);
       }
     } catch (error) {
       console.error("[Studio Stats] Error:", error);
-      setBuyersTotal(0);
       setEarningsUsd(0);
     }
   }
@@ -347,7 +401,7 @@ export default function StudioPage() {
               totals={{
                 videos: videos.length,
                 campaigns: ads.length,
-                buyers: buyersTotal,
+                meets: meetsTotal,
                 earningsUsd: earningsUsd,
               }}
             />
@@ -391,6 +445,7 @@ export default function StudioPage() {
                 <StudioRecentPanel
                   videos={videos}
                   ads={ads}
+                  meets={meets}
                   onAdsUpdate={() => {
                     // Reload campaigns when status changes
                     fetchCampaigns();

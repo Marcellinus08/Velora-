@@ -6,9 +6,9 @@ import { fmtInt, fmtUsd } from "@/lib/format";
 type Totals = {
   videos: number;
   campaigns: number;
-  /** Total unique buyers across all your paid videos */
-  buyers: number;
-  /** Earnings from paid video purchases (USD) */
+  /** Total completed meets */
+  meets: number;
+  /** Earnings from video sales and meet bookings (USD) */
   earningsUsd: number;
 };
 
@@ -116,16 +116,16 @@ export default function StudioStats({ totals }: { totals: Totals }) {
         gradient="bg-gradient-to-br from-blue-600/5 via-cyan-600/5 to-teal-600/5"
       />
 
-      {/* Buyers (replaces Points) */}
+      {/* Meets (replaces Buyers) */}
       <StatCard
         label={
           <span className="inline-flex items-center">
-            Buyers
-            <InfoHint text="Total number of buyers across all your paid videos." />
+            Meets
+            <InfoHint text="Total number of completed meet bookings with participants." />
           </span>
         }
-        value={fmtInt(totals.buyers)}
-        rightIcon={<MI name="shopping_bag" />}
+        value={fmtInt(totals.meets)}
+        rightIcon={<MI name="video_call" />}
         gradient="bg-gradient-to-br from-pink-600/5 via-rose-600/5 to-red-600/5"
       />
 
@@ -134,7 +134,7 @@ export default function StudioStats({ totals }: { totals: Totals }) {
         label={
           <span className="inline-flex items-center">
             Earnings
-            <InfoHint text="Earnings from viewers who purchased your videos (settled sales). Withdrawable according to the payout policy." />
+            <InfoHint text="Earnings from video sales (60%) and meet bookings (80%). Withdrawable according to the payout policy." />
           </span>
         }
         value={fmtUsd(totals.earningsUsd)}
