@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useAccount } from "wagmi";
 import { ConnectWalletButton } from "@/components/connect-wallet-button";
 import ProfileUpsertOnLogin from "@/components/boot/profile-upsert-on-login";
+import { HeaderSkeleton, HeaderWalletSectionSkeleton } from "@/components/skeletons/header-skeleton";
 
 import { MI } from "./MI";
 import SearchBar from "./searchbar";
@@ -16,18 +17,30 @@ import { useProfileAvatar } from "./useprofileavatar";
 import { useUsdceBalance } from "./useusdcebalance"; // <-- ini hook baru
 import { useUserPoints } from "./useuserpoints"; // <-- hook untuk total points
 import { PointsSheet, WalletSheet } from "./wallet-panels";
-import React from "react";
+import React, { useTransition } from "react";
 
 export default function SiteHeader() {
   const { address, status } = useAccount();
   const isConnected = status === "connected" && !!address;
 
-  const { username, avatarUrl } = useProfileAvatar(address as `0x${string}` | undefined);
+  const { username, avatarUrl, loading: avatarLoading } = useProfileAvatar(address as `0x${string}` | undefined);
   const usdceText = useUsdceBalance();
   const { totalPoints } = useUserPoints(address as `0x${string}` | undefined);
 
   const [openWallet, setOpenWallet] = React.useState(false);
   const [openPoints, setOpenPoints] = React.useState(false);
+  
+  // Show skeleton while data is loading after connection
+  const [isPending] = useTransition();
+  const [wasConnected, setWasConnected] = React.useState(false);
+  
+  React.useEffect(() => {
+    if (isConnected && !wasConnected) {
+      setWasConnected(true);
+    }
+  }, [isConnected, wasConnected]);
+  
+  const showWalletSkeleton = isConnected && (!totalPoints || !usdceText);
 
   return (
     <header
@@ -68,6 +81,8 @@ export default function SiteHeader() {
           <div className="flex items-center gap-2">
             <ConnectWalletButton className="min-w-28 px-4" />
           </div>
+        ) : showWalletSkeleton ? (
+          <HeaderWalletSectionSkeleton />
         ) : (
           <>
             <div className="hidden items-center gap-4 rounded-full bg-neutral-800 px-4 py-1.5 sm:flex">
@@ -98,7 +113,7 @@ export default function SiteHeader() {
 
             <AddMenu />
             <NotificationsMenu />
-            <WalletDropdown address={address as `0x${string}`} avatarUrl={avatarUrl} username={username} />
+            <WalletDropdown address={address as `0x${string}`} avatarUrl={avatarUrl} username={username} avatarLoading={avatarLoading} />
           </>
         )}
       </div>

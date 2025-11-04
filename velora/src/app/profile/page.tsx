@@ -8,6 +8,7 @@ import { useAccount } from "wagmi";
 import ProfileHeader from "@/components/profile/header";
 import ProfileStatsCard from "@/components/profile/stats";
 import ProfileActivity from "@/components/profile/activity";
+import { ProfilePageSkeleton } from "@/components/skeletons/profile-skeleton";
 import type { ProfileUser, HistoryItem } from "@/components/profile/types";
 import type { HistoryItem as LeaderboardHistoryItem, ActivityItem, HistoryStats, ActivityStats } from "@/components/leaderboard/types";
 import MI from "@/components/leaderboard/MI";
@@ -258,15 +259,7 @@ export default function ProfilePage() {
   ];
 
   if (loading) {
-    return (
-      <div className="flex h-full grow flex-row">
-        <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-center h-64">
-            <div className="text-neutral-400">Loading profile...</div>
-          </div>
-        </main>
-      </div>
-    );
+    return <ProfilePageSkeleton />;
   }
 
   if (!profileData) {
@@ -483,7 +476,7 @@ export default function ProfilePage() {
                           .map((item) => {
                             const getNavigationUrl = () => {
                               if (item.type === "video_purchase" && item.video.id) {
-                                return `/task?id=${item.video.id}`;
+                                return `/video?id=${item.video.id}`;
                               }
                               if (item.type === "meet_purchase" && item.meet.id) {
                                 return `/meet/${item.meet.id}`;

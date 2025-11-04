@@ -395,7 +395,7 @@ export default function CreateAd({
       fd.append("title", title.trim());
       fd.append("description", description.trim());
       fd.append("ctaText", ctaText.trim());
-      fd.append("ctaLink", `/task?id=${selectedVideoId}`);
+      fd.append("ctaLink", `/video?id=${selectedVideoId}`);
       fd.append("durationDays", String(DURATION_DAYS));
       fd.append("creationFeeCents", String(PRICE_USD * 100));
       fd.append("txHash", txHash as string);

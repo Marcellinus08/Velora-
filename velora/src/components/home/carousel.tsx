@@ -336,14 +336,14 @@ export default function Carousel({
       )}
 
       {/* Loading State */}
-      {/* {loading && (
+      {loading && (
         <div className="absolute inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center">
           <div className="bg-white/10 rounded-xl p-6 flex items-center gap-3">
             <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
             <span className="text-white font-medium">Loading campaigns...</span>
           </div>
         </div>
-      )} */}
+      )}
     </div>
   );
 }

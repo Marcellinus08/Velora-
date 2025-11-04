@@ -21,10 +21,12 @@ export default function WalletDropdown({
   address,
   avatarUrl,
   username,
+  avatarLoading = false,
 }: {
   address?: `0x${string}`;
   avatarUrl?: string | null;
   username?: string | null;
+  avatarLoading?: boolean;
 }) {
   const router = useRouter();
   const { logout } = useLoginWithAbstract();
@@ -50,7 +52,7 @@ export default function WalletDropdown({
               title="Open wallet menu"
               type="button"
             >
-              <AvatarTrigger avatarUrl={avatarUrl} />
+              <AvatarTrigger avatarUrl={avatarUrl} avatarLoading={avatarLoading} />
             </button>
           </DropdownMenuTrigger>
 
@@ -63,7 +65,11 @@ export default function WalletDropdown({
             <div className="relative overflow-hidden bg-gradient-to-br from-purple-900/30 via-neutral-900 to-neutral-900 border-b border-purple-500/20">
               <div className="flex items-center gap-3 px-3 py-2.5">
                 <div className="relative h-12 w-12 overflow-hidden rounded-full ring-2 ring-purple-500/40 shadow-lg flex-shrink-0">
-                  {avatarUrl ? (
+                  {avatarLoading ? (
+                    // ✅ Loading: show skeleton
+                    <div className="skel h-full w-full rounded-full" />
+                  ) : avatarUrl ? (
+                    // Dari DB
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
                       src={avatarUrl}
@@ -71,6 +77,7 @@ export default function WalletDropdown({
                       className="h-full w-full object-cover"
                     />
                   ) : (
+                    // Fallback: AbstractProfile (jika tidak ada di DB)
                     <AbstractProfile
                       size="xs"
                       showTooltip={false}

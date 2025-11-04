@@ -40,10 +40,6 @@ export function CommunityPagination({
   return (
     <div className="flex items-center justify-between rounded-lg border border-neutral-800/50 bg-neutral-900/30 px-6 py-4">
       <div className="flex items-center gap-4">
-        <span className="text-sm text-neutral-400">
-          Showing {startItem}-{endItem} of {totalItems.toLocaleString()} posts
-        </span>
-        
         {onItemsPerPageChange && (
           <div className="flex items-center gap-2">
             <label className="text-sm text-neutral-500">Posts per page:</label>

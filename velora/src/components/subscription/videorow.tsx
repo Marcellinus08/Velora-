@@ -18,7 +18,7 @@ export function SubscriptionVideoRow({
   href?: string;
 }) {
   const isPrimary = primaryAction.variant !== "secondary";
-  const targetHref = href || (videoId ? `/task?id=${encodeURIComponent(videoId)}` : "/task");
+  const targetHref = href || (videoId ? `/video?id=${encodeURIComponent(videoId)}` : "/video");
 
   // Material Icon helper
   const MI = ({ name, className = "" }: { name: string; className?: string }) => (

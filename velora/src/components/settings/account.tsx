@@ -4,6 +4,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useAccount } from "wagmi";
 import { AbstractProfile } from "@/components/abstract-profile";
+import { SettingsAccountSkeleton } from "@/components/skeletons/settings-skeleton";
 
 type DbProfile = {
   abstract_id: string;
@@ -260,12 +261,7 @@ export default function SettingsAccount() {
       (!!username.trim() && !formatError && available === true));
 
   if (loading) {
-    return (
-      <section className="rounded-2xl border border-neutral-800 bg-neutral-900 p-4 sm:p-6">
-        <div className="h-6 w-48 animate-pulse rounded bg-neutral-800" />
-        <div className="mt-4 h-40 w-full animate-pulse rounded bg-neutral-800" />
-      </section>
-    );
+    return <SettingsAccountSkeleton />;
   }
 
   return (

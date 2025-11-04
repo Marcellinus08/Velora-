@@ -454,7 +454,7 @@ export default function CardsGrid() {
 
                 {/* Simple Action Buttons */}
                 {isOwned ? (
-                  <Link href={`/task?id=${v.id}`} prefetch={false} className="relative z-10">
+                  <Link href={`/video?id=${v.id}`} prefetch={false} className="relative z-10">
                     <button
                       type="button"
                       className="group relative inline-flex items-center gap-2 rounded-full bg-neutral-700 px-4 py-2 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-neutral-600 hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[var(--primary-500)] focus-visible:ring-offset-neutral-900 cursor-pointer"
