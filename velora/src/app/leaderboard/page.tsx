@@ -2,14 +2,23 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import dynamic from "next/dynamic";
 import { supabase } from "@/lib/supabase";
 import { useAccount } from "wagmi";
 import { useRouter } from "next/navigation";
 import Sidebar from "@/components/sidebar";
 import { AbstractProfile } from "@/components/abstract-profile";
-import { LeaderboardLazy } from "@/components/leaderboard/leaderboard-lazy";
 import { LeaderboardPageSkeleton, CurrentUserCardSkeleton } from "@/components/skeletons/leaderboard-skeleton";
 import { LeaderboardEmptyState } from "@/components/leaderboard/empty-state";
+
+// Lazy load LeaderboardLazy component
+const LeaderboardLazy = dynamic(
+  () => import("@/components/leaderboard/leaderboard-lazy").then((mod) => ({ default: mod.LeaderboardLazy })),
+  {
+    loading: () => <div className="h-96 rounded-xl bg-neutral-800/50 animate-pulse" />,
+    ssr: true,
+  }
+);
 
 import type { TableEntry, CurrentUser } from "@/components/leaderboard/types";
 

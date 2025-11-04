@@ -2,17 +2,34 @@
 
 import { useEffect, useState } from "react";
 import { useAccount } from "wagmi";
+import dynamic from "next/dynamic";
 import Swal from "sweetalert2";
 import { toast } from "@/components/ui/toast";
 import { useConfirmDialog } from "@/components/ui/confirm-dialog";
 
 import Sidebar from "@/components/sidebar";
-import CommunityTabs from "@/components/community/tabs";
-import { CommunityLazy } from "@/components/community/community-lazy";
-import CreatePostModal from "@/components/community/createmodal";
 import { CommunityEmptyState } from "@/components/community/empty-state";
 import { CommunityPageSkeleton } from "@/components/skeletons/community-skeleton";
 import { CommunityPost, NewPostPayload } from "@/components/community/types";
+
+// Lazy load heavy components
+const CommunityTabs = dynamic(() => import("@/components/community/tabs"), {
+  loading: () => <div className="h-20 rounded-xl bg-neutral-800/50 animate-pulse" />,
+  ssr: true,
+});
+
+const CommunityLazy = dynamic(
+  () => import("@/components/community/community-lazy").then((mod) => ({ default: mod.CommunityLazy })),
+  {
+    loading: () => <div className="h-96 rounded-xl bg-neutral-800/50 animate-pulse" />,
+    ssr: true,
+  }
+);
+
+const CreatePostModal = dynamic(() => import("@/components/community/createmodal"), {
+  loading: () => null,
+  ssr: true,
+});
 
 export default function CommunityPage() {
   const { address } = useAccount();

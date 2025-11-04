@@ -1,13 +1,22 @@
 // src/app/subscription/page.tsx
 "use client";
 
+import dynamic from "next/dynamic";
 import Sidebar from "@/components/sidebar";
-import { SubscriptionVideosLazy } from "@/components/subscription/videos-lazy";
 import { ConnectWalletPrompt } from "@/components/subscription/connect-wallet-prompt";
 import { SubscriptionErrorState } from "@/components/subscription/error-state";
 import { useAccount } from "wagmi";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+
+// Lazy load SubscriptionVideosLazy component
+const SubscriptionVideosLazy = dynamic(
+  () => import("@/components/subscription/videos-lazy").then((mod) => ({ default: mod.SubscriptionVideosLazy })),
+  {
+    loading: () => <div className="h-96 rounded-xl bg-neutral-800/50 animate-pulse" />,
+    ssr: true,
+  }
+);
 
 type VideoItem = {
   purchaseId: string;
