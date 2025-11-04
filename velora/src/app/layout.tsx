@@ -10,21 +10,14 @@ import type { ReactNode } from "react";
 export const metadata = {
   title: "Glonic",
   description: "Platform video dengan poin & tugas",
-  icons: {
+   icons: {
     icon: [{ url: "/glonic_logo_main.png", type: "image/png" }],
-  },
-  viewport: {
-    width: "device-width",
-    initialScale: 1,
-    maximumScale: 5,
-    userScalable: true,
   },
 };
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="id">
       <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
         {/* Material Icons Round (ligature-based) */}
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
         <link

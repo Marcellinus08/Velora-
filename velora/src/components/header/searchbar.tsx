@@ -78,8 +78,8 @@ export default function SearchBar() {
       <div ref={containerRef} className="relative w-full max-w-[720px]">
         <form onSubmit={onSubmit} className="flex w-full items-center" role="search">
           <div className="relative flex min-w-0 flex-1">
-            <span className="pointer-events-none absolute inset-y-0 left-2 sm:left-4 flex items-center">
-              <MI name="search" className="text-[16px] sm:text-[18px] text-neutral-400" />
+            <span className="pointer-events-none absolute inset-y-0 left-4 flex items-center">
+              <MI name="search" className="text-[18px] text-neutral-400" />
             </span>
 
             <input
@@ -88,7 +88,7 @@ export default function SearchBar() {
               value={q}
               onChange={(e) => setQ(e.target.value)}
               onFocus={() => setOpenSug(true)}
-              className="h-8 sm:h-10 w-full rounded-l-full border border-neutral-700 bg-neutral-950 pl-8 sm:pl-11 pr-10 sm:pr-[3.5rem] text-sm sm:text-base text-neutral-50 placeholder:text-neutral-400 outline-none focus:border-neutral-500"
+              className="h-10 w-full rounded-l-full border border-neutral-700 bg-neutral-950 pl-11 pr-[3.5rem] text-base text-neutral-50 placeholder:text-neutral-400 outline-none focus:border-neutral-500"
               placeholder="Search"
               aria-label="Search"
               inputMode="search"
@@ -100,21 +100,21 @@ export default function SearchBar() {
               <button
                 type="button"
                 onClick={clear}
-                className="absolute inset-y-0 right-12 sm:right-16 my-0.5 sm:my-1 flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-full text-neutral-400 hover:bg-neutral-800 hover:text-neutral-200 cursor-pointer"
+                className="absolute inset-y-0 right-16 my-1 flex h-8 w-8 items-center justify-center rounded-full text-neutral-400 hover:bg-neutral-800 hover:text-neutral-200 cursor-pointer"
                 aria-label="Clear text"
                 title="Clear"
               >
-                <MI name="close" className="text-[14px] sm:text-[16px]" />
+                <MI name="close" className="text-[16px]" />
               </button>
             )}
 
             <button
               type="submit"
-              className="h-8 sm:h-10 w-12 sm:w-16 cursor-pointer rounded-r-full border border-l-0 border-neutral-700 bg-neutral-800 text-neutral-200 hover:bg-neutral-700 flex items-center justify-center"
+              className="h-10 w-16 cursor-pointer rounded-r-full border border-l-0 border-neutral-700 bg-neutral-800 text-neutral-200 hover:bg-neutral-700 flex items-center justify-center"
               aria-label="Search"
               title="Search"
             >
-              <MI name="search" className="text-[16px] sm:text-[18px]" />
+              <MI name="search" className="text-[18px]" />
             </button>
           </div>
 
