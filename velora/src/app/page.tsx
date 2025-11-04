@@ -2,11 +2,26 @@
 
 import { useSearchParams } from "next/navigation";
 import { useEffect, useRef } from "react";
+import dynamic from "next/dynamic";
 import Sidebar from "@/components/sidebar";
-import Carousel from "@/components/home/carousel";
 import Categories from "@/components/home/categories";
-import CardsGrid from "@/components/home/cardsgrid";
-import HomeMeetRibbon from "@/components/home/meet";
+import { CarouselSkeleton } from "@/components/home/carousel-skeleton";
+
+// Lazy load Carousel with skeleton
+const Carousel = dynamic(() => import("@/components/home/carousel"), {
+  loading: () => <CarouselSkeleton />,
+  ssr: true,
+});
+
+// Lazy load HomeMeetRibbon with no loading state (instant render)
+const HomeMeetRibbon = dynamic(() => import("@/components/home/meet"), {
+  ssr: true,
+});
+
+// Lazy load CardsGrid with no loading state (instant render)
+const CardsGrid = dynamic(() => import("@/components/home/cardsgrid"), {
+  ssr: true,
+});
 
 export default function Home() {
   const searchParams = useSearchParams();
@@ -39,14 +54,14 @@ export default function Home() {
         {/* Hero Carousel Section */}
         <div 
           ref={carouselRef}
-          className="relative mb-8 w-full animate-in fade-in duration-700"
+          className="relative mb-8 w-full"
         >
           <div className="absolute inset-0 bg-gradient-to-r from-purple-500/5 via-transparent to-blue-500/5 rounded-2xl opacity-0 hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
           <Carousel size="h-[500px]" campaignId={campaignId || undefined} />
         </div>
 
         {/* Meet Section with Enhanced Design */}
-        <div className="relative mb-8 animate-in slide-in-from-left duration-700" style={{ animationDelay: '200ms' }}>
+        <div className="relative mb-8">
           <div className="absolute inset-0 bg-gradient-to-r from-blue-500/3 via-purple-500/3 to-pink-500/3 rounded-2xl blur-xl" />
           <div className="relative">
             <HomeMeetRibbon />
@@ -54,7 +69,7 @@ export default function Home() {
         </div>
 
         {/* Categories Section with Glow Effect */}
-        <div className="relative animate-in slide-in-from-right duration-700" style={{ animationDelay: '400ms' }}>
+        <div className="relative">
           <div className="absolute inset-0 bg-gradient-to-r from-neutral-800/20 via-purple-500/10 to-neutral-800/20 rounded-xl opacity-0 hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
           <div className="relative">
             <Categories />
@@ -62,7 +77,7 @@ export default function Home() {
         </div>
 
         {/* Cards Grid with Staggered Animation */}
-        <div className="relative animate-in fade-in duration-1000" style={{ animationDelay: '600ms' }}>
+        <div className="relative">
           <div className="absolute inset-0 bg-gradient-to-br from-purple-500/3 via-transparent to-blue-500/3 rounded-2xl" />
           <div className="relative">
             <CardsGrid />

@@ -49,101 +49,147 @@ function addMin(hhmm: string, minutes: number) {
 }
 
 export default function CallRatesPage() {
-  const { address } = useAccount();
-  const abstractId = (address ?? "").toLowerCase();
+  // const { address } = useAccount();
+  // const abstractId = (address ?? "").toLowerCase();
 
-  const [pricingOpen, setPricingOpen] = useState(false);
-  const [activeKind, setActiveKind] = useState<"voice" | "video">("voice");
+  // const [pricingOpen, setPricingOpen] = useState(false);
+  // const [activeKind, setActiveKind] = useState<"voice" | "video">("voice");
 
-  // === harga DISIMPAN PER-MENIT untuk input drawer ===
-  const [voicePerMin, setVoicePerMin] = useState<number>(0);
-  const [videoPerMin, setVideoPerMin] = useState<number>(0);
+  // // === harga DISIMPAN PER-MENIT untuk input drawer ===
+  // const [voicePerMin, setVoicePerMin] = useState<number>(0);
+  // const [videoPerMin, setVideoPerMin] = useState<number>(0);
 
-  // baseline (deteksi perubahan di builder)
-  const [initialVoicePerMin, setInitialVoicePerMin] = useState<number>(0);
-  const [initialVideoPerMin, setInitialVideoPerMin] = useState<number>(0);
+  // // baseline (deteksi perubahan di builder)
+  // const [initialVoicePerMin, setInitialVoicePerMin] = useState<number>(0);
+  // const [initialVideoPerMin, setInitialVideoPerMin] = useState<number>(0);
 
-  const [slotMinutes, setSlotMinutes] = useState<number>(10);
-  const [initialDays, setInitialDays] = useState<DaySchedule[] | null>(null);
+  // const [slotMinutes, setSlotMinutes] = useState<number>(10);
+  // const [initialDays, setInitialDays] = useState<DaySchedule[] | null>(null);
 
-  useEffect(() => {
-    (async () => {
-      if (!abstractId) return;
-      try {
-        const res = await fetch(`/api/call-rates/schedules?id=${abstractId}`, { cache: "no-store" });
-        const j: PrefillResp = await res.json();
-        if (!res.ok) throw new Error((j as any)?.error || res.statusText);
+  // useEffect(() => {
+  //   (async () => {
+  //     if (!abstractId) return;
+  //     try {
+  //       const res = await fetch(`/api/call-rates/schedules?id=${abstractId}`, { cache: "no-store" });
+  //       const j: PrefillResp = await res.json();
+  //       if (!res.ok) throw new Error((j as any)?.error || res.statusText);
 
-        setSlotMinutes(j.slotMinutes || 10);
+  //       setSlotMinutes(j.slotMinutes || 10);
 
-        // === session → minute (baseline + current) ===
-        const vMin = (j.pricePerSession.voice || 0) / (j.slotMinutes || 10);
-        const viMin = (j.pricePerSession.video || 0) / (j.slotMinutes || 10);
+  //       // === session → minute (baseline + current) ===
+  //       const vMin = (j.pricePerSession.voice || 0) / (j.slotMinutes || 10);
+  //       const viMin = (j.pricePerSession.video || 0) / (j.slotMinutes || 10);
 
-        setInitialVoicePerMin(+vMin.toFixed(4));
-        setInitialVideoPerMin(+viMin.toFixed(4));
-        setVoicePerMin(+vMin.toFixed(4));
-        setVideoPerMin(+viMin.toFixed(4));
+  //       setInitialVoicePerMin(+vMin.toFixed(4));
+  //       setInitialVideoPerMin(+viMin.toFixed(4));
+  //       setVoicePerMin(+vMin.toFixed(4));
+  //       setVideoPerMin(+viMin.toFixed(4));
 
-        // Prefill days → DaySchedule[]
-        const map = new Map<string, DaySchedule>();
-        for (const it of j.items) {
-          const dayName = DAYS[it.day - 1];
-          if (!map.has(dayName)) map.set(dayName, { id: uid("day"), day: dayName, hours: [] });
-          const sessions = (it.slots || []).map((s) => ({
-            id: uid("sess"),
-            start: s,
-            end: addMin(s, j.slotMinutes || 10),
-            active: true,
-          }));
-          map.get(dayName)!.hours.push({
-            id: uid("hour"),
-            start: it.start,
-            duration: it.duration,
-            sessions,
-            kinds: { voice: it.kind === "voice", video: it.kind === "video" },
-          });
-        }
-        setInitialDays(Array.from(map.values()));
-      } catch (e) {
-        console.warn("prefill failed", e);
-        setInitialDays([]); // tetap render supaya user bisa buat baru
-      }
-    })();
-  }, [abstractId]);
+  //       // Prefill days → DaySchedule[]
+  //       const map = new Map<string, DaySchedule>();
+  //       for (const it of j.items) {
+  //         const dayName = DAYS[it.day - 1];
+  //         if (!map.has(dayName)) map.set(dayName, { id: uid("day"), day: dayName, hours: [] });
+  //         const sessions = (it.slots || []).map((s) => ({
+  //           id: uid("sess"),
+  //           start: s,
+  //           end: addMin(s, j.slotMinutes || 10),
+  //           active: true,
+  //         }));
+  //         map.get(dayName)!.hours.push({
+  //           id: uid("hour"),
+  //           start: it.start,
+  //           duration: it.duration,
+  //           sessions,
+  //           kinds: { voice: it.kind === "voice", video: it.kind === "video" },
+  //         });
+  //       }
+  //       setInitialDays(Array.from(map.values()));
+  //     } catch (e) {
+  //       console.warn("prefill failed", e);
+  //       setInitialDays([]); // tetap render supaya user bisa buat baru
+  //     }
+  //   })();
+  // }, [abstractId]);
 
-  const openPricing = (k: "voice" | "video") => {
-    setActiveKind(k);
-    setPricingOpen(true);
-  };
+  // const openPricing = (k: "voice" | "video") => {
+  //   setActiveKind(k);
+  //   setPricingOpen(true);
+  // };
 
-  const handleConfirm = (kind: "voice" | "video", perMin: number) => {
-    if (kind === "voice") setVoicePerMin(perMin);
-    else setVideoPerMin(perMin);
-  };
+  // const handleConfirm = (kind: "voice" | "video", perMin: number) => {
+  //   if (kind === "voice") setVoicePerMin(perMin);
+  //   else setVideoPerMin(perMin);
+  // };
 
-  const resetPrices = () => {
-    setVoicePerMin(0);
-    setVideoPerMin(0);
-  };
+  // const resetPrices = () => {
+  //   setVoicePerMin(0);
+  //   setVideoPerMin(0);
+  // };
 
-  // Kartu → tampilkan PER-SESI
-  const voicePerSession = useMemo(() => voicePerMin * slotMinutes, [voicePerMin, slotMinutes]);
-  const videoPerSession = useMemo(() => videoPerMin * slotMinutes, [videoPerMin, slotMinutes]);
+  // // Kartu → tampilkan PER-SESI
+  // const voicePerSession = useMemo(() => voicePerMin * slotMinutes, [voicePerMin, slotMinutes]);
+  // const videoPerSession = useMemo(() => videoPerMin * slotMinutes, [videoPerMin, slotMinutes]);
 
   return (
     <main className="px-4 py-6 sm:px-6 lg:px-8">
       <header className="mb-6">
         <h1 className="text-2xl font-bold text-neutral-50">Set Your Call Rates</h1>
-        {!abstractId && (
-          <p className="mt-2 text-xs text-amber-300">
-            Connect your wallet to save schedules (otherwise the server can’t resolve your profile).
-          </p>
-        )}
+        <p className="mt-2 text-xs text-amber-300">
+          This feature is coming soon. Stay tuned! 🚀
+        </p>
       </header>
 
+      {/* Coming Soon Banner - Full Width */}
+      <div className="h-80 rounded-2xl border border-purple-500/40 bg-gradient-to-r from-purple-950/80 via-blue-950/60 to-purple-950/80 px-6 py-8 text-neutral-300 transition-all duration-300 flex items-center justify-center hover:shadow-2xl hover:shadow-purple-500/40 relative overflow-hidden group">
+        {/* Animated background with moving gradient */}
+        <div className="absolute inset-0 bg-gradient-to-r from-purple-600/0 via-purple-500/30 to-blue-600/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 animate-pulse" />
+        
+        {/* Top light rays */}
+        <div className="absolute top-0 left-1/4 w-48 h-48 bg-gradient-to-b from-purple-500/40 to-transparent rounded-full blur-3xl -translate-y-1/2 group-hover:from-purple-500/60 transition-all duration-500" />
+        <div className="absolute top-0 right-1/4 w-48 h-48 bg-gradient-to-b from-blue-500/40 to-transparent rounded-full blur-3xl -translate-y-1/2 group-hover:from-blue-500/60 transition-all duration-500" />
+        
+        {/* Bottom glow */}
+        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-72 h-48 bg-gradient-to-t from-purple-500/20 to-transparent rounded-full blur-3xl group-hover:from-purple-500/40 transition-all duration-500" />
+        
+        {/* Border glow */}
+        <div className="absolute inset-0 rounded-2xl border border-purple-500/0 group-hover:border-purple-400/50 transition-all duration-300" />
+        
+        <div className="relative z-10 flex flex-col items-center justify-center gap-4 text-center">
+          {/* Icon container with 3D effect */}
+          <div className="relative">
+            {/* Rotating ring */}
+            <div className="absolute inset-0 rounded-xl border border-purple-500/30 group-hover:border-purple-400/60 transition-all duration-300" style={{ animation: 'spin 3s linear infinite' }} />
+            
+            {/* Glow layers */}
+            <div className="absolute inset-0 bg-gradient-to-br from-purple-500/40 to-blue-500/20 rounded-lg blur-lg group-hover:from-purple-500/60 group-hover:to-blue-500/40 transition-all duration-300" />
+            
+            {/* Main icon */}
+            <div className="relative bg-gradient-to-br from-purple-600 to-blue-600 rounded-lg px-6 py-3 shadow-xl shadow-purple-500/50 group-hover:shadow-2xl group-hover:shadow-purple-400/70 transition-all duration-300">
+              <span className="material-icons-round text-white text-5xl leading-none block">settings</span>
+            </div>
+          </div>
+          
+          {/* Content */}
+          <div>
+            <div className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-300 via-blue-300 to-purple-300 group-hover:from-purple-100 group-hover:via-blue-100 group-hover:to-purple-100 transition-all duration-300 animate-pulse" style={{ animationDuration: '3s' }}>
+              Coming Soon
+            </div>
+            <div className="text-lg text-purple-200/80 group-hover:text-purple-100 transition-colors duration-300 font-semibold tracking-wide mt-2">
+              📊 Call rates feature launching soon
+            </div>
+          </div>
+          
+          {/* Floating particles */}
+          <div className="absolute top-8 right-12 text-3xl opacity-60 group-hover:opacity-100 transition-opacity duration-300 animate-bounce" style={{ animationDelay: '0s' }}>✨</div>
+          <div className="absolute bottom-8 right-16 text-2xl opacity-40 group-hover:opacity-70 transition-opacity duration-300 animate-bounce" style={{ animationDelay: '0.2s' }}>🚀</div>
+          <div className="absolute top-1/3 left-8 text-2xl opacity-50 group-hover:opacity-80 transition-opacity duration-300 animate-bounce" style={{ animationDelay: '0.4s' }}>💫</div>
+        </div>
+      </div>
+
+      {/* Pricing cards section - commented for future use */}
       {/* pricing cards (per-session) */}
-      <section className="grid grid-cols-1 gap-6 md:grid-cols-2">
+      {/* <section className="grid grid-cols-1 gap-6 md:grid-cols-2">
         <ProductCard
           icon={<MicIcon />}
           title="Voice Calls"
@@ -168,10 +214,10 @@ export default function CallRatesPage() {
           cta={videoPerSession > 0 ? "Update pricing" : "Setup pricing"}
           onClick={() => openPricing("video")}
         />
-      </section>
+      </section> */}
 
-      {/* schedule builder (harga per-menit) */}
-      <section className="mt-6">
+      {/* schedule builder (harga per-menit) - commented for future use */}
+      {/* <section className="mt-6">
         <SchedulePicker
           abstractId={abstractId}
           hasVoicePrice={voicePerMin > 0}
@@ -188,16 +234,16 @@ export default function CallRatesPage() {
             console.log("saved:", { day, start, count: slots.length, kind });
           }}
         />
-      </section>
+      </section> */}
 
-      {/* drawer set price → per-minute input */}
-      <PricingDrawer
+      {/* drawer set price → per-minute input - commented for future use */}
+      {/* <PricingDrawer
         open={pricingOpen}
         onClose={() => setPricingOpen(false)}
         kind={activeKind}
         initialPerMinute={activeKind === "voice" ? voicePerMin : videoPerMin}
         onConfirm={(val) => handleConfirm(activeKind, val)}
-      />
+      /> */}
     </main>
   );
 }

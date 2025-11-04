@@ -25,7 +25,7 @@ function shortenWalletAddress(address: string): string {
 function RecommendationItem({ video }: { video: RecommendedVideo }) {
   return (
     <Link
-      href={`/video?id=${video.id}`}
+      href={`/task?id=${video.id}`}
       className="group relative flex items-start gap-3 rounded-lg p-2 hover:bg-neutral-800/70 transition-colors"
     >
       <div className="relative aspect-video h-auto w-28 shrink-0 overflow-hidden rounded-lg">

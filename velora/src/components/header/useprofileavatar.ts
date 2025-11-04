@@ -12,7 +12,6 @@ export function useProfileAvatar(address?: `0x${string}`) {
   const addr = useMemo(() => (address ? address.toLowerCase() : ""), [address]);
   const [username, setUsername] = useState<string | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let alive = true;
@@ -22,7 +21,6 @@ export function useProfileAvatar(address?: `0x${string}`) {
         if (alive) {
           setUsername(null);
           setAvatarUrl(null);
-          setLoading(false);
         }
         return;
       }
@@ -39,7 +37,6 @@ export function useProfileAvatar(address?: `0x${string}`) {
 
         if (dbAvatar) {
           if (alive) setAvatarUrl(`${dbAvatar}?v=${Date.now()}`);
-          if (alive) setLoading(false);
           return;
         }
 
@@ -59,8 +56,6 @@ export function useProfileAvatar(address?: `0x${string}`) {
           setUsername(null);
           setAvatarUrl(null);
         }
-      } finally {
-        if (alive) setLoading(false);
       }
     })();
 
@@ -69,5 +64,5 @@ export function useProfileAvatar(address?: `0x${string}`) {
     };
   }, [addr]);
 
-  return { username, avatarUrl, loading };
+  return { username, avatarUrl };
 }

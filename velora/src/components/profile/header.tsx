@@ -34,7 +34,6 @@ const PLACEHOLDER_SVG =
 function useDbProfile(address?: `0x${string}`) {
   const [username, setUsername] = useState<string | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
 
   const addrLower = useMemo(
     () => (address ? address.toLowerCase() : ""),
@@ -46,21 +45,16 @@ function useDbProfile(address?: `0x${string}`) {
 
     (async () => {
       if (!ETH_RE.test(addrLower)) {
-        if (alive) {
-          setUsername(null);
-          setAvatarUrl(null);
-          setLoading(false);
-        }
+        setUsername(null);
+        setAvatarUrl(null);
         return;
       }
 
       try {
         const r = await fetch(`/api/profiles/${addrLower}`, { cache: "no-store" });
         if (!r.ok) {
-          if (alive) {
-            setUsername(null);
-            setAvatarUrl(null);
-          }
+          setUsername(null);
+          setAvatarUrl(null);
           return;
         }
         const p = (await r.json()) as DbProfile;
@@ -72,8 +66,6 @@ function useDbProfile(address?: `0x${string}`) {
         if (!alive) return;
         setUsername(null);
         setAvatarUrl(null);
-      } finally {
-        if (alive) setLoading(false);
       }
     })();
 
@@ -82,7 +74,7 @@ function useDbProfile(address?: `0x${string}`) {
     };
   }, [addrLower]);
 
-  return { username, avatarUrl, loading };
+  return { username, avatarUrl };
 }
 
 /* ===== Component ===== */
@@ -96,7 +88,7 @@ export default function ProfileHeader({
   const [copied, setCopied] = useState(false);
 
   // 1) Data dari DB menggunakan address dari props
-  const { username: dbUsername, avatarUrl: dbAvatar, loading: dbLoading } = useDbProfile(
+  const { username: dbUsername, avatarUrl: dbAvatar } = useDbProfile(
     address as `0x${string}` | undefined
   );
 
@@ -120,12 +112,9 @@ export default function ProfileHeader({
 
   return (
     <div className="rounded-2xl border border-neutral-800 bg-neutral-900/60 p-6 flex flex-col md:flex-row items-start md:items-center gap-6">
-      {/* Avatar: Show skeleton while loading, then DB avatar, then AbstractProfile, then placeholder */}
+      {/* Avatar: DB → AbstractProfile → placeholder */}
       <div className="relative h-24 w-24 overflow-hidden rounded-full ring-2 ring-[var(--primary-500)]">
-        {dbLoading ? (
-          // Loading: show skeleton
-          <div className="skel h-full w-full rounded-full" />
-        ) : dbAvatar ? (
+        {dbAvatar ? (
           // Dari DB
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -137,7 +126,7 @@ export default function ProfileHeader({
             }}
           />
         ) : address ? (
-          // Fallback: avatar dari Abstract (jika tidak ada di DB)
+          // Fallback: avatar dari Abstract (sama seperti di header utama)
           <AbstractProfile
             address={address as `0x${string}`}
             size="lg"
