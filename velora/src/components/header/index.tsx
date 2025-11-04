@@ -14,8 +14,8 @@ import AddMenu from "./addmenu";
 import NotificationsMenu from "./notificationsmenu";
 import WalletDropdown from "./walletdropdown";
 import { useProfileAvatar } from "./useprofileavatar";
-import { useUsdceBalance } from "./useusdcebalance"; // <-- ini hook baru
-import { useUserPoints } from "./useuserpoints"; // <-- hook untuk total points
+import { useUsdceBalance } from "./useusdcebalance";
+import { useUserPoints } from "./useuserpoints";
 import { PointsSheet, WalletSheet } from "./wallet-panels";
 import React, { useTransition } from "react";
 
@@ -30,7 +30,6 @@ export default function SiteHeader() {
   const [openWallet, setOpenWallet] = React.useState(false);
   const [openPoints, setOpenPoints] = React.useState(false);
   
-  // Show skeleton while data is loading after connection
   const [isPending] = useTransition();
   const [wasConnected, setWasConnected] = React.useState(false);
   
@@ -44,29 +43,21 @@ export default function SiteHeader() {
 
   return (
     <header
-      className="sticky top-0 z-20 grid w-full items-center gap-4 border-b border-neutral-800 bg-neutral-900 px-4 py-2 sm:px-6 lg:px-8
+      className="sticky top-0 z-20 grid w-full items-center gap-2 sm:gap-4 border-b border-neutral-800 bg-neutral-900 px-3 py-2 sm:px-4 sm:py-2 lg:px-8
                  grid-cols-[auto_1fr_auto] md:[grid-template-columns:var(--sidebar-w,16rem)_1fr_auto]"
     >
       {/* Column 1: Logo */}
-      <div className="flex items-center gap-4">
-        <button
-          className="flex items-center justify-center rounded-full p-2 text-neutral-50 hover:bg-neutral-800 md:hidden cursor-pointer"
-          aria-label="Open menu"
-          type="button"
-        >
-          <MI name="menu" className="text-[18px] leading-none" />
-        </button>
-
-        <Link href="/" aria-label="Home" className="flex items-center gap-2 select-none cursor-pointer">
+      <div className="flex items-center gap-2 sm:gap-4">
+        <Link href="/" aria-label="Home" className="flex items-center gap-1.5 sm:gap-2 select-none cursor-pointer">
           <Image
             src="/glonic_logo_main.png"
             alt="Glonic Logo"
             priority
             width={200}
             height={60}
-            className="h-10 w-auto sm:h-11 lg:h-8"
+            className="h-8 w-auto sm:h-10 lg:h-8"
           />
-          <span className="text-xs sm:text-2xl font-bold tracking-tight leading-none text-neutral-50">
+          <span className="text-lg sm:text-xl lg:text-2xl font-bold tracking-tight leading-none text-neutral-50">
             GLO<span className="text-[var(--primary-500)]">N</span>IC
           </span>
         </Link>
@@ -76,38 +67,39 @@ export default function SiteHeader() {
       <SearchBar />
 
       {/* Column 3: Right */}
-      <div className="flex items-center gap-2 sm:gap-4">
+      <div className="flex items-center gap-1 sm:gap-2 lg:gap-4">
         {!isConnected ? (
           <div className="flex items-center gap-2">
-            <ConnectWalletButton className="min-w-28 px-4" />
+            <ConnectWalletButton className="min-w-20 sm:min-w-28 px-2 sm:px-4 text-xs sm:text-sm" />
           </div>
         ) : showWalletSkeleton ? (
           <HeaderWalletSectionSkeleton />
         ) : (
           <>
-            <div className="hidden items-center gap-4 rounded-full bg-neutral-800 px-4 py-1.5 sm:flex">
+            <div className="hidden items-center gap-2 sm:gap-3 lg:gap-4 rounded-full bg-neutral-800 px-2 sm:px-3 lg:px-4 py-1 sm:py-1.5 md:flex">
               <button
                 onClick={() => setOpenPoints(true)}
-                className="group flex items-center gap-2 rounded-full px-2 py-1 outline-none transition hover:bg-neutral-700 cursor-pointer"
+                className="group flex items-center gap-1 sm:gap-2 rounded-full px-1.5 sm:px-2 py-1 outline-none transition hover:bg-neutral-700 cursor-pointer"
                 aria-label="Open points"
                 title="Open points"
               >
-                <MI name="star" className="text-[18px] text-yellow-400 group-hover:scale-110 transition-transform" />
-                <span className="text-sm font-semibold text-neutral-50">
+                <MI name="star" className="text-[16px] sm:text-[18px] text-yellow-400 group-hover:scale-110 transition-transform" />
+                <span className="text-xs sm:text-sm font-semibold text-neutral-50">
                   {totalPoints.toLocaleString()}
                 </span>
               </button>
 
-              <div className="h-5 w-px bg-neutral-700" />
+              <div className="h-4 sm:h-5 w-px bg-neutral-700" />
 
               <button
                 onClick={() => setOpenWallet(true)}
-                className="group flex items-center gap-2 rounded-full px-2 py-1 outline-none transition hover:bg-neutral-700 cursor-pointer"
+                className="group flex items-center gap-1 sm:gap-2 rounded-full px-1.5 sm:px-2 py-1 outline-none transition hover:bg-neutral-700 cursor-pointer"
                 aria-label="Open wallet"
                 title="Open wallet"
               >
-                <MI name="account_balance_wallet" className="text-[18px] text-[var(--primary-500)] group-hover:scale-110 transition-transform" />
-                <span className="text-sm font-semibold text-neutral-50">USDC.e {usdceText}</span>
+                <MI name="account_balance_wallet" className="text-[16px] sm:text-[18px] text-[var(--primary-500)] group-hover:scale-110 transition-transform" />
+                <span className="text-xs sm:text-sm font-semibold text-neutral-50 hidden lg:inline">USDC.e {usdceText}</span>
+                <span className="text-xs sm:text-sm font-semibold text-neutral-50 lg:hidden">{usdceText}</span>
               </button>
             </div>
 

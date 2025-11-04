@@ -227,9 +227,9 @@ export default function Carousel({
               
               {/* Campaign Sponsored Badge */}
               {slide.type === "campaign" && (
-                <div className="absolute top-4 right-4 bg-gradient-to-r from-purple-600 to-purple-500 px-3 py-1 rounded-full text-xs font-medium text-white shadow-lg shadow-purple-500/30">
-                  <span className="flex items-center gap-1">
-                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                <div className="absolute top-2 sm:top-4 right-2 sm:right-4 bg-gradient-to-r from-purple-600 to-purple-500 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-medium text-white shadow-lg shadow-purple-500/30">
+                  <span className="flex items-center gap-0.5 sm:gap-1">
+                    <svg className="w-2.5 h-2.5 sm:w-3 sm:h-3" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
                     </svg>
                     Sponsored
@@ -239,9 +239,9 @@ export default function Carousel({
 
               {/* Default Slide Badge (Ajakan Iklan) */}
               {slide.type === "static" && (
-                <div className="absolute top-4 right-4 bg-gradient-to-r from-purple-600 to-purple-500 px-3 py-1 rounded-full text-xs font-medium text-white shadow-lg shadow-purple-500/30">
-                  <span className="flex items-center gap-1">
-                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                <div className="absolute top-2 sm:top-4 right-2 sm:right-4 bg-gradient-to-r from-purple-600 to-purple-500 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-medium text-white shadow-lg shadow-purple-500/30">
+                  <span className="flex items-center gap-0.5 sm:gap-1">
+                    <svg className="w-2.5 h-2.5 sm:w-3 sm:h-3" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                     </svg>
                     Advertise Here
@@ -249,15 +249,15 @@ export default function Carousel({
                 </div>
               )}
               
-              <div className="absolute inset-0 flex m-5 flex-col justify-center p-8 text-white md:p-12 pb-16 md:pb-20">
-                <h2 className={`text-2xl font-bold md:text-4xl line-clamp-2 ${
+              <div className="absolute inset-0 flex m-2 sm:m-3 md:m-5 flex-col justify-center p-3 sm:p-4 md:p-8 text-white lg:p-12 pb-10 sm:pb-12 md:pb-16 lg:pb-20">
+                <h2 className={`text-base sm:text-xl md:text-2xl lg:text-4xl font-bold line-clamp-2 ${
                   slide.type === "static" 
                     ? "text-white drop-shadow-lg"
                     : "text-white"
                 }`}>
                   {slide.title}
                 </h2>
-                <p className={`mt-2 text-base md:text-lg line-clamp-3 ${
+                <p className={`mt-1 sm:mt-1.5 md:mt-2 text-xs sm:text-sm md:text-base lg:text-lg line-clamp-2 sm:line-clamp-3 ${
                   slide.type === "static" 
                     ? "text-gray-100 drop-shadow-md"
                     : "text-gray-200 drop-shadow-md"
@@ -266,11 +266,11 @@ export default function Carousel({
                 </p>
                 <button 
                   onClick={() => handleSlideClick(slide)}
-                  className="mt-4 w-fit rounded-full bg-gradient-to-r from-purple-600 to-purple-500 px-6 py-2.5 text-sm font-semibold text-white transition-all duration-300 hover:from-purple-700 hover:to-purple-600 hover:shadow-xl shadow-lg shadow-purple-500/30 cursor-pointer"
+                  className="mt-2 sm:mt-3 md:mt-4 w-fit rounded-full bg-gradient-to-r from-purple-600 to-purple-500 px-3 sm:px-4 md:px-6 py-1.5 sm:py-2 md:py-2.5 text-[10px] sm:text-xs md:text-sm font-semibold text-white transition-all duration-300 hover:from-purple-700 hover:to-purple-600 hover:shadow-xl shadow-lg shadow-purple-500/30 cursor-pointer"
                 >
                   {slide.type === "static" && (
-                    <span className="flex items-center gap-2">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <span className="flex items-center gap-1 sm:gap-1.5 md:gap-2">
+                      <svg className="w-2.5 h-2.5 sm:w-3 sm:h-3 md:w-4 md:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                       </svg>
                       {slide.cta}
@@ -286,11 +286,11 @@ export default function Carousel({
 
       {/* Dots */}
       {!loading && allSlides.length > 1 && (
-        <div className="pointer-events-none absolute bottom-6 left-1/2 flex -translate-x-1/2 space-x-3">
+        <div className="pointer-events-none absolute bottom-3 sm:bottom-6 left-1/2 flex -translate-x-1/2 space-x-2 sm:space-x-3">
           {allSlides.map((slide, i) => (
             <button
               key={slide.id || i}
-              className={`pointer-events-auto h-3 w-3 rounded-full transition-all duration-200 ${
+              className={`pointer-events-auto h-2 w-2 sm:h-3 sm:w-3 rounded-full transition-all duration-200 ${
                 i === index 
                   ? "bg-purple-500 scale-110 shadow-lg shadow-purple-500/50"
                   : "bg-white/60 hover:bg-white/80 hover:scale-105"
@@ -309,26 +309,26 @@ export default function Carousel({
       {!loading && allSlides.length > 1 && (
         <>
           <button
-            className="absolute left-4 top-1/2 -translate-y-1/2 rounded-full bg-black/30 backdrop-blur-sm p-3 text-white hover:bg-black/50 transition-all duration-200 hover:scale-110 active:scale-95 cursor-pointer"
+            className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 rounded-full bg-black/30 backdrop-blur-sm p-2 sm:p-3 text-white hover:bg-black/50 transition-all duration-200 hover:scale-110 active:scale-95 cursor-pointer"
             aria-label="Previous slide"
             onClick={() => {
               prev();
               start();
             }}
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
           </button>
           <button
-            className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full bg-black/30 backdrop-blur-sm p-3 text-white hover:bg-black/50 transition-all duration-200 hover:scale-110 active:scale-95 cursor-pointer"
+            className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 rounded-full bg-black/30 backdrop-blur-sm p-2 sm:p-3 text-white hover:bg-black/50 transition-all duration-200 hover:scale-110 active:scale-95 cursor-pointer"
             aria-label="Next slide"
             onClick={() => {
               next();
               start();
             }}
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
           </button>
