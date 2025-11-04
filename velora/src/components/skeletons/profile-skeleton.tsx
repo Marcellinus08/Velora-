@@ -21,20 +21,20 @@ export function ProfileHeaderSkeleton() {
         <div className="flex-1 space-y-3">
           {/* Name and wallet */}
           <div className="space-y-2">
-            <div className="skel h-7 w-48 rounded" />
-            <div className="skel h-4 w-32 rounded" />
+            <div className="skel h-7 w-48 rounded" style={{ animationDelay: '0.05s' }} />
+            <div className="skel h-4 w-32 rounded" style={{ animationDelay: '0.1s' }} />
           </div>
 
           {/* Bio */}
           <div className="space-y-2 pt-2">
-            <div className="skel h-4 w-full rounded" />
-            <div className="skel h-4 w-5/6 rounded" />
+            <div className="skel h-4 w-full rounded" style={{ animationDelay: '0.15s' }} />
+            <div className="skel h-4 w-5/6 rounded" style={{ animationDelay: '0.2s' }} />
           </div>
 
           {/* Action buttons skeleton */}
           <div className="flex gap-3 pt-2">
-            <div className="skel h-10 w-32 rounded-full" />
-            <div className="skel h-10 w-32 rounded-full" />
+            <div className="skel h-10 w-32 rounded-full" style={{ animationDelay: '0.25s' }} />
+            <div className="skel h-10 w-32 rounded-full" style={{ animationDelay: '0.3s' }} />
           </div>
         </div>
       </div>
@@ -44,18 +44,21 @@ export function ProfileHeaderSkeleton() {
 
 /**
  * ProfileStatsCardSkeleton
- * Skeleton untuk stats dan rank card
+ * Skeleton untuk stats dan rank card - match dengan 5 columns (Followers, Following, Profit, Points, Rank)
  */
 export function ProfileStatsCardSkeleton() {
   return (
-    <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-      {Array.from({ length: 4 }).map((_, i) => (
+    <div className="grid grid-cols-2 gap-4 sm:grid-cols-5">
+      {Array.from({ length: 5 }).map((_, i) => (
         <div
           key={i}
-          className="skel rounded-xl border border-neutral-800 bg-neutral-900/30 p-4 shadow-lg shadow-black/50"
+          className="rounded-lg border border-neutral-800 bg-neutral-900 p-4 text-center"
         >
-          <div className="skel h-4 w-24 rounded mb-3" />
-          <div className="skel h-8 w-16 rounded" />
+          {/* Label skeleton */}
+          <div className="skel h-3 w-20 rounded mx-auto" style={{ animationDelay: `${0.05 * i}s` }} />
+          
+          {/* Value skeleton */}
+          <div className="skel h-6 w-16 rounded mx-auto mt-2" style={{ animationDelay: `${0.05 * i + 0.05}s` }} />
         </div>
       ))}
     </div>
@@ -70,8 +73,11 @@ export function ProfileTabsSkeleton() {
   return (
     <div className="border-b border-neutral-800 pb-4">
       <div className="flex gap-3">
-        <div className="skel h-10 w-32 rounded-full" />
-        <div className="skel h-10 w-32 rounded-full" />
+        {/* History tab skeleton */}
+        <div className="skel h-10 w-20 rounded-full" />
+        
+        {/* Activity tab skeleton */}
+        <div className="skel h-10 w-20 rounded-full" style={{ animationDelay: '0.05s' }} />
       </div>
     </div>
   );
@@ -85,12 +91,12 @@ export function ProfileFilterBarSkeleton() {
   return (
     <div className="space-y-3 sm:space-y-0 sm:flex sm:items-center sm:justify-between gap-4">
       {/* Filter select */}
-      <div className="skel h-10 w-48 rounded-md" />
+      <div className="skel h-10 w-40 rounded-md" />
 
       {/* Search and sort */}
       <div className="flex gap-3">
-        <div className="skel h-10 w-56 rounded-full" />
-        <div className="skel h-10 w-32 rounded-md" />
+        <div className="skel h-10 w-48 rounded-full" style={{ animationDelay: '0.05s' }} />
+        <div className="skel h-10 w-32 rounded-md" style={{ animationDelay: '0.1s' }} />
       </div>
     </div>
   );
@@ -106,10 +112,13 @@ export function ProfileStatsSummarySkeleton() {
       {Array.from({ length: 4 }).map((_, i) => (
         <div
           key={i}
-          className="skel rounded-xl border border-neutral-800/50 bg-neutral-900/30 p-4"
+          className="rounded-xl border border-neutral-800/50 bg-neutral-800/50 p-4 text-center"
         >
-          <div className="skel h-3 w-20 rounded mb-2" />
-          <div className="skel h-6 w-16 rounded" />
+          {/* Label skeleton */}
+          <div className="skel h-3 w-20 rounded mx-auto" style={{ animationDelay: `${0.05 * i}s` }} />
+          
+          {/* Value skeleton */}
+          <div className="skel h-6 w-16 rounded mx-auto mt-2" style={{ animationDelay: `${0.05 * i + 0.05}s` }} />
         </div>
       ))}
     </div>
@@ -123,6 +132,7 @@ export function ProfileStatsSummarySkeleton() {
 export function ProfileTableRowSkeleton() {
   return (
     <tr className="border-b border-neutral-800/30">
+      {/* Content column */}
       <td className="px-4 py-4">
         <div className="flex items-center gap-3">
           <div className="skel h-12 w-20 rounded" />
@@ -132,15 +142,23 @@ export function ProfileTableRowSkeleton() {
           </div>
         </div>
       </td>
+      
+      {/* Type column */}
       <td className="px-4 py-4">
         <div className="skel h-6 w-16 rounded-full" />
       </td>
+      
+      {/* Amount/Price column */}
       <td className="px-4 py-4">
         <div className="skel h-5 w-20 rounded" />
       </td>
+      
+      {/* Status column */}
       <td className="px-4 py-4">
         <div className="skel h-6 w-20 rounded-full" />
       </td>
+      
+      {/* Date column */}
       <td className="px-4 py-4">
         <div className="skel h-4 w-32 rounded" />
       </td>

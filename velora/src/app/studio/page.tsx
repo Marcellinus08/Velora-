@@ -2,7 +2,10 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useAccount } from "wagmi";
-
+import { StudioHeaderSkeleton } from "@/components/studio/header-skeleton";
+import { StudioStatsSkeleton } from "@/components/studio/stats-skeleton";
+import { StudioActionsSkeleton } from "@/components/studio/actions-skeleton";
+import { StudioRecentSkeleton } from "@/components/studio/recent-skeleton";
 import StudioHeader from "@/components/studio/header";
 import StudioStats from "@/components/studio/stats";
 import StudioActions from "@/components/studio/actions";
@@ -375,6 +378,51 @@ export default function StudioPage() {
     if (status === "connected" && me) void load();
   }, [status, me]);
 
+  // Create a full page skeleton if loading
+  if (loading) {
+    return (
+      <div className="flex h-full grow flex-row">
+        <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8 relative overflow-hidden">
+          {/* Background decorative elements - matching home page */}
+          <div className="fixed inset-0 overflow-hidden opacity-5 pointer-events-none">
+            <div className="absolute -top-10 -right-10 w-40 h-40 bg-purple-500 rounded-full blur-3xl animate-pulse" style={{ animationDuration: '4s' }} />
+            <div className="absolute top-1/3 -left-20 w-32 h-32 bg-blue-500 rounded-full blur-2xl animate-pulse" style={{ animationDelay: '2s', animationDuration: '5s' }} />
+            <div className="absolute bottom-1/4 right-1/4 w-24 h-24 bg-pink-500 rounded-full blur-xl animate-pulse" style={{ animationDelay: '1s', animationDuration: '3s' }} />
+          </div>
+
+          {/* Header skeleton */}
+          <div className="relative">
+            <StudioHeaderSkeleton />
+          </div>
+
+          {/* Stats skeleton */}
+          <div className="relative mt-6">
+            <StudioStatsSkeleton />
+          </div>
+
+          {/* Actions skeleton */}
+          <div className="relative mt-6">
+            <StudioActionsSkeleton />
+          </div>
+
+          {/* Recent skeleton */}
+          <div className="relative mt-8">
+            <StudioRecentSkeleton />
+          </div>
+
+          {/* Floating decorative elements */}
+          <div className="fixed bottom-8 right-8 opacity-20 hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+            <div className="flex flex-col gap-3">
+              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500/20 to-blue-500/20 backdrop-blur-sm border border-purple-500/20 animate-pulse" style={{ animationDuration: '3s' }} />
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-pink-500/20 to-purple-500/20 backdrop-blur-sm border border-pink-500/20 animate-pulse" style={{ animationDelay: '1s', animationDuration: '2s' }} />
+              <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-500/20 to-cyan-500/20 backdrop-blur-sm border border-blue-500/20 animate-pulse" style={{ animationDelay: '2s', animationDuration: '4s' }} />
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="flex h-full grow flex-row">
       <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8 relative overflow-hidden">
@@ -386,7 +434,7 @@ export default function StudioPage() {
         </div>
 
         {/* Header with gradient background */}
-        <div className="relative animate-in fade-in duration-700">
+        <div className="relative">
           <div className="absolute inset-0 bg-gradient-to-r from-purple-500/5 via-transparent to-blue-500/5 rounded-2xl blur-xl" />
           <div className="relative">
             <StudioHeader />
@@ -394,7 +442,7 @@ export default function StudioPage() {
         </div>
 
         {/* Stats with enhanced styling */}
-        <div className="relative mt-6 animate-in slide-in-from-bottom duration-700" style={{ animationDelay: '100ms' }}>
+        <div className="relative mt-6">
           <div className="absolute inset-0 bg-gradient-to-r from-purple-500/3 via-blue-500/3 to-pink-500/3 rounded-2xl blur-xl opacity-0 hover:opacity-100 transition-opacity duration-500" />
           <div className="relative">
             <StudioStats
@@ -409,15 +457,15 @@ export default function StudioPage() {
         </div>
 
         {/* Actions with staggered animation */}
-        <div className="relative mt-6 animate-in slide-in-from-left duration-700" style={{ animationDelay: '200ms' }}>
+        <div className="relative mt-6">
           <div className="absolute inset-0 bg-gradient-to-r from-violet-500/5 via-transparent to-emerald-500/5 rounded-2xl" />
           <div className="relative">
             <StudioActions />
           </div>
         </div>
 
-        {/* Recent panel with fade in */}
-        <div className="relative mt-8 animate-in fade-in duration-1000" style={{ animationDelay: '300ms' }}>
+        {/* Recent panel */}
+        <div className="relative mt-8">
           {error && (
             <div className="rounded-xl border border-red-700/50 bg-gradient-to-r from-red-900/30 via-red-800/20 to-red-900/30 p-4 text-sm text-red-200 backdrop-blur-sm shadow-lg shadow-red-900/20 mb-4">
               <div className="flex items-center gap-2">
@@ -428,32 +476,20 @@ export default function StudioPage() {
               </div>
             </div>
           )}
-          {loading ? (
-            <div className="rounded-2xl border border-neutral-800/50 bg-gradient-to-br from-neutral-900/60 via-neutral-900/40 to-neutral-900/60 p-8 backdrop-blur-sm">
-              <div className="flex flex-col items-center justify-center gap-4">
-                <div className="relative">
-                  <div className="w-12 h-12 border-4 border-purple-500/20 border-t-purple-500 rounded-full animate-spin" />
-                  <div className="absolute inset-0 w-12 h-12 border-4 border-transparent border-r-blue-500 rounded-full animate-spin" style={{ animationDirection: 'reverse', animationDuration: '1.5s' }} />
-                </div>
-                <p className="text-neutral-400 font-medium">Loading your studio...</p>
-              </div>
-            </div>
-          ) : (
+          <div className="relative">
+            <div className="absolute inset-0 bg-gradient-to-br from-purple-500/3 via-transparent to-blue-500/3 rounded-2xl" />
             <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-br from-purple-500/3 via-transparent to-blue-500/3 rounded-2xl" />
-              <div className="relative">
-                <StudioRecentPanel
-                  videos={videos}
-                  ads={ads}
-                  meets={meets}
-                  onAdsUpdate={() => {
-                    // Reload campaigns when status changes
-                    fetchCampaigns();
-                  }}
-                />
-              </div>
+              <StudioRecentPanel
+                videos={videos}
+                ads={ads}
+                meets={meets}
+                onAdsUpdate={() => {
+                  // Reload campaigns when status changes
+                  fetchCampaigns();
+                }}
+              />
             </div>
-          )}
+          </div>
         </div>
 
         {/* Floating decorative elements */}
