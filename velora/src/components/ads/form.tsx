@@ -28,7 +28,7 @@ export default function AdForm({
   return (
     <section className="rounded-3xl border border-neutral-700/50 bg-gradient-to-br from-neutral-900/80 to-neutral-800/40 backdrop-blur-sm p-6 sm:p-8 shadow-2xl">
       <div className="flex items-center gap-3 mb-6">
-        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-600 via-purple-500 to-fuchsia-500 flex items-center justify-center shadow-lg shadow-purple-500/20">
+        <div className="w-10 h-10 rounded-xl bg-purple-600 flex items-center justify-center shadow-lg shadow-purple-500/20">
           <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
           </svg>
@@ -135,7 +135,7 @@ export default function AdForm({
             />
             <div className="border-2 border-dashed border-neutral-600/50 rounded-xl bg-neutral-800/30 hover:bg-neutral-800/50 transition-all duration-200 p-6 text-center">
               <div className="flex flex-col items-center gap-3">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500/20 via-purple-400/20 to-fuchsia-400/20 flex items-center justify-center">
+                <div className="w-12 h-12 rounded-xl bg-purple-600/20 flex items-center justify-center">
                   <svg className="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                   </svg>
@@ -190,7 +190,7 @@ export default function AdForm({
                   <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-black/80 via-black/40 to-transparent pointer-events-none" />
                   
                   {/* Sponsored badge preview */}
-                  <div className="absolute top-3 right-3 bg-gradient-to-r from-purple-600 via-purple-500 to-fuchsia-500 px-2.5 py-1 rounded-full text-[11px] font-medium text-white shadow-lg">
+                  <div className="absolute top-3 right-3 bg-purple-600 px-2.5 py-1 rounded-full text-[11px] font-medium text-white shadow-lg">
                     <span className="flex items-center gap-1">
                       <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
