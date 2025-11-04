@@ -49,7 +49,7 @@ export default function Home() {
   return (
     <div className="flex h-full grow flex-row">
       <Sidebar />
-      <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8 relative overflow-hidden">
+      <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8 relative overflow-hidden md:ml-64">
         {/* Background decorative elements */}
         <div className="fixed inset-0 overflow-hidden opacity-5 pointer-events-none">
           <div className="absolute -top-10 -right-10 w-40 h-40 bg-purple-500 rounded-full blur-3xl animate-pulse" style={{ animationDuration: '4s' }} />

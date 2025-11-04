@@ -1,12 +1,13 @@
 // src/components/home/cardsgrid.tsx
-"use client";
+// "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useAccount } from "wagmi";
 import { supabase } from "@/lib/supabase";
 import { AbstractProfile } from "@/components/abstract-profile";
 import { BuyVideoButton } from "@/components/payments/TreasuryButtons";
+import { useInfiniteScroll } from "@/hooks/use-infinite-scroll";
 
 /* ================== Types ================== */
 type VideoRow = {
@@ -91,7 +92,10 @@ export default function CardsGrid() {
 
   const [items, setItems] = useState<VideoRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [err, setErr] = useState<string>("");
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
 
   // ===== OWNED: set id video yang sudah dibeli user ini
   const [owned, setOwned] = useState<Set<string>>(new Set());
@@ -149,7 +153,7 @@ export default function CardsGrid() {
     };
   }, [buyer]);
 
-  // 1) Ambil video + join profile
+  // 1) Ambil video + join profile - INITIAL LOAD ONLY
   useEffect(() => {
     let active = true;
 
@@ -157,6 +161,8 @@ export default function CardsGrid() {
       try {
         setLoading(true);
         setErr("");
+        setPage(1);
+        setItems([]);
 
         const selects = [
           `
@@ -184,7 +190,7 @@ export default function CardsGrid() {
             .from("videos")
             .select(sel)
             .order("created_at", { ascending: false })
-            .limit(24);
+            .range(0, 19); // Load 20 items first
           if (!error) {
             data = d;
             break;
@@ -194,10 +200,14 @@ export default function CardsGrid() {
 
         if (!active) return;
         if (!data) throw lastError ?? new Error("Unknown error fetching videos");
+        
         setItems(data as VideoRow[]);
+        setHasMore(data.length >= 20);
+        setPage(2); // Next page will be 2
       } catch (e: any) {
         if (!active) return;
         setErr(e?.message || "Failed to load videos.");
+        setHasMore(false);
       } finally {
         if (active) setLoading(false);
       }
@@ -208,7 +218,69 @@ export default function CardsGrid() {
     };
   }, []);
 
-  // 2) Fetch avatar Abstract untuk yang belum punya avatar_url di DB, sekali saja
+  // 1b) Load lebih banyak video ketika di-scroll
+  const fetchMore = useCallback(async () => {
+    try {
+      const selects = [
+        `
+          id, title, description, category, thumb_url,
+          price_cents, currency, points_total,
+          creator:profiles!videos_abstract_id_fkey(username, abstract_id, avatar_url)
+        `,
+        `
+          id, title, description, category, thumb_url,
+          price_cents, currency, total_points,
+          creator:profiles!videos_abstract_id_fkey(username, abstract_id, avatar_url)
+        `,
+        `
+          id, title, description, category, thumb_url,
+          price_cents, currency,
+          creator:profiles!videos_abstract_id_fkey(username, abstract_id, avatar_url)
+        `,
+      ];
+
+      let data: any = null;
+      let lastError: any = null;
+
+      const offset = (page - 1) * 20; // 20 items per page
+
+      for (const sel of selects) {
+        const { data: d, error } = await supabase
+          .from("videos")
+          .select(sel)
+          .order("created_at", { ascending: false })
+          .range(offset, offset + 19);
+        if (!error) {
+          data = d;
+          break;
+        }
+        lastError = error;
+      }
+
+      if (!data) throw lastError ?? new Error("Unknown error fetching more videos");
+      
+      if (data.length === 0) {
+        setHasMore(false);
+      } else {
+        setItems((prev) => [...prev, ...(data as VideoRow[])]);
+        setPage((prev) => prev + 1);
+        setHasMore(data.length >= 20);
+      }
+    } catch (e: any) {
+      console.error("Failed to load more videos:", e);
+      setHasMore(false);
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [page]);
+
+  const handleFetchMore = useCallback(async () => {
+    setLoadingMore(true);
+    await fetchMore();
+  }, [fetchMore]);
+
+  // Hook infinite scroll - akan trigger fetchMore saat user scroll ke bawah
+  const observerTarget = useInfiniteScroll(handleFetchMore, hasMore && !loading);
   useEffect(() => {
     let alive = true;
 
@@ -492,6 +564,29 @@ export default function CardsGrid() {
           </div>
         );
       })}
+      </div>
+
+      {/* Observer target untuk infinite scroll */}
+      <div ref={observerTarget} className="mt-8 flex justify-center">
+        {loadingMore && (
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-x-4 gap-y-8 w-full">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={`skeleton-${i}`} className="animate-pulse rounded-xl border border-neutral-800 bg-neutral-900">
+                <div className="aspect-video w-full rounded-t-xl bg-neutral-800/60" />
+                <div className="space-y-2 p-3">
+                  <div className="h-4 w-3/4 rounded bg-neutral-800/60" />
+                  <div className="h-3 w-1/2 rounded bg-neutral-800/60" />
+                  <div className="mt-3 h-8 w-24 rounded-full bg-neutral-800/60" />
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+        {!hasMore && items.length > 0 && (
+          <div className="text-center py-8">
+            <p className="text-neutral-500 text-sm">No more videos to load</p>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -60,7 +60,7 @@ export default function MeetPage() {
   return (
     <div className="flex h-full">
       <Sidebar />
-      <main className="flex-1 px-6 py-8">
+      <main className="flex-1 px-6 py-8 md:ml-64">
         <Header />
 
         {/* Coming Soon Banner - Full Height */}

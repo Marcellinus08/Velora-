@@ -52,8 +52,9 @@ export default function NotificationDebugPage() {
   };
 
   return (
-    <div className="p-8 max-w-2xl mx-auto">
-      <h1 className="text-2xl font-bold mb-4">🐛 Notification Debug</h1>
+    <div className="flex h-full grow flex-row">
+      <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8 p-8 max-w-2xl mx-auto">
+        <h1 className="text-2xl font-bold mb-4">🐛 Notification Debug</h1>
 
       <div className="bg-gray-100 p-4 rounded mb-4">
         <p className="font-semibold">Current Address:</p>
@@ -132,6 +133,7 @@ export default function NotificationDebugPage() {
           <li>Any errors from fetch</li>
         </ul>
       </div>
+      </main>
     </div>
   );
 }

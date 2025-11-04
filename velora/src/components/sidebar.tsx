@@ -32,7 +32,7 @@ export default function Sidebar() {
   );
 
   return (
-    <aside className="sticky top-[57px] hidden h-[calc(100vh-57px)] w-64 flex-shrink-0 flex-col gap-y-2 overflow-y-auto border-r border-solid border-neutral-800 bg-neutral-900 px-3 py-4 md:flex">
+    <aside className="fixed left-0 top-[57px] hidden h-[calc(100vh-57px)] w-64 flex-shrink-0 flex-col gap-y-2 overflow-y-auto border-r border-solid border-neutral-800 bg-neutral-900 px-3 py-4 md:flex z-30">
       <nav className="flex flex-col gap-1">
         {/* Homepage */}
         <Link

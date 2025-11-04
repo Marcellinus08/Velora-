@@ -99,6 +99,12 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
+/* Prevent layout shift when scroll appears/disappears (e.g., dialog open) */
+html {
+  overflow-y: scroll;
+  scrollbar-gutter: stable;
+}
+
 /* Menghilangkan tampilan scroll bar */
 ::-webkit-scrollbar {
   display: none;
@@ -107,6 +113,13 @@
 /* Pastikan konten masih bisa discroll */
 body {
   overflow: scroll;
+  scrollbar-gutter: stable; /* Prevent layout shift when scroll appears/disappears */
+}
+
+/* Prevent body from jumping when Radix locks scroll */
+[data-radix-dialog-trigger],
+[data-state="open"] {
+  scrollbar-gutter: stable;
 }
 
 @keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
@@ -154,6 +167,24 @@ input[type="time"]::-webkit-calendar-picker-indicator {
 
 input[type="time"]::-webkit-datetime-edit {
   cursor: pointer !important;
+}
+
+/* Disable scroll-lock for dropdown menus */
+/* Only allow scroll-lock for actual dialogs */
+[role="menu"][data-radix-dropdown-menu-content],
+[role="listbox"],
+[data-radix-dropdown-menu-content] {
+  pointer-events: auto;
+}
+
+/* Ensure body doesn't get overflow:hidden from dropdown */
+html:has([data-radix-dropdown-menu-content]) {
+  overflow-y: scroll;
+}
+
+body:has([data-radix-dropdown-menu-content]) {
+  overflow: auto !important;
+  padding-right: 0 !important;
 }
 
 

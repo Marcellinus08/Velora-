@@ -42,7 +42,7 @@ export default function AdminDashboardPage() {
   return (
     <div className="flex h-full grow flex-row">
 
-      <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8">
+      <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8 md:ml-64">
         {/* Header */}
         <div className="mb-6 flex flex-col items-start gap-4 md:flex-row md:items-center md:justify-between">
           <div>

@@ -16,7 +16,7 @@ export const metadata = {
 };
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="id">
+    <html lang="id" className="overflow-visible">
       <head>
         {/* Material Icons Round (ligature-based) */}
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
@@ -50,7 +50,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         />
       </head>
       <body
-        className="relative flex min-h-screen flex-col overflow-x-hidden bg-neutral-900"
+        className="relative flex min-h-screen flex-col overflow-visible bg-neutral-900 pt-[57px]"
         style={{ fontFamily: `"Be Vietnam Pro", "Noto Sans", sans-serif` }}
       >
         <NextAbstractWalletProvider>

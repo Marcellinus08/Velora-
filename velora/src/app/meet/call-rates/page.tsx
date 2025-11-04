@@ -132,7 +132,7 @@ export default function CallRatesPage() {
   const videoPerSession = useMemo(() => videoPerMin * slotMinutes, [videoPerMin, slotMinutes]);
 
   return (
-    <main className="px-4 py-6 sm:px-6 lg:px-8">
+    <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8">
       <header className="mb-6">
         <h1 className="text-2xl font-bold text-neutral-50">Set Your Call Rates</h1>
         {!abstractId && (
