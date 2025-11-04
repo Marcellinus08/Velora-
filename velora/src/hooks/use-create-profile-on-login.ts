@@ -21,8 +21,7 @@ export function useCreateProfileOnLogin() {
 
     (async () => {
       try {
-        console.log("[upsert] POST /api/profiles/upsert", address);
-        const res = await fetch("/api/profiles/upsert", {
+const res = await fetch("/api/profiles/upsert", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ abstractId: address }),
@@ -30,13 +29,10 @@ export function useCreateProfileOnLogin() {
 
         if (!res.ok) {
           const msg = await res.text();
-          console.error("[upsert] failed:", res.status, msg);
-        } else {
-          console.log("[upsert] success");
-        }
+} else {
+}
       } catch (err) {
-        console.error("[upsert] error:", err);
-      }
+}
     })();
   }, [status, address]);
 }

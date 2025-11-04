@@ -29,10 +29,7 @@ export default function NotificationsMenu() {
   
   // Fallback ke localStorage jika wagmi tidak return address
   const abstractId = ((wagmiAddress?.toLowerCase() as `0x${string}` | undefined) || getStoredAbstractAddress()) as `0x${string}` | undefined;
-
-  console.log("[NotificationsMenu] Current user address:", { wagmiAddress, abstractId });
-
-  const {
+const {
     notifications,
     unreadCount,
     loading,
@@ -65,25 +62,19 @@ export default function NotificationsMenu() {
   };
 
   const handleNotificationClick = async (id: string, isRead: boolean) => {
-    console.log("[NotificationsMenu] Clicked notification:", { id, isRead });
-    if (!isRead) {
+if (!isRead) {
       try {
         await markAsRead(id);
-        console.log("[NotificationsMenu] Marked as read successfully");
-      } catch (error) {
-        console.error("[NotificationsMenu] Failed to mark as read:", error);
-      }
+} catch (error) {
+}
     }
   };
 
   const handleMarkAllAsRead = async () => {
-    console.log("[NotificationsMenu] Mark all as read clicked");
-    try {
+try {
       await markAllAsRead();
-      console.log("[NotificationsMenu] Marked all as read successfully");
-    } catch (error) {
-      console.error("[NotificationsMenu] Failed to mark all as read:", error);
-    }
+} catch (error) {
+}
   };
 
   return (

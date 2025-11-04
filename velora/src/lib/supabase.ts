@@ -34,17 +34,8 @@ export function createClient() {
     }
   );
 
-  console.log("🔧 Supabase Client created with Realtime enabled (singleton)");
   return supabaseClient;
 }
 
 // Browser singleton untuk komponen client (pakai public keys saja)
 export const supabase = createClient();
-
-// Debug: Log supabase initialization
-if (typeof window !== "undefined") {
-  console.log("🔧 Supabase Client Initialized");
-  console.log("📍 URL:", process.env.NEXT_PUBLIC_SUPABASE_URL);
-  console.log("🔑 Key:", process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? "✅ Present" : "❌ Missing");
-  console.log("🔴 Realtime enabled: ✅");
-}

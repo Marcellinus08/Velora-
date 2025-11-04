@@ -61,19 +61,15 @@ export function useNotifications(abstractId: string | undefined) {
   // Fetch notifications from all 6 tables
   const fetchNotifications = useCallback(async () => {
     if (!abstractId) {
-      console.log("[useNotifications] No abstractId, skipping fetch");
-      setNotifications([]);
+setNotifications([]);
       setUnreadCount(0);
       setLoading(false);
       return;
     }
 
     const addr = abstractId.toLowerCase();
-    console.log("[useNotifications] ===== FETCH START =====");
-    console.log("[useNotifications] Fetching for address:", addr);
-    console.log("[useNotifications] Address type:", typeof addr, "Length:", addr?.length);
-    
-    try {
+
+try {
       const supabase = createClient();
 
       // Query 6 notification tables
@@ -125,34 +121,13 @@ export function useNotifications(abstractId: string | undefined) {
       if (videoLikesRes.error) throw new Error(videoLikesRes.error.message);
       if (videoCommentsRes.error) throw new Error(videoCommentsRes.error.message);
 
-      console.log("[useNotifications] ===== QUERY RESULTS =====");
-      console.log("[useNotifications] Community Likes:", likesRes.data?.length || 0);
-      console.log("[useNotifications] Community Replies:", repliesRes.data?.length || 0);
-      console.log("[useNotifications] Reply Likes:", replyLikesRes.data?.length || 0);
-      console.log("[useNotifications] Video Purchases:", videoPurchasesRes.data?.length || 0);
-      console.log("[useNotifications] Video Likes:", videoLikesRes.data?.length || 0);
-      console.log("[useNotifications] Video Comments:", videoCommentsRes.data?.length || 0);
-      
-      if (videoPurchasesRes.data && videoPurchasesRes.data.length > 0) {
-        console.log("[useNotifications] ⚠️  VIDEO PURCHASES FOUND!");
-        console.log("[useNotifications] Data:", videoPurchasesRes.data);
-      } else {
-        console.log("[useNotifications] ⚠️  NO VIDEO PURCHASES FOUND - checking RLS issue");
-        console.log("[useNotifications] Expected creator_addr:", addr);
-      }
+if (videoPurchasesRes.data && videoPurchasesRes.data.length > 0) {
 
-      console.log("[useNotifications] Fetch results:", {
-        likes: likesRes.data?.length || 0,
-        replies: repliesRes.data?.length || 0,
-        replyLikes: replyLikesRes.data?.length || 0,
-        videoPurchases: videoPurchasesRes.data?.length || 0,
-        videoLikes: videoLikesRes.data?.length || 0,
-        videoComments: videoCommentsRes.data?.length || 0,
-      });
+} else {
 
-      if (videoPurchasesRes.data && videoPurchasesRes.data.length > 0) {
-        console.log("[useNotifications] Video purchases data:", videoPurchasesRes.data);
-      }
+}
+if (videoPurchasesRes.data && videoPurchasesRes.data.length > 0) {
+}
 
       // Combine and normalize all notifications
       const allNotifs: Notification[] = [];
@@ -198,16 +173,9 @@ export function useNotifications(abstractId: string | undefined) {
           const [targetType, targetId] = key.split(":");
           const title = await fetchTargetTitle(targetId, targetType);
           targetTitles.set(key, title);
-          console.log("[useNotifications] Fetched target title:", { key, targetType, targetId, title });
-        })
+})
       );
-
-      console.log("[useNotifications] All target titles fetched:", {
-        count: targetTitles.size,
-        titles: Object.fromEntries(targetTitles),
-      });
-
-      // Add likes
+// Add likes
       (likesRes.data || []).forEach((n: any) => {
         const actor = actorProfiles.get(n.actor_addr.toLowerCase()) || { name: null, avatar: null };
         const titleKey = `post:${n.post_id}`;
@@ -345,19 +313,10 @@ export function useNotifications(abstractId: string | undefined) {
 
       // Sort by created_at DESC
       allNotifs.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-
-      console.log("[useNotifications] Processed notifications:", allNotifs.length, {
-        likes: likesRes.data?.length || 0,
-        replies: repliesRes.data?.length || 0,
-        replyLikes: replyLikesRes.data?.length || 0,
-        videoPurchases: videoPurchasesRes.data?.length || 0,
-      });
-
-      setNotifications(allNotifs);
+setNotifications(allNotifs);
       setUnreadCount(allNotifs.filter((n) => !n.isRead).length);
     } catch (error) {
-      console.error("[useNotifications] Fetch error:", error);
-      setNotifications([]);
+setNotifications([]);
       setUnreadCount(0);
     } finally {
       setLoading(false);
@@ -367,13 +326,10 @@ export function useNotifications(abstractId: string | undefined) {
   // Mark as read
   const markAsRead = useCallback(async (notificationId: string) => {
     try {
-      console.log("[useNotifications] Marking as read:", notificationId);
-
-      // Find which table this notification came from
+// Find which table this notification came from
       const notif = notifications.find((n) => n.id === notificationId);
       if (!notif) {
-        console.warn("[useNotifications] Notification not found:", notificationId);
-        return;
+return;
       }
 
       const supabase = createClient();
@@ -392,8 +348,7 @@ export function useNotifications(abstractId: string | undefined) {
       } else if (notif.source === "video_comments") {
         tableName = "notification_video_comments";
       } else {
-        console.error("[useNotifications] Unknown notification source:", notif.source);
-        return;
+return;
       }
 
       const { error } = await supabase
@@ -402,33 +357,25 @@ export function useNotifications(abstractId: string | undefined) {
         .eq("id", notificationId);
 
       if (error) {
-        console.error("[useNotifications] Mark as read error:", error);
-        throw new Error(error.message);
+throw new Error(error.message);
       }
-
-      console.log("[useNotifications] Successfully marked as read");
-
-      // Optimistically update local state
+// Optimistically update local state
       setNotifications((prev) =>
         prev.map((n) => (n.id === notificationId ? { ...n, isRead: true, readAt: new Date().toISOString() } : n))
       );
       setUnreadCount((prev) => Math.max(0, prev - 1));
     } catch (error) {
-      console.error("[useNotifications] Mark as read error:", error);
-    }
+}
   }, [notifications]);
 
   // Mark all as read
   const markAllAsRead = useCallback(async () => {
     if (!abstractId) {
-      console.warn("[useNotifications] No abstractId for mark all as read");
-      return;
+return;
     }
 
     try {
-      console.log("[useNotifications] Marking all as read for:", abstractId);
-      
-      const addr = abstractId.toLowerCase();
+const addr = abstractId.toLowerCase();
       const supabase = createClient();
       const now = new Date().toISOString();
 
@@ -477,28 +424,21 @@ export function useNotifications(abstractId: string | undefined) {
       if (res4.error) throw new Error(res4.error.message);
       if (res5.error) throw new Error(res5.error.message);
       if (res6.error) throw new Error(res6.error.message);
-
-      console.log("[useNotifications] Successfully marked all as read");
-
-      // Optimistically update local state
+// Optimistically update local state
       const nowIso = new Date().toISOString();
       setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true, readAt: nowIso })));
       setUnreadCount(0);
     } catch (error) {
-      console.error("[useNotifications] Mark all as read error:", error);
-    }
+}
   }, [abstractId]);
 
   // Delete notification
   const deleteNotification = useCallback(async (notificationId: string) => {
     try {
-      console.log("[useNotifications] Deleting notification:", notificationId);
-
-      // Find which table this notification came from
+// Find which table this notification came from
       const notif = notifications.find((n) => n.id === notificationId);
       if (!notif) {
-        console.warn("[useNotifications] Notification not found:", notificationId);
-        return;
+return;
       }
 
       const supabase = createClient();
@@ -517,8 +457,7 @@ export function useNotifications(abstractId: string | undefined) {
       } else if (notif.source === "video_comments") {
         tableName = "notification_video_comments";
       } else {
-        console.error("[useNotifications] Unknown notification source:", notif.source);
-        return;
+return;
       }
 
       const { error } = await supabase
@@ -527,13 +466,9 @@ export function useNotifications(abstractId: string | undefined) {
         .eq("id", notificationId);
 
       if (error) {
-        console.error("[useNotifications] Delete error:", error);
-        throw new Error(error.message);
+throw new Error(error.message);
       }
-
-      console.log("[useNotifications] Successfully deleted notification");
-
-      // Optimistically update local state
+// Optimistically update local state
       setNotifications((prev) => {
         const deleted = prev.find((n) => n.id === notificationId);
         const newNotifs = prev.filter((n) => n.id !== notificationId);
@@ -545,8 +480,7 @@ export function useNotifications(abstractId: string | undefined) {
         return newNotifs;
       });
     } catch (error) {
-      console.error("[useNotifications] Delete error:", error);
-    }
+}
   }, [notifications]);
 
   // Initial fetch
@@ -557,15 +491,12 @@ export function useNotifications(abstractId: string | undefined) {
   // Real-time subscription
   useEffect(() => {
     if (!abstractId) {
-      console.log("[useNotifications] No abstractId, skipping real-time subscription");
-      return;
+return;
     }
 
     const addr = abstractId.toLowerCase();
     const supabase = createClient();
-    console.log("[useNotifications] 🔄 Setting up real-time subscriptions for:", addr);
-
-    // Subscribe to likes
+// Subscribe to likes
     const likesChannel = supabase
       .channel(`notif-likes-${addr}`)
       .on(
@@ -577,13 +508,11 @@ export function useNotifications(abstractId: string | undefined) {
           filter: `recipient_addr=eq.${addr}`,
         },
         (payload) => {
-          console.log("[useNotifications] 🔔 Likes channel event:", payload.eventType);
-          handleRealtimeChange(payload, "community_likes");
+handleRealtimeChange(payload, "community_likes");
         }
       )
       .subscribe((status) => {
-        console.log("[useNotifications] Likes subscription status:", status);
-      });
+});
 
     // Subscribe to replies
     const repliesChannel = supabase
@@ -597,13 +526,11 @@ export function useNotifications(abstractId: string | undefined) {
           filter: `recipient_addr=eq.${addr}`,
         },
         (payload) => {
-          console.log("[useNotifications] 🔔 Replies channel event:", payload.eventType);
-          handleRealtimeChange(payload, "community_replies");
+handleRealtimeChange(payload, "community_replies");
         }
       )
       .subscribe((status) => {
-        console.log("[useNotifications] Replies subscription status:", status);
-      });
+});
 
     // Subscribe to reply likes
     const replyLikesChannel = supabase
@@ -617,13 +544,11 @@ export function useNotifications(abstractId: string | undefined) {
           filter: `recipient_addr=eq.${addr}`,
         },
         (payload) => {
-          console.log("[useNotifications] � Reply likes channel event:", payload.eventType);
-          handleRealtimeChange(payload, "reply_likes");
+handleRealtimeChange(payload, "reply_likes");
         }
       )
       .subscribe((status) => {
-        console.log("[useNotifications] Reply likes subscription status:", status);
-      });
+});
 
     // Subscribe to video purchases
     const videoPurchasesChannel = supabase
@@ -637,13 +562,11 @@ export function useNotifications(abstractId: string | undefined) {
           filter: `creator_addr=eq.${addr}`,
         },
         (payload) => {
-          console.log("[useNotifications] 🔔 Video purchases channel event:", payload.eventType);
-          handleRealtimeChange(payload, "video_purchases");
+handleRealtimeChange(payload, "video_purchases");
         }
       )
       .subscribe((status) => {
-        console.log("[useNotifications] Video purchases subscription status:", status);
-      });
+});
 
     // Subscribe to video likes
     const videoLikesChannel = supabase
@@ -657,13 +580,11 @@ export function useNotifications(abstractId: string | undefined) {
           filter: `creator_addr=eq.${addr}`,
         },
         (payload) => {
-          console.log("[useNotifications] 🔔 Video likes channel event:", payload.eventType);
-          handleRealtimeChange(payload, "video_likes");
+handleRealtimeChange(payload, "video_likes");
         }
       )
       .subscribe((status) => {
-        console.log("[useNotifications] Video likes subscription status:", status);
-      });
+});
 
     // Subscribe to video comments
     const videoCommentsChannel = supabase
@@ -677,19 +598,15 @@ export function useNotifications(abstractId: string | undefined) {
           filter: `creator_addr=eq.${addr}`,
         },
         (payload) => {
-          console.log("[useNotifications] 🔔 Video comments channel event:", payload.eventType);
-          console.log("[useNotifications] 🔔 Video comments payload:", JSON.stringify(payload.new, null, 2));
-          console.log("[useNotifications] 🔔 Filter check - creator_addr:", (payload.new as any)?.creator_addr, "vs filter addr:", addr);
-          handleRealtimeChange(payload, "video_comments");
+
+handleRealtimeChange(payload, "video_comments");
         }
       )
       .subscribe((status) => {
-        console.log("[useNotifications] Video comments subscription status:", status);
-      });
+});
 
     return () => {
-      console.log("[useNotifications] 🧹 Cleaning up real-time subscriptions");
-      supabase.removeChannel(likesChannel);
+supabase.removeChannel(likesChannel);
       supabase.removeChannel(repliesChannel);
       supabase.removeChannel(replyLikesChannel);
       supabase.removeChannel(videoPurchasesChannel);
@@ -702,9 +619,7 @@ export function useNotifications(abstractId: string | undefined) {
   const handleRealtimeChange = useCallback(
     (payload: any, source: "community_likes" | "community_replies" | "reply_likes" | "video_purchases" | "video_likes" | "video_comments") => {
       if (payload.eventType === "INSERT") {
-        console.log("[useNotifications] ✅ INSERT detected:", payload.new.id);
-        
-        let newNotif: Notification;
+let newNotif: Notification;
         if (source === "community_likes") {
           newNotif = {
             id: payload.new.id,
@@ -809,9 +724,7 @@ export function useNotifications(abstractId: string | undefined) {
           setUnreadCount((prev) => prev + 1);
         }
       } else if (payload.eventType === "UPDATE") {
-        console.log("[useNotifications] 🔄 UPDATE detected:", payload.new.id);
-        
-        setNotifications((prev) =>
+setNotifications((prev) =>
           prev.map((n) => {
             if (n.id === payload.new.id) {
               return {
@@ -831,9 +744,7 @@ export function useNotifications(abstractId: string | undefined) {
           return prev;
         });
       } else if (payload.eventType === "DELETE") {
-        console.log("[useNotifications] 🗑️ DELETE detected:", payload.old.id);
-        
-        setNotifications((prev) => {
+setNotifications((prev) => {
           const deleted = prev.find((n) => n.id === payload.old.id);
           const newNotifs = prev.filter((n) => n.id !== payload.old.id);
           
