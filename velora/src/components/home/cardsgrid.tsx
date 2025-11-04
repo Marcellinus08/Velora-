@@ -190,7 +190,7 @@ export default function CardsGrid() {
             .from("videos")
             .select(sel)
             .order("created_at", { ascending: false })
-            .range(0, 19); // Load 20 items first
+            .range(0, 7); // Load 8 items first
           if (!error) {
             data = d;
             break;
@@ -202,7 +202,7 @@ export default function CardsGrid() {
         if (!data) throw lastError ?? new Error("Unknown error fetching videos");
         
         setItems(data as VideoRow[]);
-        setHasMore(data.length >= 20);
+        setHasMore(data.length >= 8);
         setPage(2); // Next page will be 2
       } catch (e: any) {
         if (!active) return;
@@ -242,14 +242,14 @@ export default function CardsGrid() {
       let data: any = null;
       let lastError: any = null;
 
-      const offset = (page - 1) * 20; // 20 items per page
+      const offset = (page - 1) * 8; // 8 items per page
 
       for (const sel of selects) {
         const { data: d, error } = await supabase
           .from("videos")
           .select(sel)
           .order("created_at", { ascending: false })
-          .range(offset, offset + 19);
+          .range(offset, offset + 7);
         if (!error) {
           data = d;
           break;
@@ -264,7 +264,7 @@ export default function CardsGrid() {
       } else {
         setItems((prev) => [...prev, ...(data as VideoRow[])]);
         setPage((prev) => prev + 1);
-        setHasMore(data.length >= 20);
+        setHasMore(data.length >= 8);
       }
     } catch (e: any) {
       console.error("Failed to load more videos:", e);
@@ -580,11 +580,6 @@ export default function CardsGrid() {
                 </div>
               </div>
             ))}
-          </div>
-        )}
-        {!hasMore && items.length > 0 && (
-          <div className="text-center py-8">
-            <p className="text-neutral-500 text-sm">No more videos to load</p>
           </div>
         )}
       </div>

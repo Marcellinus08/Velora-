@@ -15,12 +15,15 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const category = searchParams.get("category") || undefined;
     const me = (searchParams.get("me") || "").toLowerCase();
+    const page = parseInt(searchParams.get("page") || "1", 10);
+    const pageSize = 5; // Load 5 items per page (hemat request)
+    const offset = (page - 1) * pageSize;
 
     let q = sbService
       .from("community_posts")
       .select("id, created_at, abstract_id, title, category, content, likes_count, replies_count")
       .order("created_at", { ascending: false })
-      .limit(100);
+      .range(offset, offset + pageSize - 1);
 
     if (category && category !== "All Topics") q = q.eq("category", category);
 

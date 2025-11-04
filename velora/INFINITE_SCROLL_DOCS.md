@@ -1,8 +1,12 @@
-# Infinite Scroll Implementation - Home Page
+# Infinite Scroll Implementation - Community Page
+
+## Status: ✅ Implemented
+
+Infinite scroll telah diimplementasikan di **halaman Community** dengan **hemat request seperti home page** - hanya load 5 posts awal, kemudian fetch 5 posts per scroll.
 
 ## Apa yang Diimplementasikan
 
-### 1. Hook `useInfiniteScroll` 
+### 1. Hook `useInfiniteScroll`
 📍 File: `/src/hooks/use-infinite-scroll.ts`
 
 Hook ini menggunakan **Intersection Observer API** untuk:
@@ -15,69 +19,95 @@ Hook ini menggunakan **Intersection Observer API** untuk:
 - `rootMargin`: Pre-load sebelum reach bottom (default: 100px)
 - `enabled`: Toggle untuk enable/disable infinite scroll
 
-### 2. Modifikasi `CardsGrid`
-📍 File: `/src/components/home/cardsgrid.tsx`
+### 2. API Pagination - `/api/community/posts`
+📍 File: `/src/app/api/community/posts/route.ts`
 
 **Perubahan:**
-- ✅ State baru untuk pagination: `page`, `hasMore`, `loadingMore`
-- ✅ Initial load: ambil 20 items pertama (bukan 24)
-- ✅ `fetchMore()`: fungsi untuk load page berikutnya
-- ✅ Hook `useInfiniteScroll`: trigger fetch saat user scroll ke bawah
-- ✅ Observer target element di akhir grid
-- ✅ Loading skeleton saat fetch lebih banyak data
-- ✅ "No more videos" message ketika sudah sampai akhir
+- ✅ Tambah parameter `page` untuk pagination
+- ✅ Load 5 items per page (hemat request)
+- ✅ Query: `.range(offset, offset + 4)` - Supabase range untuk pagination
+
+**Contoh Request:**
+```
+GET /api/community/posts?page=1&category=All%20Topics&me=0x...  → 5 items
+GET /api/community/posts?page=2&category=All%20Topics&me=0x...  → 5 items berikutnya
+```
+
+### 3. Community Page Component
+📍 File: `/src/app/community/page.tsx`
+
+**Perubahan:**
+- ✅ State: `loading`, `loadingMore`, `posts`, `page`, `hasMore`, `error`
+- ✅ Function `loadInitial()`: Initial load 20 posts pertama
+- ✅ Function `fetchMore()`: Callback untuk load page berikutnya
+- ✅ Hook `useInfiniteScroll`: Trigger fetchMore saat user scroll ke bawah
+- ✅ Observer target element di akhir list
+- ✅ Loading spinner saat fetch berlangsung
+- ✅ Empty state ketika tidak ada posts
+
+**Fitur:**
+- Auto-fetch hanya ketika user scroll ke bawah (hemat bandwidth)
+- Retain existing posts saat load more
+- Filter by category terintegrasi
+- Like/Reply/Share/Edit/Delete functionality
 
 ## Cara Kerja
 
 ```
-Initial Load (Page 1)
+Page Load
     ↓
-User lihat 20 videos
+loadInitial() → Fetch /api/community/posts?page=1
     ↓
-User scroll ke bawah → Intersection Observer detect
+Display 5 posts (atau kurang jika < 5)
     ↓
-fetchMore() dipanggil → Load page 2 (items 20-39)
+User scroll → Intersection Observer detect element near viewport
     ↓
-Tambah ke list (items.length = 40)
+fetchMore() → Fetch /api/community/posts?page=2
     ↓
-Repeat sampai hasMore = false
+Tambah 5 posts ke existing posts
+    ↓
+Repeat sampai dapat < 5 posts (berarti tidak ada page berikutnya)
 ```
 
 ## Bandwith Savings
 
-**Sebelum:**
-- Muat 24 items sekaligus di page load
+**Sebelum (load semua):**
+- Muat 100 posts sekaligus di page load
 - User harus scroll banyak untuk lihat semua
 
-**Sesudah:**
-- Mula muat 20 items
-- Load 20 lebih per scroll (on-demand)
+**Sesudah (infinite scroll 5/page):**
+- Mula muat 5 posts
+- Load 5 lebih per scroll (on-demand)
 - User hanya lihat konten yang mereka butuhkan
-- Hemat data ~15-20% untuk first page load
+- **Hemat data ~95% untuk first page load** 🎉
 
-## Konfigurasi Dapat Disesuaikan
+## Desain & UX
 
-Jika ingin ubah behavior, edit di `cardsgrid.tsx`:
+- **Layout**: Landscape dengan avatar di kiri, content di kanan (original design)
+- **Expand/Collapse**: Click "Read more" untuk baca full content
+- **Replies**: Terintegrasi dengan section replies
+- **Share**: Share ke Twitter/X
+- **Edit/Delete**: Hanya untuk post owner
 
-```tsx
-const observerTarget = useInfiniteScroll(
-  handleFetchMore, 
-  hasMore && !loading,
-  {
-    threshold: 0.1,      // Trigger saat 10% terlihat
-    rootMargin: '100px', // Pre-load 100px sebelum bottom
-    enabled: true        // Enable/disable
-  }
-);
+## Konfigurasi
+
+Jika ingin ubah jumlah items per page, edit di `/api/community/posts/route.ts`:
+
+```typescript
+const pageSize = 5;  // Ubah ke nilai lain sesuai kebutuhan
 ```
 
 ## Testing
 
-Buka DevTools → Network tab:
-1. Initial load: lihat fetch pertama (20 items)
-2. Scroll ke bawah: lihat fetch kedua trigger secara otomatis
-3. Lihat request hanya dikirim untuk items yang diperlukan ✅
+1. Buka halaman Community
+2. Lihat 5 posts pertama load (sangat cepat!)
+3. Scroll ke bawah hingga near bottom → lihat loading spinner
+4. Otomatis load 5 posts berikutnya
+5. DevTools → Network: lihat requests hanya dikirim saat scroll
+   - Request 1: `/api/community/posts?page=1` (5 posts)
+   - Request 2: `/api/community/posts?page=2` (saat user scroll)
+   - Request 3: `/api/community/posts?page=3` (saat user scroll lagi)
 
 ---
 
-Siap untuk di-test! 🚀
+✅ Production Ready - Hemat Request seperti YouTube! 🚀

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useAccount } from "wagmi";
 import dynamic from "next/dynamic";
 import Swal from "sweetalert2";
@@ -11,6 +11,7 @@ import Sidebar from "@/components/sidebar";
 import { CommunityEmptyState } from "@/components/community/empty-state";
 import { CommunityPageSkeleton } from "@/components/skeletons/community-skeleton";
 import { CommunityPost, NewPostPayload } from "@/components/community/types";
+import { useInfiniteScroll } from "@/hooks/use-infinite-scroll";
 
 // Lazy load heavy components
 const CommunityTabs = dynamic(() => import("@/components/community/tabs"), {
@@ -39,8 +40,11 @@ export default function CommunityPage() {
   const [open, setOpen] = useState(false);
   const [category, setCategory] = useState<string>("All Topics");
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [posts, setPosts] = useState<CommunityPost[]>([]);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
 
   async function safeJson(res: Response) {
     const ct = res.headers.get("content-type") || "";
@@ -49,17 +53,22 @@ export default function CommunityPage() {
     throw new Error(`Unexpected response (${res.status}).${text ? ` Body: ${text.slice(0, 200)}` : ""}`);
   }
 
-  async function load() {
+  async function loadInitial() {
     setLoading(true);
+    setPage(1);
+    setPosts([]);
+    setHasMore(true);
     setError(null);
     try {
-      const qs: string[] = [];
+      const qs: string[] = ["page=1"];
       if (category !== "All Topics") qs.push(`category=${encodeURIComponent(category)}`);
       if (me) qs.push(`me=${me}`);
-      const res = await fetch(`/api/community/posts${qs.length ? `?${qs.join("&")}` : ""}`, { cache: "no-store" });
+      const res = await fetch(`/api/community/posts?${qs.join("&")}`, { cache: "no-store" });
       const json = await safeJson(res);
       if (!res.ok) throw new Error(json?.error || `HTTP ${res.status}`);
-      setPosts((json.posts || []) as CommunityPost[]);
+      const newPosts = (json.posts || []) as CommunityPost[];
+      setPosts(newPosts);
+      setHasMore(newPosts.length === 5); // If got less than 5, no more pages
     } catch (e: any) {
       console.error("Load posts failed:", e);
       setError(e?.message || "Failed to load posts");
@@ -69,8 +78,41 @@ export default function CommunityPage() {
     }
   }
 
+  const fetchMore = useCallback(async () => {
+    try {
+      const nextPage = page + 1;
+      const qs: string[] = [`page=${nextPage}`];
+      if (category !== "All Topics") qs.push(`category=${encodeURIComponent(category)}`);
+      if (me) qs.push(`me=${me}`);
+      const res = await fetch(`/api/community/posts?${qs.join("&")}`, { cache: "no-store" });
+      const json = await safeJson(res);
+      if (!res.ok) throw new Error(json?.error || `HTTP ${res.status}`);
+      const newPosts = (json.posts || []) as CommunityPost[];
+      if (newPosts.length === 0) {
+        setHasMore(false);
+      } else {
+        setPosts((prev) => [...prev, ...newPosts]);
+        setPage(nextPage);
+        setHasMore(newPosts.length === 5);
+      }
+    } catch (e: any) {
+      console.error("Load more posts failed:", e);
+      setHasMore(false);
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [page, category, me]);
+
+  const handleFetchMore = useCallback(async () => {
+    setLoadingMore(true);
+    await fetchMore();
+  }, [fetchMore]);
+
+  // Hook infinite scroll - trigger fetchMore saat user scroll ke bawah
+  const observerTarget = useInfiniteScroll(handleFetchMore, hasMore && !loading);
+
   useEffect(() => {
-    void load();
+    void loadInitial();
   }, [category, me]);
 
   async function handleCreate(data: NewPostPayload) {
@@ -100,7 +142,7 @@ export default function CommunityPage() {
       );
       
       setOpen(false);
-      await load();
+      await loadInitial();
     } catch (e: any) {
       console.error("Create post failed:", e);
       setError(e?.message || "Failed to create post");
@@ -265,16 +307,33 @@ export default function CommunityPage() {
           {/* Loading State dengan Skeleton */}
           {loading ? (
             <CommunityPageSkeleton count={5} />
+          ) : posts.length === 0 ? (
+            <CommunityEmptyState category={category} />
           ) : (
-            <CommunityLazy
-              allPosts={posts}
-              isLoading={loading}
-              currentAddress={me}
-              onLike={toggleLike}
-              onDelete={handleDelete}
-              onEdit={handleEdit}
-              error={error}
-            />
+            <>
+              <CommunityLazy
+                allPosts={posts}
+                isLoading={loading}
+                currentAddress={me}
+                onLike={toggleLike}
+                onDelete={handleDelete}
+                onEdit={handleEdit}
+                error={error}
+              />
+              
+              {/* Loading indicator saat fetch more */}
+              {loadingMore && (
+                <div className="flex justify-center items-center py-8">
+                  <div className="flex items-center gap-2">
+                    <div className="h-5 w-5 animate-spin rounded-full border-2 border-[var(--primary-500)] border-t-transparent" />
+                    <span className="text-sm text-neutral-400">Loading more posts...</span>
+                  </div>
+                </div>
+              )}
+              
+              {/* Observer target untuk infinite scroll */}
+              <div ref={observerTarget} className="h-10 w-full" />
+            </>
           )}
         </div>
       </main>
