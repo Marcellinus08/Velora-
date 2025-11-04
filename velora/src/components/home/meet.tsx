@@ -173,67 +173,67 @@ export default function HomeMeetRibbon() {
   // };
 
   return (
-    <section className="mb-5">
+    <section className="mb-4 sm:mb-5">
       <div
-        className="mt-4 flex gap-3 overflow-x-auto scroll-smooth pl-2 pr-2 md:pl-0 md:pr-0
+        className="flex gap-2 sm:gap-2.5 overflow-x-auto scroll-smooth pl-0 pr-0
                    [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
         {/* Title-as-card (tanpa neon) */}
-        <Link href="/meet" className="group min-w-[200px] rounded-xl border border-neutral-800 bg-neutral-900 px-3 py-2 text-neutral-300 transition-all duration-300 flex flex-col justify-between">
+        <Link href="/meet" className="group min-w-[140px] sm:min-w-[160px] flex-shrink-0 rounded-lg sm:rounded-xl border border-neutral-800 bg-neutral-900 px-2.5 py-2 sm:px-3 text-neutral-300 transition-all duration-300 flex flex-col justify-between">
           <div>
-            <div className="text-sm font-semibold text-neutral-100">Meet</div>
-            <div className="mt-0.5 text-[11px] text-neutral-400">
+            <div className="text-xs sm:text-sm font-semibold text-neutral-100">Meet</div>
+            <div className="mt-0.5 text-[10px] sm:text-[11px] text-neutral-400">
               Find creators to talk with
             </div>
           </div>
-          <div className="mt-2 w-fit rounded-md border border-neutral-700/70 px-2 py-1 text-[11px] font-medium text-[var(--primary-500)] hover:opacity-90 transition-opacity">
+          <div className="mt-1.5 sm:mt-2 w-fit rounded-md border border-neutral-700/70 px-1.5 py-0.5 sm:px-2 sm:py-1 text-[10px] sm:text-[11px] font-medium text-[var(--primary-500)] hover:opacity-90 transition-opacity">
             View all →
           </div>
         </Link>
 
         {/* Coming Soon Banner - Creative Design */}
-        <div className="group flex-1 rounded-xl border border-transparent bg-gradient-to-r from-purple-950/80 via-blue-950/60 to-purple-950/80 px-4 py-2 text-neutral-300 transition-all duration-300 flex items-center justify-center hover:shadow-2xl hover:shadow-purple-500/40 relative overflow-hidden">
+        <div className="group flex-1 min-w-[220px] sm:min-w-[280px] flex-shrink-0 rounded-lg sm:rounded-xl border border-transparent bg-gradient-to-r from-purple-950/80 via-blue-950/60 to-purple-950/80 px-3 py-2 text-neutral-300 transition-all duration-300 flex items-center justify-center hover:shadow-2xl hover:shadow-purple-500/40 relative overflow-hidden">
           {/* Animated background with moving gradient */}
           <div className="absolute inset-0 bg-gradient-to-r from-purple-600/0 via-purple-500/30 to-blue-600/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 animate-pulse" />
           
-          {/* Top light rays */}
-          <div className="absolute top-0 left-1/4 w-32 h-32 bg-gradient-to-b from-purple-500/40 to-transparent rounded-full blur-3xl -translate-y-1/2 group-hover:from-purple-500/60 transition-all duration-500" />
-          <div className="absolute top-0 right-1/4 w-32 h-32 bg-gradient-to-b from-blue-500/40 to-transparent rounded-full blur-3xl -translate-y-1/2 group-hover:from-blue-500/60 transition-all duration-500" />
+          {/* Top light rays - smaller on mobile */}
+          <div className="absolute top-0 left-1/4 w-16 h-16 sm:w-24 sm:h-24 bg-gradient-to-b from-purple-500/40 to-transparent rounded-full blur-2xl sm:blur-3xl -translate-y-1/2 group-hover:from-purple-500/60 transition-all duration-500" />
+          <div className="absolute top-0 right-1/4 w-16 h-16 sm:w-24 sm:h-24 bg-gradient-to-b from-blue-500/40 to-transparent rounded-full blur-2xl sm:blur-3xl -translate-y-1/2 group-hover:from-blue-500/60 transition-all duration-500" />
           
           {/* Bottom glow */}
-          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-48 h-24 bg-gradient-to-t from-purple-500/20 to-transparent rounded-full blur-3xl group-hover:from-purple-500/40 transition-all duration-500" />
+          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-24 h-12 sm:w-36 sm:h-20 bg-gradient-to-t from-purple-500/20 to-transparent rounded-full blur-2xl sm:blur-3xl group-hover:from-purple-500/40 transition-all duration-500" />
           
           {/* Border glow */}
-          <div className="absolute inset-0 rounded-xl border border-purple-500/0 group-hover:border-purple-400/50 transition-all duration-300" />
+          <div className="absolute inset-0 rounded-lg sm:rounded-xl border border-purple-500/0 group-hover:border-purple-400/50 transition-all duration-300" />
           
-          <div className="relative z-10 flex items-center gap-4 w-full">
+          <div className="relative z-10 flex items-center gap-2 sm:gap-3 w-full">
             {/* Icon container with 3D effect */}
             <div className="relative flex-shrink-0">
               {/* Rotating ring */}
-              <div className="absolute inset-0 rounded-xl border border-purple-500/30 group-hover:border-purple-400/60 transition-all duration-300" style={{ animation: 'spin 3s linear infinite' }} />
+              <div className="absolute inset-0 rounded-lg sm:rounded-xl border border-purple-500/30 group-hover:border-purple-400/60 transition-all duration-300" style={{ animation: 'spin 3s linear infinite' }} />
               
               {/* Glow layers */}
               <div className="absolute inset-0 bg-gradient-to-br from-purple-500/40 to-blue-500/20 rounded-lg blur-lg group-hover:from-purple-500/60 group-hover:to-blue-500/40 transition-all duration-300" />
               
               {/* Main icon */}
-              <div className="relative bg-gradient-to-br from-purple-600 to-blue-600 rounded-lg px-4 py-2 shadow-xl shadow-purple-500/50 group-hover:shadow-2xl group-hover:shadow-purple-400/70 transition-all duration-300">
-                <span className="material-icons-round text-white text-2xl leading-none block">videocam</span>
+              <div className="relative bg-gradient-to-br from-purple-600 to-blue-600 rounded-lg px-2.5 py-1.5 sm:px-3 sm:py-2 shadow-xl shadow-purple-500/50 group-hover:shadow-2xl group-hover:shadow-purple-400/70 transition-all duration-300">
+                <span className="material-icons-round text-white text-lg sm:text-xl leading-none block">videocam</span>
               </div>
             </div>
             
             {/* Content with staggered animation */}
             <div className="flex-1">
-              <div className="text-lg font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-300 via-blue-300 to-purple-300 group-hover:from-purple-100 group-hover:via-blue-100 group-hover:to-purple-100 transition-all duration-300 animate-pulse" style={{ animationDuration: '3s' }}>
+              <div className="text-sm sm:text-base md:text-lg font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-300 via-blue-300 to-purple-300 group-hover:from-purple-100 group-hover:via-blue-100 group-hover:to-purple-100 transition-all duration-300 animate-pulse" style={{ animationDuration: '3s' }}>
                 Coming Soon
               </div>
-              <div className="text-[11px] text-purple-200/80 group-hover:text-purple-100 transition-colors duration-300 font-semibold tracking-wide">
+              <div className="text-[9px] sm:text-[10px] text-purple-200/80 group-hover:text-purple-100 transition-colors duration-300 font-semibold tracking-wide">
                 🌟 Meet feature launching soon
               </div>
             </div>
             
             {/* Floating particles */}
-            <div className="absolute top-2 right-4 text-xl opacity-60 group-hover:opacity-100 transition-opacity duration-300 animate-bounce" style={{ animationDelay: '0s' }}>✨</div>
-            <div className="absolute bottom-2 right-8 text-lg opacity-40 group-hover:opacity-70 transition-opacity duration-300 animate-bounce" style={{ animationDelay: '0.2s' }}>🚀</div>
+            <div className="hidden sm:block absolute top-1 sm:top-2 right-2 sm:right-4 text-base sm:text-xl opacity-60 group-hover:opacity-100 transition-opacity duration-300 animate-bounce" style={{ animationDelay: '0s' }}>✨</div>
+            <div className="hidden sm:block absolute bottom-1 sm:bottom-2 right-4 sm:right-8 text-sm sm:text-lg opacity-40 group-hover:opacity-70 transition-opacity duration-300 animate-bounce" style={{ animationDelay: '0.2s' }}>🚀</div>
           </div>
         </div>
 

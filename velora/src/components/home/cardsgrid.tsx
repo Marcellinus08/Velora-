@@ -407,32 +407,32 @@ export default function CardsGrid() {
   return (
     <div>
       {/* Enhanced Section Header */}
-      <div className="mb-6">
-        <div className="flex items-start justify-between">
-          <div className="flex items-start gap-3">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-purple-500/20 to-blue-500/20 border border-purple-500/30">
-              <span className="text-base">🎬</span>
+      <div className="mb-3 sm:mb-4">
+        <div className="flex items-start justify-between flex-wrap gap-2 sm:gap-3">
+          <div className="flex items-start gap-1.5 sm:gap-2">
+            <div className="flex h-6 w-6 sm:h-7 sm:w-7 items-center justify-center rounded-lg bg-gradient-to-br from-purple-500/20 to-blue-500/20 border border-purple-500/30">
+              <span className="text-xs sm:text-sm">🎬</span>
             </div>
             
             <div>
-              <h2 className="text-xl font-bold text-neutral-100">Featured Videos</h2>
+              <h2 className="text-base sm:text-lg font-bold text-neutral-100">Featured Videos</h2>
             </div>
           </div>
           
-          <div className="flex items-center gap-2 rounded-full bg-neutral-800/60 border border-neutral-700/50 px-3 py-1.5">
-            <div className="flex h-5 w-5 items-center justify-center rounded-full bg-purple-500/20">
-              <span className="text-xs font-bold text-purple-400">{items.length}</span>
+          <div className="flex items-center gap-1 sm:gap-1.5 rounded-full bg-neutral-800/60 border border-neutral-700/50 px-2 py-0.5 sm:px-2.5 sm:py-1">
+            <div className="flex h-3.5 w-3.5 sm:h-4 sm:w-4 items-center justify-center rounded-full bg-purple-500/20">
+              <span className="text-[9px] sm:text-[10px] font-bold text-purple-400">{items.length}</span>
             </div>
-            <span className="text-sm font-medium text-neutral-300">
-              video{items.length !== 1 ? 's' : ''} available
+            <span className="text-[10px] sm:text-xs font-medium text-neutral-300">
+              video{items.length !== 1 ? 's' : ''}
             </span>
           </div>
         </div>
         
-        <p className="text-sm text-neutral-400 mt-2">Discover amazing content</p>
+        <p className="text-[10px] sm:text-xs text-neutral-400 mt-1 sm:mt-1.5">Discover amazing content</p>
       </div>
 
-      <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-x-4 gap-y-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
       {items.map((v) => {
         const addrLower = v.creator?.abstract_id?.toLowerCase() || "";
         const fetchedAbstract = addrLower ? absAvatars[addrLower] : "";
@@ -461,10 +461,10 @@ export default function CardsGrid() {
             <div className="relative w-full overflow-hidden rounded-t-xl">
               {/* Points badge - simple and clean */}
               {totalPoints > 0 && (
-                <div className="absolute left-2 top-2 z-10 flex items-center gap-1.5 rounded-full border border-neutral-700 bg-neutral-900/85 px-2.5 py-1 text-xs font-semibold text-neutral-100 backdrop-blur">
+                <div className="absolute left-2 top-2 z-10 flex items-center gap-1 sm:gap-1.5 rounded-full border border-neutral-700 bg-neutral-900/85 px-2 py-0.5 sm:px-2.5 sm:py-1 text-[10px] sm:text-xs font-semibold text-neutral-100 backdrop-blur">
                   <span
                     className="material-icons-round text-yellow-400 align-middle"
-                    style={{ fontSize: "16px" }}
+                    style={{ fontSize: "14px" }}
                     aria-hidden="true"
                   >
                     star
@@ -475,8 +475,8 @@ export default function CardsGrid() {
 
               {/* Simple owned indicator */}
               {isOwned && (
-                <div className="absolute right-2 top-2 z-10 flex items-center justify-center w-7 h-7 rounded-full bg-[var(--primary-500)] text-white">
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <div className="absolute right-2 top-2 z-10 flex items-center justify-center w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-[var(--primary-500)] text-white">
+                  <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                   </svg>
                 </div>
@@ -490,13 +490,13 @@ export default function CardsGrid() {
             </div>
 
             {/* Clean Info Section */}
-            <div className="flex flex-1 flex-col gap-2 p-3 pb-4">
-              <h3 className="text-base font-semibold leading-snug text-neutral-50 group-hover:text-[var(--primary-500)] transition-colors duration-200">
+            <div className="flex flex-1 flex-col gap-1.5 sm:gap-2 p-2.5 pb-3 sm:p-3 sm:pb-4">
+              <h3 className="text-sm sm:text-base font-semibold leading-snug text-neutral-50 group-hover:text-[var(--primary-500)] transition-colors duration-200 line-clamp-2">
                 {v.title}
               </h3>
 
-              <div className="flex items-center gap-2 text-sm text-neutral-400">
-                <div className="h-6 w-6 overflow-hidden rounded-full bg-neutral-800 ring-1 ring-neutral-700">
+              <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-neutral-400">
+                <div className="h-5 w-5 sm:h-6 sm:w-6 overflow-hidden rounded-full bg-neutral-800 ring-1 ring-neutral-700">
                   {avatarSrc ? (
                     <img
                       src={avatarSrc}
@@ -509,18 +509,18 @@ export default function CardsGrid() {
                       }}
                     />
                   ) : addrLower ? (
-                    <AbstractProfile address={addrLower as `0x${string}`} size="xs" showTooltip={false} className="!h-6 !w-6" />
+                    <AbstractProfile address={addrLower as `0x${string}`} size="xs" showTooltip={false} className="!h-5 !w-5 sm:!h-6 sm:!w-6" />
                   ) : (
-                    <svg viewBox="0 0 24 24" className="h-6 w-6 text-neutral-500" fill="currentColor" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" className="h-5 w-5 sm:h-6 sm:w-6 text-neutral-500" fill="currentColor" aria-hidden="true">
                       <path d="M12 12a5 5 0 100-10 5 5 0 000 10zm0 2c-4.418 0-8 2.239-8 5v1h16v-1c0-2.761-3.582-5-8-5z" />
                     </svg>
                   )}
                 </div>
-                <span>{author}</span>
+                <span className="truncate">{author}</span>
               </div>
 
-              <div className="mt-auto flex items-end justify-between">
-                <p className={`text-base font-bold ${isOwned ? "text-violet-300" : "text-neutral-50"}`}>
+              <div className="mt-auto flex items-end justify-between gap-2">
+                <p className={`text-sm sm:text-base font-bold ${isOwned ? "text-violet-300" : "text-neutral-50"}`}>
                   {isOwned ? "Owned" : priceText}
                 </p>
 
@@ -529,10 +529,10 @@ export default function CardsGrid() {
                   <Link href={`/video?id=${v.id}`} prefetch={false} className="relative z-10">
                     <button
                       type="button"
-                      className="group relative inline-flex items-center gap-2 rounded-full bg-neutral-700 px-4 py-2 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-neutral-600 hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[var(--primary-500)] focus-visible:ring-offset-neutral-900 cursor-pointer"
+                      className="group relative inline-flex items-center gap-1.5 rounded-full bg-neutral-700 px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-neutral-600 hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[var(--primary-500)] focus-visible:ring-offset-neutral-900 cursor-pointer"
                       title="Watch this video"
                     >
-                      <span className="material-icons-round text-[16px]" aria-hidden>
+                      <span className="material-icons-round text-[14px] sm:text-[16px]" aria-hidden>
                         play_arrow
                       </span>
                       Watch
@@ -544,7 +544,7 @@ export default function CardsGrid() {
                       videoId={v.id}
                       creator={creatorAddress}
                       priceUsd={priceUsd}
-                      className="group relative inline-flex items-center gap-2 rounded-full bg-purple-600 px-4 py-2 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-purple-700 hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-purple-500 focus-visible:ring-offset-neutral-900 cursor-pointer"
+                      className="group relative inline-flex items-center gap-1.5 rounded-full bg-purple-600 px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-purple-700 hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-purple-500 focus-visible:ring-offset-neutral-900 cursor-pointer"
                     >
                       Buy
                     </BuyVideoButton>
@@ -553,7 +553,7 @@ export default function CardsGrid() {
                   <button
                     type="button"
                     disabled
-                    className="inline-flex items-center gap-2 rounded-full bg-neutral-700 px-4 py-2 text-sm font-semibold text-white opacity-60 cursor-not-allowed"
+                    className="inline-flex items-center gap-1.5 rounded-full bg-neutral-700 px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-semibold text-white opacity-60 cursor-not-allowed"
                     title={priceUsd <= 0 ? "Free video" : "Invalid creator address"}
                   >
                     {priceUsd <= 0 ? "Free" : "Buy"}
@@ -567,16 +567,16 @@ export default function CardsGrid() {
       </div>
 
       {/* Observer target untuk infinite scroll */}
-      <div ref={observerTarget} className="mt-8 flex justify-center">
+      <div ref={observerTarget} className="mt-6 sm:mt-8 flex justify-center">
         {loadingMore && (
-          <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-x-4 gap-y-8 w-full">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 w-full">
             {Array.from({ length: 4 }).map((_, i) => (
               <div key={`skeleton-${i}`} className="animate-pulse rounded-xl border border-neutral-800 bg-neutral-900">
                 <div className="aspect-video w-full rounded-t-xl bg-neutral-800/60" />
-                <div className="space-y-2 p-3">
-                  <div className="h-4 w-3/4 rounded bg-neutral-800/60" />
+                <div className="space-y-2 p-2.5 sm:p-3">
+                  <div className="h-3.5 sm:h-4 w-3/4 rounded bg-neutral-800/60" />
                   <div className="h-3 w-1/2 rounded bg-neutral-800/60" />
-                  <div className="mt-3 h-8 w-24 rounded-full bg-neutral-800/60" />
+                  <div className="mt-3 h-7 sm:h-8 w-20 sm:w-24 rounded-full bg-neutral-800/60" />
                 </div>
               </div>
             ))}

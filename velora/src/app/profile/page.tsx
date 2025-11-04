@@ -275,8 +275,8 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="flex h-full grow flex-row">
-      <main className="flex-1 overflow-y-auto px-4 py-6 sm:px-6 lg:px-8">
+    <div className="flex h-full grow flex-row pb-16 md:pb-0">
+      <main className="flex-1 overflow-y-auto px-3 py-4 sm:px-6 lg:px-8">
         <ProfileHeader user={profileData.user} address={targetAddress} />
 
         {/* Stats + Rank */}

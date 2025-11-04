@@ -30,10 +30,10 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="flex h-full grow flex-row">
-      <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8">
-        {/* Background decorative elements - matching other pages */}
-        <div className="fixed inset-0 overflow-hidden opacity-5 pointer-events-none">
+    <div className="flex h-full grow flex-row pb-16 md:pb-0">
+      <main className="flex-1 px-3 py-4 sm:px-6 lg:px-8">
+        {/* Background decorative elements - matching other pages - hidden on mobile */}
+        <div className="hidden sm:block fixed inset-0 overflow-hidden opacity-5 pointer-events-none">
           <div className="absolute -top-10 -right-10 w-40 h-40 bg-purple-500 rounded-full blur-3xl animate-pulse" style={{ animationDuration: '4s' }} />
           <div className="absolute top-1/3 -left-20 w-32 h-32 bg-blue-500 rounded-full blur-2xl animate-pulse" style={{ animationDelay: '2s', animationDuration: '5s' }} />
           <div className="absolute bottom-1/4 right-1/4 w-24 h-24 bg-pink-500 rounded-full blur-xl animate-pulse" style={{ animationDelay: '1s', animationDuration: '3s' }} />

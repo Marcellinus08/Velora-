@@ -44,29 +44,21 @@ export default function SiteHeader() {
 
   return (
     <header
-      className="fixed top-0 left-0 right-0 z-40 grid w-full items-center gap-4 border-b border-neutral-800 bg-neutral-900 px-4 py-2 sm:px-6 lg:px-8
+      className="fixed top-0 left-0 right-0 z-40 grid w-full items-center gap-2 sm:gap-3 border-b border-neutral-800 bg-neutral-900 px-3 py-2 sm:px-4 md:px-6 lg:px-8
                  grid-cols-[auto_1fr_auto] md:[grid-template-columns:var(--sidebar-w,16rem)_1fr_auto]"
     >
       {/* Column 1: Logo */}
-      <div className="flex items-center gap-4">
-        <button
-          className="flex items-center justify-center rounded-full p-2 text-neutral-50 hover:bg-neutral-800 md:hidden cursor-pointer"
-          aria-label="Open menu"
-          type="button"
-        >
-          <MI name="menu" className="text-[18px] leading-none" />
-        </button>
-
-        <Link href="/" aria-label="Home" className="flex items-center gap-2 select-none cursor-pointer">
+      <div className="flex items-center gap-1 sm:gap-2">
+        <Link href="/" aria-label="Home" className="flex items-center gap-1 sm:gap-1.5 select-none cursor-pointer">
           <Image
             src="/glonic_logo_main.png"
             alt="Glonic Logo"
             priority
-            width={200}
-            height={60}
-            className="h-10 w-auto sm:h-11 lg:h-8"
+            width={40}
+            height={40}
+            className="h-7 w-7 sm:h-8 sm:w-8 md:h-9 md:w-9 object-contain"
           />
-          <span className="text-xs sm:text-2xl font-bold tracking-tight leading-none text-neutral-50">
+          <span className="text-sm sm:text-base md:text-lg lg:text-xl font-bold tracking-tight leading-none text-neutral-50">
             GLO<span className="text-[var(--primary-500)]">N</span>IC
           </span>
         </Link>
@@ -76,7 +68,7 @@ export default function SiteHeader() {
       <SearchBar />
 
       {/* Column 3: Right */}
-      <div className="flex items-center gap-2 sm:gap-4">
+      <div className="flex items-center gap-1 sm:gap-2 md:gap-4">
         {!isConnected ? (
           <div className="flex items-center gap-2">
             <ConnectWalletButton className="min-w-28 px-4" />
@@ -85,15 +77,15 @@ export default function SiteHeader() {
           <HeaderWalletSectionSkeleton />
         ) : (
           <>
-            <div className="hidden items-center gap-4 rounded-full bg-neutral-800 px-4 py-1.5 sm:flex">
+            <div className="hidden sm:flex items-center gap-2 md:gap-4 rounded-full bg-neutral-800 px-2 md:px-4 py-1.5">
               <button
                 onClick={() => setOpenPoints(true)}
-                className="group flex items-center gap-2 rounded-full px-2 py-1 outline-none transition hover:bg-neutral-700 cursor-pointer"
+                className="group flex items-center gap-1 md:gap-2 rounded-full px-1.5 md:px-2 py-1 outline-none transition hover:bg-neutral-700 cursor-pointer"
                 aria-label="Open points"
                 title="Open points"
               >
-                <MI name="star" className="text-[18px] text-yellow-400 group-hover:scale-110 transition-transform" />
-                <span className="text-sm font-semibold text-neutral-50">
+                <MI name="star" className="text-[16px] md:text-[18px] text-yellow-400 group-hover:scale-110 transition-transform" />
+                <span className="text-xs md:text-sm font-semibold text-neutral-50">
                   {totalPoints.toLocaleString()}
                 </span>
               </button>
@@ -102,12 +94,13 @@ export default function SiteHeader() {
 
               <button
                 onClick={() => setOpenWallet(true)}
-                className="group flex items-center gap-2 rounded-full px-2 py-1 outline-none transition hover:bg-neutral-700 cursor-pointer"
+                className="group flex items-center gap-1 md:gap-2 rounded-full px-1.5 md:px-2 py-1 outline-none transition hover:bg-neutral-700 cursor-pointer"
                 aria-label="Open wallet"
                 title="Open wallet"
               >
-                <MI name="account_balance_wallet" className="text-[18px] text-[var(--primary-500)] group-hover:scale-110 transition-transform" />
-                <span className="text-sm font-semibold text-neutral-50">USDC.e {usdceText}</span>
+                <MI name="account_balance_wallet" className="text-[16px] md:text-[18px] text-[var(--primary-500)] group-hover:scale-110 transition-transform" />
+                <span className="text-xs md:text-sm font-semibold text-neutral-50 hidden lg:inline">USDC.e</span>
+                <span className="text-xs md:text-sm font-semibold text-neutral-50">{usdceText}</span>
               </button>
             </div>
 

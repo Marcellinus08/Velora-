@@ -187,4 +187,40 @@ body:has([data-radix-dropdown-menu-content]) {
   padding-right: 0 !important;
 }
 
+/* Safe area for mobile devices (bottom navigation) */
+@supports (padding: env(safe-area-inset-bottom)) {
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 0);
+  }
+}
 
+/* Ensure content doesn't go under bottom navigation on mobile */
+@media (max-width: 767px) {
+  main {
+    min-height: calc(100vh - 57px - 64px); /* Header height - Bottom nav height */
+  }
+}
+
+/* Smooth transitions for bottom nav items */
+@media (max-width: 767px) {
+  nav a {
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+/* Hide all scrollbars globally but keep functionality */
+* {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+*::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+  width: 0;
+  height: 0;
+}
+
+/* Keep scroll functionality for main content areas */
+main, .overflow-y-auto, .overflow-x-auto, .overflow-auto {
+  overflow: auto;
+}
