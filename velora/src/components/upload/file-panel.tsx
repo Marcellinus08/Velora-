@@ -53,14 +53,24 @@ const UploadFilePanel = forwardRef<HTMLVideoElement, Props>(function UploadFileP
   };
 
   return (
-    <section className="rounded-2xl border border-neutral-800 bg-neutral-900 p-4 sm:p-6">
-      <h2 className="mb-4 text-base font-semibold text-neutral-200">File</h2>
+    <section className="rounded-2xl border border-neutral-700/50 bg-gradient-to-br from-neutral-900/80 to-neutral-800/40 backdrop-blur-sm p-6 shadow-2xl">
+      <div className="flex items-center gap-3 mb-4">
+        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-violet-600 flex items-center justify-center">
+          <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M19 12h-2V6H7v6H5l7 7 7-7zM5 4h14v2H5z" />
+          </svg>
+        </div>
+        <div>
+          <h2 className="text-lg font-bold text-white">Upload File</h2>
+          <p className="text-xs text-neutral-400">Select or drag video file</p>
+        </div>
+      </div>
 
       {!file && (
         <label
           onDrop={onDrop}
           onDragOver={onDragOver}
-          className="flex min-h-[260px] cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed border-neutral-700 bg-neutral-950 p-8 text-center transition-colors hover:border-neutral-600"
+          className="flex min-h-[260px] cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-neutral-600/50 bg-gradient-to-br from-neutral-900/50 to-neutral-800/30 p-8 text-center transition-all hover:border-violet-500/50 hover:bg-violet-500/5"
         >
           <input
             type="file"
@@ -69,21 +79,21 @@ const UploadFilePanel = forwardRef<HTMLVideoElement, Props>(function UploadFileP
             aria-label="Choose video file"
             className="hidden"
           />
-          <svg className="mb-3 h-10 w-10 text-neutral-400" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <svg className="mb-3 h-10 w-10 text-violet-400" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
             <path d="M19 12h-2V6H7v6H5l7 7 7-7zM5 4h14v2H5z" />
           </svg>
-          <div className="text-neutral-200">
-            Drag & drop video here, or <span className="underline">browse</span>
+          <div className="text-neutral-100">
+            Drag & drop video here, or <span className="text-violet-300 underline">browse</span>
           </div>
-          <div className="mt-1 text-xs text-neutral-500">Accepted: MP4, WebM, MOV, MKV</div>
+          <div className="mt-1 text-xs text-neutral-400">Accepted: MP4, WebM, MOV, MKV</div>
         </label>
       )}
 
       {file && (
         <div className="space-y-4">
-          <div className="flex items-center justify-between rounded-lg border border-neutral-800 bg-neutral-950 px-3 py-2 text-sm">
-            <div className="truncate text-neutral-200">{file.name}</div>
-            <div className="ml-3 shrink-0 text-neutral-400">{fmtBytes(file.size)}</div>
+          <div className="flex items-center justify-between rounded-lg border border-neutral-700/50 bg-neutral-900/60 px-3 py-2 text-sm">
+            <div className="truncate text-neutral-200 font-medium">{file.name}</div>
+            <div className="ml-3 shrink-0 text-violet-300 font-semibold">{fmtBytes(file.size)}</div>
           </div>
 
           {/* grid: video (left) + thumbnail (right) */}
@@ -96,24 +106,24 @@ const UploadFilePanel = forwardRef<HTMLVideoElement, Props>(function UploadFileP
                   src={fileURL}
                   controls
                   onLoadedMetadata={onLoadedMeta}
-                  className="aspect-video w-full rounded-lg border border-neutral-800 bg-black"
+                  className="aspect-video w-full rounded-lg border border-neutral-700/50 bg-black shadow-lg"
                 />
               )}
               <div className="mt-3 text-sm text-neutral-400">
-                Duration: {duration}
+                <span className="font-semibold text-neutral-300">Duration:</span> {duration}
               </div>
             </div>
 
             {/* Right: thumbnail preview + actions */}
             <div className="lg:col-span-3">
-              <p className="mb-2 text-sm text-neutral-300">Thumbnail</p>
-              <div className="flex aspect-video w-full items-center justify-center overflow-hidden rounded-lg border border-neutral-800 bg-neutral-950">
+              <p className="mb-2 text-sm font-semibold text-violet-300">Thumbnail</p>
+              <div className="flex aspect-video w-full items-center justify-center overflow-hidden rounded-lg border border-neutral-700/50 bg-gradient-to-br from-neutral-900/60 to-neutral-800/40 shadow-lg">
                 {thumbURL ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={thumbURL} alt="Thumbnail preview" className="h-full w-full object-cover" />
                 ) : (
-                  <span className="px-3 text-center text-xs text-neutral-500">
-                    No thumbnail yet — capture from video or upload image.
+                  <span className="px-3 text-center text-xs text-neutral-400">
+                    No thumbnail — capture from video or upload image.
                   </span>
                 )}
               </div>
@@ -123,7 +133,7 @@ const UploadFilePanel = forwardRef<HTMLVideoElement, Props>(function UploadFileP
                 <button
                   type="button"
                   onClick={onCaptureThumb}
-                  className="w-full rounded-md bg-neutral-800 px-3 py-2 text-sm text-neutral-200 hover:bg-neutral-700"
+                  className="w-full rounded-lg bg-gradient-to-r from-violet-600 to-violet-700 px-3 py-2 text-sm font-medium text-white hover:shadow-lg hover:shadow-violet-500/50 transition-all"
                 >
                   Capture Thumbnail
                 </button>
@@ -138,7 +148,7 @@ const UploadFilePanel = forwardRef<HTMLVideoElement, Props>(function UploadFileP
                 <button
                   type="button"
                   onClick={triggerThumbPicker}
-                  className="w-full rounded-md bg-neutral-800 px-3 py-2 text-sm text-neutral-200 hover:bg-neutral-700"
+                  className="w-full rounded-lg border border-violet-500/30 bg-violet-500/10 px-3 py-2 text-sm font-medium text-violet-200 hover:bg-violet-500/20 hover:border-violet-500/50 transition-all"
                 >
                   Upload Thumbnail
                 </button>
@@ -149,8 +159,8 @@ const UploadFilePanel = forwardRef<HTMLVideoElement, Props>(function UploadFileP
       )}
 
       {error && (
-        <div className="mt-4 rounded-xl border border-red-800/50 bg-red-900/20 px-3 py-2 text-sm text-red-300">
-          {error}
+        <div className="mt-4 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200 font-medium">
+          <span className="text-red-400">⚠️ Error:</span> {error}
         </div>
       )}
     </section>

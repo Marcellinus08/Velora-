@@ -80,79 +80,104 @@ export default function UploadDetailsPanel({
   const canAddMoreTasks = tasks.length < 5;
 
   return (
-    <section className="rounded-2xl border border-neutral-800 bg-neutral-900 p-4 sm:p-6">
-      <h3 className="text-sm font-semibold text-neutral-200">Details</h3>
-
-      <div className="mt-3 space-y-4">
-        {/* Title */}
-        <div>
-          <label className="mb-1 block text-sm text-neutral-300">Title</label>
-          <input
-            value={title}
-            onChange={(e) => onChangeTitle(e.target.value)}
-            placeholder="Give your video a descriptive title"
-            aria-label="Video title"
-            className="w-full rounded-lg border border-neutral-700 bg-neutral-950 px-3 py-2 text-neutral-100 placeholder:text-neutral-500 focus:border-neutral-500 focus:outline-none"
-          />
+    <section className="space-y-6">
+      {/* Details Section */}
+      <div className="rounded-2xl border border-neutral-700/50 bg-gradient-to-br from-neutral-900/80 to-neutral-800/40 backdrop-blur-sm p-6 shadow-2xl">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
+            <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" />
+            </svg>
+          </div>
+          <div>
+            <h3 className="text-lg font-bold text-white">Video Details</h3>
+            <p className="text-sm text-neutral-400">Fill in the details below</p>
+          </div>
         </div>
 
-        {/* Description */}
-        <div>
-          <label className="mb-1 block text-sm text-neutral-300">Description</label>
-          <textarea
-            value={description}
-            onChange={(e) => onChangeDescription(e.target.value)}
-            rows={5}
-            placeholder="Tell viewers about your video…"
-            aria-label="Video description"
-            className="w-full resize-y rounded-lg border border-neutral-700 bg-neutral-950 px-3 py-2 text-neutral-100 placeholder:text-neutral-500 focus:border-neutral-500 focus:outline-none"
-          />
-        </div>
+        <div className="space-y-4">
+          {/* Title */}
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-1.5 h-1.5 rounded-full bg-blue-400"></div>
+              <label className="text-sm font-semibold text-neutral-200">Title</label>
+            </div>
+            <input
+              value={title}
+              onChange={(e) => onChangeTitle(e.target.value)}
+              placeholder="Give your video a descriptive title"
+              aria-label="Video title"
+              className="w-full rounded-lg border border-neutral-700 bg-neutral-950/50 px-3 py-2 text-neutral-100 placeholder:text-neutral-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500/20"
+            />
+          </div>
 
-        {/* Category */}
-        <div>
-          <label className="mb-1 block text-sm text-neutral-300">Category</label>
-          <select
-            value={category}
-            onChange={(e) => onChangeCategory(e.target.value)}
-            aria-label="Video category"
-            className={`w-full rounded-lg border border-neutral-700 bg-neutral-950 px-3 py-2 focus:border-neutral-500 focus:outline-none ${
-              category === "" ? "text-neutral-500" : "text-neutral-100"
-            }`}
-          >
-            <option value="" disabled>
-              — Select category —
-            </option>
-            {categories.map((c) => (
-              <option key={c} value={c}>
-                {c}
+          {/* Description */}
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-1.5 h-1.5 rounded-full bg-green-400"></div>
+              <label className="text-sm font-semibold text-neutral-200">Description</label>
+            </div>
+            <textarea
+              value={description}
+              onChange={(e) => onChangeDescription(e.target.value)}
+              rows={5}
+              placeholder="Tell viewers about your video…"
+              aria-label="Video description"
+              className="w-full resize-y rounded-lg border border-neutral-700 bg-neutral-950/50 px-3 py-2 text-neutral-100 placeholder:text-neutral-500 focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500/20"
+            />
+          </div>
+
+          {/* Category */}
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-1.5 h-1.5 rounded-full bg-purple-400"></div>
+              <label className="text-sm font-semibold text-neutral-200">Category</label>
+            </div>
+            <select
+              value={category}
+              onChange={(e) => onChangeCategory(e.target.value)}
+              aria-label="Video category"
+              className={`w-full rounded-lg border border-neutral-700 bg-neutral-950/50 px-3 py-2 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500/20 ${
+                category === "" ? "text-neutral-500" : "text-neutral-100"
+              }`}
+            >
+              <option value="" disabled>
+                — Select category —
               </option>
-            ))}
-          </select>
+              {categories.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
       </div>
 
       {/* ===== Tasks (max 5) ===== */}
-      <div className="mt-5 rounded-xl border border-neutral-800 bg-neutral-950 p-3">
-        <div className="flex items-center justify-between">
-          <h4 className="text-sm font-semibold text-neutral-200">
-            Tasks / Quiz <span className="text-xs text-neutral-500">(max 5)</span>
+      <div className="rounded-2xl border border-neutral-700/50 bg-gradient-to-br from-neutral-900/80 to-neutral-800/40 backdrop-blur-sm p-6 shadow-2xl">
+        <div className="flex items-center justify-between mb-4">
+          <h4 className="text-lg font-bold text-white">
+            Tasks / Quiz <span className="text-xs text-neutral-400">(max 5)</span>
           </h4>
-          <span className="text-xs text-neutral-500">{tasks.length}/5 questions</span>
+          <span className="text-xs font-semibold text-amber-300 bg-amber-500/10 px-2.5 py-1 rounded-full border border-amber-500/20">{tasks.length}/5</span>
         </div>
 
-        <div className="mt-3 space-y-4">
+        <div className="mt-4 space-y-4">
           {tasks.map((t, idx) => {
             const qLabel = `Question ${idx + 1}`;
             return (
-              <div key={idx} className="rounded-lg border border-neutral-800 bg-neutral-900 p-3">
-                <div className="flex items-start justify-between gap-2">
-                  <label className="text-sm font-medium text-neutral-200">{qLabel}</label>
+              <div key={idx} className="rounded-lg border border-neutral-700/50 bg-neutral-900/60 p-4">
+                <div className="flex items-start justify-between gap-2 mb-3">
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center text-xs font-bold">{idx + 1}</div>
+                    <label className="text-sm font-semibold text-neutral-200">{qLabel}</label>
+                  </div>
                   {idx > 0 && (
                     <button
                       type="button"
                       onClick={() => onRemoveTask(idx)}
-                      className="shrink-0 rounded-md bg-neutral-800 px-2 py-1 text-xs text-neutral-100 hover:bg-neutral-700"
+                      className="text-xs px-3 py-1 rounded-lg bg-red-500/10 text-red-300 hover:bg-red-500/20 border border-red-500/20 transition-colors"
                     >
                       Remove
                     </button>
@@ -164,18 +189,18 @@ export default function UploadDetailsPanel({
                   value={t.question}
                   onChange={(e) => onChangeTask(idx, { ...t, question: e.target.value })}
                   placeholder="Write the question…"
-                  className="mt-2 w-full rounded-lg border border-neutral-700 bg-neutral-950 px-3 py-2 text-neutral-100 placeholder:text-neutral-500 focus:border-neutral-500 focus:outline-none"
+                  className="w-full mb-3 rounded-lg border border-neutral-700 bg-neutral-950/50 px-3 py-2 text-neutral-100 placeholder:text-neutral-500 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500/20"
                 />
 
                 {/* Options + choose correct */}
-                <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                   {t.options.map((opt, oi) => (
                     <label
                       key={oi}
-                      className={`flex items-center gap-2 rounded-lg border px-3 py-2 ${
+                      className={`flex items-center gap-2 rounded-lg border px-3 py-2 cursor-pointer transition-all ${
                         t.answerIndex === oi
-                          ? "border-[var(--primary-500)] bg-[var(--primary-500)]/10"
-                          : "border-neutral-700 bg-neutral-950"
+                          ? "border-amber-500/50 bg-amber-500/10"
+                          : "border-neutral-700 bg-neutral-900/40 hover:border-neutral-600"
                       }`}
                     >
                       <input
@@ -183,7 +208,7 @@ export default function UploadDetailsPanel({
                         name={`ans-${idx}`}
                         checked={t.answerIndex === oi}
                         onChange={() => onChangeTask(idx, { ...t, answerIndex: oi })}
-                        className="accent-[var(--primary-500)]"
+                        className="accent-amber-500"
                         aria-label={`Correct option ${oi + 1}`}
                       />
                       <input
@@ -194,7 +219,7 @@ export default function UploadDetailsPanel({
                           onChangeTask(idx, { ...t, options: next });
                         }}
                         placeholder={`Option ${oi + 1}`}
-                        className="w-full rounded-md border border-neutral-700 bg-neutral-900 px-2 py-1 text-sm text-neutral-100 placeholder:text-neutral-500 focus:border-neutral-500 focus:outline-none"
+                        className="flex-1 rounded-md border border-neutral-700 bg-transparent px-2 py-1 text-sm text-neutral-100 placeholder:text-neutral-500 focus:border-amber-500 focus:outline-none"
                       />
                     </label>
                   ))}
@@ -205,33 +230,36 @@ export default function UploadDetailsPanel({
         </div>
 
         {/* Add Question (small, bottom) */}
-        <div className="mt-3 flex justify-end">
+        <div className="mt-6 flex justify-center">
           <button
             type="button"
             disabled={!canAddMoreTasks}
             onClick={onAddEmptyTask}
-            className="rounded-full bg-neutral-800 px-3 py-1 text-xs font-medium text-neutral-100 enabled:hover:bg-neutral-700 disabled:opacity-50"
+            className="inline-flex items-center gap-2 px-6 py-2.5 rounded-lg bg-gradient-to-r from-amber-500 to-amber-600 text-white font-medium text-sm enabled:hover:shadow-lg enabled:hover:shadow-amber-500/50 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200"
             title={canAddMoreTasks ? "Add question" : "Max 5 questions"}
           >
-            + Add
+            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
+            </svg>
+            Add Question
           </button>
         </div>
       </div>
 
       {/* ===== Pricing ===== */}
-      <div className="mt-5 rounded-xl border border-neutral-800 bg-neutral-950 p-3">
-        <div className="flex items-center justify-between">
-          <h4 className="text-sm font-semibold text-neutral-200">Pricing</h4>
-          <span className="text-xs text-neutral-500">
+      <div className="mt-5 rounded-2xl border border-neutral-700/50 bg-gradient-to-br from-neutral-900/80 to-neutral-800/40 backdrop-blur-sm p-6 shadow-2xl">
+        <div className="flex items-center justify-between mb-4">
+          <h4 className="text-lg font-bold text-white">Pricing</h4>
+          <span className="text-xs text-neutral-400">
             Range ${(min_cents / 100).toFixed(2)} – ${(max_cents / 100).toFixed(2)} • step $
             {(step_cents / 100).toFixed(2)}
           </span>
         </div>
 
         {/* Slider */}
-        <div className="mt-3">
-          <label htmlFor="price-range" className="mb-1 block text-xs text-neutral-400">
-            Set price (USD)
+        <div className="mt-4">
+          <label htmlFor="price-range" className="mb-2 block text-xs font-semibold text-neutral-300">
+            Adjust price (USD)
           </label>
           <input
             id="price-range"
@@ -241,20 +269,20 @@ export default function UploadDetailsPanel({
             step={step_cents}
             value={priceCents}
             onChange={(e) => onChangePriceCents(Number(e.target.value))}
-            className="w-full accent-[var(--primary-500)]"
+            className="w-full accent-amber-500"
           />
-          <div className="mt-1 flex justify-between text-xs text-neutral-500">
+          <div className="mt-2 flex justify-between text-xs text-neutral-400">
             <span>${(min_cents / 100).toFixed(2)}</span>
-            <span>${(priceCents / 100).toFixed(2)}</span>
+            <span className="font-bold text-amber-300">${(priceCents / 100).toFixed(2)}</span>
             <span>${(max_cents / 100).toFixed(2)}</span>
           </div>
         </div>
 
         {/* Two cards: LEFT (Price+Earnings) | RIGHT (Points improved & fills box) */}
-        <div className="mt-3 grid grid-cols-1 items-stretch gap-3 sm:grid-cols-2">
+        <div className="mt-4 grid grid-cols-1 items-stretch gap-3 sm:grid-cols-2">
           {/* LEFT: Price + earnings */}
-          <div className="flex h-full flex-col self-stretch rounded-md border border-neutral-800 bg-neutral-900 p-3">
-            <label className="mb-1 block text-xs text-neutral-400">Price (USD)</label>
+          <div className="flex h-full flex-col self-stretch rounded-lg border border-neutral-700/50 bg-neutral-900/50 p-4">
+            <label className="mb-2 block text-xs font-semibold text-neutral-300">Price (USD)</label>
             <input
               type="number"
               min={min_cents / 100}
@@ -266,35 +294,35 @@ export default function UploadDetailsPanel({
                 if (isNaN(v)) return;
                 onChangePriceCents(clampToRangeStep(v));
               }}
-              className="w-full rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2 text-neutral-100 placeholder:text-neutral-500 focus:border-neutral-500 focus:outline-none"
+              className="w-full rounded-lg border border-neutral-700 bg-neutral-950/50 px-3 py-2 text-neutral-100 placeholder:text-neutral-500 focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500/20"
               placeholder={`${(min_cents / 100).toFixed(2)} - ${(max_cents / 100).toFixed(2)}`}
             />
 
-            <div className="my-2 h-px bg-neutral-800" />
+            <div className="my-3 h-px bg-neutral-700/50" />
 
             <div className="flex items-center justify-between">
               <span className="text-xs text-neutral-400">You earn (60%)</span>
-              <span className="text-sm font-semibold text-neutral-100">
+              <span className="text-sm font-bold text-green-300">
                 ${dollars(creatorEarn)}
               </span>
             </div>
 
             <div className="mt-2 flex items-center justify-between">
               <span className="text-xs text-neutral-400">Platform (40%)</span>
-              <span className="text-sm font-semibold text-neutral-100">
+              <span className="text-sm font-semibold text-neutral-300">
                 ${dollars(platformFee)}
               </span>
             </div>
           </div>
 
           {/* RIGHT: Total points — fills the box with balanced spacing */}
-          <div className="flex h-full flex-col self-stretch rounded-md border border-neutral-800 bg-neutral-900 p-3">
+          <div className="flex h-full flex-col self-stretch rounded-lg border border-neutral-700/50 bg-neutral-900/50 p-4">
             {/* Header pill */}
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-neutral-400">Total points</span>
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-neutral-800/60 px-2.5 py-1 text-sm font-semibold text-neutral-100">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs font-semibold text-neutral-300">Total points</span>
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/10 px-2.5 py-1 text-sm font-bold text-amber-300 border border-amber-500/30">
                 <svg
-                  className="h-4 w-4 text-yellow-400"
+                  className="h-4 w-4"
                   viewBox="0 0 256 256"
                   fill="currentColor"
                   aria-hidden="true"
@@ -306,16 +334,16 @@ export default function UploadDetailsPanel({
             </div>
 
             {/* Middle area grows to fill vertical space */}
-            <div className="mt-3 flex flex-1 flex-col justify-center gap-3">
+            <div className="mt-2 flex flex-1 flex-col justify-center gap-3">
               {/* Segmented progress bar (thicker) */}
-              <div className="flex h-3 w-full overflow-hidden rounded-full bg-neutral-800">
-                <div className="h-full bg-[var(--primary-500)]" style={{ width: "40%" }} />
-                <div className="h-full bg-yellow-500" style={{ width: "20%" }} />
+              <div className="flex h-3 w-full overflow-hidden rounded-full bg-neutral-800/50">
+                <div className="h-full bg-cyan-500" style={{ width: "40%" }} />
+                <div className="h-full bg-amber-500" style={{ width: "20%" }} />
                 <div className="h-full bg-emerald-500" style={{ width: "40%" }} />
               </div>
 
               {/* Tiny caption under bar */}
-              <div className="flex justify-between text-[10px] text-neutral-500">
+              <div className="flex justify-between text-[10px] text-neutral-400">
                 <span>Buy 40%</span>
                 <span>Tasks 20%</span>
                 <span>Share 40%</span>
@@ -324,32 +352,32 @@ export default function UploadDetailsPanel({
 
             {/* Legend chips pinned to bottom (no extra bottom space) */}
             <div className="mt-auto grid grid-cols-3 gap-2 text-[11px]">
-              <div className="flex items-center justify-between rounded-md bg-neutral-800/55 px-2 py-1">
-                <span className="flex items-center gap-1 text-neutral-300">
-                  <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 text-[var(--primary-500)]" fill="currentColor">
+              <div className="flex items-center justify-between rounded-md bg-cyan-500/10 px-2 py-1.5 border border-cyan-500/20">
+                <span className="flex items-center gap-1 text-cyan-300">
+                  <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="currentColor">
                     <path d="M7 4h-2l-1 2v2h2l1 6h10l2-8h-12l-1-2zm1 14a2 2 0 100 4 2 2 0 000-4zm8 0a2 2 0 100 4 2 2 0 000-4z" />
                   </svg>
                   Buy
                 </span>
-                <span className="font-semibold text-neutral-100">{buyPts} pts</span>
+                <span className="font-bold text-cyan-200">{buyPts}</span>
               </div>
-              <div className="flex items-center justify-between rounded-md bg-neutral-800/55 px-2 py-1">
-                <span className="flex items-center gap-1 text-neutral-300">
-                  <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 text-yellow-500" fill="currentColor">
+              <div className="flex items-center justify-between rounded-md bg-amber-500/10 px-2 py-1.5 border border-amber-500/20">
+                <span className="flex items-center gap-1 text-amber-300">
+                  <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="currentColor">
                     <path d="M9 16.2l-3.5-3.5L4 14.2l5 5 11-11-1.5-1.5L9 16.2z" />
                   </svg>
                   Tasks
                 </span>
-                <span className="font-semibold text-neutral-100">{taskPts} pts</span>
+                <span className="font-bold text-amber-200">{taskPts}</span>
               </div>
-              <div className="flex items-center justify-between rounded-md bg-neutral-800/55 px-2 py-1">
-                <span className="flex items-center gap-1 text-neutral-300">
-                  <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 text-emerald-500" fill="currentColor">
+              <div className="flex items-center justify-between rounded-md bg-emerald-500/10 px-2 py-1.5 border border-emerald-500/20">
+                <span className="flex items-center gap-1 text-emerald-300">
+                  <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="currentColor">
                     <path d="M18 16.08c-.76 0-1.44.3-1.95.77L8.91 12.7a3.27 3.27 0 000-1.39l7.02-4.11A3 3 0 1014 5a3 3 0 00.09.72L7.06 9.83a3 3 0 100 4.34l7.05 4.11c-.06.22-.1.46-.1.72a3 3 0 103-3z" />
                   </svg>
                   Share
                 </span>
-                <span className="font-semibold text-neutral-100">{sharePts} pts</span>
+                <span className="font-bold text-emerald-200">{sharePts}</span>
               </div>
             </div>
           </div>

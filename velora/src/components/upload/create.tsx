@@ -474,9 +474,12 @@ export default function UploadCreate() {
 
   return (
     <div>
+      {/* Header - Same style as Ads */}
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-neutral-50">Upload Video</h1>
-        <p className="text-sm text-neutral-400 mt-1">Share your content with the community and start earning</p>
+        <h1 className="text-2xl font-bold tracking-tight text-neutral-50">
+          Upload Video
+        </h1>
+        <p className="text-sm text-neutral-400 mt-1">Share your content with the community and start earning rewards</p>
       </div>
 
       {/* TOP: FILE + THUMBNAIL */}
