@@ -13,7 +13,9 @@ export default function Categories() {
   return (
     <div className="relative pb-6 max-sm:pb-3">
       {/* Categories */}
-      <div className="flex items-center gap-x-3 overflow-x-auto pb-2 scrollbar-thin scrollbar-track-neutral-800 scrollbar-thumb-neutral-600
+      <div className="flex items-center gap-x-3 overflow-x-auto pb-2 
+        scrollbar-thin scrollbar-track-neutral-800 scrollbar-thumb-neutral-600
+        [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden
         max-sm:gap-x-2 max-sm:pb-1.5 max-sm:-mx-0">
         {cats.map((cat, i) => (
           <button

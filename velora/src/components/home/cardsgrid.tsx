@@ -407,32 +407,36 @@ export default function CardsGrid() {
   return (
     <div>
       {/* Enhanced Section Header */}
-      <div className="mb-6">
+      <div className="mb-6 max-sm:mb-4">
         <div className="flex items-start justify-between flex-wrap gap-2">
-          <div className="flex items-start gap-3">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-purple-500/20 to-blue-500/20 border border-purple-500/30">
-              <span className="text-base">🎬</span>
+          <div className="flex items-start gap-3 max-sm:gap-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-purple-500/20 to-blue-500/20 border border-purple-500/30
+              max-sm:h-6 max-sm:w-6">
+              <span className="text-base max-sm:text-sm">🎬</span>
             </div>
             
             <div>
-              <h2 className="text-xl font-bold text-neutral-100 mobile-section-header">Featured Videos</h2>
+              <h2 className="text-xl font-bold text-neutral-100 max-sm:text-base max-sm:font-semibold">Featured Videos</h2>
             </div>
           </div>
           
-          <div className="flex items-center gap-2 rounded-full bg-neutral-800/60 border border-neutral-700/50 px-3 py-1.5 mobile-section-badge">
-            <div className="flex h-5 w-5 items-center justify-center rounded-full bg-purple-500/20">
-              <span className="text-xs font-bold text-purple-400">{items.length}</span>
+          <div className="flex items-center gap-2 rounded-full bg-neutral-800/60 border border-neutral-700/50 px-3 py-1.5
+            max-sm:px-2 max-sm:py-1 max-sm:gap-1.5">
+            <div className="flex h-5 w-5 items-center justify-center rounded-full bg-purple-500/20
+              max-sm:h-4 max-sm:w-4">
+              <span className="text-xs font-bold text-purple-400 max-sm:text-[10px]">{items.length}</span>
             </div>
-            <span className="text-sm font-medium text-neutral-300 mobile-section-subtext">
+            <span className="text-sm font-medium text-neutral-300 max-sm:text-[11px]">
               {items.length} video{items.length !== 1 ? 's' : ''}
             </span>
           </div>
         </div>
         
-        <p className="text-sm text-neutral-400 mt-2 mobile-section-subtext">Discover amazing content</p>
+        <p className="text-sm text-neutral-400 mt-2 max-sm:text-xs max-sm:mt-1">Discover amazing content</p>
       </div>
 
-      <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-x-4 gap-y-8 mobile-card-grid">
+      <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-x-4 gap-y-8
+        max-sm:grid-cols-1 max-sm:gap-y-4">
       {items.map((v) => {
         const addrLower = v.creator?.abstract_id?.toLowerCase() || "";
         const fetchedAbstract = addrLower ? absAvatars[addrLower] : "";
