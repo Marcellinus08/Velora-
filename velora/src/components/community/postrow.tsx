@@ -257,9 +257,9 @@ export default function CommunityPostRow({
         <div className="flex-1 min-w-0">
           {/* HEADER: kiri (nama + kategori), kanan (waktu + menu) — sejajar rapi */}
           <div className="flex items-start justify-between gap-2">
-            <div className="flex flex-col gap-0.5 max-sm:gap-0 flex-1 min-w-0">
+            <div className="flex flex-col gap-0.5 max-sm:gap-0 sm:flex-row sm:items-center sm:gap-2 flex-1 min-w-0">
               <p className="font-semibold text-neutral-50 max-sm:text-sm truncate">{displayName}</p>
-              <p className="text-sm max-sm:text-xs text-neutral-400 truncate">
+              <p className="text-xs max-sm:text-xs text-neutral-400 truncate sm:text-xs">
                 posted in <span className="font-medium text-neutral-50">{post.category}</span>
               </p>
             </div>
