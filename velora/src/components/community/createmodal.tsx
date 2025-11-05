@@ -126,7 +126,7 @@ export default function CreatePostModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 max-sm:p-2"
       role="dialog"
       aria-modal="true"
       onKeyDown={(e) => e.key === "Escape" && onClose()}
@@ -136,10 +136,10 @@ export default function CreatePostModal({
         className="absolute inset-0 bg-black/70 backdrop-blur-sm cursor-pointer"
         onClick={onClose}
       />
-      <div className="relative z-10 w-full max-w-lg rounded-xl border border-neutral-700/50 bg-neutral-900 shadow-2xl">
+      <div className="relative z-10 w-full max-w-lg max-sm:max-w-full rounded-xl max-sm:rounded-lg border border-neutral-700/50 bg-neutral-900 shadow-2xl">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-neutral-800 px-5 py-3.5">
-          <h3 className="text-lg font-bold text-neutral-50">
+        <div className="flex items-center justify-between border-b border-neutral-800 px-5 max-sm:px-3 py-3.5 max-sm:py-3">
+          <h3 className="text-lg max-sm:text-base font-bold text-neutral-50">
             Create New Post
           </h3>
           <button
@@ -155,29 +155,29 @@ export default function CreatePostModal({
           </button>
         </div>
         {/* Form Content */}
-        <form onSubmit={handleSubmit} className="px-5 py-4">
-          <div className="max-h-[65vh] space-y-4 overflow-y-auto pr-2">
+        <form onSubmit={handleSubmit} className="px-5 max-sm:px-3 py-4 max-sm:py-3">
+          <div className="max-h-[65vh] max-sm:max-h-[70vh] space-y-4 max-sm:space-y-3 overflow-y-auto pr-2 max-sm:pr-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {/* Title */}
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-neutral-200">
+              <label className="mb-1.5 max-sm:mb-1 block text-sm max-sm:text-xs font-medium text-neutral-200">
                 Title
               </label>
               <input
                 name="title"
                 required
-                className="w-full rounded-lg border border-neutral-700 bg-neutral-800/50 px-3 py-2 text-sm text-neutral-50 placeholder:text-neutral-500 focus:border-[var(--primary-500)] focus:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-[var(--primary-500)]/20 transition-all"
+                className="w-full rounded-lg max-sm:rounded-md border border-neutral-700 bg-neutral-800/50 px-3 max-sm:px-2.5 py-2 max-sm:py-1.5 text-sm max-sm:text-xs text-neutral-50 placeholder:text-neutral-500 focus:border-[var(--primary-500)] focus:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-[var(--primary-500)]/20 transition-all"
                 placeholder="e.g. Tips for consistent knife cuts"
               />
             </div>
 
             {/* Category */}
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-neutral-200">
+              <label className="mb-1.5 max-sm:mb-1 block text-sm max-sm:text-xs font-medium text-neutral-200">
                 Category
               </label>
               <select
                 name="category"
-                className="w-full rounded-lg border border-neutral-700 bg-neutral-800/50 px-3 py-2 text-sm text-neutral-50 focus:border-[var(--primary-500)] focus:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-[var(--primary-500)]/20 transition-all cursor-pointer [&>option]:text-neutral-50 [&>option]:bg-neutral-800 [&>option[value='']]:text-neutral-500"
+                className="w-full rounded-lg max-sm:rounded-md border border-neutral-700 bg-neutral-800/50 px-3 max-sm:px-2.5 py-2 max-sm:py-1.5 text-sm max-sm:text-xs text-neutral-50 focus:border-[var(--primary-500)] focus:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-[var(--primary-500)]/20 transition-all cursor-pointer [&>option]:text-neutral-50 [&>option]:bg-neutral-800 [&>option[value='']]:text-neutral-500"
                 defaultValue=""
               >
                 <option value="">Select a category</option>
@@ -194,21 +194,21 @@ export default function CreatePostModal({
 
             {/* Content */}
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-neutral-200">
+              <label className="mb-1.5 max-sm:mb-1 block text-sm max-sm:text-xs font-medium text-neutral-200">
                 Content
               </label>
               <textarea
                 name="content"
                 rows={5}
                 required
-                className="w-full rounded-lg border border-neutral-700 bg-neutral-800/50 px-3 py-2.5 text-sm text-neutral-50 placeholder:text-neutral-500 focus:border-[var(--primary-500)] focus:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-[var(--primary-500)]/20 transition-all resize-none"
+                className="w-full rounded-lg max-sm:rounded-md border border-neutral-700 bg-neutral-800/50 px-3 max-sm:px-2.5 py-2.5 max-sm:py-2 text-sm max-sm:text-xs text-neutral-50 placeholder:text-neutral-500 focus:border-[var(--primary-500)] focus:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-[var(--primary-500)]/20 transition-all resize-none"
                 placeholder="Write your question or topic starter…"
               />
             </div>
 
             {/* Attachments */}
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-neutral-200">
+              <label className="mb-1.5 max-sm:mb-1 block text-sm max-sm:text-xs font-medium text-neutral-200">
                 Attachments <span className="text-neutral-500">(optional)</span>
               </label>
 
@@ -218,22 +218,22 @@ export default function CreatePostModal({
                   e.preventDefault();
                   addFiles(e.dataTransfer.files);
                 }}
-                className="flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-neutral-700 bg-neutral-800/30 py-8 text-center hover:border-[var(--primary-500)]/50 hover:bg-neutral-800/50 transition-all"
+                className="flex cursor-pointer flex-col items-center justify-center rounded-xl max-sm:rounded-lg border-2 border-dashed border-neutral-700 bg-neutral-800/30 py-8 max-sm:py-5 text-center hover:border-[var(--primary-500)]/50 hover:bg-neutral-800/50 transition-all"
                 onClick={() => fileRef.current?.click()}
               >
-                <div className="rounded-full bg-neutral-800 p-3 mb-3">
+                <div className="rounded-full bg-neutral-800 p-3 max-sm:p-2 mb-3 max-sm:mb-2">
                   <MI
                     name="cloud_upload"
-                    className="text-[28px] text-[var(--primary-500)]"
+                    className="text-[28px] max-sm:text-[20px] text-[var(--primary-500)]"
                   />
                 </div>
-                <div className="text-sm font-medium text-neutral-200">
+                <div className="text-sm max-sm:text-xs font-medium text-neutral-200">
                   Drag & drop file here, or{" "}
                   <span className="text-[var(--primary-500)] hover:underline">
                     choose a file
                   </span>
                 </div>
-                <div className="mt-2 text-xs text-neutral-500">
+                <div className="mt-2 max-sm:mt-1 text-xs max-sm:text-[10px] text-neutral-500">
                   PNG, JPG, GIF, MP4, WebM (max 25MB)
                 </div>
               </div>
@@ -248,16 +248,16 @@ export default function CreatePostModal({
               />
 
               {!!items.length && (
-                <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-3">
+                <div className="mt-4 max-sm:mt-3 grid grid-cols-2 gap-3 max-sm:gap-2 md:grid-cols-3">
                   {items.map((it) => (
                     <div
                       key={it.id}
-                      className="group relative overflow-hidden rounded-lg border border-neutral-700 bg-neutral-800"
+                      className="group relative overflow-hidden rounded-lg max-sm:rounded-md border border-neutral-700 bg-neutral-800"
                     >
                       {it.file.type.startsWith("video/") ? (
                         <video
                           src={it.url}
-                          className="h-32 w-full object-cover"
+                          className="h-32 max-sm:h-24 w-full object-cover"
                           muted
                           loop
                           playsInline
@@ -266,17 +266,17 @@ export default function CreatePostModal({
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
                           src={it.url}
-                          className="h-32 w-full object-cover"
+                          className="h-32 max-sm:h-24 w-full object-cover"
                           alt=""
                         />
                       )}
                       <button
                         type="button"
                         onClick={() => removeItem(it.id)}
-                        className="absolute right-2 top-2 rounded-full bg-black/70 p-1.5 text-white opacity-0 group-hover:opacity-100 hover:bg-black/90 cursor-pointer transition-all"
+                        className="absolute right-2 max-sm:right-1.5 top-2 max-sm:top-1.5 rounded-full bg-black/70 p-1.5 max-sm:p-1 text-white opacity-0 group-hover:opacity-100 hover:bg-black/90 cursor-pointer transition-all"
                         aria-label="Remove"
                       >
-                        <MI name="close" className="text-[16px] leading-none" />
+                        <MI name="close" className="text-[16px] max-sm:text-[14px] leading-none" />
                       </button>
                     </div>
                   ))}
@@ -286,7 +286,7 @@ export default function CreatePostModal({
           </div>
 
           {/* Footer Actions */}
-          <div className="mt-6 flex items-center justify-end gap-3 border-t border-neutral-800 pt-5">
+          <div className="mt-6 max-sm:mt-4 flex items-center justify-end gap-3 max-sm:gap-2 border-t border-neutral-800 pt-5 max-sm:pt-3">
             <button
               type="button"
               onClick={() => {
@@ -296,7 +296,7 @@ export default function CreatePostModal({
                 onClose();
               }}
               disabled={submitting}
-              className="rounded-lg px-5 py-2.5 text-sm font-medium text-neutral-300 bg-neutral-800 hover:bg-neutral-750 cursor-pointer transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="rounded-lg max-sm:rounded-md px-5 max-sm:px-4 py-2.5 max-sm:py-2 text-sm max-sm:text-xs font-medium text-neutral-300 bg-neutral-800 hover:bg-neutral-750 cursor-pointer transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Cancel
             </button>
@@ -304,11 +304,11 @@ export default function CreatePostModal({
             <button
               type="submit"
               disabled={submitting}
-              className="rounded-lg px-5 py-2.5 text-sm font-medium text-white bg-[var(--primary-500)] hover:bg-[var(--primary-500)]/90 cursor-pointer transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              className="rounded-lg max-sm:rounded-md px-5 max-sm:px-4 py-2.5 max-sm:py-2 text-sm max-sm:text-xs font-medium text-white bg-[var(--primary-500)] hover:bg-[var(--primary-500)]/90 cursor-pointer transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {submitting ? (
-                <span className="flex items-center gap-2">
-                  <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <span className="flex items-center gap-2 max-sm:gap-1.5">
+                  <svg className="animate-spin h-4 w-4 max-sm:h-3 max-sm:w-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>

@@ -144,7 +144,7 @@ function Avatar({ address, url }: { address: string; url: string | null }) {
       <img
         src={avatarUrl}
         alt="avatar"
-        className="h-8 w-8 rounded-full object-cover"
+        className="h-8 w-8 max-sm:h-6 max-sm:w-6 rounded-full object-cover"
         onError={(e) => {
           const el = e.currentTarget as HTMLImageElement;
           if (el.src !== fallback) el.src = fallback;
@@ -154,7 +154,7 @@ function Avatar({ address, url }: { address: string; url: string | null }) {
   }
 
   if (loading) {
-    return <div className="h-8 w-8 rounded-full bg-neutral-800 animate-pulse" />;
+    return <div className="h-8 w-8 max-sm:h-6 max-sm:w-6 rounded-full bg-neutral-800 animate-pulse" />;
   }
 
   return (
@@ -162,7 +162,7 @@ function Avatar({ address, url }: { address: string; url: string | null }) {
       size="xs"
       showTooltip={false}
       address={address as `0x${string}`}
-      className="!h-8 !w-8 !rounded-full"
+      className="!h-8 !w-8 max-sm:!h-6 max-sm:!w-6 !rounded-full"
     />
   );
 }
@@ -393,17 +393,17 @@ export default function Replies({ postId, onPosted, openReplyBox }: { postId: st
     const likeIcon = node.liked ? "favorite" : "favorite_border";
 
     return (
-      <div className="mt-4 first:mt-0 bg-neutral-900/40 rounded-lg p-3 border border-neutral-800/30">
-        <div className="flex items-start gap-3">
+      <div className="mt-4 first:mt-0 bg-neutral-900/40 rounded-lg max-sm:rounded-md p-3 max-sm:p-2 border border-neutral-800/30">
+        <div className="flex items-start gap-3 max-sm:gap-2">
           <Avatar address={node.authorAddress} url={node.authorAvatar} />
           <div className="flex-1 min-w-0">
             {/* Header: Author info and menu */}
-            <div className="flex items-center justify-between mb-1">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-sm font-semibold text-neutral-100">
+            <div className="flex items-center justify-between mb-1 max-sm:mb-0.5">
+              <div className="flex items-center gap-2 max-sm:gap-1 flex-wrap">
+                <span className="text-sm max-sm:text-xs font-semibold text-neutral-100">
                   {node.authorName?.trim() || short(node.authorAddress)}
                 </span>
-                <span className="text-xs text-neutral-500">
+                <span className="text-xs max-sm:text-[10px] text-neutral-500">
                   {new Date(node.createdAt).toLocaleString()}
                 </span>
               </div>
@@ -435,7 +435,7 @@ export default function Replies({ postId, onPosted, openReplyBox }: { postId: st
             </div>
 
             {editingReplyId === node.id ? (
-              <div className="mt-2">
+              <div className="mt-2 max-sm:mt-1.5">
                 <textarea
                   value={editContent}
                   onChange={(e) => setEditContent(e.target.value)}
@@ -452,16 +452,16 @@ export default function Replies({ postId, onPosted, openReplyBox }: { postId: st
                       }
                     }
                   }}
-                  className="w-full rounded-lg border border-neutral-700 bg-neutral-900/50 p-3 text-sm text-neutral-50 outline-none focus:border-[var(--primary-500)] transition-colors"
+                  className="w-full rounded-lg max-sm:rounded-md border border-neutral-700 bg-neutral-900/50 p-3 max-sm:p-2 text-sm max-sm:text-xs text-neutral-50 outline-none focus:border-[var(--primary-500)] transition-colors"
                   rows={2}
                 />
-                <div className="mt-2 flex justify-end gap-2">
+                <div className="mt-2 max-sm:mt-1.5 flex justify-end gap-2 max-sm:gap-1.5">
                   <button
                     onClick={() => {
                       setEditingReplyId(null);
                       setEditContent(node.content);
                     }}
-                    className="px-3 py-1 text-sm text-neutral-400 hover:text-neutral-200 cursor-pointer transition-colors"
+                    className="px-3 max-sm:px-2 py-1 max-sm:py-0.5 text-sm max-sm:text-xs text-neutral-400 hover:text-neutral-200 cursor-pointer transition-colors"
                   >
                     Cancel
                   </button>
@@ -475,20 +475,20 @@ export default function Replies({ postId, onPosted, openReplyBox }: { postId: st
                       }
                     }}
                     disabled={!editContent.trim() || editContent === node.content}
-                    className="px-3 py-1.5 text-sm bg-[var(--primary-500)] text-white rounded-md hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-opacity"
+                    className="px-3 max-sm:px-2 py-1.5 max-sm:py-1 text-sm max-sm:text-xs bg-[var(--primary-500)] text-white rounded-md max-sm:rounded hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-opacity"
                   >
                     Save
                   </button>
                 </div>
               </div>
             ) : (
-              <div className="mt-1 text-sm text-neutral-200 leading-relaxed whitespace-pre-wrap break-words">
+              <div className="mt-1 max-sm:mt-0.5 text-sm max-sm:text-xs text-neutral-200 leading-relaxed whitespace-pre-wrap break-words">
                 {node.content}
               </div>
             )}
 
             {/* actions: LIKE + REPLIES + REPLY */}
-            <div className="mt-3 flex items-center gap-5 text-xs">
+            <div className="mt-3 max-sm:mt-2 flex items-center gap-5 max-sm:gap-3 text-xs max-sm:text-[10px]">
               <button
                 onClick={() => toggleLike(node.id)}
                 disabled={pendingLikeId === node.id}
@@ -564,7 +564,7 @@ export default function Replies({ postId, onPosted, openReplyBox }: { postId: st
 
             {/* children (collapse/expand) */}
             {showChildren && node.children?.length > 0 && (
-              <div className="mt-4 ml-2 pl-4 border-l-2 border-neutral-800/60 space-y-0">
+              <div className="mt-4 max-sm:mt-3 ml-2 max-sm:ml-1 pl-4 max-sm:pl-2 border-l-2 border-neutral-800/60 space-y-0">
                 {node.children.map((c) => (
                   <Item key={c.id} node={c} />
                 ))}
@@ -577,10 +577,10 @@ export default function Replies({ postId, onPosted, openReplyBox }: { postId: st
   }
 
   return (
-    <div className="mt-4">
+    <div className="mt-4 max-sm:mt-3">
       {/* composer top-level */}
       {showTopReplyBox && (
-        <div className="flex items-start gap-3">
+        <div className="flex items-start gap-3 max-sm:gap-2">
           <Avatar address={me} url={currentUserAvatar} />
           <div className="flex-1">
             <textarea
@@ -595,23 +595,23 @@ export default function Replies({ postId, onPosted, openReplyBox }: { postId: st
                 }
               }}
               rows={2}
-              className="w-full rounded-md border border-neutral-700 bg-neutral-950 p-2 text-sm text-neutral-50 outline-none focus:border-[var(--primary-500)] transition-colors"
+              className="w-full rounded-md border border-neutral-700 bg-neutral-950 p-2 max-sm:p-1.5 text-sm max-sm:text-xs text-neutral-50 outline-none focus:border-[var(--primary-500)] transition-colors"
               placeholder="Write a reply…"
             />
-            <div className="mt-2 flex justify-end gap-2">
+            <div className="mt-2 max-sm:mt-1.5 flex justify-end gap-2 max-sm:gap-1.5">
               <button
                 onClick={() => {
                   setText("");
                   setShowTopReplyBox(false);
                 }}
-                className="rounded-md px-3 py-1 text-neutral-300 hover:bg-neutral-800 cursor-pointer transition-colors"
+                className="rounded-md max-sm:rounded px-3 max-sm:px-2 py-1 max-sm:py-0.5 text-sm max-sm:text-xs text-neutral-300 hover:bg-neutral-800 cursor-pointer transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={() => postReply(null)}
                 disabled={!text.trim()}
-                className="rounded-md bg-[var(--primary-500)] px-4 py-1.5 text-sm text-neutral-50 hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                className="rounded-md max-sm:rounded bg-[var(--primary-500)] px-4 max-sm:px-3 py-1.5 max-sm:py-1 text-sm max-sm:text-xs text-neutral-50 hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
               >
                 Reply
               </button>
@@ -620,10 +620,10 @@ export default function Replies({ postId, onPosted, openReplyBox }: { postId: st
         </div>
       )}
 
-      {err && <p className="mt-2 text-xs text-red-400">{err}</p>}
-      {loading && <p className="mt-3 text-sm text-neutral-400">Loading replies…</p>}
+      {err && <p className="mt-2 max-sm:mt-1.5 text-xs max-sm:text-[10px] text-red-400">{err}</p>}
+      {loading && <p className="mt-3 max-sm:mt-2 text-sm max-sm:text-xs text-neutral-400">Loading replies…</p>}
 
-      <div className="mt-3">
+      <div className="mt-3 max-sm:mt-2">
         {items.map((n) => (
           <Item key={n.id} node={n} />
         ))}
