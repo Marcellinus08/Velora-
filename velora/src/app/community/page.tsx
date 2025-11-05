@@ -285,7 +285,10 @@ export default function CommunityPage() {
       <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8 md:ml-64">
         <div className="flex flex-col gap-6">
           <div className="flex flex-col items-start gap-4 md:flex-row md:items-center md:justify-between">
-            <h2 className="text-2xl font-bold text-neutral-50">Community Discussions</h2>
+            <div>
+              <h2 className="text-2xl font-bold text-neutral-50">Community Discussions</h2>
+              <p className="text-sm text-neutral-400 mt-1">Share ideas, ask questions, and engage with the community</p>
+            </div>
 
             {address && (
               <button

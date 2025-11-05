@@ -182,7 +182,7 @@ export function SubscriptionVideosLazy({
     );
 
   return (
-    <div className="space-y-8">
+    <div>
       {/* Available Videos Section */}
       <div className="space-y-4">
         <h3 className="text-lg font-semibold text-neutral-100">Available Videos</h3>

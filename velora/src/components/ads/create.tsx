@@ -433,24 +433,12 @@ export default function CreateAd({
 
   return (
     <>
-      <h1 className="text-2xl font-bold tracking-tight text-neutral-50">
-        Create Advertisement
-      </h1>
-      <p className="mt-1 text-sm text-neutral-400">
-        {ONCHAIN_ENABLED ? (
-          <>
-            Fill in your campaign details. Payment is{" "}
-            <span className="font-semibold">on-chain</span> via Abstract Global
-            Wallet.
-          </>
-        ) : (
-          <>
-            Fill in your campaign details. Payment is{" "}
-            <span className="font-semibold">preview only</span> for now—no
-            charges will be made.
-          </>
-        )}
-      </p>
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight text-neutral-50">
+          Create Advertisement
+        </h1>
+        <p className="text-sm text-neutral-400 mt-1">Promote your videos to a wider audience and boost engagement</p>
+      </div>
 
       <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[2fr_1fr]">
         <AdForm

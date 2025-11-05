@@ -3,8 +3,11 @@ import Link from "next/link";
 
 export const Header = () => {
   return (
-    <div className="mb-3 flex items-center justify-between">
-      <h2 className="text-2xl font-bold text-neutral-50">Meet</h2>
+    <div className="mb-6 flex items-center justify-between">
+      <div>
+        <h2 className="text-2xl font-bold text-neutral-50">Meet</h2>
+        <p className="text-sm text-neutral-400 mt-1">Connect and collaborate with creators in real-time</p>
+      </div>
       {/* Set call rates button - Commented for Coming Soon feature */}
       {/* <Link
         href="/meet/call-rates"

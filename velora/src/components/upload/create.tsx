@@ -474,10 +474,10 @@ export default function UploadCreate() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold tracking-tight text-neutral-50">Upload Video</h1>
-      <p className="mt-1 text-sm text-neutral-400">
-        Select a video file, fill the details, then start upload.
-      </p>
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight text-neutral-50">Upload Video</h1>
+        <p className="text-sm text-neutral-400 mt-1">Share your content with the community and start earning</p>
+      </div>
 
       {/* TOP: FILE + THUMBNAIL */}
       <section className="mt-6">

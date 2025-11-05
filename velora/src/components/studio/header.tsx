@@ -26,7 +26,7 @@ export default function StudioHeader() {
               </span>
             </div>
             <p className="text-sm text-neutral-400 mt-1">
-              Manage your uploads and ad campaigns from one place.
+              Manage your content, campaigns, and earnings in one place
             </p>
           </div>
         </div>
