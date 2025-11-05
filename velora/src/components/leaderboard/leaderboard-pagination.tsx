@@ -38,43 +38,47 @@ export function LeaderboardPagination({
   };
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3">
-      <div className="flex items-center gap-2">
-        <label className="text-xs sm:text-sm text-neutral-500 whitespace-nowrap">Rows per page:</label>
-        <select
-          value={itemsPerPage}
-          onChange={(e) => onItemsPerPageChange?.(Number(e.target.value))}
-          className="rounded border border-neutral-700 bg-neutral-800 px-2 py-1 sm:px-3 sm:py-1.5 text-xs sm:text-sm text-neutral-200 focus:border-purple-500 focus:outline-none"
-        >
-          <option value={10}>10</option>
-          <option value={20}>20</option>
-          <option value={50}>50</option>
-          <option value={100}>100</option>
-        </select>
+    <div className="flex items-center justify-between">
+      <div className="text-sm text-neutral-400">
+        Showing {startItem}-{endItem} of {totalItems.toLocaleString()} players
       </div>
 
-      <div className="flex items-center gap-3">
-        <span className="text-xs sm:text-sm text-neutral-400">
+      <div className="flex items-center gap-4">
+        {onItemsPerPageChange && (
+          <div className="flex items-center gap-2">
+            <label className="text-sm text-neutral-500">Rows per page:</label>
+            <select
+              value={itemsPerPage}
+              onChange={(e) => onItemsPerPageChange(Number(e.target.value))}
+              className="rounded border border-neutral-700 bg-neutral-800 px-3 py-1.5 text-sm text-neutral-200 focus:border-purple-500 focus:outline-none"
+            >
+              <option value={10}>10</option>
+              <option value={20}>20</option>
+              <option value={50}>50</option>
+              <option value={100}>100</option>
+            </select>
+          </div>
+        )}
+
+        <span className="text-sm text-neutral-500">
           Page {currentPage} of {totalPages}
         </span>
         
-        <div className="flex items-center gap-2">
-          <button
-            onClick={handlePrevious}
-            disabled={!hasPrevious}
-            className="rounded border border-neutral-700 bg-neutral-800 px-3 py-1 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium text-neutral-200 transition-all duration-200 hover:bg-neutral-700 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            Prev
-          </button>
+        <button
+          onClick={handlePrevious}
+          disabled={!hasPrevious}
+          className="rounded border border-neutral-700 bg-neutral-800 px-4 py-2 text-sm font-medium text-neutral-200 transition-all duration-200 hover:bg-neutral-700 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          Prev
+        </button>
 
-          <button
-            onClick={handleNext}
-            disabled={!hasNext}
-            className="rounded border border-neutral-700 bg-neutral-800 px-3 py-1 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium text-neutral-200 transition-all duration-200 hover:bg-neutral-700 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            Next
-          </button>
-        </div>
+        <button
+          onClick={handleNext}
+          disabled={!hasNext}
+          className="rounded border border-neutral-700 bg-neutral-800 px-4 py-2 text-sm font-medium text-neutral-200 transition-all duration-200 hover:bg-neutral-700 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          Next
+        </button>
       </div>
     </div>
   );
