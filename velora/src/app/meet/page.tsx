@@ -60,11 +60,11 @@ export default function MeetPage() {
   return (
     <div className="flex h-full">
       <Sidebar />
-      <main className="flex-1 px-6 py-8 md:ml-64">
+      <main className="flex-1 px-6 py-8 md:ml-64 max-sm:px-3 max-sm:py-3 max-sm:pb-20">
         <Header />
 
         {/* Coming Soon Banner - Full Height */}
-        <div className="mt-8 h-80 group rounded-2xl border border-transparent bg-gradient-to-r from-purple-950/80 via-blue-950/60 to-purple-950/80 transition-all duration-300 flex items-center justify-center hover:shadow-2xl hover:shadow-purple-500/40 relative overflow-hidden">
+        <div className="mt-8 h-80 group rounded-2xl border border-transparent bg-gradient-to-r from-purple-950/80 via-blue-950/60 to-purple-950/80 transition-all duration-300 flex items-center justify-center hover:shadow-2xl hover:shadow-purple-500/40 relative overflow-hidden max-sm:mt-4 max-sm:h-64 max-sm:rounded-xl">
           {/* Animated background with moving gradient */}
           <div className="absolute inset-0 bg-gradient-to-r from-purple-600/0 via-purple-500/30 to-blue-600/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 animate-pulse" />
           
@@ -78,35 +78,35 @@ export default function MeetPage() {
           {/* Border glow */}
           <div className="absolute inset-0 rounded-2xl border border-purple-500/0 group-hover:border-purple-400/50 transition-all duration-300" />
           
-          <div className="relative z-10 flex flex-col items-center gap-6 text-center px-8">
+          <div className="relative z-10 flex flex-col items-center gap-6 text-center px-8 max-sm:gap-4 max-sm:px-4">
             {/* Icon container with 3D effect */}
             <div className="relative">
               {/* Rotating ring */}
-              <div className="absolute -inset-6 rounded-xl border border-purple-500/30 group-hover:border-purple-400/60 transition-all duration-300" style={{ animation: 'spin 3s linear infinite' }} />
+              <div className="absolute -inset-6 rounded-xl border border-purple-500/30 group-hover:border-purple-400/60 transition-all duration-300 max-sm:-inset-4" style={{ animation: 'spin 3s linear infinite' }} />
               
               {/* Glow layers */}
-              <div className="absolute -inset-4 bg-gradient-to-br from-purple-500/40 to-blue-500/20 rounded-lg blur-lg group-hover:from-purple-500/60 group-hover:to-blue-500/40 transition-all duration-300" />
+              <div className="absolute -inset-4 bg-gradient-to-br from-purple-500/40 to-blue-500/20 rounded-lg blur-lg group-hover:from-purple-500/60 group-hover:to-blue-500/40 transition-all duration-300 max-sm:-inset-3" />
               
               {/* Main icon */}
-              <div className="relative bg-gradient-to-br from-purple-600 to-blue-600 rounded-lg px-6 py-4 shadow-xl shadow-purple-500/50 group-hover:shadow-2xl group-hover:shadow-purple-400/70 transition-all duration-300">
-                <span className="material-icons-round text-white text-5xl leading-none block">videocam</span>
+              <div className="relative bg-gradient-to-br from-purple-600 to-blue-600 rounded-lg px-6 py-4 shadow-xl shadow-purple-500/50 group-hover:shadow-2xl group-hover:shadow-purple-400/70 transition-all duration-300 max-sm:px-4 max-sm:py-3">
+                <span className="material-icons-round text-white text-5xl leading-none block max-sm:text-4xl">videocam</span>
               </div>
             </div>
             
             {/* Content with staggered animation */}
-            <div className="flex flex-col items-center gap-3">
-              <div className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-300 via-blue-300 to-purple-300 group-hover:from-purple-100 group-hover:via-blue-100 group-hover:to-purple-100 transition-all duration-300 animate-pulse" style={{ animationDuration: '3s' }}>
+            <div className="flex flex-col items-center gap-3 max-sm:gap-2">
+              <div className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-300 via-blue-300 to-purple-300 group-hover:from-purple-100 group-hover:via-blue-100 group-hover:to-purple-100 transition-all duration-300 animate-pulse max-sm:text-2xl" style={{ animationDuration: '3s' }}>
                 Coming Soon
               </div>
-              <div className="text-base text-purple-200/80 group-hover:text-purple-100 transition-colors duration-300 font-semibold tracking-wide">
+              <div className="text-base text-purple-200/80 group-hover:text-purple-100 transition-colors duration-300 font-semibold tracking-wide max-sm:text-sm max-sm:px-2">
                 🌟 Meet feature launching soon - Connect with creators and start your journey
               </div>
             </div>
             
             {/* Floating particles */}
-            <div className="absolute top-12 left-1/4 text-3xl opacity-60 group-hover:opacity-100 transition-opacity duration-300 animate-bounce" style={{ animationDelay: '0s' }}>✨</div>
-            <div className="absolute top-1/4 right-1/4 text-2xl opacity-40 group-hover:opacity-70 transition-opacity duration-300 animate-bounce" style={{ animationDelay: '0.2s' }}>🚀</div>
-            <div className="absolute bottom-12 right-1/3 text-2xl opacity-50 group-hover:opacity-90 transition-opacity duration-300 animate-bounce" style={{ animationDelay: '0.4s' }}>⭐</div>
+            <div className="absolute top-12 left-1/4 text-3xl opacity-60 group-hover:opacity-100 transition-opacity duration-300 animate-bounce max-sm:text-2xl max-sm:top-8 max-sm:left-1/6" style={{ animationDelay: '0s' }}>✨</div>
+            <div className="absolute top-1/4 right-1/4 text-2xl opacity-40 group-hover:opacity-70 transition-opacity duration-300 animate-bounce max-sm:text-xl max-sm:right-1/6" style={{ animationDelay: '0.2s' }}>🚀</div>
+            <div className="absolute bottom-12 right-1/3 text-2xl opacity-50 group-hover:opacity-90 transition-opacity duration-300 animate-bounce max-sm:text-xl max-sm:bottom-8" style={{ animationDelay: '0.4s' }}>⭐</div>
           </div>
         </div>
 
