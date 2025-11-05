@@ -58,6 +58,7 @@ export default function VideoInfoSection({
   userAddress,
   hasShared = false,
   claimedSharePoints = 0,
+  isLocked = false,
 }: {
   video: VideoInfo;
   recommendations: RecommendedVideo[];
@@ -68,6 +69,7 @@ export default function VideoInfoSection({
   userAddress?: string;
   hasShared?: boolean;
   claimedSharePoints?: number;
+  isLocked?: boolean;
 }) {
   const [expanded, setExpanded] = useState(false);
 
@@ -270,113 +272,117 @@ export default function VideoInfoSection({
 
             <div className="flex items-center gap-2">
               {/* Heart like ala Community */}
-              <button
-                onClick={onToggleLikeVideo}
-                disabled={likeBusy}
-                className={[
-                  "flex items-center gap-1.5 rounded-full border px-3 py-1 text-sm transition",
-                  liked
-                    ? "text-[var(--primary-500)] border-[var(--primary-500)]/40 bg-violet-900/20"
-                    : "text-neutral-200 border-neutral-700 bg-neutral-800/80 hover:bg-neutral-700",
-                  likeBusy ? "opacity-60 cursor-not-allowed" : "hover:scale-[1.03] active:scale-95",
-                ].join(" ")}
-                title={liked ? "Unlike" : "Like"}
-              >
-                <MI name={likeIcon} />
-                <span>{likeCount}</span>
-              </button>
+              {!isLocked && (
+                <button
+                  onClick={onToggleLikeVideo}
+                  disabled={likeBusy}
+                  className={[
+                    "flex items-center gap-1.5 rounded-full border px-3 py-1 text-sm transition",
+                    liked
+                      ? "text-[var(--primary-500)] border-[var(--primary-500)]/40 bg-violet-900/20"
+                      : "text-neutral-200 border-neutral-700 bg-neutral-800/80 hover:bg-neutral-700",
+                    likeBusy ? "opacity-60 cursor-not-allowed" : "hover:scale-[1.03] active:scale-95",
+                  ].join(" ")}
+                  title={liked ? "Unlike" : "Like"}
+                >
+                  <MI name={likeIcon} />
+                  <span>{likeCount}</span>
+                </button>
+              )}
 
               {/* Share */}
-              <button
-                className={`flex items-center gap-2 rounded-full px-3 py-1 text-neutral-50 transition-all duration-300 ${
-                  isShared 
-                    ? 'bg-green-900/30 border border-green-500/30 cursor-default' 
-                    : shareBusy
-                    ? 'bg-neutral-800 opacity-60 cursor-not-allowed'
-                    : 'bg-neutral-800 hover:bg-neutral-700 hover:scale-[1.03] active:scale-95'
-                }`}
-                onClick={async () => {
-                  // Jika sudah pernah share atau sedang proses, tidak bisa claim lagi
-                  if (isShared || shareBusy) {
-                    return;
-                  }
-
-                  setShareBusy(true);
-
-                  // Award points untuk share (hanya sekali)
-                  if (userAddress && totalPoints > 0) {
-                    try {
-                      const response = await fetch("/api/user-progress", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({
-                          userAddr: userAddress.toLowerCase(),
-                          videoId,
-                          action: "share",
-                          totalPoints,
-                        }),
-                      });
-
-                      const data = await response.json();
-
-                      if (response.ok) {
-                        // Instant update UI - berubah jadi "Shared"
-                        setIsShared(true);
-                        setEarnedSharePoints(sharePoints);
-                        toast.success("Share Success!", `You've earned ${sharePoints} points!`);
-                      } else {
-                        // Jika error (misalnya belum purchase), tetap bisa share tapi tidak dapat poin
-                        console.log("Note:", data.error);
-                        toast.info("Shared!", "Share successful, but no points awarded (video not purchased)");
-                      }
-                    } catch (error) {
-                      console.error("Error awarding share points:", error);
-                      toast.error("Error", "Failed to award points, but you can still share");
+              {!isLocked && (
+                <button
+                  className={`flex items-center gap-2 rounded-full px-3 py-1 text-neutral-50 transition-all duration-300 ${
+                    isShared 
+                      ? 'bg-green-900/30 border border-green-500/30 cursor-default' 
+                      : shareBusy
+                      ? 'bg-neutral-800 opacity-60 cursor-not-allowed'
+                      : 'bg-neutral-800 hover:bg-neutral-700 hover:scale-[1.03] active:scale-95'
+                  }`}
+                  onClick={async () => {
+                    // Jika sudah pernah share atau sedang proses, tidak bisa claim lagi
+                    if (isShared || shareBusy) {
+                      return;
                     }
-                  }
 
-                  // Share to Twitter/X (tetap bisa share meskipun sudah pernah)
-                  const pointsText = totalPoints > 0 ? ` and get total ${totalPoints} points!` : '!';
-                  const url = typeof window !== "undefined" ? window.location.href : "";
-                  const text = `Check out this video: ${video.title}${pointsText}\n\n${url}\n\n@AbstractChain`;
-                  const twitterIntent = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
-                  
-                  // Buka Twitter intent
-                  window.open(twitterIntent, "_blank");
-                  
-                  setShareBusy(false);
-                }}
-                disabled={isShared || shareBusy}
-              >
-                <div className="flex items-center gap-2">
-                  <span
-                    className="material-icons-round text-[16px] leading-none align-middle"
-                    aria-hidden="true"
-                  >
-                    {shareBusy ? 'hourglass_empty' : isShared ? 'check_circle' : 'share'}
-                  </span>
-                  <span className="text-sm font-medium">
-                    {shareBusy ? 'Sharing...' : isShared ? 'Shared' : 'Share'}
-                  </span>
-                </div>
-                {sharePoints > 0 && (
-                  <div className={`flex items-center gap-1.5 ml-2 pl-2 border-l ${
-                    isShared ? 'border-green-600/30' : 'border-neutral-700'
-                  }`}>
-                    <svg className="w-4 h-4 text-yellow-400" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                    </svg>
-                    <span className={`text-sm font-medium ${
-                      isShared ? 'text-green-400' : 'text-yellow-400'
-                    }`}>
-                      {isShared ? `+${earnedSharePoints}` : sharePoints}
+                    setShareBusy(true);
+
+                    // Award points untuk share (hanya sekali)
+                    if (userAddress && totalPoints > 0) {
+                      try {
+                        const response = await fetch("/api/user-progress", {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({
+                            userAddr: userAddress.toLowerCase(),
+                            videoId,
+                            action: "share",
+                            totalPoints,
+                          }),
+                        });
+
+                        const data = await response.json();
+
+                        if (response.ok) {
+                          // Instant update UI - berubah jadi "Shared"
+                          setIsShared(true);
+                          setEarnedSharePoints(sharePoints);
+                          toast.success("Share Success!", `You've earned ${sharePoints} points!`);
+                        } else {
+                          // Jika error (misalnya belum purchase), tetap bisa share tapi tidak dapat poin
+                          console.log("Note:", data.error);
+                          toast.info("Shared!", "Share successful, but no points awarded (video not purchased)");
+                        }
+                      } catch (error) {
+                        console.error("Error awarding share points:", error);
+                        toast.error("Error", "Failed to award points, but you can still share");
+                      }
+                    }
+
+                    // Share to Twitter/X (tetap bisa share meskipun sudah pernah)
+                    const pointsText = totalPoints > 0 ? ` and get total ${totalPoints} points!` : '!';
+                    const url = typeof window !== "undefined" ? window.location.href : "";
+                    const text = `Check out this video: ${video.title}${pointsText}\n\n${url}\n\n@AbstractChain`;
+                    const twitterIntent = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
+                    
+                    // Buka Twitter intent
+                    window.open(twitterIntent, "_blank");
+                    
+                    setShareBusy(false);
+                  }}
+                  disabled={isShared || shareBusy}
+                >
+                  <div className="flex items-center gap-2">
+                    <span
+                      className="material-icons-round text-[16px] leading-none align-middle"
+                      aria-hidden="true"
+                    >
+                      {shareBusy ? 'hourglass_empty' : isShared ? 'check_circle' : 'share'}
+                    </span>
+                    <span className="text-sm font-medium">
+                      {shareBusy ? 'Sharing...' : isShared ? 'Shared' : 'Share'}
                     </span>
                   </div>
-                )}
-                {isShared && (
-                  <span className="ml-2 text-xs text-green-400">Claimed</span>
-                )}
-              </button>
+                  {sharePoints > 0 && (
+                    <div className={`flex items-center gap-1.5 ml-2 pl-2 border-l ${
+                      isShared ? 'border-green-600/30' : 'border-neutral-700'
+                    }`}>
+                      <svg className="w-4 h-4 text-yellow-400" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                      </svg>
+                      <span className={`text-sm font-medium ${
+                        isShared ? 'text-green-400' : 'text-yellow-400'
+                      }`}>
+                        {isShared ? `+${earnedSharePoints}` : sharePoints}
+                      </span>
+                    </div>
+                  )}
+                  {isShared && (
+                    <span className="ml-2 text-xs text-green-400">Claimed</span>
+                  )}
+                </button>
+              )}
             </div>
           </div>
 

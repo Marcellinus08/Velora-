@@ -542,7 +542,7 @@ export default function VideoPage() {
                       videoId={row.id}
                       creator={(row.creator_addr || row.abstract_id) as Address}
                       priceUsd={row.price_cents / 100}
-                      className="mt-4 px-6 py-2 bg-[var(--primary-500)] text-white rounded-full font-semibold hover:bg-opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="mt-6 px-8 py-3 bg-[var(--primary-500)] text-white rounded-full font-semibold hover:bg-violet-600 active:scale-95 transition-all duration-200 cursor-pointer shadow-lg hover:shadow-violet-500/50 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center gap-3"
                       onSuccess={() => {
                         // Reload halaman setelah 2 detik agar toast terlihat
                         setTimeout(() => {
@@ -550,7 +550,8 @@ export default function VideoPage() {
                         }, 2000);
                       }}
                     >
-                      Unlock Now
+                      <span className="hover:translate-x-0.5 transition-transform duration-200">Purchase Now</span>
+                      <span className="text-sm font-medium opacity-90">${row.price_cents / 100}</span>
                     </BuyVideoButton>
                   ) : undefined
                 }
@@ -568,6 +569,14 @@ export default function VideoPage() {
                 userAddress={me || undefined}
                 hasCompletedTask={hasCompletedTask}
                 earnedTaskPoints={taskPoints}
+                pointsBreakdown={
+                  totalPoints > 0 ? {
+                    purchasePoints: Math.floor(totalPoints * 0.4),
+                    taskPoints: Math.floor(totalPoints * 0.2),
+                    sharePoints: Math.floor(totalPoints * 0.4),
+                    totalPoints: totalPoints
+                  } : undefined
+                }
               />
             </aside>
 
@@ -583,6 +592,7 @@ export default function VideoPage() {
                 userAddress={me || undefined}
                 hasShared={hasShared}
                 claimedSharePoints={sharePoints}
+                isLocked={isLocked}
               />
             )}
           </div>

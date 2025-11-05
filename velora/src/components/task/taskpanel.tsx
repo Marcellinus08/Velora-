@@ -24,6 +24,7 @@ export default function TaskPanel({
   userAddress,
   hasCompletedTask = false,
   earnedTaskPoints = 0,
+  pointsBreakdown,
 }: {
   className?: string;
   /** list of tasks for current video (fetched from DB) */
@@ -47,6 +48,13 @@ export default function TaskPanel({
   hasCompletedTask?: boolean;
   /** points yang didapat dari task sebelumnya */
   earnedTaskPoints?: number;
+  /** breakdown poin dari berbagai aktivitas */
+  pointsBreakdown?: {
+    purchasePoints: number;
+    taskPoints: number;
+    sharePoints: number;
+    totalPoints: number;
+  };
 }) {
   const [started, setStarted] = useState(false);
   const [completed, setCompleted] = useState(hasCompletedTask); // Set to true jika sudah pernah complete
@@ -254,17 +262,9 @@ export default function TaskPanel({
 
   return (
     <div className={`min-h-0 h-full rounded-2xl bg-neutral-800 p-6 flex flex-col ${className}`}>
-      {/* Header: judul + poin */}
+      {/* Header: judul */}
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-bold text-neutral-50">Your Task</h2>
-        {allPoints > 0 && (
-          <div className="flex items-center gap-1.5 px-2.5 py-1">
-            <svg className="w-5 h-5 text-yellow-400" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-            </svg>
-            <span className="text-sm font-medium text-yellow-400">{allPoints}</span>
-          </div>
-        )}
       </div>
 
       {!started || completed ? (
@@ -345,14 +345,8 @@ export default function TaskPanel({
                   />
                 </svg>
               </div>
-              <h3 className="text-xl font-bold text-white mb-2">Video Locked</h3>
-              <p className="text-neutral-400 mb-4">Unlock for 31 USD</p>
-              <div className="flex items-center gap-2 text-neutral-400">
-                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-                  <path fillRule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z" clipRule="evenodd" />
-                </svg>
-                <span>{allPoints} points available</span>
-              </div>
+              <h3 className="text-xl font-bold text-white mb-2">Task Locked</h3>
+              <p className="text-neutral-400 mb-4">Purchase this video to unlock tasks and earn rewards</p>
             </>
           )}
         </div>
@@ -452,6 +446,72 @@ export default function TaskPanel({
             )}
           </div>
         </>
+      )}
+
+      {/* Points Breakdown - Bottom */}
+      {isLocked && pointsBreakdown && pointsBreakdown.totalPoints > 0 && (
+        <div className="mt-6 rounded-lg border border-neutral-700 bg-neutral-900/60 p-3 text-left">
+          <p className="text-xs font-semibold text-neutral-300 uppercase tracking-wide mb-2.5">
+            Points Distribution
+          </p>
+          <div className="space-y-2">
+            {/* Purchase Points */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                <span className="text-xs text-neutral-300">Buy Video</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <svg className="w-3 h-3 text-yellow-400" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                </svg>
+                <span className="text-xs font-semibold text-yellow-400">{pointsBreakdown.purchasePoints}</span>
+              </div>
+            </div>
+
+            {/* Task Points */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-violet-500" />
+                <span className="text-xs text-neutral-300">Complete Tasks</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <svg className="w-3 h-3 text-yellow-400" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                </svg>
+                <span className="text-xs font-semibold text-yellow-400">{pointsBreakdown.taskPoints}</span>
+              </div>
+            </div>
+
+            {/* Share Points */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-cyan-500" />
+                <span className="text-xs text-neutral-300">Share Video</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <svg className="w-3 h-3 text-yellow-400" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                </svg>
+                <span className="text-xs font-semibold text-yellow-400">{pointsBreakdown.sharePoints}</span>
+              </div>
+            </div>
+
+            {/* Divider */}
+            <div className="border-t border-neutral-700 my-1.5" />
+
+            {/* Total */}
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold text-neutral-200">Total</span>
+              <div className="flex items-center gap-1">
+                <svg className="w-3 h-3 text-yellow-400" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                </svg>
+                <span className="text-xs font-bold text-green-400">{pointsBreakdown.totalPoints}</span>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

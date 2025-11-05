@@ -23,7 +23,7 @@ export default function VideoPlayer({
   price,
   points,
   onUnlock,
-  unlockButtonElement
+  unlockButtonElement,
 }: VideoPlayerProps) {
   return (
     <div 
@@ -60,21 +60,12 @@ export default function VideoPlayer({
             </div>
             <div className="text-center px-4 pointer-events-auto">
               <h3 className="text-xl font-bold mb-2">Video Locked</h3>
-              {(price || points) && (
-                <div className="space-y-2 text-neutral-200">
-                  {price && (
-                    <p>Unlock for {price.amount} {price.currency}</p>
-                  )}
-                  {points && points > 0 && (
-                    <p className="flex items-center justify-center gap-2">
-                      <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                        <path d="M10.464 3.314a.75.75 0 00-1.1.16L6.25 8H2.5A.75.75 0 001.75 8.75v2.5A.75.75 0 002.5 12h2.75l2.114 3.525a.75.75 0 001.1.16l2.886-2.163a.75.75 0 00.3-.6V6.178a.75.75 0 00-.3-.6l-2.886-2.163z" />
-                      </svg>
-                      {points} points available
-                    </p>
-                  )}
+              {price && (
+                <div className="space-y-2 text-neutral-200 mb-4">
+                  <p>Purchase this video to access exclusive content and earn rewards</p>
                 </div>
               )}
+              
               {unlockButtonElement || (
                 <button
                   onClick={(e) => {
@@ -83,9 +74,14 @@ export default function VideoPlayer({
                     console.log('Default unlock button clicked');
                     onUnlock?.();
                   }}
-                  className="mt-4 px-6 py-2 bg-[var(--primary-500)] text-white rounded-full font-semibold hover:bg-opacity-90 transition-colors cursor-pointer"
+                  className="mt-4 px-8 py-3 bg-[var(--primary-500)] text-white rounded-full font-semibold hover:bg-violet-600 active:scale-95 transition-all duration-200 cursor-pointer shadow-lg hover:shadow-violet-500/50 flex items-center justify-center gap-2 group"
                 >
-                  Unlock Now
+                  <span className="group-hover:translate-x-1 transition-transform duration-200">Purchase Now</span>
+                  {price && (
+                    <span className="text-sm font-medium opacity-90">
+                      {price.amount} {price.currency}
+                    </span>
+                  )}
                 </button>
               )}
             </div>
