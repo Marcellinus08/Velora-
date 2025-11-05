@@ -12,6 +12,7 @@ export default function SearchBar() {
   const [q, setQ] = useState("");
   const [openSug, setOpenSug] = useState(false);
   const [recent, setRecent] = useState<string[]>([]);
+  const [expanded, setExpanded] = useState(false); // State untuk expand search di mobile
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -26,10 +27,16 @@ export default function SearchBar() {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "/" && !e.metaKey && !e.ctrlKey && !e.altKey) {
         e.preventDefault();
-        inputRef.current?.focus();
+        setExpanded(true);
+        setTimeout(() => inputRef.current?.focus(), 100);
         setOpenSug(true);
       }
-      if (e.key === "Escape") setOpenSug(false);
+      if (e.key === "Escape") {
+        setOpenSug(false);
+        if (window.innerWidth < 640) {
+          setExpanded(false);
+        }
+      }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
@@ -39,11 +46,15 @@ export default function SearchBar() {
     const handleClickOutside = (event: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
         setOpenSug(false);
+        // Di mobile, collapse search bar jika klik di luar
+        if (window.innerWidth < 640 && !q) {
+          setExpanded(false);
+        }
       }
     };
     document.addEventListener("click", handleClickOutside);
     return () => document.removeEventListener("click", handleClickOutside);
-  }, []);
+  }, [q]);
 
   function saveRecent(query: string) {
     const list = [query, ...recent.filter((x) => x !== query)].slice(0, 8);
@@ -56,6 +67,7 @@ export default function SearchBar() {
     if (!query) return;
     saveRecent(query);
     setOpenSug(false);
+    setExpanded(false);
     router.push(`/search?q=${encodeURIComponent(query)}`);
   }
   function clear() {
@@ -73,13 +85,52 @@ export default function SearchBar() {
     localStorage.removeItem(RECENT_KEY);
   }
 
+  // Handle search icon click di mobile
+  const handleSearchIconClick = () => {
+    if (window.innerWidth < 640 && !expanded) {
+      setExpanded(true);
+      setTimeout(() => inputRef.current?.focus(), 100);
+      setOpenSug(true);
+    }
+  };
+
   return (
-    <div className="flex justify-start">
-      <div ref={containerRef} className="relative w-full max-w-[720px]">
-        <form onSubmit={onSubmit} className="flex w-full items-center" role="search">
-          <div className="relative flex min-w-0 flex-1">
-            <span className="pointer-events-none absolute inset-y-0 left-4 flex items-center">
-              <MI name="search" className="text-[18px] text-neutral-400" />
+    <>
+      {/* Backdrop overlay ketika search expanded di mobile */}
+      {expanded && (
+        <div 
+          className="sm:hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-30"
+          onClick={() => {
+            setExpanded(false);
+            setOpenSug(false);
+            setQ("");
+          }}
+        />
+      )}
+      
+      <div className="flex justify-start relative z-40">
+        <div ref={containerRef} className={`relative transition-all duration-300 ${
+          expanded 
+            ? 'fixed top-0 left-0 right-0 w-full p-3 bg-neutral-900 sm:relative sm:top-auto sm:left-auto sm:right-auto sm:w-full sm:max-w-[720px] sm:p-0 sm:bg-transparent' 
+            : 'sm:w-full sm:max-w-[720px]'
+        }`}>
+          <form onSubmit={onSubmit} className="flex w-full items-center" role="search">
+            {/* Mobile: Icon only ketika tidak expanded, Desktop: Always show full bar */}
+            {!expanded && (
+              <button
+                type="button"
+                onClick={handleSearchIconClick}
+                className="sm:hidden flex h-9 w-9 items-center justify-center rounded-full hover:bg-neutral-800 text-neutral-400 hover:text-neutral-200 transition-colors"
+                aria-label="Search"
+              >
+                <MI name="search" className="text-[20px]" />
+              </button>
+            )}
+
+            {/* Search bar - hidden di mobile kecuali expanded */}
+            <div className={`relative flex min-w-0 flex-1 ${!expanded ? 'hidden sm:flex' : 'flex'}`}>
+            <span className="pointer-events-none absolute inset-y-0 left-3 sm:left-4 flex items-center">
+              <MI name="search" className="text-[16px] sm:text-[18px] text-neutral-400" />
             </span>
 
             <input
@@ -88,7 +139,7 @@ export default function SearchBar() {
               value={q}
               onChange={(e) => setQ(e.target.value)}
               onFocus={() => setOpenSug(true)}
-              className="h-10 w-full rounded-l-full border border-neutral-700 bg-neutral-950 pl-11 pr-[3.5rem] text-base text-neutral-50 placeholder:text-neutral-400 outline-none focus:border-neutral-500"
+              className="h-9 sm:h-10 w-full rounded-l-full border border-neutral-700 bg-neutral-950 pl-9 sm:pl-11 pr-12 sm:pr-[3.5rem] text-sm sm:text-base text-neutral-50 placeholder:text-neutral-400 outline-none focus:border-neutral-500"
               placeholder="Search"
               aria-label="Search"
               inputMode="search"
@@ -100,21 +151,21 @@ export default function SearchBar() {
               <button
                 type="button"
                 onClick={clear}
-                className="absolute inset-y-0 right-16 my-1 flex h-8 w-8 items-center justify-center rounded-full text-neutral-400 hover:bg-neutral-800 hover:text-neutral-200 cursor-pointer"
+                className="absolute inset-y-0 right-12 sm:right-16 my-1 flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-full text-neutral-400 hover:bg-neutral-800 hover:text-neutral-200 cursor-pointer"
                 aria-label="Clear text"
                 title="Clear"
               >
-                <MI name="close" className="text-[16px]" />
+                <MI name="close" className="text-[14px] sm:text-[16px]" />
               </button>
             )}
 
             <button
               type="submit"
-              className="h-10 w-16 cursor-pointer rounded-r-full border border-l-0 border-neutral-700 bg-neutral-800 text-neutral-200 hover:bg-neutral-700 flex items-center justify-center"
+              className="h-9 sm:h-10 w-12 sm:w-16 cursor-pointer rounded-r-full border border-l-0 border-neutral-700 bg-neutral-800 text-neutral-200 hover:bg-neutral-700 flex items-center justify-center"
               aria-label="Search"
               title="Search"
             >
-              <MI name="search" className="text-[18px]" />
+              <MI name="search" className="text-[16px] sm:text-[18px]" />
             </button>
           </div>
 
@@ -168,11 +219,11 @@ export default function SearchBar() {
                 );
               }
             }}
-            className="ml-3 cursor-pointer flex h-10 w-10 items-center justify-center rounded-full bg-neutral-800 text-neutral-200 hover:bg-neutral-700"
+            className="ml-2 sm:ml-3 cursor-pointer hidden sm:flex h-9 sm:h-10 w-9 sm:w-10 items-center justify-center rounded-full bg-neutral-800 text-neutral-200 hover:bg-neutral-700"
             aria-label="Voice search"
             title="Voice search"
           >
-            <MI name="keyboard_voice" className="text-[18px]" />
+            <MI name="keyboard_voice" className="text-[16px] sm:text-[18px]" />
           </button>
         </form>
 
@@ -226,11 +277,12 @@ export default function SearchBar() {
                     </li>
                   );
                 })}
-              {q && <li className="px-4 pt-1 text-xs text-neutral-500">Press Enter to search “{q}”.</li>}
+              {q && <li className="px-4 pt-1 text-xs text-neutral-500">Press Enter to search "{q}".</li>}
             </ul>
           </div>
         )}
       </div>
-    </div>
+      </div>
+    </>
   );
 }

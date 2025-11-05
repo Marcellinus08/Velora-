@@ -187,4 +187,83 @@ body:has([data-radix-dropdown-menu-content]) {
   padding-right: 0 !important;
 }
 
+/* Safe area for mobile bottom nav */
+.safe-area-pb {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* ============================================
+   MOBILE RESPONSIVE STYLES
+   ============================================ */
+
+/* Mobile: Extra small devices (phones, less than 640px) */
+@media (max-width: 639px) {
+  /* Global mobile adjustments */
+  body {
+    font-size: 14px;
+  }
+
+  /* Hide decorative background elements on mobile for cleaner look */
+  .mobile-hide-decorative {
+    display: none !important;
+  }
+
+  /* Reduce spacing for mobile */
+  .mobile-compact-spacing {
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+    padding-top: 0.75rem !important;
+    padding-bottom: 4rem !important; /* Extra space for bottom nav */
+  }
+
+  /* Mobile optimized grid */
+  .mobile-single-column {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Hide floating action elements on mobile */
+  .mobile-hide-floating {
+    display: none !important;
+  }
+
+  /* Mobile video card styling */
+  .mobile-video-card {
+    border-radius: 0.75rem !important;
+  }
+
+  .mobile-video-card-title {
+    font-size: 0.85rem !important;
+    font-weight: 600 !important;
+    line-height: 1.3 !important;
+  }
+
+  .mobile-video-card-author {
+    font-size: 0.7rem !important;
+  }
+
+  .mobile-video-card-price {
+    font-size: 0.85rem !important;
+    font-weight: 700 !important;
+  }
+
+  .mobile-video-card-button {
+    font-size: 0.7rem !important;
+    padding: 0.4rem 0.85rem !important;
+  }
+}
+
+/* Tablet: Small devices (tablets, 640px and up) */
+@media (min-width: 640px) and (max-width: 767px) {
+  .mobile-carousel-compact {
+    height: 300px !important;
+  }
+
+  .mobile-card-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 1rem !important;
+  }
+}
+
+
+
 

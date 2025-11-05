@@ -44,29 +44,21 @@ export default function SiteHeader() {
 
   return (
     <header
-      className="fixed top-0 left-0 right-0 z-40 grid w-full items-center gap-4 border-b border-neutral-800 bg-neutral-900 px-4 py-2 sm:px-6 lg:px-8
+      className="fixed top-0 left-0 right-0 z-40 grid w-full items-center gap-2 sm:gap-4 border-b border-neutral-800 bg-neutral-900 px-3 py-2 sm:px-6 lg:px-8
                  grid-cols-[auto_1fr_auto] md:[grid-template-columns:var(--sidebar-w,16rem)_1fr_auto]"
     >
       {/* Column 1: Logo */}
-      <div className="flex items-center gap-4">
-        <button
-          className="flex items-center justify-center rounded-full p-2 text-neutral-50 hover:bg-neutral-800 md:hidden cursor-pointer"
-          aria-label="Open menu"
-          type="button"
-        >
-          <MI name="menu" className="text-[18px] leading-none" />
-        </button>
-
-        <Link href="/" aria-label="Home" className="flex items-center gap-2 select-none cursor-pointer">
+      <div className="flex items-center gap-2 sm:gap-4">
+        <Link href="/" aria-label="Home" className="flex items-center gap-1.5 sm:gap-2 select-none cursor-pointer">
           <Image
             src="/glonic_logo_main.png"
             alt="Glonic Logo"
             priority
             width={200}
             height={60}
-            className="h-10 w-auto sm:h-11 lg:h-8"
+            className="h-7 w-auto sm:h-10 lg:h-8"
           />
-          <span className="text-xs sm:text-2xl font-bold tracking-tight leading-none text-neutral-50">
+          <span className="text-base sm:text-2xl font-bold tracking-tight leading-none text-neutral-50">
             GLO<span className="text-[var(--primary-500)]">N</span>IC
           </span>
         </Link>
@@ -76,10 +68,10 @@ export default function SiteHeader() {
       <SearchBar />
 
       {/* Column 3: Right */}
-      <div className="flex items-center gap-2 sm:gap-4">
+      <div className="flex items-center gap-1 sm:gap-2">
         {!isConnected ? (
           <div className="flex items-center gap-2">
-            <ConnectWalletButton className="min-w-28 px-4" />
+            <ConnectWalletButton className="min-w-20 sm:min-w-28 px-3 sm:px-4 text-xs sm:text-sm" />
           </div>
         ) : showWalletSkeleton ? (
           <HeaderWalletSectionSkeleton />

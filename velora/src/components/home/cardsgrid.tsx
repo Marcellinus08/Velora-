@@ -375,7 +375,7 @@ export default function CardsGrid() {
           <div className="h-4 w-32 rounded bg-neutral-800/60 animate-pulse" />
         </div>
 
-        <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-x-4 gap-y-8">
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-x-4 gap-y-8 mobile-card-grid">
           {Array.from({ length: 8 }).map((_, i) => (
             <div key={i} className="animate-pulse rounded-xl border border-neutral-800 bg-neutral-900">
               <div className="aspect-video w-full rounded-t-xl bg-neutral-800/60" />
@@ -408,31 +408,31 @@ export default function CardsGrid() {
     <div>
       {/* Enhanced Section Header */}
       <div className="mb-6">
-        <div className="flex items-start justify-between">
+        <div className="flex items-start justify-between flex-wrap gap-2">
           <div className="flex items-start gap-3">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-purple-500/20 to-blue-500/20 border border-purple-500/30">
               <span className="text-base">🎬</span>
             </div>
             
             <div>
-              <h2 className="text-xl font-bold text-neutral-100">Featured Videos</h2>
+              <h2 className="text-xl font-bold text-neutral-100 mobile-section-header">Featured Videos</h2>
             </div>
           </div>
           
-          <div className="flex items-center gap-2 rounded-full bg-neutral-800/60 border border-neutral-700/50 px-3 py-1.5">
+          <div className="flex items-center gap-2 rounded-full bg-neutral-800/60 border border-neutral-700/50 px-3 py-1.5 mobile-section-badge">
             <div className="flex h-5 w-5 items-center justify-center rounded-full bg-purple-500/20">
               <span className="text-xs font-bold text-purple-400">{items.length}</span>
             </div>
-            <span className="text-sm font-medium text-neutral-300">
-              video{items.length !== 1 ? 's' : ''} available
+            <span className="text-sm font-medium text-neutral-300 mobile-section-subtext">
+              {items.length} video{items.length !== 1 ? 's' : ''}
             </span>
           </div>
         </div>
         
-        <p className="text-sm text-neutral-400 mt-2">Discover amazing content</p>
+        <p className="text-sm text-neutral-400 mt-2 mobile-section-subtext">Discover amazing content</p>
       </div>
 
-      <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-x-4 gap-y-8">
+      <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-x-4 gap-y-8 mobile-card-grid">
       {items.map((v) => {
         const addrLower = v.creator?.abstract_id?.toLowerCase() || "";
         const fetchedAbstract = addrLower ? absAvatars[addrLower] : "";
@@ -455,7 +455,7 @@ export default function CardsGrid() {
         return (
           <div
             key={v.id}
-            className="group flex flex-col rounded-xl bg-neutral-900 border border-neutral-800 transition-all duration-300 hover:shadow-lg hover:border-neutral-700 hover:scale-[1.01] transform"
+            className="group flex flex-col rounded-xl bg-neutral-900 border border-neutral-800 transition-all duration-300 hover:shadow-lg hover:border-neutral-700 hover:scale-[1.01] transform mobile-video-card"
           >
             {/* Elegant Thumbnail */}
             <div className="relative w-full overflow-hidden rounded-t-xl">
@@ -491,11 +491,11 @@ export default function CardsGrid() {
 
             {/* Clean Info Section */}
             <div className="flex flex-1 flex-col gap-2 p-3 pb-4">
-              <h3 className="text-base font-semibold leading-snug text-neutral-50 group-hover:text-[var(--primary-500)] transition-colors duration-200">
+              <h3 className="text-base font-semibold leading-snug text-neutral-50 group-hover:text-[var(--primary-500)] transition-colors duration-200 mobile-video-card-title">
                 {v.title}
               </h3>
 
-              <div className="flex items-center gap-2 text-sm text-neutral-400">
+              <div className="flex items-center gap-2 text-sm text-neutral-400 mobile-video-card-author">
                 <div className="h-6 w-6 overflow-hidden rounded-full bg-neutral-800 ring-1 ring-neutral-700">
                   {avatarSrc ? (
                     <img
@@ -520,7 +520,7 @@ export default function CardsGrid() {
               </div>
 
               <div className="mt-auto flex items-end justify-between">
-                <p className={`text-base font-bold ${isOwned ? "text-violet-300" : "text-neutral-50"}`}>
+                <p className={`text-base font-bold mobile-video-card-price ${isOwned ? "text-violet-300" : "text-neutral-50"}`}>
                   {isOwned ? "Owned" : priceText}
                 </p>
 
@@ -529,7 +529,7 @@ export default function CardsGrid() {
                   <Link href={`/video?id=${v.id}`} prefetch={false} className="relative z-10">
                     <button
                       type="button"
-                      className="group relative inline-flex items-center gap-2 rounded-full bg-neutral-700 px-4 py-2 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-neutral-600 hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[var(--primary-500)] focus-visible:ring-offset-neutral-900 cursor-pointer"
+                      className="group relative inline-flex items-center gap-2 rounded-full bg-neutral-700 px-4 py-2 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-neutral-600 hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[var(--primary-500)] focus-visible:ring-offset-neutral-900 cursor-pointer mobile-video-card-button"
                       title="Watch this video"
                     >
                       <span className="material-icons-round text-[16px]" aria-hidden>
@@ -544,7 +544,7 @@ export default function CardsGrid() {
                       videoId={v.id}
                       creator={creatorAddress}
                       priceUsd={priceUsd}
-                      className="group relative inline-flex items-center gap-2 rounded-full bg-purple-600 px-4 py-2 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-purple-700 hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-purple-500 focus-visible:ring-offset-neutral-900 cursor-pointer"
+                      className="group relative inline-flex items-center gap-2 rounded-full bg-purple-600 px-4 py-2 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-purple-700 hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-purple-500 focus-visible:ring-offset-neutral-900 cursor-pointer mobile-video-card-button"
                     >
                       Buy
                     </BuyVideoButton>
@@ -553,7 +553,7 @@ export default function CardsGrid() {
                   <button
                     type="button"
                     disabled
-                    className="inline-flex items-center gap-2 rounded-full bg-neutral-700 px-4 py-2 text-sm font-semibold text-white opacity-60 cursor-not-allowed"
+                    className="inline-flex items-center gap-2 rounded-full bg-neutral-700 px-4 py-2 text-sm font-semibold text-white opacity-60 cursor-not-allowed mobile-video-card-button"
                     title={priceUsd <= 0 ? "Free video" : "Invalid creator address"}
                   >
                     {priceUsd <= 0 ? "Free" : "Buy"}
@@ -569,7 +569,7 @@ export default function CardsGrid() {
       {/* Observer target untuk infinite scroll */}
       <div ref={observerTarget} className="mt-8 flex justify-center">
         {loadingMore && (
-          <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-x-4 gap-y-8 w-full">
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-x-4 gap-y-8 w-full mobile-card-grid">
             {Array.from({ length: 4 }).map((_, i) => (
               <div key={`skeleton-${i}`} className="animate-pulse rounded-xl border border-neutral-800 bg-neutral-900">
                 <div className="aspect-video w-full rounded-t-xl bg-neutral-800/60" />

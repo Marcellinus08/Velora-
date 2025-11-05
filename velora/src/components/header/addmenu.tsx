@@ -13,12 +13,12 @@ export default function AddMenu() {
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <button
-            className="flex size-10 cursor-pointer border border-[var(--primary-500)] items-center justify-center rounded-full text-neutral-50 transition-colors hover:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-[var(--primary-500)]/40"
+            className="flex size-8 sm:size-10 cursor-pointer border border-[var(--primary-500)] items-center justify-center rounded-full text-neutral-50 transition-colors hover:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-[var(--primary-500)]/40"
             aria-label="Add"
             title="Add"
             type="button"
           >
-            <MI name="add" className="text-[18px]" />
+            <MI name="add" className="text-[16px] sm:text-[18px]" />
           </button>
         </DropdownMenuTrigger>
 
