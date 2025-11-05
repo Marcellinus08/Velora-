@@ -50,7 +50,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         />
       </head>
       <body
-        className="relative flex min-h-screen flex-col overflow-visible bg-neutral-900 pt-[57px] pb-0 md:pb-0"
+        className="relative flex min-h-screen flex-col overflow-visible bg-neutral-900 pt-[57px]"
         style={{ fontFamily: `"Be Vietnam Pro", "Noto Sans", sans-serif` }}
       >
         <NextAbstractWalletProvider>

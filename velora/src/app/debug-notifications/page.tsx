@@ -52,8 +52,8 @@ export default function NotificationDebugPage() {
   };
 
   return (
-    <div className="flex h-full grow flex-row pb-16 md:pb-0">
-      <main className="flex-1 px-3 py-4 sm:px-6 lg:px-8 p-4 sm:p-8 max-w-2xl mx-auto">
+    <div className="flex h-full grow flex-row">
+      <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8 p-8 max-w-2xl mx-auto">
         <h1 className="text-2xl font-bold mb-4">🐛 Notification Debug</h1>
 
       <div className="bg-gray-100 p-4 rounded mb-4">

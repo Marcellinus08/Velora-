@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { FormEvent, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -74,12 +74,12 @@ export default function SearchBar() {
   }
 
   return (
-    <div className="flex justify-start w-full">
-      <div ref={containerRef} className="relative w-full max-w-[600px]">
+    <div className="flex justify-start">
+      <div ref={containerRef} className="relative w-full max-w-[720px]">
         <form onSubmit={onSubmit} className="flex w-full items-center" role="search">
           <div className="relative flex min-w-0 flex-1">
-            <span className="pointer-events-none absolute inset-y-0 left-2.5 sm:left-3 flex items-center">
-              <MI name="search" className="text-[14px] sm:text-[16px] text-neutral-400" />
+            <span className="pointer-events-none absolute inset-y-0 left-4 flex items-center">
+              <MI name="search" className="text-[18px] text-neutral-400" />
             </span>
 
             <input
@@ -88,7 +88,7 @@ export default function SearchBar() {
               value={q}
               onChange={(e) => setQ(e.target.value)}
               onFocus={() => setOpenSug(true)}
-              className="h-8 sm:h-9 w-full rounded-l-full border border-neutral-700 bg-neutral-950 pl-8 sm:pl-9 pr-9 sm:pr-12 text-xs sm:text-sm text-neutral-50 placeholder:text-neutral-400 outline-none focus:border-neutral-500"
+              className="h-10 w-full rounded-l-full border border-neutral-700 bg-neutral-950 pl-11 pr-[3.5rem] text-base text-neutral-50 placeholder:text-neutral-400 outline-none focus:border-neutral-500"
               placeholder="Search"
               aria-label="Search"
               inputMode="search"
@@ -100,21 +100,21 @@ export default function SearchBar() {
               <button
                 type="button"
                 onClick={clear}
-                className="absolute inset-y-0 right-9 sm:right-12 my-0.5 sm:my-1 flex h-6 w-6 sm:h-7 sm:w-7 items-center justify-center rounded-full text-neutral-400 hover:bg-neutral-800 hover:text-neutral-200 cursor-pointer"
+                className="absolute inset-y-0 right-16 my-1 flex h-8 w-8 items-center justify-center rounded-full text-neutral-400 hover:bg-neutral-800 hover:text-neutral-200 cursor-pointer"
                 aria-label="Clear text"
                 title="Clear"
               >
-                <MI name="close" className="text-[12px] sm:text-[14px]" />
+                <MI name="close" className="text-[16px]" />
               </button>
             )}
 
             <button
               type="submit"
-              className="h-8 sm:h-9 w-10 sm:w-12 cursor-pointer rounded-r-full border border-l-0 border-neutral-700 bg-neutral-800 text-neutral-200 hover:bg-neutral-700 flex items-center justify-center"
+              className="h-10 w-16 cursor-pointer rounded-r-full border border-l-0 border-neutral-700 bg-neutral-800 text-neutral-200 hover:bg-neutral-700 flex items-center justify-center"
               aria-label="Search"
               title="Search"
             >
-              <MI name="search" className="text-[14px] sm:text-[16px]" />
+              <MI name="search" className="text-[18px]" />
             </button>
           </div>
 
@@ -168,16 +168,16 @@ export default function SearchBar() {
                 );
               }
             }}
-            className="ml-1.5 sm:ml-2 cursor-pointer hidden sm:flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-full bg-neutral-800 text-neutral-200 hover:bg-neutral-700"
+            className="ml-3 cursor-pointer flex h-10 w-10 items-center justify-center rounded-full bg-neutral-800 text-neutral-200 hover:bg-neutral-700"
             aria-label="Voice search"
             title="Voice search"
           >
-            <MI name="keyboard_voice" className="text-[14px] sm:text-[16px]" />
+            <MI name="keyboard_voice" className="text-[18px]" />
           </button>
         </form>
 
         {openSug && (recent.length > 0 || q) && (
-          <div className="absolute left-0 right-0 top-[34px] sm:top-[38px] mx-auto w-full max-w-[600px] rounded-xl border border-neutral-800 bg-neutral-900/95 backdrop-blur supports-[backdrop-filter]:bg-neutral-900/70 z-50">
+          <div className="absolute left-0 right-0 top-[44px] mx-auto w-full max-w-[720px] rounded-xl border border-neutral-800 bg-neutral-900/95 backdrop-blur supports-[backdrop-filter]:bg-neutral-900/70">
             {recent.length > 0 && (
               <div className="flex items-center justify-between px-4 py-2 text-xs text-neutral-400">
                 <span>Recent searches</span>
