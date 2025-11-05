@@ -59,6 +59,27 @@
 
 .dark {}
 
+/* Hide scrollbar globally for all browsers */
+* {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+*::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
+html,
+body {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  display: none;
+}
+
 /* Mapping Tailwind v4  */
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
@@ -249,6 +270,16 @@ body:has([data-radix-dropdown-menu-content]) {
   .mobile-video-card-button {
     font-size: 0.7rem !important;
     padding: 0.4rem 0.85rem !important;
+  }
+
+  /* Hide scrollbars on mobile for cleaner look */
+  .mobile-hide-scrollbar {
+    -ms-overflow-style: none !important;
+    scrollbar-width: none !important;
+  }
+
+  .mobile-hide-scrollbar::-webkit-scrollbar {
+    display: none !important;
   }
 }
 

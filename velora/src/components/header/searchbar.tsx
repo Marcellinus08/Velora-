@@ -96,8 +96,8 @@ export default function SearchBar() {
 
   return (
     <>
-      {/* Backdrop overlay ketika search expanded di mobile */}
-      {expanded && (
+      {/* Backdrop overlay ketika search expanded di mobile - DISABLED */}
+      {/* {expanded && (
         <div 
           className="sm:hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-30"
           onClick={() => {
@@ -106,29 +106,14 @@ export default function SearchBar() {
             setQ("");
           }}
         />
-      )}
+      )} */}
       
       <div className="flex justify-start relative z-40">
-        <div ref={containerRef} className={`relative transition-all duration-300 ${
-          expanded 
-            ? 'fixed top-0 left-0 right-0 w-full p-3 bg-neutral-900 sm:relative sm:top-auto sm:left-auto sm:right-auto sm:w-full sm:max-w-[720px] sm:p-0 sm:bg-transparent' 
-            : 'sm:w-full sm:max-w-[720px]'
-        }`}>
+        <div ref={containerRef} className="relative transition-all duration-300 w-full max-w-[720px] hidden sm:block">
           <form onSubmit={onSubmit} className="flex w-full items-center" role="search">
-            {/* Mobile: Icon only ketika tidak expanded, Desktop: Always show full bar */}
-            {!expanded && (
-              <button
-                type="button"
-                onClick={handleSearchIconClick}
-                className="sm:hidden flex h-9 w-9 items-center justify-center rounded-full hover:bg-neutral-800 text-neutral-400 hover:text-neutral-200 transition-colors"
-                aria-label="Search"
-              >
-                <MI name="search" className="text-[20px]" />
-              </button>
-            )}
-
-            {/* Search bar - hidden di mobile kecuali expanded */}
-            <div className={`relative flex min-w-0 flex-1 ${!expanded ? 'hidden sm:flex' : 'flex'}`}>
+            {/* Mobile: Icon search button DIHAPUS */}
+            {/* Desktop: Always show full search bar */}
+            <div className="relative flex min-w-0 flex-1">
             <span className="pointer-events-none absolute inset-y-0 left-3 sm:left-4 flex items-center">
               <MI name="search" className="text-[16px] sm:text-[18px] text-neutral-400" />
             </span>
