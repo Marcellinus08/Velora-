@@ -182,16 +182,16 @@ export function SubscriptionVideosLazy({
     );
 
   return (
-    <div>
+    <div className="space-y-2 max-sm:space-y-2">
       {/* Available Videos Section */}
-      <div className="space-y-4">
-        <h3 className="text-lg font-semibold text-neutral-100">Available Videos</h3>
+      <div className="space-y-4 max-sm:space-y-2">
+        <h3 className="text-lg font-semibold text-neutral-100 max-sm:text-base">Available Videos</h3>
         {initialLoading ? (
           <SubscriptionRowsGridSkeleton count={3} />
         ) : availableItems.length === 0 ? (
           <SubscriptionEmptyState type="available" />
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-4 max-sm:space-y-2">
             {availableItems.map((v) => (
               <SubscriptionVideoRow
                 key={v.purchaseId}
@@ -208,7 +208,7 @@ export function SubscriptionVideosLazy({
                   <div className="h-2 w-2 rounded-full bg-purple-500 animate-bounce" />
                   <div className="h-2 w-2 rounded-full bg-purple-500 animate-bounce delay-100" />
                   <div className="h-2 w-2 rounded-full bg-purple-500 animate-bounce delay-200" />
-                  <span className="ml-2 text-sm text-neutral-400">Loading more videos...</span>
+                  <span className="ml-2 text-sm text-neutral-400 max-sm:text-xs">Loading more videos...</span>
                 </div>
               </div>
             )}
@@ -219,14 +219,14 @@ export function SubscriptionVideosLazy({
       </div>
 
       {/* Completed Videos Section */}
-      <div className="space-y-4">
-        <h3 className="text-lg font-semibold text-neutral-100">Completed Videos</h3>
+      <div className="space-y-4 max-sm:space-y-2">
+        <h3 className="text-lg font-semibold text-neutral-100 max-sm:text-base">Completed Videos</h3>
         {initialLoading ? (
           <SubscriptionRowsGridSkeleton count={2} />
         ) : completedItems.length === 0 ? (
           <SubscriptionEmptyState type="completed" />
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-4 max-sm:space-y-2">
             {completedItems.map((v) => (
               <SubscriptionVideoRow
                 key={v.purchaseId}
@@ -243,7 +243,7 @@ export function SubscriptionVideosLazy({
                   <div className="h-2 w-2 rounded-full bg-purple-500 animate-bounce" />
                   <div className="h-2 w-2 rounded-full bg-purple-500 animate-bounce delay-100" />
                   <div className="h-2 w-2 rounded-full bg-purple-500 animate-bounce delay-200" />
-                  <span className="ml-2 text-sm text-neutral-400">Loading more videos...</span>
+                  <span className="ml-2 text-sm text-neutral-400 max-sm:text-xs">Loading more videos...</span>
                 </div>
               </div>
             )}

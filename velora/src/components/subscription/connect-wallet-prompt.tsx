@@ -4,7 +4,7 @@ import { ConnectWalletButton } from "@/components/connect-wallet-button";
 
 export function ConnectWalletPrompt() {
   return (
-    <div className="group relative rounded-2xl border border-dashed border-violet-500/40 bg-gradient-to-br from-violet-900/20 via-neutral-900/50 to-neutral-800/30 p-5 transition-all duration-700 hover:-translate-y-2 hover:scale-[1.01] overflow-hidden cursor-pointer">
+    <div className="group relative rounded-2xl border border-dashed border-violet-500/40 bg-gradient-to-br from-violet-900/20 via-neutral-900/50 to-neutral-800/30 p-5 transition-all duration-700 hover:-translate-y-2 hover:scale-[1.01] overflow-hidden cursor-pointer max-sm:p-3 max-sm:rounded-xl">
       {/* Dynamic background with moving gradients */}
       <div className="absolute inset-0 opacity-20 group-hover:opacity-40 transition-opacity duration-500">
         <div className="absolute inset-0 bg-gradient-to-r from-violet-500/5 via-transparent to-violet-400/5 animate-pulse" />
@@ -19,12 +19,12 @@ export function ConnectWalletPrompt() {
       </div>
 
       {/* Main content container */}
-      <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between min-h-[80px] z-10">
-        <div className="flex items-center gap-4">
+      <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between min-h-[80px] z-10 max-sm:gap-3 max-sm:min-h-[60px]">
+        <div className="flex items-center gap-4 max-sm:gap-3">
           {/* Enhanced icon container */}
           <div className="relative animate-bounce group-hover:animate-none group-hover:scale-110 group-hover:rotate-6 transition-all duration-1000" style={{ animationDuration: '2.5s' }}>
-            <div className="relative flex h-18 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500/15 to-violet-600/20 ring-2 ring-violet-500/30 shadow-lg shadow-violet-500/10 transition-all duration-700 group-hover:shadow-[0_0_30px_currentColor] group-hover:ring-4">
-              <Wallet className="h-9 w-9 text-violet-300 transition-all duration-700 animate-pulse group-hover:animate-none group-hover:scale-110 group-hover:drop-shadow-[0_0_15px_currentColor]" />
+            <div className="relative flex h-18 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500/15 to-violet-600/20 ring-2 ring-violet-500/30 shadow-lg shadow-violet-500/10 transition-all duration-700 group-hover:shadow-[0_0_30px_currentColor] group-hover:ring-4 max-sm:h-14 max-sm:w-16 max-sm:rounded-xl">
+              <Wallet className="h-9 w-9 text-violet-300 transition-all duration-700 animate-pulse group-hover:animate-none group-hover:scale-110 group-hover:drop-shadow-[0_0_15px_currentColor] max-sm:h-7 max-sm:w-7" />
               
               {/* Animated connection indicators */}
               <div className="absolute top-2 right-2 h-2.5 w-2.5 bg-violet-400 rounded-full animate-pulse opacity-70 group-hover:animate-ping transition-all duration-300" />
@@ -36,27 +36,27 @@ export function ConnectWalletPrompt() {
           </div>
 
           {/* Enhanced text content */}
-          <div className="space-y-2">
-            <h3 className="text-lg font-bold text-violet-300 group-hover:text-white transition-all duration-500 transform group-hover:scale-105 animate-pulse group-hover:animate-none group-hover:drop-shadow-lg">
+          <div className="space-y-2 max-sm:space-y-1">
+            <h3 className="text-lg font-bold text-violet-300 group-hover:text-white transition-all duration-500 transform group-hover:scale-105 animate-pulse group-hover:animate-none group-hover:drop-shadow-lg max-sm:text-base">
               Login Required
             </h3>
-            <p className="text-sm text-neutral-400 group-hover:text-neutral-200 transition-all duration-500 max-w-[280px] leading-relaxed group-hover:scale-105">
+            <p className="text-sm text-neutral-400 group-hover:text-neutral-200 transition-all duration-500 max-w-[280px] leading-relaxed group-hover:scale-105 max-sm:text-xs max-sm:max-w-[200px]">
               You need to login first to access your subscription management and personalized features
             </p>
             
             {/* Feature indicators with enhanced animations */}
-            <div className="flex items-center gap-4 pt-1">
-              <div className="flex items-center gap-1.5 group-hover:scale-105 transition-transform duration-300">
-                <Shield className="h-3 w-3 text-green-400 animate-pulse" />
-                <span className="text-xs text-neutral-400 group-hover:text-neutral-300 transition-colors duration-300">Secure</span>
+            <div className="flex items-center gap-4 pt-1 max-sm:gap-2">
+              <div className="flex items-center gap-1.5 group-hover:scale-105 transition-transform duration-300 max-sm:gap-1">
+                <Shield className="h-3 w-3 text-green-400 animate-pulse max-sm:h-2.5 max-sm:w-2.5" />
+                <span className="text-xs text-neutral-400 group-hover:text-neutral-300 transition-colors duration-300 max-sm:text-[10px]">Secure</span>
               </div>
-              <div className="flex items-center gap-1.5 group-hover:scale-105 transition-transform duration-300" style={{ transitionDelay: '100ms' }}>
-                <Play className="h-3 w-3 text-purple-400 animate-pulse" style={{ animationDelay: '0.5s' }} />
-                <span className="text-xs text-neutral-400 group-hover:text-neutral-300 transition-colors duration-300">Instant</span>
+              <div className="flex items-center gap-1.5 group-hover:scale-105 transition-transform duration-300 max-sm:gap-1" style={{ transitionDelay: '100ms' }}>
+                <Play className="h-3 w-3 text-purple-400 animate-pulse max-sm:h-2.5 max-sm:w-2.5" style={{ animationDelay: '0.5s' }} />
+                <span className="text-xs text-neutral-400 group-hover:text-neutral-300 transition-colors duration-300 max-sm:text-[10px]">Instant</span>
               </div>
-              <div className="flex items-center gap-1.5 group-hover:scale-105 transition-transform duration-300" style={{ transitionDelay: '200ms' }}>
-                <Wallet className="h-3 w-3 text-blue-400 animate-pulse" style={{ animationDelay: '1s' }} />
-                <span className="text-xs text-neutral-400 group-hover:text-neutral-300 transition-colors duration-300">Web3</span>
+              <div className="flex items-center gap-1.5 group-hover:scale-105 transition-transform duration-300 max-sm:gap-1" style={{ transitionDelay: '200ms' }}>
+                <Wallet className="h-3 w-3 text-blue-400 animate-pulse max-sm:h-2.5 max-sm:w-2.5" style={{ animationDelay: '1s' }} />
+                <span className="text-xs text-neutral-400 group-hover:text-neutral-300 transition-colors duration-300 max-sm:text-[10px]">Web3</span>
               </div>
             </div>
           </div>

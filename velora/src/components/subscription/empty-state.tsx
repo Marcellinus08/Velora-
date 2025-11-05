@@ -51,7 +51,7 @@ export function SubscriptionEmptyState({ type }: EmptyStateProps) {
   const ButtonIcon = config.buttonIcon;
 
   return (
-    <div className={`group relative rounded-2xl border border-dashed ${config.borderColor} bg-gradient-to-br ${config.gradient} p-5 transition-all duration-700 hover:-translate-y-2 hover:scale-[1.01] overflow-hidden cursor-pointer`}>
+    <div className={`group relative rounded-2xl border border-dashed ${config.borderColor} bg-gradient-to-br ${config.gradient} p-5 transition-all duration-700 hover:-translate-y-2 hover:scale-[1.01] overflow-hidden cursor-pointer max-sm:p-3 max-sm:rounded-xl`}>
       {/* Dynamic background with moving gradients */}
       <div className="absolute inset-0 opacity-20 group-hover:opacity-40 transition-opacity duration-500">
         <div className={`absolute inset-0 bg-gradient-to-r ${config.glowColor} animate-pulse`} />
@@ -66,12 +66,12 @@ export function SubscriptionEmptyState({ type }: EmptyStateProps) {
       </div>
 
       {/* Main content container */}
-      <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between min-h-[80px] z-10">
-        <div className="flex items-center gap-4">
+      <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between min-h-[80px] z-10 max-sm:gap-3 max-sm:min-h-[60px]">
+        <div className="flex items-center gap-4 max-sm:gap-3">
           {/* Enhanced icon container */}
           <div className="relative animate-bounce group-hover:animate-none group-hover:scale-110 group-hover:rotate-6 transition-all duration-1000" style={{ animationDuration: '2.5s' }}>
-            <div className={`relative flex h-18 w-20 items-center justify-center rounded-2xl bg-gradient-to-br ${config.iconGradient} ring-2 ${config.ringColor} shadow-lg ${config.shadowColor} transition-all duration-700 group-hover:shadow-[0_0_30px_currentColor] group-hover:ring-4`}>
-              <Icon className={`h-9 w-9 ${config.iconColor} transition-all duration-700 animate-pulse group-hover:animate-none group-hover:scale-110 group-hover:drop-shadow-[0_0_15px_currentColor]`} />
+            <div className={`relative flex h-18 w-20 items-center justify-center rounded-2xl bg-gradient-to-br ${config.iconGradient} ring-2 ${config.ringColor} shadow-lg ${config.shadowColor} transition-all duration-700 group-hover:shadow-[0_0_30px_currentColor] group-hover:ring-4 max-sm:h-14 max-sm:w-16 max-sm:rounded-xl`}>
+              <Icon className={`h-9 w-9 ${config.iconColor} transition-all duration-700 animate-pulse group-hover:animate-none group-hover:scale-110 group-hover:drop-shadow-[0_0_15px_currentColor] max-sm:h-7 max-sm:w-7`} />
               
               {/* Animated indicators */}
               {type === "available" ? (
@@ -89,11 +89,11 @@ export function SubscriptionEmptyState({ type }: EmptyStateProps) {
           </div>
 
           {/* Enhanced text content */}
-          <div className="space-y-2">
-            <h3 className={`text-lg font-bold ${config.iconColor.split(' ')[0]} group-hover:text-white transition-all duration-500 transform group-hover:scale-105 animate-pulse group-hover:animate-none group-hover:drop-shadow-lg`}>
+          <div className="space-y-2 max-sm:space-y-1">
+            <h3 className={`text-lg font-bold ${config.iconColor.split(' ')[0]} group-hover:text-white transition-all duration-500 transform group-hover:scale-105 animate-pulse group-hover:animate-none group-hover:drop-shadow-lg max-sm:text-base`}>
               {config.title}
             </h3>
-            <p className="text-sm text-neutral-400 group-hover:text-neutral-200 transition-all duration-500 max-w-[280px] leading-relaxed group-hover:scale-105">
+            <p className="text-sm text-neutral-400 group-hover:text-neutral-200 transition-all duration-500 max-w-[280px] leading-relaxed group-hover:scale-105 max-sm:text-xs max-sm:max-w-[200px]">
               {config.description}
             </p>
           </div>
@@ -102,9 +102,9 @@ export function SubscriptionEmptyState({ type }: EmptyStateProps) {
         {/* Enhanced button */}
         <div className="flex items-center gap-2">
           <Link href={config.buttonLink}>
-            <button className={`group/btn relative inline-flex items-center justify-center px-5 py-3 text-sm font-bold text-white bg-gradient-to-r ${config.buttonGradient} border border-transparent rounded-xl focus:outline-none shadow-lg hover:shadow-xl ${config.buttonShadow} transform hover:scale-105 transition-all duration-300 overflow-hidden`}>
+            <button className={`group/btn relative inline-flex items-center justify-center px-5 py-3 text-sm font-bold text-white bg-gradient-to-r ${config.buttonGradient} border border-transparent rounded-xl focus:outline-none shadow-lg hover:shadow-xl ${config.buttonShadow} transform hover:scale-105 transition-all duration-300 overflow-hidden max-sm:px-3 max-sm:py-2 max-sm:text-xs max-sm:rounded-lg`}>
               <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent opacity-0 group-hover/btn:opacity-100 transition-opacity duration-300" />
-              <ButtonIcon className="h-5 w-5 mr-2 relative z-10 group-hover/btn:rotate-12 group-hover/btn:scale-110 transition-transform duration-300" />
+              <ButtonIcon className="h-5 w-5 mr-2 relative z-10 group-hover/btn:rotate-12 group-hover/btn:scale-110 transition-transform duration-300 max-sm:h-4 max-sm:w-4 max-sm:mr-1.5" />
               <span className="relative z-10">{config.buttonText}</span>
             </button>
           </Link>
