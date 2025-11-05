@@ -29,7 +29,6 @@ export default function SiteHeader() {
 
   const [openWallet, setOpenWallet] = React.useState(false);
   const [openPoints, setOpenPoints] = React.useState(false);
-  const [showMobileSearch, setShowMobileSearch] = React.useState(false);
   
   // Show skeleton while data is loading after connection
   const [isPending] = useTransition();
@@ -45,44 +44,31 @@ export default function SiteHeader() {
 
   return (
     <header
-      className="fixed top-0 left-0 right-0 z-40 grid w-full items-center gap-2 border-b border-neutral-800 bg-neutral-900 px-3 py-2.5 sm:px-4 md:px-6 lg:px-8
+      className="fixed top-0 left-0 right-0 z-40 grid w-full items-center gap-2 sm:gap-3 border-b border-neutral-800 bg-neutral-900 px-3 py-2 sm:px-4 md:px-6 lg:px-8
                  grid-cols-[auto_1fr_auto] md:[grid-template-columns:var(--sidebar-w,16rem)_1fr_auto]"
     >
       {/* Column 1: Logo */}
-      <div className="flex items-center gap-1.5 sm:gap-2">
-        <Link href="/" aria-label="Home" className="flex items-center gap-1.5 select-none cursor-pointer">
+      <div className="flex items-center gap-1 sm:gap-2">
+        <Link href="/" aria-label="Home" className="flex items-center gap-1 sm:gap-1.5 select-none cursor-pointer">
           <Image
             src="/glonic_logo_main.png"
             alt="Glonic Logo"
             priority
-            width={32}
-            height={32}
-            className="h-8 w-8 md:h-9 md:w-9 object-contain"
+            width={40}
+            height={40}
+            className="h-7 w-7 sm:h-8 sm:w-8 md:h-9 md:w-9 object-contain"
           />
-          <span className="text-base sm:text-lg md:text-xl font-bold tracking-tight leading-none text-neutral-50">
+          <span className="text-sm sm:text-base md:text-lg lg:text-xl font-bold tracking-tight leading-none text-neutral-50">
             GLO<span className="text-[var(--primary-500)]">N</span>IC
           </span>
         </Link>
       </div>
 
-      {/* Column 2: Search - Hidden on mobile, shown on md+ */}
-      <div className="hidden md:block">
-        <SearchBar />
-      </div>
-      
-      {/* Mobile search icon - Only visible on mobile */}
-      <div className="flex md:hidden items-center justify-center">
-        <button
-          onClick={() => setShowMobileSearch(true)}
-          className="h-9 w-9 flex items-center justify-center rounded-full bg-neutral-800 text-neutral-200 hover:bg-neutral-700 transition-colors"
-          aria-label="Search"
-        >
-          <MI name="search" className="text-[20px]" />
-        </button>
-      </div>
+      {/* Column 2: Search */}
+      <SearchBar />
 
       {/* Column 3: Right */}
-      <div className="flex items-center gap-1 sm:gap-2 md:gap-3">
+      <div className="flex items-center gap-1 sm:gap-2 md:gap-4">
         {!isConnected ? (
           <div className="flex items-center gap-2">
             <ConnectWalletButton className="min-w-28 px-4" />
@@ -91,15 +77,15 @@ export default function SiteHeader() {
           <HeaderWalletSectionSkeleton />
         ) : (
           <>
-            <div className="hidden sm:flex items-center gap-2 md:gap-3 rounded-full bg-neutral-800 px-3 md:px-4 py-1.5">
+            <div className="hidden sm:flex items-center gap-2 md:gap-4 rounded-full bg-neutral-800 px-2 md:px-4 py-1.5">
               <button
                 onClick={() => setOpenPoints(true)}
-                className="group flex items-center gap-1.5 rounded-full px-2 py-1 outline-none transition hover:bg-neutral-700 cursor-pointer"
+                className="group flex items-center gap-1 md:gap-2 rounded-full px-1.5 md:px-2 py-1 outline-none transition hover:bg-neutral-700 cursor-pointer"
                 aria-label="Open points"
                 title="Open points"
               >
-                <MI name="star" className="text-[18px] text-yellow-400 group-hover:scale-110 transition-transform" />
-                <span className="text-sm font-semibold text-neutral-50">
+                <MI name="star" className="text-[16px] md:text-[18px] text-yellow-400 group-hover:scale-110 transition-transform" />
+                <span className="text-xs md:text-sm font-semibold text-neutral-50">
                   {totalPoints.toLocaleString()}
                 </span>
               </button>
@@ -108,13 +94,13 @@ export default function SiteHeader() {
 
               <button
                 onClick={() => setOpenWallet(true)}
-                className="group flex items-center gap-1.5 rounded-full px-2 py-1 outline-none transition hover:bg-neutral-700 cursor-pointer"
+                className="group flex items-center gap-1 md:gap-2 rounded-full px-1.5 md:px-2 py-1 outline-none transition hover:bg-neutral-700 cursor-pointer"
                 aria-label="Open wallet"
                 title="Open wallet"
               >
-                <MI name="account_balance_wallet" className="text-[18px] text-[var(--primary-500)] group-hover:scale-110 transition-transform" />
-                <span className="text-sm font-semibold text-neutral-50 hidden lg:inline">USDC.e</span>
-                <span className="text-sm font-semibold text-neutral-50">{usdceText}</span>
+                <MI name="account_balance_wallet" className="text-[16px] md:text-[18px] text-[var(--primary-500)] group-hover:scale-110 transition-transform" />
+                <span className="text-xs md:text-sm font-semibold text-neutral-50 hidden lg:inline">USDC.e</span>
+                <span className="text-xs md:text-sm font-semibold text-neutral-50">{usdceText}</span>
               </button>
             </div>
 
@@ -126,24 +112,6 @@ export default function SiteHeader() {
       </div>
 
       <ProfileUpsertOnLogin />
-
-      {/* Mobile Search Overlay */}
-      {showMobileSearch && (
-        <div className="fixed inset-0 z-50 bg-neutral-900/95 backdrop-blur-sm md:hidden">
-          <div className="flex items-center gap-2 p-3 border-b border-neutral-800">
-            <button
-              onClick={() => setShowMobileSearch(false)}
-              className="h-9 w-9 flex items-center justify-center rounded-full hover:bg-neutral-800 text-neutral-200 transition-colors flex-shrink-0"
-              aria-label="Close search"
-            >
-              <MI name="arrow_back" className="text-[20px]" />
-            </button>
-            <div className="flex-1">
-              <SearchBar isMobileOverlay onClose={() => setShowMobileSearch(false)} />
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Modals */}
       <PointsSheet
