@@ -41,7 +41,7 @@ export function CommunityLazy({
   }
 
   return (
-    <div className="flex flex-col gap-4 max-sm:gap-3">
+    <div className="flex flex-col gap-4 max-sm:gap-3 max-sm:w-full max-sm:overflow-hidden">
       {transformedPosts.map((post) => (
         <CommunityPostRow
           key={post.id}

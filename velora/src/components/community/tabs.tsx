@@ -19,8 +19,8 @@ export default function CommunityTabs({
   ];
 
   return (
-    <div className="border-b border-neutral-800">
-      <div className="flex items-center gap-x-2 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+    <div className="border-b border-neutral-800 max-sm:w-full max-sm:overflow-hidden">
+      <div className="flex items-center gap-x-2 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden max-sm:w-full">
         {tabs.map((t) => {
           const active = (value ?? tabs[0]) === t;
           return (
