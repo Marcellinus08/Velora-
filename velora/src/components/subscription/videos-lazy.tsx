@@ -182,16 +182,16 @@ export function SubscriptionVideosLazy({
     );
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-7">
       {/* Available Videos Section */}
-      <div className="space-y-4">
-        <h3 className="text-lg font-semibold text-neutral-100">Available Videos</h3>
+      <div className="space-y-3 sm:space-y-4">
+        <h3 className="text-base sm:text-lg font-semibold text-neutral-100">Available Videos</h3>
         {initialLoading ? (
           <SubscriptionRowsGridSkeleton count={3} />
         ) : availableItems.length === 0 ? (
           <SubscriptionEmptyState type="available" />
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-3">
             {availableItems.map((v) => (
               <SubscriptionVideoRow
                 key={v.purchaseId}
@@ -203,30 +203,30 @@ export function SubscriptionVideosLazy({
               />
             ))}
             {availableIsLoadingMore && (
-              <div className="flex justify-center py-4">
+              <div className="flex justify-center py-3">
                 <div className="flex items-center gap-2">
-                  <div className="h-2 w-2 rounded-full bg-purple-500 animate-bounce" />
-                  <div className="h-2 w-2 rounded-full bg-purple-500 animate-bounce delay-100" />
-                  <div className="h-2 w-2 rounded-full bg-purple-500 animate-bounce delay-200" />
-                  <span className="ml-2 text-sm text-neutral-400">Loading more videos...</span>
+                  <div className="h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full bg-purple-500 animate-bounce" />
+                  <div className="h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full bg-purple-500 animate-bounce delay-100" />
+                  <div className="h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full bg-purple-500 animate-bounce delay-200" />
+                  <span className="ml-2 text-xs sm:text-sm text-neutral-400">Loading more...</span>
                 </div>
               </div>
             )}
             {/* Sentinel element untuk Intersection Observer */}
-            <div ref={availableSentinelRef} className="h-4" />
+            <div ref={availableSentinelRef} className="h-2" />
           </div>
         )}
       </div>
 
       {/* Completed Videos Section */}
-      <div className="space-y-4">
-        <h3 className="text-lg font-semibold text-neutral-100">Completed Videos</h3>
+      <div className="space-y-3 sm:space-y-4">
+        <h3 className="text-base sm:text-lg font-semibold text-neutral-100">Completed Videos</h3>
         {initialLoading ? (
           <SubscriptionRowsGridSkeleton count={2} />
         ) : completedItems.length === 0 ? (
           <SubscriptionEmptyState type="completed" />
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-3">
             {completedItems.map((v) => (
               <SubscriptionVideoRow
                 key={v.purchaseId}
@@ -238,17 +238,17 @@ export function SubscriptionVideosLazy({
               />
             ))}
             {completedIsLoadingMore && (
-              <div className="flex justify-center py-4">
+              <div className="flex justify-center py-3">
                 <div className="flex items-center gap-2">
-                  <div className="h-2 w-2 rounded-full bg-purple-500 animate-bounce" />
-                  <div className="h-2 w-2 rounded-full bg-purple-500 animate-bounce delay-100" />
-                  <div className="h-2 w-2 rounded-full bg-purple-500 animate-bounce delay-200" />
-                  <span className="ml-2 text-sm text-neutral-400">Loading more videos...</span>
+                  <div className="h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full bg-purple-500 animate-bounce" />
+                  <div className="h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full bg-purple-500 animate-bounce delay-100" />
+                  <div className="h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full bg-purple-500 animate-bounce delay-200" />
+                  <span className="ml-2 text-xs sm:text-sm text-neutral-400">Loading more...</span>
                 </div>
               </div>
             )}
             {/* Sentinel element untuk Intersection Observer */}
-            <div ref={completedSentinelRef} className="h-4" />
+            <div ref={completedSentinelRef} className="h-2" />
           </div>
         )}
       </div>
