@@ -162,9 +162,9 @@ export default function LeaderboardPage() {
 
   if (loading) {
     return (
-      <div className="flex h-full grow flex-row">
+      <div className="flex h-full grow flex-row pb-16 md:pb-0">
         <Sidebar />
-        <main className="flex-1 overflow-y-auto px-4 py-6 sm:px-6 lg:px-8 md:ml-64">
+        <main className="flex-1 overflow-y-auto px-3 py-3 sm:px-4 sm:py-4 md:px-6 lg:px-8 md:ml-64">
           <LeaderboardPageSkeleton />
         </main>
       </div>
@@ -175,7 +175,7 @@ export default function LeaderboardPage() {
     return (
       <div className="flex h-full grow flex-row pb-16 md:pb-0">
         <Sidebar />
-        <main className="flex-1 px-3 py-4 sm:px-6 lg:px-8 md:ml-64">
+        <main className="flex-1 px-3 py-3 sm:px-4 sm:py-4 md:px-6 lg:px-8 md:ml-64">
           <LeaderboardEmptyState />
         </main>
       </div>
@@ -185,50 +185,51 @@ export default function LeaderboardPage() {
   return (
     <div className="flex h-full grow flex-row pb-16 md:pb-0">
       <Sidebar />
-      <main className="flex-1 overflow-y-auto px-3 py-4 sm:px-6 lg:px-8 md:ml-64">
-        <div className="flex flex-col gap-6">
+      <main className="flex-1 overflow-y-auto px-3 py-3 sm:px-4 sm:py-4 md:px-6 lg:px-8 md:ml-64">
+        <div className="flex flex-col gap-4 sm:gap-5 md:gap-6">
           {/* Simple Header */}
-          <div className="flex flex-col items-start gap-4 md:flex-row md:items-center md:justify-between">
-            <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-yellow-500/10 border border-yellow-500/20">
-                <svg className="h-6 w-6 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                </svg>
-              </div>
-              <div>
-                <h2 className="text-2xl font-bold text-neutral-50">Leaderboard</h2>
-                <p className="text-sm text-neutral-400">Top performing community members</p>
-              </div>
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-lg bg-yellow-500/10 border border-yellow-500/20">
+              <svg className="h-5 w-5 sm:h-6 sm:w-6 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+              </svg>
             </div>
-            
-            <div className="flex items-center gap-4 text-sm text-neutral-400">
-              <span>{fmt(leaderboardData.length)} players</span>
+            <div>
+              <h2 className="text-xl sm:text-2xl font-bold text-neutral-50">Leaderboard</h2>
+              <p className="text-xs sm:text-sm text-neutral-400">Top performing community members</p>
+            </div>
+          </div>
+
+          {/* Players count - positioned separately */}
+          <div className="flex justify-end -mt-2 sm:-mt-3">
+            <div className="text-xs sm:text-sm text-neutral-400">
+              <span className="font-medium">{fmt(leaderboardData.length)}</span> players
             </div>
           </div>
 
           {/* Current user highlight */}
           {currentUser && (
             <div 
-              className="flex items-center justify-between rounded-xl border border-purple-500/30 bg-purple-500/5 px-6 py-4 cursor-pointer hover:bg-purple-500/10 transition-all duration-300 hover:border-purple-500/50 group"
+              className="flex items-center justify-between rounded-lg sm:rounded-xl border border-purple-500/30 bg-purple-500/5 px-4 py-3 sm:px-5 sm:py-4 md:px-6 md:py-4 cursor-pointer hover:bg-purple-500/10 transition-all duration-300 hover:border-purple-500/50 group"
               onClick={() => openProfile(currentUser.handle)}
             >
-              <div className="flex items-center gap-4">
-                <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full border-2 border-purple-500/40 bg-neutral-800">
+              <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
+                <div className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center overflow-hidden rounded-full border-2 border-purple-500/40 bg-neutral-800 flex-shrink-0">
                   {currentUser.avatarNode}
                 </div>
-                <div>
-                  <div className="text-lg font-bold text-neutral-50">{currentUser.name}</div>
-                  <div className="text-sm text-neutral-400">Your ranking position</div>
+                <div className="min-w-0 flex-1">
+                  <div className="text-base sm:text-lg font-bold text-neutral-50 truncate">{currentUser.name}</div>
+                  <div className="text-xs sm:text-sm text-neutral-400">Your ranking position</div>
                 </div>
               </div>
-              <div className="flex items-center gap-8">
+              <div className="flex items-center gap-4 sm:gap-6 md:gap-8 flex-shrink-0">
                 <div className="text-right">
-                  <div className="text-xs font-medium uppercase tracking-wide text-neutral-500">Rank</div>
-                  <div className="mt-1 text-2xl font-bold text-purple-400">#{currentUser.rank}</div>
+                  <div className="text-[10px] sm:text-xs font-medium uppercase tracking-wide text-neutral-500">Rank</div>
+                  <div className="mt-0.5 sm:mt-1 text-xl sm:text-2xl font-bold text-purple-400">#{currentUser.rank}</div>
                 </div>
                 <div className="text-right">
-                  <div className="text-xs font-medium uppercase tracking-wide text-neutral-500">Score</div>
-                  <div className="mt-1 text-2xl font-bold text-yellow-400">{fmt(currentUser.score)}</div>
+                  <div className="text-[10px] sm:text-xs font-medium uppercase tracking-wide text-neutral-500">Score</div>
+                  <div className="mt-0.5 sm:mt-1 text-xl sm:text-2xl font-bold text-yellow-400">{fmt(currentUser.score)}</div>
                 </div>
               </div>
             </div>
