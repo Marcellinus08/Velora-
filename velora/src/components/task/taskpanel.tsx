@@ -71,6 +71,11 @@ export default function TaskPanel({
     setEarnedPoints(earnedTaskPoints);
   }, [hasCompletedTask, earnedTaskPoints]);
 
+  // Restore selected answer when step changes
+  useEffect(() => {
+    setSelected(answers[step] ?? null);
+  }, [step, answers]);
+
   const current = tasks?.[step];
 
   const allPoints = useMemo(() => {
@@ -125,15 +130,14 @@ export default function TaskPanel({
       toastWarn("Please select an answer first");
       return;
     }
-    setAnswers((prev) => {
-      const next = [...prev];
-      next[step] = selected;
-      return next;
-    });
+    // Save the current answer to the answers array
+    const newAnswers = [...answers];
+    newAnswers[step] = selected;
+    setAnswers(newAnswers);
+    
+    // Move to next step
     if (!isLast) {
-      const nextStep = step + 1;
-      setStep(nextStep);
-      setSelected((prev) => answers[nextStep] ?? null);
+      setStep(step + 1);
     }
   };
 
@@ -272,57 +276,91 @@ export default function TaskPanel({
         <div className="flex-1 flex flex-col items-center justify-center text-center relative">
           {!isLocked ? (
             <>
-              <div className="w-16 h-16 bg-violet-600/20 rounded-full flex items-center justify-center mb-4">
-                {completed ? (
-                  <svg 
-                    className="w-8 h-8 text-violet-500" 
-                    viewBox="0 0 24 24" 
-                    fill="none" 
-                    stroke="currentColor"
-                  >
-                    <path 
-                      strokeLinecap="round" 
-                      strokeLinejoin="round" 
-                      strokeWidth={2} 
-                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" 
-                    />
-                  </svg>
-                ) : (
-                  <svg 
-                    className="w-8 h-8 text-violet-500" 
-                    fill="none" 
-                    viewBox="0 0 24 24" 
-                    stroke="currentColor"
-                  >
-                    <path 
-                      strokeLinecap="round" 
-                      strokeLinejoin="round" 
-                      strokeWidth={2} 
-                      d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                    />
-                  </svg>
-                )}
-              </div>
-              <h3 className="text-xl font-bold text-white mb-2">
-                {completed ? "Task Completed!" : "Ready to Begin?"}
-              </h3>
-              <p className="text-neutral-400 mb-6">
-                {completed 
-                  ? earnedPoints > 0 
-                    ? `You've earned ${earnedPoints} points!` 
-                    : `All answers must be correct to earn points.`
-                  : `Complete ${tasks.length} questions about this video${allPoints > 0 ? ` to earn ${allPoints} points` : ''}!`
-                }
-              </p>
+              {completed ? (
+                <>
+                  <div className="animate-in fade-in zoom-in duration-700 ease-out">
+                    <div className="mb-6">
+                      <div className="w-20 h-20 bg-gradient-to-br from-emerald-500/20 to-emerald-600/10 rounded-full flex items-center justify-center mb-4 mx-auto border border-emerald-500/30 shadow-lg shadow-emerald-500/10">
+                        <svg 
+                          className="w-10 h-10 text-emerald-400 animate-pulse" 
+                          viewBox="0 0 24 24" 
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="3"
+                        >
+                          <path 
+                            strokeLinecap="round" 
+                            strokeLinejoin="round" 
+                            d="M5 13l4 4L19 7"
+                          />
+                        </svg>
+                      </div>
+                      <h3 className="text-2xl font-bold bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent mb-3">
+                        Task Completed!
+                      </h3>
+                      <div className="space-y-3">
+                        {earnedPoints > 0 ? (
+                          <>
+                            <p className="text-neutral-300">You answered all questions correctly!</p>
+                            <div className="inline-flex items-center gap-2 bg-emerald-900/30 border border-emerald-500/30 rounded-full px-4 py-2 mx-auto">
+                              <svg className="w-5 h-5 text-emerald-400" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                              </svg>
+                              <span className="text-sm font-semibold text-emerald-300">+{earnedPoints} points earned</span>
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <p className="text-neutral-400 text-sm">
+                              Good effort! To earn points, all answers must be correct.
+                            </p>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="mb-6 animate-in fade-in zoom-in duration-500">
+                    <div className="w-20 h-20 bg-gradient-to-br from-violet-500/20 to-purple-600/10 rounded-full flex items-center justify-center mb-4 mx-auto border border-violet-500/30 shadow-lg shadow-violet-500/10">
+                      <svg 
+                        className="w-10 h-10 text-violet-400" 
+                        fill="none" 
+                        viewBox="0 0 24 24" 
+                        stroke="currentColor"
+                        strokeWidth={2}
+                      >
+                        <path 
+                          strokeLinecap="round" 
+                          strokeLinejoin="round" 
+                          d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                        />
+                      </svg>
+                    </div>
+                    <h3 className="text-2xl font-bold bg-gradient-to-r from-violet-400 to-purple-400 bg-clip-text text-transparent mb-3">
+                      Ready to Begin?
+                    </h3>
+                    <div className="space-y-2">
+                      <p className="text-neutral-300 text-sm font-medium">
+                        Test your knowledge with {tasks.length} {tasks.length === 1 ? 'question' : 'questions'}
+                      </p>
+                      <p className="text-neutral-400 text-xs">
+                        Answer all questions correctly to earn {allPoints} {allPoints === 1 ? 'point' : 'points'}
+                      </p>
+                    </div>
+                  </div>
+                </>
+              )}
               {!completed && !hasCompletedTask && (
                 <button
                   onClick={() => setStarted(true)}
-                  className="w-48 rounded-full py-2.5 text-sm font-semibold text-white bg-[var(--primary-500)] hover:bg-violet-500 transition-colors cursor-pointer"
+                  className="w-48 rounded-full py-2.5 text-sm font-semibold text-white bg-[var(--primary-500)] hover:bg-violet-500 transition-colors cursor-pointer animate-in fade-in zoom-in duration-700 ease-out delay-100"
                 >
                   Start Task
                 </button>
               )}
-              {hasCompletedTask && (
+              {hasCompletedTask && !completed && (
                 <p className="text-sm text-neutral-500">
                   You have already completed this task.
                 </p>
@@ -330,33 +368,43 @@ export default function TaskPanel({
             </>
           ) : (
             <>
-              <div className="w-16 h-16 bg-[#271759] rounded-full flex items-center justify-center mb-4">
-                <svg 
-                  className="w-8 h-8 text-[#9333EA]" 
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <path 
-                    strokeLinecap="round" 
-                    strokeLinejoin="round" 
-                    d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"
-                  />
-                </svg>
+              <div className="animate-in fade-in zoom-in duration-700 ease-out">
+                <div className="w-16 h-16 bg-[#271759] rounded-full flex items-center justify-center mb-4 mx-auto">
+                  <svg 
+                    className="w-8 h-8 text-[#9333EA]" 
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <path 
+                      strokeLinecap="round" 
+                      strokeLinejoin="round" 
+                      d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"
+                    />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-bold text-white mb-2">Task Locked</h3>
+                <p className="text-neutral-400 mb-4">Purchase this video to unlock tasks and earn rewards</p>
               </div>
-              <h3 className="text-xl font-bold text-white mb-2">Task Locked</h3>
-              <p className="text-neutral-400 mb-4">Purchase this video to unlock tasks and earn rewards</p>
             </>
           )}
         </div>
       ) : (
         <>
           {/* Progress: single badge "X / N" */}
-          <div className="mt-3">
+          <div className="mt-3 flex items-center justify-between">
             <span className="inline-flex items-center rounded-full border border-neutral-700 bg-neutral-900/60 px-2.5 py-0.5 text-xs font-medium text-neutral-300">
               Question {step + 1} of {tasks.length}
             </span>
+            {allPoints > 0 && (
+              <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-900/30 border border-emerald-500/30 px-3 py-1">
+                <svg className="w-3.5 h-3.5 text-yellow-400" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                </svg>
+                <span className="text-xs font-semibold text-emerald-300">+{allPoints} if all correct</span>
+              </div>
+            )}
           </div>
 
           <div className="relative flex-1">
@@ -420,12 +468,27 @@ export default function TaskPanel({
           </div>
 
           {/* Tombol aksi */}
-          <div className="mt-6">
+          <div className="mt-6 flex gap-3">
+            {step > 0 && (
+              <button
+                onClick={() => setStep(step - 1)}
+                disabled={isLocked}
+                className={`flex items-center justify-center gap-2 rounded-full py-2.5 px-4 text-sm font-semibold text-neutral-50 transition-colors
+                  ${isLocked 
+                    ? 'bg-neutral-700 cursor-not-allowed opacity-50' 
+                    : 'bg-neutral-700 hover:bg-neutral-600'}`}
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+                Back
+              </button>
+            )}
             {isLast ? (
               <button
                 onClick={handleDone}
                 disabled={isLocked}
-                className={`w-full rounded-full py-2.5 text-sm font-semibold text-neutral-50 transition-colors
+                className={`flex-1 rounded-full py-2.5 text-sm font-semibold text-neutral-50 transition-colors
                   ${isLocked 
                     ? 'bg-neutral-700 cursor-not-allowed opacity-50' 
                     : 'bg-[var(--primary-500)] hover:bg-violet-500'}`}
@@ -436,7 +499,7 @@ export default function TaskPanel({
               <button
                 onClick={handleNext}
                 disabled={isLocked}
-                className={`w-full rounded-full py-2.5 text-sm font-semibold text-neutral-50 transition-colors
+                className={`flex-1 rounded-full py-2.5 text-sm font-semibold text-neutral-50 transition-colors
                   ${isLocked 
                     ? 'bg-neutral-700 cursor-not-allowed opacity-50' 
                     : 'bg-[var(--primary-500)] hover:bg-violet-500'}`}
@@ -450,7 +513,7 @@ export default function TaskPanel({
 
       {/* Points Breakdown - Bottom */}
       {isLocked && pointsBreakdown && pointsBreakdown.totalPoints > 0 && (
-        <div className="mt-6 rounded-lg border border-neutral-700 bg-neutral-900/60 p-3 text-left">
+        <div className="mt-6 rounded-lg border border-neutral-700 bg-neutral-900/60 p-3 text-left animate-in fade-in zoom-in duration-700 ease-out">
           <p className="text-xs font-semibold text-neutral-300 uppercase tracking-wide mb-2.5">
             Points Distribution
           </p>

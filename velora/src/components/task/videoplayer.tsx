@@ -42,7 +42,7 @@ export default function VideoPlayer({
           <div className="absolute inset-0 bg-black/60" />
           
           {/* Lock overlay */}
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 text-white z-10">
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 text-white z-10 animate-in fade-in zoom-in duration-700 ease-out">
             <div className="bg-neutral-800/80 p-4 rounded-full">
               <svg 
                 className="w-8 h-8" 
