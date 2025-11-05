@@ -59,6 +59,27 @@
 
 .dark {}
 
+/* Hide scrollbar globally for all browsers */
+* {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+*::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
+html,
+body {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  display: none;
+}
+
 /* Mapping Tailwind v4  */
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
