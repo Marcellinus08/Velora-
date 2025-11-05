@@ -30,8 +30,8 @@ export function CommunityLazy({
 
   if (error) {
     return (
-      <div className="rounded-lg border border-red-800/50 bg-red-900/20 p-4">
-        <p className="text-sm text-red-300">{error}</p>
+      <div className="rounded-lg border border-red-800/50 bg-red-900/20 p-4 max-sm:p-3 max-sm:rounded-md">
+        <p className="text-sm text-red-300 max-sm:text-xs">{error}</p>
       </div>
     );
   }
@@ -41,7 +41,7 @@ export function CommunityLazy({
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4 max-sm:gap-3">
       {transformedPosts.map((post) => (
         <CommunityPostRow
           key={post.id}

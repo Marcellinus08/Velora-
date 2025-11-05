@@ -33,7 +33,7 @@ export function CommunityEmptyState({ category }: CommunityEmptyStateProps) {
   const Icon = config.icon;
 
   return (
-    <div className={`group relative rounded-2xl border ${config.borderColor} bg-gradient-to-br ${config.gradient} p-8 transition-all duration-700 hover:-translate-y-2 hover:scale-[1.01] overflow-hidden cursor-pointer`}>
+    <div className={`group relative rounded-2xl max-sm:rounded-lg border ${config.borderColor} bg-gradient-to-br ${config.gradient} p-8 max-sm:p-4 transition-all duration-700 hover:-translate-y-2 hover:scale-[1.01] overflow-hidden cursor-pointer`}>
       {/* Dynamic background with moving gradients */}
       <div className="absolute inset-0 opacity-20 group-hover:opacity-40 transition-opacity duration-500">
         <div className={`absolute inset-0 bg-gradient-to-r ${config.glowColor} animate-pulse`} />
@@ -48,19 +48,19 @@ export function CommunityEmptyState({ category }: CommunityEmptyStateProps) {
       </div>
 
       {/* Main content container */}
-      <div className="relative flex flex-col items-center justify-center text-center min-h-[200px] z-10">
+      <div className="relative flex flex-col items-center justify-center text-center min-h-[200px] max-sm:min-h-[160px] z-10">
         {/* Icon container with community-specific animations */}
-        <div className="relative mb-8 animate-bounce group-hover:animate-none group-hover:scale-110 group-hover:rotate-6 transition-all duration-1000" style={{ animationDuration: '2.5s' }}>
-          <div className={`relative flex h-24 w-24 items-center justify-center rounded-3xl bg-gradient-to-br ${config.iconGradient} ring-2 ${config.ringColor} shadow-2xl transition-all duration-700 group-hover:shadow-[0_0_40px_currentColor] group-hover:ring-4`}>
-            <Icon className={`h-12 w-12 ${config.iconColor} transition-all duration-700 animate-pulse group-hover:animate-none group-hover:scale-110 group-hover:drop-shadow-[0_0_20px_currentColor]`} />
+        <div className="relative mb-8 max-sm:mb-5 animate-bounce group-hover:animate-none group-hover:scale-110 group-hover:rotate-6 transition-all duration-1000" style={{ animationDuration: '2.5s' }}>
+          <div className={`relative flex h-24 w-24 max-sm:h-16 max-sm:w-16 items-center justify-center rounded-3xl max-sm:rounded-2xl bg-gradient-to-br ${config.iconGradient} ring-2 ${config.ringColor} shadow-2xl transition-all duration-700 group-hover:shadow-[0_0_40px_currentColor] group-hover:ring-4`}>
+            <Icon className={`h-12 w-12 max-sm:h-8 max-sm:w-8 ${config.iconColor} transition-all duration-700 animate-pulse group-hover:animate-none group-hover:scale-110 group-hover:drop-shadow-[0_0_20px_currentColor]`} />
             
             {/* Community-specific floating elements */}
-            <div className="absolute -inset-6 opacity-0 group-hover:opacity-80 transition-opacity duration-700">
+            <div className="absolute -inset-6 max-sm:-inset-4 opacity-0 group-hover:opacity-80 transition-opacity duration-700">
               {/* Heart icons floating around */}
-              <Heart className="absolute -top-2 -right-2 h-4 w-4 text-pink-300 animate-ping" style={{ animationDelay: '0s' }} />
-              <Users className="absolute -bottom-2 -left-2 h-4 w-4 text-blue-300 animate-ping" style={{ animationDelay: '0.3s' }} />
-              <Sparkles className="absolute -top-2 -left-2 h-4 w-4 text-yellow-300 animate-ping" style={{ animationDelay: '0.6s' }} />
-              <TrendingUp className="absolute -bottom-2 -right-2 h-4 w-4 text-green-300 animate-ping" style={{ animationDelay: '0.9s' }} />
+              <Heart className="absolute -top-2 -right-2 h-4 w-4 max-sm:h-3 max-sm:w-3 text-pink-300 animate-ping" style={{ animationDelay: '0s' }} />
+              <Users className="absolute -bottom-2 -left-2 h-4 w-4 max-sm:h-3 max-sm:w-3 text-blue-300 animate-ping" style={{ animationDelay: '0.3s' }} />
+              <Sparkles className="absolute -top-2 -left-2 h-4 w-4 max-sm:h-3 max-sm:w-3 text-yellow-300 animate-ping" style={{ animationDelay: '0.6s' }} />
+              <TrendingUp className="absolute -bottom-2 -right-2 h-4 w-4 max-sm:h-3 max-sm:w-3 text-green-300 animate-ping" style={{ animationDelay: '0.9s' }} />
             </div>
 
             {/* Rotating ring effects */}
@@ -70,29 +70,29 @@ export function CommunityEmptyState({ category }: CommunityEmptyStateProps) {
         </div>
 
         {/* Enhanced title */}
-        <h3 className={`mb-4 text-2xl font-black ${config.iconColor.split(' ')[0]} transition-all duration-500 transform relative animate-pulse group-hover:animate-none group-hover:text-white group-hover:scale-110 group-hover:drop-shadow-[0_0_20px_currentColor]`}>
+        <h3 className={`mb-4 max-sm:mb-3 text-2xl max-sm:text-lg font-black ${config.iconColor.split(' ')[0]} transition-all duration-500 transform relative animate-pulse group-hover:animate-none group-hover:text-white group-hover:scale-110 group-hover:drop-shadow-[0_0_20px_currentColor]`}>
           {config.title}
           <div className="absolute inset-0 blur-sm opacity-20 group-hover:opacity-60 transition-all duration-500">{config.title}</div>
         </h3>
         
         {/* Description */}
-        <p className="text-base text-neutral-300 group-hover:text-neutral-100 transition-all duration-500 max-w-[300px] leading-relaxed mb-8 group-hover:scale-105">
+        <p className="text-base max-sm:text-sm text-neutral-300 group-hover:text-neutral-100 transition-all duration-500 max-w-[300px] max-sm:max-w-[260px] leading-relaxed mb-8 max-sm:mb-5 group-hover:scale-105">
           {config.description}
         </p>
 
         {/* Interactive stats indicators */}
-        <div className="mt-8 flex items-center gap-6">
-          <div className="flex items-center gap-2 opacity-60 group-hover:opacity-100 transition-opacity duration-500">
-            <div className="h-2 w-2 bg-pink-400 rounded-full animate-pulse" />
-            <span className="text-xs text-neutral-400 group-hover:text-neutral-300">0 Likes</span>
+        <div className="mt-8 max-sm:mt-5 flex items-center gap-6 max-sm:gap-4">
+          <div className="flex items-center gap-2 max-sm:gap-1.5 opacity-60 group-hover:opacity-100 transition-opacity duration-500">
+            <div className="h-2 w-2 max-sm:h-1.5 max-sm:w-1.5 bg-pink-400 rounded-full animate-pulse" />
+            <span className="text-xs max-sm:text-[10px] text-neutral-400 group-hover:text-neutral-300">0 Likes</span>
           </div>
-          <div className="flex items-center gap-2 opacity-60 group-hover:opacity-100 transition-opacity duration-500">
-            <div className="h-2 w-2 bg-blue-400 rounded-full animate-pulse" style={{ animationDelay: '0.3s' }} />
-            <span className="text-xs text-neutral-400 group-hover:text-neutral-300">0 Comments</span>
+          <div className="flex items-center gap-2 max-sm:gap-1.5 opacity-60 group-hover:opacity-100 transition-opacity duration-500">
+            <div className="h-2 w-2 max-sm:h-1.5 max-sm:w-1.5 bg-blue-400 rounded-full animate-pulse" style={{ animationDelay: '0.3s' }} />
+            <span className="text-xs max-sm:text-[10px] text-neutral-400 group-hover:text-neutral-300">0 Comments</span>
           </div>
-          <div className="flex items-center gap-2 opacity-60 group-hover:opacity-100 transition-opacity duration-500">
-            <div className="h-2 w-2 bg-green-400 rounded-full animate-pulse" style={{ animationDelay: '0.6s' }} />
-            <span className="text-xs text-neutral-400 group-hover:text-neutral-300">0 Posts</span>
+          <div className="flex items-center gap-2 max-sm:gap-1.5 opacity-60 group-hover:opacity-100 transition-opacity duration-500">
+            <div className="h-2 w-2 max-sm:h-1.5 max-sm:w-1.5 bg-green-400 rounded-full animate-pulse" style={{ animationDelay: '0.6s' }} />
+            <span className="text-xs max-sm:text-[10px] text-neutral-400 group-hover:text-neutral-300">0 Posts</span>
           </div>
         </div>
       </div>
