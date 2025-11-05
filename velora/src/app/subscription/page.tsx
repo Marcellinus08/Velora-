@@ -211,10 +211,10 @@ export default function SubscriptionPage() {
   return (
     <div className="flex h-full grow flex-row pb-16 md:pb-0">
       <Sidebar />
-      <main className="flex-1 px-3 py-3 sm:px-4 sm:py-4 md:px-6 lg:px-8 md:ml-64">
-        <div className="flex flex-col gap-4 sm:gap-5">
-          <div className="flex flex-col items-start gap-2 sm:gap-3">
-            <h2 className="text-xl sm:text-2xl font-bold text-neutral-50">Subscription Management</h2>
+      <main className="flex-1 px-3 py-4 sm:px-6 lg:px-8 md:ml-64">
+        <div className="flex flex-col gap-6">
+          <div className="flex flex-col items-start gap-4 md:flex-row md:items-center md:justify-between">
+            <h2 className="text-2xl font-bold text-neutral-50">Subscription Management</h2>
           </div>
 
           {err && (
