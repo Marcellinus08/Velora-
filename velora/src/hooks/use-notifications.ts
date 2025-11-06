@@ -68,11 +68,14 @@ setNotifications([]);
     }
 
     const addr = abstractId.toLowerCase();
+    console.log("[useNotifications] Starting fetch for addr:", addr);
+    const startTime = performance.now();
 
 try {
       const supabase = createClient();
 
-      // Query 6 notification tables + notification_follows
+      // Query 7 notification tables (6 legacy + notification_follows + video_comments)
+      console.log("[useNotifications] Fetching from all 7 tables...");
       const [likesRes, repliesRes, replyLikesRes, videoPurchasesRes, videoLikesRes, videoCommentsRes, followsRes] = await Promise.all([
         supabase
           .from("notification_community_likes")
@@ -106,11 +109,8 @@ try {
 
         supabase
           .from("notification_video_comments")
-          .select(`
-            *,
-            video_comments!inner(id, content, created_at)
-          `)
-          .eq("creator_addr", addr)
+          .select("*")
+          .eq("receiver_addr", addr)
           .order("created_at", { ascending: false }),
 
         supabase
@@ -128,6 +128,19 @@ try {
       if (videoCommentsRes.error) throw new Error(videoCommentsRes.error.message);
       if (followsRes.error) throw new Error(followsRes.error.message);
 
+      const queryTime = performance.now() - startTime;
+      console.log("[useNotifications] Queries completed in", queryTime.toFixed(2), "ms");
+      console.log("[useNotifications] Query results:", {
+        likes: likesRes.data?.length || 0,
+        replies: repliesRes.data?.length || 0,
+        replyLikes: replyLikesRes.data?.length || 0,
+        videoPurchases: videoPurchasesRes.data?.length || 0,
+        videoLikes: videoLikesRes.data?.length || 0,
+        videoComments: videoCommentsRes.data?.length || 0,
+        follows: followsRes.data?.length || 0,
+        totalNotifications: (likesRes.data?.length || 0) + (repliesRes.data?.length || 0) + (replyLikesRes.data?.length || 0) + (videoPurchasesRes.data?.length || 0) + (videoLikesRes.data?.length || 0) + (videoCommentsRes.data?.length || 0) + (followsRes.data?.length || 0),
+      });
+
 if (videoPurchasesRes.data && videoPurchasesRes.data.length > 0) {
 
 } else {
@@ -139,7 +152,8 @@ if (videoPurchasesRes.data && videoPurchasesRes.data.length > 0) {
       // Combine and normalize all notifications
       const allNotifs: Notification[] = [];
 
-      // ✅ Fetch actor profiles in parallel for all notifications
+      // ✅ SIMPLIFIED: Display raw notifications WITHOUT enrichment
+      // This ensures data appears immediately from database
       const allRawNotifs: any[] = [
         ...(likesRes.data || []),
         ...(repliesRes.data || []),
@@ -150,53 +164,23 @@ if (videoPurchasesRes.data && videoPurchasesRes.data.length > 0) {
         ...(followsRes.data || []),
       ];
 
-      // Get unique actor addresses
-      const uniqueActors = new Set<string>();
-      allRawNotifs.forEach((n: any) => {
-        const actorAddr = n.actor_addr || n.buyer_addr || n.liker_addr || n.commenter_addr;
-        if (actorAddr) uniqueActors.add(actorAddr.toLowerCase());
-      });
+      console.log("[useNotifications] ⚡ FAST PATH: Processing", allRawNotifs.length, "raw notifications WITHOUT enrichment");
 
-      // Fetch all actor profiles in parallel
-      const actorProfiles = new Map<string, { name: string | null; avatar: string | null }>();
-      await Promise.all(
-        Array.from(uniqueActors).map(async (addr) => {
-          const profile = await fetchActorProfile(addr);
-          actorProfiles.set(addr, profile);
-        })
-      );
-
-      // ✅ Get unique target titles to fetch
-      const uniqueTargets = new Set<string>();
-      allRawNotifs.forEach((n: any) => {
-        const targetId = n.post_id || n.reply_id || n.video_id;
-        const targetType = n.post_id ? "post" : n.reply_id ? "reply" : "video";
-        if (targetId) uniqueTargets.add(`${targetType}:${targetId}`);
-      });
-
-      // ✅ Fetch all target titles in parallel
-      const targetTitles = new Map<string, string>();
-      await Promise.all(
-        Array.from(uniqueTargets).map(async (key) => {
-          const [targetType, targetId] = key.split(":");
-          const title = await fetchTargetTitle(targetId, targetType);
-          targetTitles.set(key, title);
-})
-      );
-// Add likes
+      // ✅ SIMPLIFIED: Just map raw data directly to Notification format
+      // Skip actor profile and title fetching for now - display immediately
+      
+      // Add likes
       (likesRes.data || []).forEach((n: any) => {
-        const actor = actorProfiles.get(n.actor_addr.toLowerCase()) || { name: null, avatar: null };
-        const titleKey = `post:${n.post_id}`;
         allNotifs.push({
           id: n.id,
           recipientAddr: n.recipient_addr,
           actorAddress: n.actor_addr,
-          actorName: actor.name,
-          actorAvatar: actor.avatar,
+          actorName: null,
+          actorAvatar: null,
           type: "like",
           targetId: n.post_id,
           targetType: "post",
-          targetTitle: targetTitles.get(titleKey),
+          targetTitle: "Post",
           message: n.message,
           isRead: n.is_read,
           createdAt: n.created_at,
@@ -207,18 +191,16 @@ if (videoPurchasesRes.data && videoPurchasesRes.data.length > 0) {
 
       // Add replies
       (repliesRes.data || []).forEach((n: any) => {
-        const actor = actorProfiles.get(n.actor_addr.toLowerCase()) || { name: null, avatar: null };
-        const titleKey = `reply:${n.reply_id}`;
         allNotifs.push({
           id: n.id,
           recipientAddr: n.recipient_addr,
           actorAddress: n.actor_addr,
-          actorName: actor.name,
-          actorAvatar: actor.avatar,
+          actorName: null,
+          actorAvatar: null,
           type: n.type === "nested_reply" ? "nested_reply" : "reply",
           targetId: n.reply_id,
           targetType: "reply",
-          targetTitle: targetTitles.get(titleKey),
+          targetTitle: "Reply",
           message: n.message,
           isRead: n.is_read,
           createdAt: n.created_at,
@@ -229,18 +211,16 @@ if (videoPurchasesRes.data && videoPurchasesRes.data.length > 0) {
 
       // Add reply likes
       (replyLikesRes.data || []).forEach((n: any) => {
-        const actor = actorProfiles.get(n.actor_addr.toLowerCase()) || { name: null, avatar: null };
-        const titleKey = `reply:${n.reply_id}`;
         allNotifs.push({
           id: n.id,
           recipientAddr: n.recipient_addr,
           actorAddress: n.actor_addr,
-          actorName: actor.name,
-          actorAvatar: actor.avatar,
+          actorName: null,
+          actorAvatar: null,
           type: "like_reply",
           targetId: n.reply_id,
           targetType: "reply",
-          targetTitle: targetTitles.get(titleKey),
+          targetTitle: "Reply",
           message: n.message,
           isRead: n.is_read,
           createdAt: n.created_at,
@@ -251,18 +231,16 @@ if (videoPurchasesRes.data && videoPurchasesRes.data.length > 0) {
 
       // Add video purchases
       (videoPurchasesRes.data || []).forEach((n: any) => {
-        const actor = actorProfiles.get(n.buyer_addr.toLowerCase()) || { name: null, avatar: null };
-        const titleKey = `video:${n.video_id}`;
         allNotifs.push({
           id: n.id,
           recipientAddr: n.creator_addr,
           actorAddress: n.buyer_addr,
-          actorName: actor.name,
-          actorAvatar: actor.avatar,
+          actorName: null,
+          actorAvatar: null,
           type: "video_purchase",
           targetId: n.video_id,
           targetType: "video",
-          targetTitle: targetTitles.get(titleKey),
+          targetTitle: "Video",
           message: n.message,
           isRead: n.is_read,
           createdAt: n.created_at,
@@ -273,18 +251,16 @@ if (videoPurchasesRes.data && videoPurchasesRes.data.length > 0) {
 
       // Add video likes
       (videoLikesRes.data || []).forEach((n: any) => {
-        const actor = actorProfiles.get(n.liker_addr.toLowerCase()) || { name: null, avatar: null };
-        const titleKey = `video:${n.video_id}`;
         allNotifs.push({
           id: n.id,
           recipientAddr: n.creator_addr,
           actorAddress: n.liker_addr,
-          actorName: actor.name,
-          actorAvatar: actor.avatar,
+          actorName: null,
+          actorAvatar: null,
           type: "video_like",
           targetId: n.video_id,
           targetType: "video",
-          targetTitle: targetTitles.get(titleKey),
+          targetTitle: "Video",
           message: n.message,
           isRead: n.is_read,
           createdAt: n.created_at,
@@ -295,45 +271,37 @@ if (videoPurchasesRes.data && videoPurchasesRes.data.length > 0) {
 
       // Add video comments
       (videoCommentsRes.data || []).forEach((n: any) => {
-        const actor = actorProfiles.get(n.commenter_addr.toLowerCase()) || { name: null, avatar: null };
-        const commentContent = n.video_comments?.content || n.message;
-        const titleKey = `video:${n.video_id}`;
-        
         allNotifs.push({
           id: n.id,
-          recipientAddr: n.creator_addr,
+          recipientAddr: n.receiver_addr,
           actorAddress: n.commenter_addr,
-          actorName: actor.name,
-          actorAvatar: actor.avatar,
+          actorName: null,
+          actorAvatar: null,
           type: "video_comment",
           targetId: n.video_id,
           targetType: "video",
-          targetTitle: targetTitles.get(titleKey),
+          targetTitle: "Video",
           message: n.message,
           isRead: n.is_read,
           createdAt: n.created_at,
           readAt: n.read_at,
           source: "video_comments",
-          commentText: commentContent,
-          commentId: n.comment_id,
         });
       });
 
       // Add follows
       (followsRes.data || []).forEach((n: any) => {
-        const actor = actorProfiles.get(n.follower_addr.toLowerCase()) || { name: null, avatar: null };
-        
         allNotifs.push({
           id: n.id,
           recipientAddr: n.followee_addr,
           actorAddress: n.follower_addr,
-          actorName: actor.name,
-          actorAvatar: actor.avatar,
+          actorName: null,
+          actorAvatar: null,
           type: "follow",
-          targetId: n.follower_addr, // Profile address of the follower
+          targetId: n.follower_addr,
           targetType: "profile",
-          targetTitle: actor.name || "Someone", // Use follower's name as title
-          message: `${actor.name || "Someone"} started following you`,
+          targetTitle: "Profile",
+          message: "started following you",
           isRead: n.is_read,
           createdAt: n.created_at,
           readAt: n.read_at,
@@ -343,9 +311,23 @@ if (videoPurchasesRes.data && videoPurchasesRes.data.length > 0) {
 
       // Sort by created_at DESC
       allNotifs.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      
+      console.log("[useNotifications] ✅ Final notifications ready:", {
+        totalProcessed: allNotifs.length,
+        unreadCount: allNotifs.filter((n) => !n.isRead).length,
+        notifications: allNotifs.map((n) => ({
+          id: n.id,
+          type: n.type,
+          actor: n.actorName || n.actorAddress,
+          isRead: n.isRead,
+          createdAt: n.createdAt,
+        })),
+      });
+      
 setNotifications(allNotifs);
       setUnreadCount(allNotifs.filter((n) => !n.isRead).length);
     } catch (error) {
+      console.error("[useNotifications] ❌ Error fetching notifications:", error);
 setNotifications([]);
       setUnreadCount(0);
     } finally {
@@ -383,7 +365,7 @@ return;
 return;
       }
 
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from(tableName)
         .update({ is_read: true, read_at: new Date().toISOString() })
         .eq("id", notificationId);
@@ -411,45 +393,45 @@ const addr = abstractId.toLowerCase();
       const supabase = createClient();
       const now = new Date().toISOString();
 
-      // Update all 7 notification tables (6 legacy + notification_follows)
+      // Update all 7 notification tables
       const [res1, res2, res3, res4, res5, res6, res7] = await Promise.all([
-        supabase
+        (supabase as any)
           .from("notification_community_likes")
           .update({ is_read: true, read_at: now })
           .eq("recipient_addr", addr)
           .eq("is_read", false),
         
-        supabase
+        (supabase as any)
           .from("notification_community_replies")
           .update({ is_read: true, read_at: now })
           .eq("recipient_addr", addr)
           .eq("is_read", false),
         
-        supabase
+        (supabase as any)
           .from("notification_reply_likes")
           .update({ is_read: true, read_at: now })
           .eq("recipient_addr", addr)
           .eq("is_read", false),
         
-        supabase
+        (supabase as any)
           .from("notification_video_purchases")
           .update({ is_read: true, read_at: now })
           .eq("creator_addr", addr)
           .eq("is_read", false),
 
-        supabase
+        (supabase as any)
           .from("notification_video_likes")
           .update({ is_read: true, read_at: now })
           .eq("creator_addr", addr)
           .eq("is_read", false),
 
-        supabase
+        (supabase as any)
           .from("notification_video_comments")
           .update({ is_read: true, read_at: now })
-          .eq("creator_addr", addr)
+          .eq("receiver_addr", addr)
           .eq("is_read", false),
 
-        supabase
+        (supabase as any)
           .from("notification_follows")
           .update({ is_read: true, read_at: now })
           .eq("followee_addr", addr)
@@ -636,10 +618,9 @@ handleRealtimeChange(payload, "video_likes");
           event: "*",
           schema: "public",
           table: "notification_video_comments",
-          filter: `creator_addr=eq.${addr}`,
+          filter: `receiver_addr=eq.${addr}`,
         },
         (payload) => {
-
 handleRealtimeChange(payload, "video_comments");
         }
       )
@@ -763,7 +744,7 @@ let newNotif: Notification;
         } else if (source === "video_comments") {
           newNotif = {
             id: payload.new.id,
-            recipientAddr: payload.new.creator_addr,
+            recipientAddr: payload.new.receiver_addr,
             actorAddress: payload.new.commenter_addr,
             actorName: null,
             actorAvatar: null,

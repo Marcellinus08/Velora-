@@ -106,7 +106,9 @@ export async function POST(req: Request, { params }: RouteCtx) {
       videoId,
       videoTitle: videoData.title,
       videoAbstractId: videoData.abstract_id,
+      videoAbstractId_type: typeof videoData.abstract_id,
       creatorAddr,
+      creatorAddr_type: typeof creatorAddr,
       commenterAddr: userAddr,
       willCreateNotif: !!(creatorAddr && creatorAddr !== userAddr),
     });
@@ -149,12 +151,19 @@ export async function POST(req: Request, { params }: RouteCtx) {
           throw new Error("comment_id is required for notification");
         }
 
+        console.log("[Video Comment Notification] creatorAddr value before processing:", {
+          creatorAddr,
+          creatorAddr_type: typeof creatorAddr,
+          creatorAddr_isNull: creatorAddr === null,
+          creatorAddr_isUndefined: creatorAddr === undefined,
+        });
+
         console.log("[Video Comment Notification] Attempting to create notification with:", {
           video_id: videoId,
           video_id_type: typeof videoId,
           comment_id: commentId,
           commenter_addr: userAddr.toLowerCase(),
-          creator_addr: creatorAddr.toLowerCase(),
+          receiver_addr: creatorAddr?.toLowerCase() || "WILL_BE_NULL",
           message: `commented on your video "${videoData.title?.slice(0, 50)}${videoData.title?.length ?? 0 > 50 ? '...' : ''}"`,
         });
 
@@ -162,12 +171,19 @@ export async function POST(req: Request, { params }: RouteCtx) {
           video_id: videoId,
           comment_id: commentId, // ← Foreign Key to video_comments
           commenter_addr: userAddr.toLowerCase(),
-          creator_addr: creatorAddr.toLowerCase(),
+          receiver_addr: creatorAddr?.toLowerCase() || null,
           type: "video_comment",
           message: `commented on your video "${videoData.title?.slice(0, 50)}${videoData.title?.length ?? 0 > 50 ? '...' : ''}"`,
         };
 
-        console.log("[Video Comment Notification] Payload to insert:", notifPayload);
+        console.log("[Video Comment Notification] Final Payload to insert:", {
+          ...notifPayload,
+          receiver_addr_check: {
+            value: notifPayload.receiver_addr,
+            isNull: notifPayload.receiver_addr === null,
+            type: typeof notifPayload.receiver_addr,
+          },
+        });
 
         const { data: insertedNotif, error: notifErr } = await supabaseAdmin
           .from("notification_video_comments")
@@ -192,7 +208,7 @@ export async function POST(req: Request, { params }: RouteCtx) {
         } else {
           console.log("[Video Comment] ✅ Created notification successfully:", {
             notificationId: insertedNotif.id,
-            creatorAddr: insertedNotif.creator_addr,
+            receiverAddr: insertedNotif.receiver_addr,
             commenterAddr: insertedNotif.commenter_addr,
             videoId: insertedNotif.video_id,
             createdAt: insertedNotif.created_at,
