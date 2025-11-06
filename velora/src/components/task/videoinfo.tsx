@@ -105,14 +105,24 @@ export default function VideoInfoSection({
       const me = getAbstractAddressFromSession();
       if (!me) return;
 
-      const { count, error } = await supabase
-        .from("profiles_follows")
-        .select("id", { count: "exact", head: true })
-        .eq("follower_addr", me)
-        .eq("followee_addr", walletLower);
+      try {
+        // Use follow status API
+        const response = await fetch("/api/profiles/follow/status", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            follower_addr: me,
+            followee_addr: walletLower,
+          }),
+        });
 
-      if (!active) return;
-      if (!error) setIsFollowing((count || 0) > 0);
+        if (response.ok) {
+          const data = await response.json();
+          if (active) setIsFollowing(data.isFollowing);
+        }
+      } catch (error) {
+        console.error("[VideoInfo] Error checking follow status:", error);
+      }
     })();
 
     return () => {
@@ -226,26 +236,52 @@ export default function VideoInfoSection({
     setFollowBusy(true);
     try {
       if (isFollowing) {
-        const { error } = await supabase
-          .from("profiles_follows")
-          .delete()
-          .eq("follower_addr", me)
-          .eq("followee_addr", walletLower);
-        if (error) throw error;
-        setIsFollowing(false);
-      } else {
-        const { error } = await supabase.from("profiles_follows").insert({
-          follower_addr: me,
-          followee_addr: walletLower,
+        // Unfollow
+        const response = await fetch("/api/profiles/follow", {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            follower_addr: me,
+            followee_addr: walletLower,
+          }),
         });
-        if (error) throw error;
+
+        if (!response.ok) {
+          const err = await response.json();
+          throw new Error(err.error || "Failed to unfollow");
+        }
+
+        setIsFollowing(false);
+        toast.success("Success", `You've unfollowed ${video.creator.name}`, 3000);
+      } else {
+        // Follow
+        const response = await fetch("/api/profiles/follow", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            follower_addr: me,
+            followee_addr: walletLower,
+            followee_username: video.creator.name,
+          }),
+        });
+
+        if (!response.ok) {
+          const err = await response.json();
+          throw new Error(err.error || "Failed to follow");
+        }
+
         setIsFollowing(true);
+        toast.success(
+          "Success",
+          `You're now following ${video.creator.name}! 🎉`,
+          3000
+        );
       }
     } catch (e: any) {
       console.error("Follow toggle failed:", e);
       toast.error(
         "Follow Failed",
-        `Error: ${e?.message || "Unknown error"}\nFailed to update follow status`,
+        `${e?.message || "Unknown error"}\nTry again later`,
         5000
       );
     } finally {

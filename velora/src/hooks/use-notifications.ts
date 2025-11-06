@@ -11,14 +11,14 @@ export type Notification = {
   actorName: string | null;
   actorAvatar: string | null;
   type: "like" | "like_reply" | "reply" | "nested_reply" | "follow" | "video_purchase" | "video_like" | "video_comment";
-  targetId: string; // post_id or reply_id or video_id depending on type
-  targetType: "post" | "reply" | "video";
-  targetTitle?: string; // ✅ Title of the post/reply/video
+  targetId: string; // post_id or reply_id or video_id or profile_addr depending on type
+  targetType: "post" | "reply" | "video" | "profile";
+  targetTitle?: string; // ✅ Title of the post/reply/video or username for follow
   message: string;
   isRead: boolean;
   createdAt: string;
   readAt: string | null;
-  source: "community_likes" | "community_replies" | "reply_likes" | "video_purchases" | "video_likes" | "video_comments"; // which table it came from
+  source: "community_likes" | "community_replies" | "reply_likes" | "video_purchases" | "video_likes" | "video_comments" | "notification_follows"; // which table it came from
   // Optional fields for video comments (via FK JOIN)
   commentText?: string; // From video_comments.content
   commentId?: string; // Reference to video_comments.id
@@ -72,8 +72,8 @@ setNotifications([]);
 try {
       const supabase = createClient();
 
-      // Query 6 notification tables
-      const [likesRes, repliesRes, replyLikesRes, videoPurchasesRes, videoLikesRes, videoCommentsRes] = await Promise.all([
+      // Query 6 notification tables + notification_follows
+      const [likesRes, repliesRes, replyLikesRes, videoPurchasesRes, videoLikesRes, videoCommentsRes, followsRes] = await Promise.all([
         supabase
           .from("notification_community_likes")
           .select("*")
@@ -112,6 +112,12 @@ try {
           `)
           .eq("creator_addr", addr)
           .order("created_at", { ascending: false }),
+
+        supabase
+          .from("notification_follows")
+          .select("*")
+          .eq("followee_addr", addr)
+          .order("created_at", { ascending: false }),
       ]);
 
       if (likesRes.error) throw new Error(likesRes.error.message);
@@ -120,6 +126,7 @@ try {
       if (videoPurchasesRes.error) throw new Error(videoPurchasesRes.error.message);
       if (videoLikesRes.error) throw new Error(videoLikesRes.error.message);
       if (videoCommentsRes.error) throw new Error(videoCommentsRes.error.message);
+      if (followsRes.error) throw new Error(followsRes.error.message);
 
 if (videoPurchasesRes.data && videoPurchasesRes.data.length > 0) {
 
@@ -140,6 +147,7 @@ if (videoPurchasesRes.data && videoPurchasesRes.data.length > 0) {
         ...(videoPurchasesRes.data || []),
         ...(videoLikesRes.data || []),
         ...(videoCommentsRes.data || []),
+        ...(followsRes.data || []),
       ];
 
       // Get unique actor addresses
@@ -311,6 +319,28 @@ if (videoPurchasesRes.data && videoPurchasesRes.data.length > 0) {
         });
       });
 
+      // Add follows
+      (followsRes.data || []).forEach((n: any) => {
+        const actor = actorProfiles.get(n.follower_addr.toLowerCase()) || { name: null, avatar: null };
+        
+        allNotifs.push({
+          id: n.id,
+          recipientAddr: n.followee_addr,
+          actorAddress: n.follower_addr,
+          actorName: actor.name,
+          actorAvatar: actor.avatar,
+          type: "follow",
+          targetId: n.follower_addr, // Profile address of the follower
+          targetType: "profile",
+          targetTitle: actor.name || "Someone", // Use follower's name as title
+          message: `${actor.name || "Someone"} started following you`,
+          isRead: n.is_read,
+          createdAt: n.created_at,
+          readAt: n.read_at,
+          source: "notification_follows",
+        });
+      });
+
       // Sort by created_at DESC
       allNotifs.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 setNotifications(allNotifs);
@@ -347,6 +377,8 @@ return;
         tableName = "notification_video_likes";
       } else if (notif.source === "video_comments") {
         tableName = "notification_video_comments";
+      } else if (notif.source === "notification_follows") {
+        tableName = "notification_follows";
       } else {
 return;
       }
@@ -379,8 +411,8 @@ const addr = abstractId.toLowerCase();
       const supabase = createClient();
       const now = new Date().toISOString();
 
-      // Update all 6 notification tables
-      const [res1, res2, res3, res4, res5, res6] = await Promise.all([
+      // Update all 7 notification tables (6 legacy + notification_follows)
+      const [res1, res2, res3, res4, res5, res6, res7] = await Promise.all([
         supabase
           .from("notification_community_likes")
           .update({ is_read: true, read_at: now })
@@ -416,6 +448,12 @@ const addr = abstractId.toLowerCase();
           .update({ is_read: true, read_at: now })
           .eq("creator_addr", addr)
           .eq("is_read", false),
+
+        supabase
+          .from("notification_follows")
+          .update({ is_read: true, read_at: now })
+          .eq("followee_addr", addr)
+          .eq("is_read", false),
       ]);
 
       if (res1.error) throw new Error(res1.error.message);
@@ -424,6 +462,7 @@ const addr = abstractId.toLowerCase();
       if (res4.error) throw new Error(res4.error.message);
       if (res5.error) throw new Error(res5.error.message);
       if (res6.error) throw new Error(res6.error.message);
+      if (res7.error) throw new Error(res7.error.message);
 // Optimistically update local state
       const nowIso = new Date().toISOString();
       setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true, readAt: nowIso })));
@@ -456,6 +495,8 @@ return;
         tableName = "notification_video_likes";
       } else if (notif.source === "video_comments") {
         tableName = "notification_video_comments";
+      } else if (notif.source === "notification_follows") {
+        tableName = "notification_follows";
       } else {
 return;
       }
@@ -605,6 +646,24 @@ handleRealtimeChange(payload, "video_comments");
       .subscribe((status) => {
 });
 
+    // Subscribe to follows
+    const followsChannel = supabase
+      .channel(`notif-follows-${addr}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "notification_follows",
+          filter: `followee_addr=eq.${addr}`,
+        },
+        (payload) => {
+handleRealtimeChange(payload, "notification_follows");
+        }
+      )
+      .subscribe((status) => {
+});
+
     return () => {
 supabase.removeChannel(likesChannel);
       supabase.removeChannel(repliesChannel);
@@ -612,12 +671,13 @@ supabase.removeChannel(likesChannel);
       supabase.removeChannel(videoPurchasesChannel);
       supabase.removeChannel(videoLikesChannel);
       supabase.removeChannel(videoCommentsChannel);
+      supabase.removeChannel(followsChannel);
     };
   }, [abstractId, fetchNotifications]);
 
   // Handle real-time changes
   const handleRealtimeChange = useCallback(
-    (payload: any, source: "community_likes" | "community_replies" | "reply_likes" | "video_purchases" | "video_likes" | "video_comments") => {
+    (payload: any, source: "community_likes" | "community_replies" | "reply_likes" | "video_purchases" | "video_likes" | "video_comments" | "notification_follows") => {
       if (payload.eventType === "INSERT") {
 let newNotif: Notification;
         if (source === "community_likes") {
@@ -700,8 +760,7 @@ let newNotif: Notification;
             readAt: payload.new.read_at,
             source: "video_likes",
           };
-        } else {
-          // video_comments
+        } else if (source === "video_comments") {
           newNotif = {
             id: payload.new.id,
             recipientAddr: payload.new.creator_addr,
@@ -716,6 +775,23 @@ let newNotif: Notification;
             createdAt: payload.new.created_at,
             readAt: payload.new.read_at,
             source: "video_comments",
+          };
+        } else {
+          // notification_follows
+          newNotif = {
+            id: payload.new.id,
+            recipientAddr: payload.new.followee_addr,
+            actorAddress: payload.new.follower_addr,
+            actorName: null,
+            actorAvatar: null,
+            type: "follow",
+            targetId: payload.new.follower_addr,
+            targetType: "profile",
+            message: "Someone started following you",
+            isRead: payload.new.is_read,
+            createdAt: payload.new.created_at,
+            readAt: payload.new.read_at,
+            source: "notification_follows",
           };
         }
 
