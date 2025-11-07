@@ -265,12 +265,12 @@ export default function SettingsAccount() {
   }
 
   return (
-    <section className="rounded-2xl border border-neutral-800 bg-neutral-900 p-4 sm:p-6">
-      <h2 className="mb-4 text-base font-semibold text-neutral-200">Account</h2>
+    <section className="rounded-2xl max-sm:rounded-lg border border-neutral-800 bg-neutral-900 p-4 sm:p-6 max-sm:p-3">
+      <h2 className="mb-4 max-sm:mb-3 text-base max-sm:text-sm font-semibold text-neutral-200">Account</h2>
 
       {/* Avatar */}
-      <div className="mb-6 flex items-center gap-4">
-        <div className="relative h-20 w-20 overflow-hidden rounded-full ring-2 ring-[var(--primary-500)]">
+      <div className="mb-6 max-sm:mb-4 flex items-center gap-4 max-sm:gap-3 max-sm:flex-col max-sm:text-center">
+        <div className="relative h-20 w-20 max-sm:h-24 max-sm:w-24 max-sm:mx-auto overflow-hidden rounded-full ring-2 ring-[var(--primary-500)]">
           {avatarUrl ? (
             // DB avatar atau preview
             // eslint-disable-next-line @next/next/no-img-element
@@ -287,7 +287,7 @@ export default function SettingsAccount() {
             <AbstractProfile
               size="lg"
               showTooltip={false}
-              className="!h-20 !w-20 !rounded-full object-cover"
+              className="!h-20 !w-20 max-sm:!h-24 max-sm:!w-24 !rounded-full object-cover"
             />
           ) : (
             // Terakhir: placeholder
@@ -296,10 +296,10 @@ export default function SettingsAccount() {
           )}
         </div>
 
-        <div>
+        <div className="max-sm:w-full">
           <button
             onClick={onPickAvatar}
-            className="rounded-lg bg-neutral-800 px-3 py-2 text-sm font-semibold text-neutral-100 hover:bg-neutral-700 cursor-pointer"
+            className="rounded-lg bg-neutral-800 px-3 py-2 max-sm:px-4 max-sm:py-2.5 max-sm:w-full text-sm max-sm:text-xs font-semibold text-neutral-100 hover:bg-neutral-700 cursor-pointer transition-colors"
             disabled={!address || saving}
           >
             Choose Avatar
@@ -311,25 +311,25 @@ export default function SettingsAccount() {
             onChange={onAvatarChange}
             className="hidden"
           />
-          <p className="mt-2 text-xs text-neutral-500">
+          <p className="mt-2 max-sm:mt-1.5 text-xs max-sm:text-[10px] text-neutral-500">
             PNG/JPG up to 5 MB. The image will be uploaded after you click <b>Save</b>.
           </p>
         </div>
       </div>
 
       {/* Username */}
-      <div className="space-y-2">
-        <label className="mb-1 block text-sm text-neutral-300">Username</label>
+      <div className="space-y-2 max-sm:space-y-1.5">
+        <label className="mb-1 block text-sm max-sm:text-xs text-neutral-300">Username</label>
         <input
           value={username}
           onChange={(e) => setUsername(e.target.value)}
-          className="w-full rounded-lg border border-neutral-700 bg-neutral-950 px-3 py-2 text-neutral-100 placeholder:text-neutral-500 focus:border-neutral-500 focus:outline-none"
+          className="w-full rounded-lg border border-neutral-700 bg-neutral-950 px-3 py-2 max-sm:px-2.5 max-sm:py-2 text-neutral-100 max-sm:text-sm placeholder:text-neutral-500 focus:border-neutral-500 focus:outline-none"
           placeholder={shortAddr}
           disabled={!address || saving}
         />
-        {formatError && <p className="text-xs text-red-400">{formatError}</p>}
+        {formatError && <p className="text-xs max-sm:text-[10px] text-red-400">{formatError}</p>}
         {!formatError && (
-          <p className="text-xs">
+          <p className="text-xs max-sm:text-[10px]">
             {checking && <span className="text-neutral-400">Checking availability…</span>}
             {available === true && <span className="text-emerald-400">Username is available ✓</span>}
             {available === false && <span className="text-red-400">Username is taken ✕</span>}
@@ -341,15 +341,15 @@ export default function SettingsAccount() {
       </div>
 
       {/* Actions */}
-      <div className="mt-6 flex items-center gap-2">
+      <div className="mt-6 max-sm:mt-4 flex items-center gap-2 max-sm:flex-col max-sm:items-stretch">
         <button
           onClick={onSaveAll}
           disabled={!canSave}
-          className="rounded-xl bg-[var(--primary-500)] px-4 py-2 text-sm font-semibold text-white hover:bg-opacity-90 disabled:cursor-not-allowed disabled:bg-neutral-700 cursor-pointer"
+          className="rounded-xl bg-[var(--primary-500)] px-4 py-2 max-sm:px-3 max-sm:py-2.5 max-sm:w-full text-sm max-sm:text-xs font-semibold text-white hover:bg-opacity-90 disabled:cursor-not-allowed disabled:bg-neutral-700 cursor-pointer transition-all"
         >
           {saving ? "Saving..." : "Save"}
         </button>
-        {hint && <span className="text-sm text-neutral-300">{hint}</span>}
+        {hint && <span className="text-sm max-sm:text-xs text-neutral-300 max-sm:text-center">{hint}</span>}
       </div>
     </section>
   );

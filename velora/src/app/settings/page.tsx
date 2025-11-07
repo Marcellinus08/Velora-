@@ -30,8 +30,8 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="flex h-full grow flex-row">
-      <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8">
+    <div className="flex h-full grow flex-row overflow-x-hidden max-w-full">
+      <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8 max-sm:px-3 max-sm:py-4">
         {/* Background decorative elements - matching other pages */}
         <div className="fixed inset-0 overflow-hidden opacity-5 pointer-events-none">
           <div className="absolute -top-10 -right-10 w-40 h-40 bg-purple-500 rounded-full blur-3xl animate-pulse" style={{ animationDuration: '4s' }} />
@@ -48,7 +48,7 @@ export default function SettingsPage() {
         </div>
 
         {/* Settings Account section */}
-        <div className="relative mt-6">
+        <div className="relative mt-6 max-sm:mt-4">
           <div className="absolute inset-0 bg-gradient-to-r from-purple-500/3 via-blue-500/3 to-pink-500/3 rounded-2xl blur-xl opacity-0 hover:opacity-100 transition-opacity duration-500" />
           <div className="relative">
             <SettingsAccount />
@@ -56,11 +56,11 @@ export default function SettingsPage() {
         </div>
 
         {/* Floating decorative elements */}
-        <div className="fixed bottom-8 right-8 opacity-20 hover:opacity-100 transition-opacity duration-300 pointer-events-none">
-          <div className="flex flex-col gap-3">
-            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500/20 to-blue-500/20 backdrop-blur-sm border border-purple-500/20 animate-pulse" style={{ animationDuration: '3s' }} />
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-pink-500/20 to-purple-500/20 backdrop-blur-sm border border-pink-500/20 animate-pulse" style={{ animationDelay: '1s', animationDuration: '2s' }} />
-            <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-500/20 to-cyan-500/20 backdrop-blur-sm border border-blue-500/20 animate-pulse" style={{ animationDelay: '2s', animationDuration: '4s' }} />
+        <div className="fixed bottom-8 right-8 max-sm:bottom-4 max-sm:right-4 opacity-20 hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+          <div className="flex flex-col gap-3 max-sm:gap-2">
+            <div className="w-12 h-12 max-sm:w-8 max-sm:h-8 rounded-full bg-gradient-to-br from-purple-500/20 to-blue-500/20 backdrop-blur-sm border border-purple-500/20 animate-pulse" style={{ animationDuration: '3s' }} />
+            <div className="w-8 h-8 max-sm:w-6 max-sm:h-6 rounded-full bg-gradient-to-br from-pink-500/20 to-purple-500/20 backdrop-blur-sm border border-pink-500/20 animate-pulse" style={{ animationDelay: '1s', animationDuration: '2s' }} />
+            <div className="w-6 h-6 max-sm:w-4 max-sm:h-4 rounded-full bg-gradient-to-br from-blue-500/20 to-cyan-500/20 backdrop-blur-sm border border-blue-500/20 animate-pulse" style={{ animationDelay: '2s', animationDuration: '4s' }} />
           </div>
         </div>
       </main>
