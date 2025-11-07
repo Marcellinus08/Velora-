@@ -282,7 +282,7 @@ export default function CommunityPage() {
   return (
     <div className="flex h-full grow flex-row overflow-x-hidden">
       <Sidebar />
-      <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8 xl:ml-64 max-sm:px-3 max-sm:py-3 max-sm:pb-20 max-sm:overflow-x-hidden md:pb-20 lg:pb-20 xl:pb-6">\n
+      <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8 lg:ml-64 max-sm:px-3 max-sm:py-3 max-sm:pb-20 max-sm:overflow-x-hidden md:max-lg:pb-20">\n
         <div className="flex flex-col gap-6 max-sm:gap-4 max-sm:max-w-full">
           <div className="flex flex-col items-start gap-4 md:flex-row md:items-center md:justify-between max-sm:gap-3">
             <div className="max-sm:w-full">

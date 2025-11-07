@@ -194,9 +194,9 @@ export default function Carousel({
   }, [index, allSlides, interval, loading]);
 
   return (
-    <div className={`relative w-full ${size} max-sm:h-[180px] md:h-[320px] lg:h-[400px]`}>
+    <div className={`relative w-full ${size} max-sm:h-[180px] md:max-lg:h-[380px]`}>
       <div
-        className={`h-full overflow-hidden rounded-xl max-sm:rounded-lg transition-all duration-300 ${
+        className={`h-full overflow-hidden rounded-xl max-sm:rounded-lg md:max-lg:rounded-xl transition-all duration-300 ${
           campaignId && allSlides[index]?.id === campaignId 
             ? "ring-4 ring-yellow-400/50 shadow-2xl shadow-yellow-400/20" 
             : ""
@@ -223,16 +223,15 @@ export default function Carousel({
               )}
               
               {/* Bottom Black Gradient untuk semua slides */}
-              <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-black/80 via-black/40 to-transparent max-sm:h-16 md:h-20 lg:h-24" />
+              <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-black/80 via-black/40 to-transparent max-sm:h-16 md:max-lg:h-20" />
               
               {/* Campaign Sponsored Badge */}
               {slide.type === "campaign" && (
                 <div className="absolute top-4 right-4 bg-gradient-to-r from-purple-600 to-purple-500 px-3 py-1 rounded-full text-xs font-medium text-white shadow-lg shadow-purple-500/30
                   max-sm:top-2 max-sm:right-2 max-sm:px-2 max-sm:py-0.5 max-sm:text-[9px]
-                  md:top-3 md:right-3 md:px-2.5 md:py-0.5 md:text-[10px]
-                  lg:top-4 lg:right-4">
+                  md:max-lg:top-3 md:max-lg:right-3 md:max-lg:px-2.5 md:max-lg:py-0.5 md:max-lg:text-[10px]">
                   <span className="flex items-center gap-1 max-sm:gap-0.5">
-                    <svg className="w-3 h-3 max-sm:w-2 max-sm:h-2 md:w-2.5 md:h-2.5 lg:w-3 lg:h-3" fill="currentColor" viewBox="0 0 20 20">
+                    <svg className="w-3 h-3 max-sm:w-2 max-sm:h-2 md:max-lg:w-2.5 md:max-lg:h-2.5" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
                     </svg>
                     Sponsored
@@ -244,10 +243,9 @@ export default function Carousel({
               {slide.type === "static" && (
                 <div className="absolute top-4 right-4 bg-gradient-to-r from-purple-600 to-purple-500 px-3 py-1 rounded-full text-xs font-medium text-white shadow-lg shadow-purple-500/30
                   max-sm:top-2 max-sm:right-2 max-sm:px-2 max-sm:py-0.5 max-sm:text-[9px]
-                  md:top-3 md:right-3 md:px-2.5 md:py-0.5 md:text-[10px]
-                  lg:top-4 lg:right-4">
+                  md:max-lg:top-3 md:max-lg:right-3 md:max-lg:px-2.5 md:max-lg:py-0.5 md:max-lg:text-[10px]">
                   <span className="flex items-center gap-1 max-sm:gap-0.5">
-                    <svg className="w-3 h-3 max-sm:w-2 max-sm:h-2 md:w-2.5 md:h-2.5 lg:w-3 lg:h-3" fill="currentColor" viewBox="0 0 20 20">
+                    <svg className="w-3 h-3 max-sm:w-2 max-sm:h-2 md:max-lg:w-2.5 md:max-lg:h-2.5" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                     </svg>
                     Advertise Here
@@ -257,13 +255,13 @@ export default function Carousel({
               
               <div className="absolute inset-0 flex m-5 flex-col justify-center p-8 text-white md:p-12 pb-16 md:pb-20
                 max-sm:m-2.5 max-sm:p-3 max-sm:pb-10
-                md:m-4 md:p-6 md:pb-14 lg:m-5 lg:p-8 lg:pb-16">
+                md:max-lg:m-4 md:max-lg:p-6 md:max-lg:pb-14">
                 <h2 className={`text-2xl md:text-4xl font-bold line-clamp-2 ${
                   slide.type === "static" 
                     ? "text-white drop-shadow-lg"
                     : "text-white"
                 } max-sm:text-sm max-sm:font-semibold max-sm:line-clamp-1 max-sm:mb-0.5
-                  md:text-xl md:font-bold md:line-clamp-2 lg:text-2xl`}>
+                  md:max-lg:text-xl md:max-lg:font-bold md:max-lg:line-clamp-2`}>
                   {slide.title}
                 </h2>
                 <p className={`mt-2 text-base md:text-lg line-clamp-3 ${
@@ -271,18 +269,18 @@ export default function Carousel({
                     ? "text-gray-100 drop-shadow-md"
                     : "text-gray-200 drop-shadow-md"
                 } max-sm:mt-0.5 max-sm:text-[10px] max-sm:line-clamp-2 max-sm:leading-tight
-                  md:mt-1.5 md:text-sm md:line-clamp-2 lg:mt-2 lg:text-base`}>
+                  md:max-lg:mt-1.5 md:max-lg:text-sm md:max-lg:line-clamp-2`}>
                   {slide.desc}
                 </p>
                 <button 
                   onClick={() => handleSlideClick(slide)}
                   className="mt-4 w-fit rounded-full bg-gradient-to-r from-purple-600 to-purple-500 px-6 py-2.5 text-sm font-semibold text-white transition-all duration-300 hover:from-purple-700 hover:to-purple-600 hover:shadow-xl shadow-lg shadow-purple-500/30 cursor-pointer
                     max-sm:mt-2 max-sm:px-3 max-sm:py-1.5 max-sm:text-[10px] max-sm:rounded-lg max-sm:font-semibold
-                    md:mt-3 md:px-4 md:py-2 md:text-xs lg:mt-4 lg:px-6 lg:py-2.5 lg:text-sm"
+                    md:max-lg:mt-3 md:max-lg:px-4 md:max-lg:py-2 md:max-lg:text-xs"
                 >
                   {slide.type === "static" && (
-                    <span className="flex items-center gap-2 max-sm:gap-1 md:gap-1.5 lg:gap-2">
-                      <svg className="w-4 h-4 max-sm:w-3 max-sm:h-3 md:w-3.5 md:h-3.5 lg:w-4 lg:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <span className="flex items-center gap-2 max-sm:gap-1 md:max-lg:gap-1.5">
+                      <svg className="w-4 h-4 max-sm:w-3 max-sm:h-3 md:max-lg:w-3.5 md:max-lg:h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                       </svg>
                       {slide.cta}
@@ -300,7 +298,7 @@ export default function Carousel({
       {!loading && allSlides.length > 1 && (
         <div className="pointer-events-none absolute bottom-6 left-1/2 flex -translate-x-1/2 space-x-3
           max-sm:bottom-2 max-sm:space-x-1.5
-          md:bottom-4 md:space-x-2 lg:bottom-5 lg:space-x-2.5">
+          md:max-lg:bottom-4 md:max-lg:space-x-2">
           {allSlides.map((slide, i) => (
             <button
               key={slide.id || i}
@@ -309,7 +307,7 @@ export default function Carousel({
                   ? "bg-purple-500 scale-110 shadow-lg shadow-purple-500/50"
                   : "bg-white/60 hover:bg-white/80 hover:scale-105"
               } max-sm:h-1.5 max-sm:w-1.5 ${i === index ? "max-sm:scale-125" : ""}
-                md:h-2 md:w-2 lg:h-2.5 lg:w-2.5`}
+                md:max-lg:h-2 md:max-lg:w-2`}
               aria-label={`Go to slide ${i + 1}: ${slide.title}`}
               onClick={() => {
                 setIndex(i);
@@ -326,28 +324,28 @@ export default function Carousel({
           <button
             className="absolute left-4 top-1/2 -translate-y-1/2 rounded-full bg-black/30 backdrop-blur-sm p-3 text-white hover:bg-black/50 transition-all duration-200 hover:scale-110 active:scale-95 cursor-pointer
               max-sm:left-2 max-sm:p-1.5 max-sm:bg-black/40
-              md:left-3 md:p-2 lg:left-4 lg:p-3"
+              md:max-lg:left-3 md:max-lg:p-2"
             aria-label="Previous slide"
             onClick={() => {
               prev();
               start();
             }}
           >
-            <svg className="w-5 h-5 max-sm:w-3 max-sm:h-3 md:w-4 md:h-4 lg:w-5 lg:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5 max-sm:w-3 max-sm:h-3 md:max-lg:w-4 md:max-lg:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
           </button>
           <button
             className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full bg-black/30 backdrop-blur-sm p-3 text-white hover:bg-black/50 transition-all duration-200 hover:scale-110 active:scale-95 cursor-pointer
               max-sm:right-2 max-sm:p-1.5 max-sm:bg-black/40
-              md:right-3 md:p-2 lg:right-4 lg:p-3"
+              md:max-lg:right-3 md:max-lg:p-2"
             aria-label="Next slide"
             onClick={() => {
               next();
               start();
             }}
           >
-            <svg className="w-5 h-5 max-sm:w-3 max-sm:h-3 md:w-4 md:h-4 lg:w-5 lg:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5 max-sm:w-3 max-sm:h-3 md:max-lg:w-4 md:max-lg:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
           </button>

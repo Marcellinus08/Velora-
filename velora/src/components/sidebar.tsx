@@ -22,7 +22,7 @@ export default function Sidebar() {
     "text-neutral-50 hover:bg-neutral-700 hover:text-neutral-50 hover:scale-105 hover:shadow-lg";
 
   // Mobile bottom nav styles
-  const mobileBase = "flex flex-col items-center justify-center gap-1 py-2 px-3 text-xs font-medium transition-all duration-200 cursor-pointer min-w-[60px] md:min-w-[80px] md:py-3 lg:min-w-[90px] lg:py-3";
+  const mobileBase = "flex flex-col items-center justify-center gap-1 py-2 px-3 text-xs font-medium transition-all duration-200 cursor-pointer min-w-[60px] md:max-lg:min-w-[80px] md:max-lg:py-3";
   const mobileActiveCls = "text-[#8a2be2] font-semibold";
   const mobileInactiveCls = "text-neutral-400 hover:text-neutral-200";
 
@@ -38,7 +38,7 @@ export default function Sidebar() {
 
   const MobileIcon = ({ name }: { name: string }) => (
     <span
-      className="material-icons-round text-[24px] leading-none md:text-[26px] lg:text-[28px]"
+      className="material-icons-round text-[24px] leading-none md:max-lg:text-[26px]"
       aria-hidden="true"
     >
       {name}
@@ -55,8 +55,8 @@ export default function Sidebar() {
 
   return (
     <>
-      {/* Desktop Sidebar - Only on extra large screens (≥1280px) */}
-      <aside className="fixed left-0 top-[57px] hidden h-[calc(100vh-57px)] w-64 flex-shrink-0 flex-col gap-y-2 overflow-y-auto border-r border-solid border-neutral-800 bg-neutral-900 px-3 py-4 xl:flex z-30">
+      {/* Desktop Sidebar - Hidden on tablet and mobile */}
+      <aside className="fixed left-0 top-[57px] hidden h-[calc(100vh-57px)] w-64 flex-shrink-0 flex-col gap-y-2 overflow-y-auto border-r border-solid border-neutral-800 bg-neutral-900 px-3 py-4 lg:flex z-30">
         <nav className="flex flex-col gap-1">
           {navItems.map((item) => (
             <Link
@@ -72,9 +72,9 @@ export default function Sidebar() {
         </nav>
       </aside>
 
-      {/* Mobile & Tablet Bottom Navigation - Up to 1279px */}
-      <nav className="fixed bottom-0 left-0 right-0 z-50 xl:hidden bg-neutral-900 border-t border-neutral-800 safe-area-pb">
-        <div className="flex items-center justify-around max-w-lg mx-auto md:max-w-2xl lg:max-w-3xl">
+      {/* Mobile & Tablet Bottom Navigation */}
+      <nav className="fixed bottom-0 left-0 right-0 z-50 lg:hidden bg-neutral-900 border-t border-neutral-800 safe-area-pb">
+        <div className="flex items-center justify-around max-w-lg mx-auto md:max-lg:max-w-2xl">
           {navItems.map((item) => (
             <Link
               key={item.href}
@@ -83,7 +83,7 @@ export default function Sidebar() {
               className={`${mobileBase} ${isActive(item.href) ? mobileActiveCls : mobileInactiveCls}`}
             >
               <MobileIcon name={item.icon} />
-              <span className="text-[10px] leading-tight md:text-xs lg:text-sm">{item.label}</span>
+              <span className="text-[10px] leading-tight md:max-lg:text-xs">{item.label}</span>
             </Link>
           ))}
         </div>
