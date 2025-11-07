@@ -55,8 +55,8 @@ export default function Sidebar() {
 
   return (
     <>
-      {/* Desktop Sidebar - Hidden on tablet and mobile */}
-      <aside className="fixed left-0 top-[57px] hidden h-[calc(100vh-57px)] w-64 flex-shrink-0 flex-col gap-y-2 overflow-y-auto border-r border-solid border-neutral-800 bg-neutral-900 px-3 py-4 lg:flex z-30">
+      {/* Desktop Sidebar - Only show on xl screens (≥1280px) */}
+      <aside className="fixed left-0 top-[57px] hidden h-[calc(100vh-57px)] w-64 flex-shrink-0 flex-col gap-y-2 overflow-y-auto border-r border-solid border-neutral-800 bg-neutral-900 px-3 py-4 xl:flex z-30">
         <nav className="flex flex-col gap-1">
           {navItems.map((item) => (
             <Link
@@ -72,9 +72,9 @@ export default function Sidebar() {
         </nav>
       </aside>
 
-      {/* Mobile & Tablet Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 z-50 lg:hidden bg-neutral-900 border-t border-neutral-800 safe-area-pb">
-        <div className="flex items-center justify-around max-w-lg mx-auto md:max-lg:max-w-2xl">
+      {/* Mobile & Tablet Bottom Navigation - Show on all screens smaller than xl */}
+      <nav className="fixed bottom-0 left-0 right-0 z-50 xl:hidden bg-neutral-900 border-t border-neutral-800 safe-area-pb">
+        <div className="flex items-center justify-around max-w-lg mx-auto md:max-w-2xl">
           {navItems.map((item) => (
             <Link
               key={item.href}
@@ -83,7 +83,7 @@ export default function Sidebar() {
               className={`${mobileBase} ${isActive(item.href) ? mobileActiveCls : mobileInactiveCls}`}
             >
               <MobileIcon name={item.icon} />
-              <span className="text-[10px] leading-tight md:max-lg:text-xs">{item.label}</span>
+              <span className="text-[10px] leading-tight md:text-xs">{item.label}</span>
             </Link>
           ))}
         </div>
