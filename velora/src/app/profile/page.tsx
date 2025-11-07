@@ -275,21 +275,21 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="flex h-full grow flex-row">
-      <main className="flex-1 overflow-y-auto px-4 py-6 sm:px-6 lg:px-8">
+    <div className="flex h-full grow flex-row overflow-x-hidden">
+      <main className="flex-1 overflow-y-auto px-4 py-6 sm:px-6 lg:px-8 max-sm:px-3 max-sm:py-4">
         <ProfileHeader user={profileData.user} address={targetAddress} />
 
         {/* Stats + Rank */}
-        <div className="mt-6">
+        <div className="mt-6 max-sm:mt-4">
           <ProfileStatsCard stats={profileData.user.stats} rank={profileData.rank || undefined} profit={totalProfit} />
         </div>
 
         {/* Tabs: History / Activity */}
-        <div className="mt-10">
-          <div className="flex items-center gap-3 border-b border-neutral-800 pb-4">
+        <div className="mt-10 max-sm:mt-6">
+          <div className="flex items-center gap-3 max-sm:gap-2 border-b border-neutral-800 pb-4 max-sm:pb-3">
             <button
               onClick={() => setActiveTab("history")}
-              className={`rounded-full px-6 py-2.5 text-sm font-medium transition-all cursor-pointer ${
+              className={`rounded-full px-6 py-2.5 max-sm:px-4 max-sm:py-2 text-sm max-sm:text-xs font-medium transition-all cursor-pointer ${
                 activeTab === "history"
                   ? "bg-purple-500 text-white shadow-lg shadow-purple-500/30"
                   : "border border-neutral-700 text-neutral-300 hover:bg-neutral-800 hover:border-neutral-600"
@@ -299,7 +299,7 @@ export default function ProfilePage() {
             </button>
             <button
               onClick={() => setActiveTab("activity")}
-              className={`rounded-full px-6 py-2.5 text-sm font-medium transition-all cursor-pointer ${
+              className={`rounded-full px-6 py-2.5 max-sm:px-4 max-sm:py-2 text-sm max-sm:text-xs font-medium transition-all cursor-pointer ${
                 activeTab === "activity"
                   ? "bg-purple-500 text-white shadow-lg shadow-purple-500/30"
                   : "border border-neutral-700 text-neutral-300 hover:bg-neutral-800 hover:border-neutral-600"
@@ -310,11 +310,11 @@ export default function ProfilePage() {
           </div>
 
           {/* Filter & Search */}
-          <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="mt-4 max-sm:mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             {/* Filter by type */}
-            <div className="flex items-center gap-2">
-              <label className="text-sm text-neutral-400">
-                Filter
+            <div className="flex items-center gap-2 max-sm:w-full">
+              <label className="text-sm max-sm:text-xs text-neutral-400 max-sm:flex max-sm:items-center max-sm:w-full max-sm:justify-between">
+                <span>Filter</span>
                 <select
                   value={activeTab === "history" ? historyFilter : activityFilter}
                   onChange={(e) =>
@@ -322,7 +322,7 @@ export default function ProfilePage() {
                       ? setHistoryFilter(e.target.value)
                       : setActivityFilter(e.target.value)
                   }
-                  className="ml-2 rounded-md border border-neutral-700 bg-neutral-800 px-3 py-1.5 text-sm text-neutral-50 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
+                  className="ml-2 max-sm:ml-0 max-sm:flex-1 rounded-md max-sm:rounded border border-neutral-700 bg-neutral-800 px-3 max-sm:px-2 py-1.5 max-sm:py-1 text-sm max-sm:text-xs text-neutral-50 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
                 >
                   {activeTab === "history" ? (
                     <>
@@ -345,22 +345,22 @@ export default function ProfilePage() {
             </div>
 
             {/* Search and Sort */}
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2 rounded-full border border-neutral-700 bg-neutral-900 px-4 py-2">
-                <MI name="search" className="text-[14px] text-neutral-400" />
+            <div className="flex items-center gap-3 max-sm:gap-2 max-sm:flex-col max-sm:w-full">
+              <div className="flex items-center gap-2 rounded-full max-sm:rounded-lg border border-neutral-700 bg-neutral-900 px-4 max-sm:px-3 py-2 max-sm:py-1.5 max-sm:w-full">
+                <MI name="search" className="text-[14px] max-sm:text-[12px] text-neutral-400" />
                 <input
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder={activeTab === "history" ? "Search transactions" : "Search activities"}
-                  className="w-48 bg-transparent text-sm text-neutral-50 outline-none placeholder:text-neutral-400"
+                  className="w-48 max-sm:flex-1 bg-transparent text-sm max-sm:text-xs text-neutral-50 outline-none placeholder:text-neutral-400"
                 />
               </div>
-              <label className="text-sm text-neutral-400">
-                Sort
+              <label className="text-sm max-sm:text-xs text-neutral-400 max-sm:flex max-sm:items-center max-sm:w-full max-sm:justify-between">
+                <span>Sort</span>
                 <select
                   value={sortOrder}
                   onChange={(e) => setSortOrder(e.target.value as any)}
-                  className="ml-2 rounded-md border border-neutral-700 bg-neutral-800 px-3 py-1.5 text-neutral-50 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
+                  className="ml-2 max-sm:ml-0 max-sm:flex-1 rounded-md max-sm:rounded border border-neutral-700 bg-neutral-800 px-3 max-sm:px-2 py-1.5 max-sm:py-1 text-sm max-sm:text-xs text-neutral-50 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
                 >
                   <option value="newest">Newest</option>
                   <option value="oldest">Oldest</option>
@@ -371,33 +371,33 @@ export default function ProfilePage() {
 
           {/* Stats Summary Cards */}
           {activeTab === "history" && historyStats && (
-            <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
-              <div className="rounded-xl border border-neutral-700/50 bg-neutral-800/50 p-4 text-center backdrop-blur-sm">
-                <div className="text-xs font-medium text-neutral-400">Total Spent</div>
-                <div className="mt-1 text-lg font-bold text-green-400">${fmtNum(historyStats.totalSpent)}</div>
+            <div className="mt-4 max-sm:mt-3 grid grid-cols-2 gap-3 max-sm:gap-2 sm:grid-cols-4">
+              <div className="rounded-xl max-sm:rounded-lg border border-neutral-700/50 bg-neutral-800/50 p-4 max-sm:p-3 text-center backdrop-blur-sm">
+                <div className="text-xs max-sm:text-[10px] font-medium text-neutral-400">Total Spent</div>
+                <div className="mt-1 text-lg max-sm:text-base font-bold text-green-400">${fmtNum(historyStats.totalSpent)}</div>
               </div>
-              <div className="rounded-xl border border-neutral-700/50 bg-neutral-800/50 p-4 text-center backdrop-blur-sm">
-                <div className="text-xs font-medium text-neutral-400">Videos</div>
-                <div className="mt-1 text-lg font-bold text-blue-400">{historyStats.videoPurchases}</div>
+              <div className="rounded-xl max-sm:rounded-lg border border-neutral-700/50 bg-neutral-800/50 p-4 max-sm:p-3 text-center backdrop-blur-sm">
+                <div className="text-xs max-sm:text-[10px] font-medium text-neutral-400">Videos</div>
+                <div className="mt-1 text-lg max-sm:text-base font-bold text-blue-400">{historyStats.videoPurchases}</div>
               </div>
-              <div className="rounded-xl border border-neutral-700/50 bg-neutral-800/50 p-4 text-center backdrop-blur-sm">
-                <div className="text-xs font-medium text-neutral-400">Meets</div>
-                <div className="mt-1 text-lg font-bold text-purple-400">{historyStats.meetPurchases}</div>
+              <div className="rounded-xl max-sm:rounded-lg border border-neutral-700/50 bg-neutral-800/50 p-4 max-sm:p-3 text-center backdrop-blur-sm">
+                <div className="text-xs max-sm:text-[10px] font-medium text-neutral-400">Meets</div>
+                <div className="mt-1 text-lg max-sm:text-base font-bold text-purple-400">{historyStats.meetPurchases}</div>
               </div>
-              <div className="rounded-xl border border-neutral-700/50 bg-neutral-800/50 p-4 text-center backdrop-blur-sm">
-                <div className="text-xs font-medium text-neutral-400">Ads</div>
-                <div className="mt-1 text-lg font-bold text-yellow-400">{historyStats.adsCreated}</div>
+              <div className="rounded-xl max-sm:rounded-lg border border-neutral-700/50 bg-neutral-800/50 p-4 max-sm:p-3 text-center backdrop-blur-sm">
+                <div className="text-xs max-sm:text-[10px] font-medium text-neutral-400">Ads</div>
+                <div className="mt-1 text-lg max-sm:text-base font-bold text-yellow-400">{historyStats.adsCreated}</div>
               </div>
             </div>
           )}
 
           {activeTab === "activity" && activityStats && (
-            <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
-              <div className="rounded-xl border border-neutral-700/50 bg-neutral-800/50 p-4 text-center backdrop-blur-sm">
-                <div className="text-xs font-medium text-neutral-400">Points Earned</div>
-                <div className="mt-1 text-lg font-bold text-yellow-400">{fmtNum(activityStats.totalPointsEarned)}</div>
+            <div className="mt-4 max-sm:mt-3 grid grid-cols-2 gap-3 max-sm:gap-2 sm:grid-cols-4">
+              <div className="rounded-xl max-sm:rounded-lg border border-neutral-700/50 bg-neutral-800/50 p-4 max-sm:p-3 text-center backdrop-blur-sm">
+                <div className="text-xs max-sm:text-[10px] font-medium text-neutral-400">Points Earned</div>
+                <div className="mt-1 text-lg max-sm:text-base font-bold text-yellow-400">{fmtNum(activityStats.totalPointsEarned)}</div>
               </div>
-              <div className="rounded-xl border border-neutral-700/50 bg-neutral-800/50 p-4 backdrop-blur-sm">
+              <div className="rounded-xl max-sm:rounded-lg border border-neutral-700/50 bg-neutral-800/50 p-4 max-sm:p-3 backdrop-blur-sm">
                 <div className="text-xs font-medium text-neutral-400 text-center">Videos Purchased</div>
                 <div className="mt-1 text-lg font-bold text-blue-400 text-center">{activityStats.videoPurchases}</div>
                 <div className="mt-0.5 text-[10px] text-neutral-500 text-center">
@@ -431,23 +431,23 @@ export default function ProfilePage() {
               historyData.length > 0 ? (
                 <>
                   {/* History Table */}
-                  <div className="overflow-hidden rounded-xl border border-neutral-800 bg-neutral-900/60">
-                    <table className="w-full">
+                  <div className="overflow-hidden rounded-xl max-sm:rounded-lg border border-neutral-800 bg-neutral-900/60 max-sm:overflow-x-auto">
+                    <table className="w-full max-sm:min-w-[600px]">
                       <thead className="border-b border-neutral-800 bg-neutral-900/80">
                         <tr>
-                          <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-400">
+                          <th className="px-4 max-sm:px-2 py-3 max-sm:py-2 text-left text-xs max-sm:text-[10px] font-medium uppercase tracking-wider text-neutral-400">
                             Content
                           </th>
-                          <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-400">
+                          <th className="px-4 max-sm:px-2 py-3 max-sm:py-2 text-left text-xs max-sm:text-[10px] font-medium uppercase tracking-wider text-neutral-400">
                             Type
                           </th>
-                          <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-400">
+                          <th className="px-4 max-sm:px-2 py-3 max-sm:py-2 text-left text-xs max-sm:text-[10px] font-medium uppercase tracking-wider text-neutral-400">
                             Price
                           </th>
-                          <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-400">
+                          <th className="px-4 max-sm:px-2 py-3 max-sm:py-2 text-left text-xs max-sm:text-[10px] font-medium uppercase tracking-wider text-neutral-400">
                             Status
                           </th>
-                          <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-400">
+                          <th className="px-4 max-sm:px-2 py-3 max-sm:py-2 text-left text-xs max-sm:text-[10px] font-medium uppercase tracking-wider text-neutral-400">
                             Date
                           </th>
                         </tr>
@@ -617,8 +617,8 @@ export default function ProfilePage() {
                   </div>
 
                   {/* Pagination */}
-                  <div className="mt-4 flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-sm text-neutral-400">
+                  <div className="mt-4 max-sm:mt-3 flex items-center justify-between max-sm:flex-col max-sm:gap-3">
+                    <div className="flex items-center gap-2 text-sm max-sm:text-xs text-neutral-400 max-sm:w-full max-sm:justify-between">
                       <span>Rows per page:</span>
                       <select
                         value={rowsPerPage}
@@ -626,7 +626,7 @@ export default function ProfilePage() {
                           setRowsPerPage(Number(e.target.value));
                           setCurrentPage(1);
                         }}
-                        className="rounded-md border border-neutral-700 bg-neutral-800 px-2 py-1 text-neutral-50 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
+                        className="rounded-md max-sm:rounded border border-neutral-700 bg-neutral-800 px-2 max-sm:px-1.5 py-1 max-sm:py-0.5 text-sm max-sm:text-xs text-neutral-50 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
                       >
                         <option value={5}>5</option>
                         <option value={10}>10</option>
@@ -635,22 +635,22 @@ export default function ProfilePage() {
                       </select>
                     </div>
 
-                    <div className="flex items-center gap-4">
-                      <span className="text-sm text-neutral-400">
+                    <div className="flex items-center gap-4 max-sm:gap-2 max-sm:w-full max-sm:justify-between">
+                      <span className="text-sm max-sm:text-xs text-neutral-400">
                         Page {currentPage} of {Math.max(1, Math.ceil(historyData.length / rowsPerPage))}
                       </span>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 max-sm:gap-1.5">
                         <button
                           onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                           disabled={currentPage === 1}
-                          className="rounded-md border border-neutral-700 bg-neutral-800 px-3 py-1.5 text-sm text-neutral-50 transition-colors hover:bg-neutral-700 disabled:cursor-not-allowed disabled:opacity-50"
+                          className="rounded-md max-sm:rounded border border-neutral-700 bg-neutral-800 px-3 max-sm:px-2 py-1.5 max-sm:py-1 text-sm max-sm:text-xs text-neutral-50 transition-colors hover:bg-neutral-700 disabled:cursor-not-allowed disabled:opacity-50"
                         >
                           Prev
                         </button>
                         <button
                           onClick={() => setCurrentPage((p) => Math.min(Math.ceil(historyData.length / rowsPerPage), p + 1))}
                           disabled={currentPage >= Math.ceil(historyData.length / rowsPerPage)}
-                          className="rounded-md border border-neutral-700 bg-neutral-800 px-3 py-1.5 text-sm text-neutral-50 transition-colors hover:bg-neutral-700 disabled:cursor-not-allowed disabled:opacity-50"
+                          className="rounded-md max-sm:rounded border border-neutral-700 bg-neutral-800 px-3 max-sm:px-2 py-1.5 max-sm:py-1 text-sm max-sm:text-xs text-neutral-50 transition-colors hover:bg-neutral-700 disabled:cursor-not-allowed disabled:opacity-50"
                         >
                           Next
                         </button>
@@ -671,20 +671,20 @@ export default function ProfilePage() {
               activityData.length > 0 ? (
                 <>
                   {/* Activity Table */}
-                  <div className="overflow-hidden rounded-xl border border-neutral-800 bg-neutral-900/60">
-                    <table className="w-full">
+                  <div className="overflow-hidden rounded-xl max-sm:rounded-lg border border-neutral-800 bg-neutral-900/60 max-sm:overflow-x-auto">
+                    <table className="w-full max-sm:min-w-[600px]">
                       <thead className="border-b border-neutral-800 bg-neutral-900/80">
                         <tr>
-                          <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-400">
+                          <th className="px-4 max-sm:px-2 py-3 max-sm:py-2 text-left text-xs max-sm:text-[10px] font-medium uppercase tracking-wider text-neutral-400">
                             Type
                           </th>
-                          <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-400">
+                          <th className="px-4 max-sm:px-2 py-3 max-sm:py-2 text-left text-xs max-sm:text-[10px] font-medium uppercase tracking-wider text-neutral-400">
                             Activity
                           </th>
-                          <th className="px-4 py-3 text-center text-xs font-medium uppercase tracking-wider text-neutral-400">
+                          <th className="px-4 max-sm:px-2 py-3 max-sm:py-2 text-center text-xs max-sm:text-[10px] font-medium uppercase tracking-wider text-neutral-400">
                             Points
                           </th>
-                          <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-400">
+                          <th className="px-4 max-sm:px-2 py-3 max-sm:py-2 text-left text-xs max-sm:text-[10px] font-medium uppercase tracking-wider text-neutral-400">
                             Date
                           </th>
                         </tr>
@@ -806,8 +806,8 @@ export default function ProfilePage() {
                   </div>
 
                   {/* Pagination */}
-                  <div className="mt-4 flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-sm text-neutral-400">
+                  <div className="mt-4 max-sm:mt-3 flex items-center justify-between max-sm:flex-col max-sm:gap-3">
+                    <div className="flex items-center gap-2 text-sm max-sm:text-xs text-neutral-400 max-sm:w-full max-sm:justify-between">
                       <span>Rows per page:</span>
                       <select
                         value={rowsPerPage}
@@ -815,7 +815,7 @@ export default function ProfilePage() {
                           setRowsPerPage(Number(e.target.value));
                           setCurrentPage(1);
                         }}
-                        className="rounded-md border border-neutral-700 bg-neutral-800 px-2 py-1 text-neutral-50 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
+                        className="rounded-md max-sm:rounded border border-neutral-700 bg-neutral-800 px-2 max-sm:px-1.5 py-1 max-sm:py-0.5 text-sm max-sm:text-xs text-neutral-50 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
                       >
                         <option value={5}>5</option>
                         <option value={10}>10</option>
@@ -824,22 +824,22 @@ export default function ProfilePage() {
                       </select>
                     </div>
 
-                    <div className="flex items-center gap-4">
-                      <span className="text-sm text-neutral-400">
+                    <div className="flex items-center gap-4 max-sm:gap-2 max-sm:w-full max-sm:justify-between">
+                      <span className="text-sm max-sm:text-xs text-neutral-400">
                         Page {currentPage} of {Math.max(1, Math.ceil(activityData.length / rowsPerPage))}
                       </span>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 max-sm:gap-1.5">
                         <button
                           onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                           disabled={currentPage === 1}
-                          className="rounded-md border border-neutral-700 bg-neutral-800 px-3 py-1.5 text-sm text-neutral-50 transition-colors hover:bg-neutral-700 disabled:cursor-not-allowed disabled:opacity-50"
+                          className="rounded-md max-sm:rounded border border-neutral-700 bg-neutral-800 px-3 max-sm:px-2 py-1.5 max-sm:py-1 text-sm max-sm:text-xs text-neutral-50 transition-colors hover:bg-neutral-700 disabled:cursor-not-allowed disabled:opacity-50"
                         >
                           Prev
                         </button>
                         <button
                           onClick={() => setCurrentPage((p) => Math.min(Math.ceil(activityData.length / rowsPerPage), p + 1))}
                           disabled={currentPage >= Math.ceil(activityData.length / rowsPerPage)}
-                          className="rounded-md border border-neutral-700 bg-neutral-800 px-3 py-1.5 text-sm text-neutral-50 transition-colors hover:bg-neutral-700 disabled:cursor-not-allowed disabled:opacity-50"
+                          className="rounded-md max-sm:rounded border border-neutral-700 bg-neutral-800 px-3 max-sm:px-2 py-1.5 max-sm:py-1 text-sm max-sm:text-xs text-neutral-50 transition-colors hover:bg-neutral-700 disabled:cursor-not-allowed disabled:opacity-50"
                         >
                           Next
                         </button>

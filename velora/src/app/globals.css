@@ -150,6 +150,21 @@ body {
   * {
     max-width: 100%;
   }
+  
+  /* Profile page table improvements */
+  table td, table th {
+    font-size: 0.75rem !important;
+    padding: 0.5rem !important;
+  }
+  
+  table td .text-xs {
+    font-size: 0.625rem !important;
+  }
+  
+  table td img, table td .flex {
+    height: 2.5rem;
+    width: 4rem;
+  }
 }
 
 /* Prevent body from jumping when Radix locks scroll */

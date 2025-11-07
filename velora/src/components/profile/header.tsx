@@ -119,9 +119,9 @@ export default function ProfileHeader({
   };
 
   return (
-    <div className="rounded-2xl border border-neutral-800 bg-neutral-900/60 p-6 flex flex-col md:flex-row items-start md:items-center gap-6">
+    <div className="rounded-2xl max-sm:rounded-xl border border-neutral-800 bg-neutral-900/60 p-6 max-sm:p-4 flex flex-col md:flex-row items-start md:items-center gap-6 max-sm:gap-4">
       {/* Avatar: Show skeleton while loading, then DB avatar, then AbstractProfile, then placeholder */}
-      <div className="relative h-24 w-24 overflow-hidden rounded-full ring-2 ring-[var(--primary-500)]">
+      <div className="relative h-24 w-24 max-sm:h-20 max-sm:w-20 overflow-hidden rounded-full ring-2 ring-[var(--primary-500)] max-sm:mx-auto md:mx-0">
         {dbLoading ? (
           // Loading: show skeleton
           <div className="skel h-full w-full rounded-full" />
@@ -142,7 +142,7 @@ export default function ProfileHeader({
             address={address as `0x${string}`}
             size="lg"
             showTooltip={false}
-            className="!h-24 !w-24 !rounded-full object-cover"
+            className="!h-24 !w-24 max-sm:!h-20 max-sm:!w-20 !rounded-full object-cover"
           />
         ) : (
           // Terakhir: placeholder SVG
@@ -155,24 +155,24 @@ export default function ProfileHeader({
         )}
       </div>
 
-      <div className="flex-1 min-w-0">
-        <h1 className="truncate text-2xl font-bold text-neutral-50">
+      <div className="flex-1 min-w-0 max-sm:w-full max-sm:text-center md:text-left">
+        <h1 className="truncate text-2xl max-sm:text-xl font-bold text-neutral-50">
           {displayName}
         </h1>
         <button
           onClick={copyAddress}
-          className="group mt-1 flex items-center gap-2 text-sm text-neutral-400 transition-colors hover:text-neutral-300"
+          className="group mt-1 flex items-center gap-2 text-sm max-sm:text-xs text-neutral-400 transition-colors hover:text-neutral-300 max-sm:mx-auto md:mx-0"
         >
           <span className="font-mono">{shortAddr(address)}</span>
           {copied ? (
             <>
-              <svg className="h-4 w-4 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="h-4 w-4 max-sm:h-3 max-sm:w-3 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
-              <span className="text-xs font-medium text-green-400">Copied!</span>
+              <span className="text-xs max-sm:text-[10px] font-medium text-green-400">Copied!</span>
             </>
           ) : (
-            <svg className="h-4 w-4 text-neutral-500 group-hover:text-neutral-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="h-4 w-4 max-sm:h-3 max-sm:w-3 text-neutral-500 group-hover:text-neutral-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
             </svg>
           )}
