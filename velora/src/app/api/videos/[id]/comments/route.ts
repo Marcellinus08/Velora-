@@ -82,8 +82,8 @@ export async function POST(req: Request, { params }: RouteCtx) {
       );
     }
 
-    // Get video data and creator info
-    const { data: videoData, error: videoErr } = await sbService
+    // Get video data and creator info using admin client (bypass RLS)
+    const { data: videoData, error: videoErr } = await supabaseAdmin
       .from("videos")
       .select("abstract_id, title")
       .eq("id", videoId)
@@ -151,6 +151,9 @@ export async function POST(req: Request, { params }: RouteCtx) {
           throw new Error("comment_id is required for notification");
         }
 
+        const commentSnippet = content.substring(0, 50) + (content.length > 50 ? "..." : "");
+        const videoTitle = videoData.title?.slice(0, 50) + (videoData.title?.length ?? 0 > 50 ? "..." : "");
+        
         console.log("[Video Comment Notification] creatorAddr value before processing:", {
           creatorAddr,
           creatorAddr_type: typeof creatorAddr,
@@ -164,7 +167,7 @@ export async function POST(req: Request, { params }: RouteCtx) {
           comment_id: commentId,
           commenter_addr: userAddr.toLowerCase(),
           receiver_addr: creatorAddr?.toLowerCase() || "WILL_BE_NULL",
-          message: `commented on your video "${videoData.title?.slice(0, 50)}${videoData.title?.length ?? 0 > 50 ? '...' : ''}"`,
+          message: `{actor} commented on your video "${videoTitle}": "${commentSnippet}"`,
         });
 
         const notifPayload = {
@@ -173,7 +176,8 @@ export async function POST(req: Request, { params }: RouteCtx) {
           commenter_addr: userAddr.toLowerCase(),
           receiver_addr: creatorAddr?.toLowerCase() || null,
           type: "video_comment",
-          message: `commented on your video "${videoData.title?.slice(0, 50)}${videoData.title?.length ?? 0 > 50 ? '...' : ''}"`,
+          message: `{actor} commented on your video "${videoTitle}": "${commentSnippet}"`,
+          video_title: videoData.title || "Video", // Store title for display
         };
 
         console.log("[Video Comment Notification] Final Payload to insert:", {

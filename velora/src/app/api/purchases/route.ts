@@ -99,7 +99,8 @@ export async function POST(req: NextRequest) {
               currency: currency,
               tx_hash: txHash || null,
               type: "video_purchase",
-              message: `${buyer.slice(0, 6)}...${buyer.slice(-4)} bought your video "${videoData.title || 'Untitled'}" for $${price_usd.toFixed(2)}`,
+              message: `{actor} purchased "${videoData.title || 'Untitled'}" for ${price_usd.toFixed(2)} ${currency}.`,
+              video_title: videoData.title || "Untitled", // Store title for display
             })
             .select()
             .single();

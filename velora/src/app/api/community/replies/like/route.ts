@@ -91,8 +91,9 @@ export async function POST(req: Request) {
                 recipient_addr: replyOwnerAddr,
                 type: "like_reply",
                 message: replyData.content 
-                  ? `liked your comment: "${replyData.content.slice(0, 50)}${replyData.content.length > 50 ? '...' : ''}"`
-                  : "liked your comment",
+                  ? `{actor} liked your reply: "${replyData.content.slice(0, 50)}${replyData.content.length > 50 ? '...' : ''}".`
+                  : "{actor} liked your reply.",
+                reply_content: replyData.content || "Reply", // Store content snippet for display
               })
               .select()
               .single();

@@ -97,8 +97,9 @@ export async function POST(req: Request, { params }: RouteCtx) {
                 creator_addr: creatorAddr,
                 type: "video_like",
                 message: videoData.title 
-                  ? `liked your video "${videoData.title.slice(0, 50)}${videoData.title.length > 50 ? '...' : ''}"`
-                  : "liked your video",
+                  ? `{actor} liked your video "${videoData.title.slice(0, 50)}${videoData.title.length > 50 ? '...' : ''}".`
+                  : "{actor} liked your video.",
+                video_title: videoData.title || "Video", // Store title for display
               })
               .select()
               .single();

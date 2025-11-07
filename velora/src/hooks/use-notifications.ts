@@ -154,17 +154,93 @@ if (videoPurchasesRes.data && videoPurchasesRes.data.length > 0) {
 
       // ✅ SIMPLIFIED: Display raw notifications WITHOUT enrichment
       // This ensures data appears immediately from database
-      const allRawNotifs: any[] = [
-        ...(likesRes.data || []),
-        ...(repliesRes.data || []),
-        ...(replyLikesRes.data || []),
-        ...(videoPurchasesRes.data || []),
-        ...(videoLikesRes.data || []),
-        ...(videoCommentsRes.data || []),
-        ...(followsRes.data || []),
-      ];
+      // Add source field to each notification so we know which table it came from
+      const allRawNotifs: any[] = [];
+      
+      (likesRes.data as any[] || []).forEach((n: any) => allRawNotifs.push({ ...n, source: "notification_community_likes" }));
+      (repliesRes.data as any[] || []).forEach((n: any) => allRawNotifs.push({ ...n, source: "notification_community_replies" }));
+      (replyLikesRes.data as any[] || []).forEach((n: any) => allRawNotifs.push({ ...n, source: "notification_reply_likes" }));
+      (videoPurchasesRes.data as any[] || []).forEach((n: any) => allRawNotifs.push({ ...n, source: "notification_video_purchases" }));
+      (videoLikesRes.data as any[] || []).forEach((n: any) => allRawNotifs.push({ ...n, source: "notification_video_likes" }));
+      (videoCommentsRes.data as any[] || []).forEach((n: any) => allRawNotifs.push({ ...n, source: "notification_video_comments" }));
+      (followsRes.data as any[] || []).forEach((n: any) => allRawNotifs.push({ ...n, source: "notification_follows" }));
 
       console.log("[useNotifications] ⚡ FAST PATH: Processing", allRawNotifs.length, "raw notifications WITHOUT enrichment");
+
+      // ✅ Helper: Get title/content from notification data or fetch from DB if missing
+      const getTargetTitle = async (notif: any, source: string): Promise<string> => {
+        try {
+          // Video comment notifications - fetch actual comment content from video_comments table using comment_id
+          if (source.includes("video_comments")) {
+            const { data } = await supabase
+              .from("video_comments")
+              .select("content")
+              .eq("id", notif.comment_id)
+              .single();
+            const content = (data as any)?.content || "Comment";
+            return content.slice(0, 50) + (content.length > 50 ? "..." : "");
+          }
+          // Other video notifications - fetch from videos table using video_id
+          if (source.includes("video")) {
+            const { data } = await supabase
+              .from("videos")
+              .select("title")
+              .eq("id", notif.video_id)
+              .single();
+            return (data as any)?.title || "Video";
+          }
+          // Post like notifications - fetch from community_posts table using post_id
+          if (source.includes("community_likes")) {
+            const { data } = await supabase
+              .from("community_posts")
+              .select("title")
+              .eq("id", notif.post_id)
+              .single();
+            return (data as any)?.title || "Post";
+          }
+          // Post reply notifications - fetch reply content from community_replies table using reply_id
+          if (source.includes("community_replies")) {
+            const { data } = await supabase
+              .from("community_replies")
+              .select("content")
+              .eq("id", notif.reply_id)
+              .single();
+            const content = (data as any)?.content || "Reply";
+            return content.slice(0, 50) + (content.length > 50 ? "..." : "");
+          }
+          // Reply like notifications - fetch from community_replies table using reply_id
+          if (source.includes("reply_likes")) {
+            const { data } = await supabase
+              .from("community_replies")
+              .select("content")
+              .eq("id", notif.reply_id)
+              .single();
+            const content = (data as any)?.content || "Reply";
+            return content.slice(0, 50) + (content.length > 50 ? "..." : "");
+          }
+        } catch (err) {
+          console.error("[getTargetTitle] Error fetching for", notif.id, "source:", source, ":", err);
+        }
+        return "Unknown";
+      };
+
+      // Fetch all titles in parallel
+      const titleMap: Record<string, string> = {};
+      await Promise.all(
+        allRawNotifs.map(async (n) => {
+          const key = n.id;
+          titleMap[key] = await getTargetTitle(n, n.source);
+        })
+      );
+
+      console.log("[useNotifications] titleMap result:", titleMap);
+      console.log("[useNotifications] Sample raw notifications:", allRawNotifs.slice(0, 3).map(n => ({
+        id: n.id,
+        video_title: n.video_title,
+        post_title: n.post_title,
+        source: n.source,
+        titleMapValue: titleMap[n.id]
+      })));
 
       // ✅ SIMPLIFIED: Just map raw data directly to Notification format
       // Skip actor profile and title fetching for now - display immediately
@@ -180,7 +256,7 @@ if (videoPurchasesRes.data && videoPurchasesRes.data.length > 0) {
           type: "like",
           targetId: n.post_id,
           targetType: "post",
-          targetTitle: "Post",
+          targetTitle: titleMap[n.id] || n.post_title || "Post",
           message: n.message,
           isRead: n.is_read,
           createdAt: n.created_at,
@@ -200,7 +276,7 @@ if (videoPurchasesRes.data && videoPurchasesRes.data.length > 0) {
           type: n.type === "nested_reply" ? "nested_reply" : "reply",
           targetId: n.reply_id,
           targetType: "reply",
-          targetTitle: "Reply",
+          targetTitle: titleMap[n.id] || n.post_title || "Post",
           message: n.message,
           isRead: n.is_read,
           createdAt: n.created_at,
@@ -220,7 +296,7 @@ if (videoPurchasesRes.data && videoPurchasesRes.data.length > 0) {
           type: "like_reply",
           targetId: n.reply_id,
           targetType: "reply",
-          targetTitle: "Reply",
+          targetTitle: titleMap[n.id] || n.reply_content || "Reply",
           message: n.message,
           isRead: n.is_read,
           createdAt: n.created_at,
@@ -240,7 +316,7 @@ if (videoPurchasesRes.data && videoPurchasesRes.data.length > 0) {
           type: "video_purchase",
           targetId: n.video_id,
           targetType: "video",
-          targetTitle: "Video",
+          targetTitle: titleMap[n.id] || n.video_title || "Video",
           message: n.message,
           isRead: n.is_read,
           createdAt: n.created_at,
@@ -260,7 +336,7 @@ if (videoPurchasesRes.data && videoPurchasesRes.data.length > 0) {
           type: "video_like",
           targetId: n.video_id,
           targetType: "video",
-          targetTitle: "Video",
+          targetTitle: titleMap[n.id] || n.video_title || "Video",
           message: n.message,
           isRead: n.is_read,
           createdAt: n.created_at,
@@ -280,7 +356,7 @@ if (videoPurchasesRes.data && videoPurchasesRes.data.length > 0) {
           type: "video_comment",
           targetId: n.video_id,
           targetType: "video",
-          targetTitle: "Video",
+          targetTitle: titleMap[n.id] || n.video_title || "Video",
           message: n.message,
           isRead: n.is_read,
           createdAt: n.created_at,
@@ -312,20 +388,77 @@ if (videoPurchasesRes.data && videoPurchasesRes.data.length > 0) {
       // Sort by created_at DESC
       allNotifs.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
       
-      console.log("[useNotifications] ✅ Final notifications ready:", {
-        totalProcessed: allNotifs.length,
-        unreadCount: allNotifs.filter((n) => !n.isRead).length,
-        notifications: allNotifs.map((n) => ({
+      // ✅ Fetch actor profiles for all unique actors
+      const uniqueActors = [...new Set(allNotifs.map((n) => n.actorAddress))];
+      console.log("[useNotifications] Fetching profiles for", uniqueActors.length, "unique actors");
+      
+      const actorProfiles: Record<string, { name: string | null; avatar: string | null }> = {};
+      
+      for (const actorAddr of uniqueActors) {
+        try {
+          const profile = await fetchActorProfile(actorAddr);
+          actorProfiles[actorAddr] = profile;
+        } catch (err) {
+          console.error("[useNotifications] Error fetching profile for", actorAddr, err);
+          actorProfiles[actorAddr] = { name: null, avatar: null };
+        }
+      }
+      
+      // ✅ Enrich notifications with actor profiles and replace {actor} placeholder
+      const enrichedNotifs = allNotifs.map((n: any) => {
+        const profile = actorProfiles[n.actorAddress];
+        const actorName = profile?.name || n.actorAddress.slice(0, 6) + "..." + n.actorAddress.slice(-4);
+        
+        // Get title from titleMap (which was already fetched from DB)
+        const title = titleMap[n.id] || "Unknown";
+        
+        // Generate proper message template based on notification type
+        let finalMessage = n.message;
+        
+        // Always regenerate message to ensure consistent formatting
+        if (n.source === "video_comments") {
+          const commentContent = titleMap[n.id] || "...";
+          finalMessage = `{actor} commented on your video "${title}": "${commentContent}"`;
+        } else if (n.source === "video_likes") {
+          finalMessage = `{actor} liked your video "${title}".`;
+        } else if (n.source === "video_purchases") {
+          finalMessage = `{actor} purchased "${title}" for video purchase.`;
+        } else if (n.source === "community_likes") {
+          finalMessage = `{actor} liked your post "${title}".`;
+        } else if (n.source === "community_replies") {
+          const replyContent = titleMap[n.id] || "...";
+          finalMessage = `{actor} replied to your post "${title}": "${replyContent}"`;
+        } else if (n.source === "reply_likes") {
+          finalMessage = `{actor} liked your reply: "${title}".`;
+        } else if (n.source === "notification_follows") {
+          finalMessage = "{actor} started following you";
+        }
+        
+        return {
+          ...n,
+          actorName: profile?.name || null,
+          actorAvatar: profile?.avatar || null,
+          targetTitle: title,
+          // Replace {actor} placeholder with actual actor name
+          message: finalMessage.replace("{actor}", actorName),
+        };
+      });
+      
+      console.log("[useNotifications] ✅ Final notifications with profiles ready:", {
+        totalProcessed: enrichedNotifs.length,
+        unreadCount: enrichedNotifs.filter((n) => !n.isRead).length,
+        notifications: enrichedNotifs.map((n) => ({
           id: n.id,
           type: n.type,
           actor: n.actorName || n.actorAddress,
+          actorAvatar: n.actorAvatar ? "✓" : "✗",
           isRead: n.isRead,
           createdAt: n.createdAt,
         })),
       });
       
-setNotifications(allNotifs);
-      setUnreadCount(allNotifs.filter((n) => !n.isRead).length);
+setNotifications(enrichedNotifs);
+      setUnreadCount(enrichedNotifs.filter((n) => !n.isRead).length);
     } catch (error) {
       console.error("[useNotifications] ❌ Error fetching notifications:", error);
 setNotifications([]);

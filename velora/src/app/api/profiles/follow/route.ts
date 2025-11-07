@@ -127,7 +127,7 @@ export async function POST(req: Request) {
         .maybeSingle();
 
       if (followeeProfile) {
-        const notificationMessage = `${followerUsername} started following you`;
+        const notificationMessage = `{actor} started following you`;
         
         const { error: mainNotifError } = await supabaseAdmin
           .from("notifications")

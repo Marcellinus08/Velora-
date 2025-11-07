@@ -184,7 +184,8 @@ export async function POST(req: Request, { params }: { params: { id: string } })
           const postTitle = postData.title 
             ? `"${postData.title.slice(0, 50)}${postData.title.length > 50 ? '...' : ''}"`
             : "your post";
-          message = `commented on ${postTitle}: "${content.slice(0, 50)}${content.length > 50 ? '...' : ''}"`;
+          const contentSnippet = content.slice(0, 50) + (content.length > 50 ? "..." : "");
+          message = `{actor} replied to ${postTitle}: "${contentSnippet}"`;
           
           notifData = {
             reply_id: data?.id,
@@ -193,6 +194,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
             recipient_addr: recipientAddr,
             type: "reply",
             message,
+            post_title: postData.title || "Post", // Store title for display
           };
         }
       }

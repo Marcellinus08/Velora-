@@ -103,8 +103,9 @@ export async function POST(req: Request, { params }: RouteCtx) {
                 recipient_addr: postOwnerAddr,
                 type: "like",
                 message: postData.title 
-                  ? `liked your post "${postData.title.slice(0, 50)}${postData.title.length > 50 ? '...' : ''}"`
-                  : "liked your post",
+                  ? `{actor} liked your post "${postData.title.slice(0, 50)}${postData.title.length > 50 ? '...' : ''}".`
+                  : "{actor} liked your post.",
+                post_title: postData.title || "Post", // Store title for display
               })
               .select()
               .single();
