@@ -45,7 +45,7 @@ export default function SiteHeader() {
   return (
     <header
       className="fixed top-0 left-0 right-0 z-40 grid w-full items-center gap-2 sm:gap-4 border-b border-neutral-800 bg-neutral-900 px-3 py-2 sm:px-6 lg:px-8
-                 grid-cols-[auto_1fr_auto] md:[grid-template-columns:var(--sidebar-w,16rem)_1fr_auto]"
+                 grid-cols-[auto_1fr_auto] lg:[grid-template-columns:var(--sidebar-w,16rem)_1fr_auto]"
     >
       {/* Column 1: Logo */}
       <div className="flex items-center gap-2 sm:gap-4">
