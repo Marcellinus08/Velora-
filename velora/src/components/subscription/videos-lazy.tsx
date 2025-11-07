@@ -182,16 +182,16 @@ export function SubscriptionVideosLazy({
     );
 
   return (
-    <div className="space-y-2 max-sm:space-y-2">
+    <div className="space-y-2 max-sm:space-y-1">
       {/* Available Videos Section */}
-      <div className="space-y-4 max-sm:space-y-2">
+      <div className="space-y-4 max-sm:space-y-3">
         <h3 className="text-lg font-semibold text-neutral-100 max-sm:text-base">Available Videos</h3>
         {initialLoading ? (
           <SubscriptionRowsGridSkeleton count={3} />
         ) : availableItems.length === 0 ? (
           <SubscriptionEmptyState type="available" />
         ) : (
-          <div className="space-y-4 max-sm:space-y-2">
+          <div className="space-y-3 max-sm:space-y-2">
             {availableItems.map((v) => (
               <SubscriptionVideoRow
                 key={v.purchaseId}
@@ -203,7 +203,7 @@ export function SubscriptionVideosLazy({
               />
             ))}
             {availableIsLoadingMore && (
-              <div className="flex justify-center py-4">
+              <div className="flex justify-center py-4 max-sm:py-3">
                 <div className="flex items-center gap-2">
                   <div className="h-2 w-2 rounded-full bg-purple-500 animate-bounce" />
                   <div className="h-2 w-2 rounded-full bg-purple-500 animate-bounce delay-100" />
@@ -219,14 +219,14 @@ export function SubscriptionVideosLazy({
       </div>
 
       {/* Completed Videos Section */}
-      <div className="space-y-4 max-sm:space-y-2">
+      <div className="space-y-4 max-sm:space-y-3">
         <h3 className="text-lg font-semibold text-neutral-100 max-sm:text-base">Completed Videos</h3>
         {initialLoading ? (
           <SubscriptionRowsGridSkeleton count={2} />
         ) : completedItems.length === 0 ? (
           <SubscriptionEmptyState type="completed" />
         ) : (
-          <div className="space-y-4 max-sm:space-y-2">
+          <div className="space-y-3 max-sm:space-y-2">
             {completedItems.map((v) => (
               <SubscriptionVideoRow
                 key={v.purchaseId}
@@ -238,7 +238,7 @@ export function SubscriptionVideosLazy({
               />
             ))}
             {completedIsLoadingMore && (
-              <div className="flex justify-center py-4">
+              <div className="flex justify-center py-4 max-sm:py-3">
                 <div className="flex items-center gap-2">
                   <div className="h-2 w-2 rounded-full bg-purple-500 animate-bounce" />
                   <div className="h-2 w-2 rounded-full bg-purple-500 animate-bounce delay-100" />

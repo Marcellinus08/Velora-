@@ -28,34 +28,34 @@ export function SubscriptionVideoRow({
   );
 
   return (
-    <div className="group rounded-lg border border-neutral-800 bg-neutral-800/50 p-4 transition-all duration-200 hover:border-neutral-700 hover:bg-neutral-800/80 hover:shadow-lg max-sm:p-3">
+    <div className="group rounded-lg border border-neutral-800 bg-neutral-800/50 p-4 transition-all duration-200 hover:border-neutral-700 hover:bg-neutral-800/80 hover:shadow-lg max-sm:p-3 max-sm:rounded-md">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between max-sm:gap-3">
-        <div className="flex items-center gap-4 max-sm:gap-3">
-          <div className="relative h-16 w-28 overflow-hidden rounded-md ring-1 ring-neutral-700/50 transition-all duration-200 group-hover:ring-2 group-hover:ring-purple-500/50 max-sm:h-16 max-sm:w-24">
+        <div className="flex items-center gap-4 flex-1 min-w-0 max-sm:gap-3">
+          <div className="relative h-20 w-32 flex-shrink-0 overflow-hidden rounded-md ring-1 ring-neutral-700/50 transition-all duration-200 group-hover:ring-2 group-hover:ring-purple-500/50 max-sm:h-16 max-sm:w-24">
             <Image
               src={thumb}
               alt={`${title} thumbnail`}
               fill
               className="object-cover transition-transform duration-200 group-hover:scale-105"
-              sizes="112px"
+              sizes="(max-width: 640px) 96px, 128px"
             />
           </div>
-          <div>
-            <h3 className="font-semibold text-neutral-50 transition-colors duration-200 group-hover:text-white max-sm:text-[15px]">{title}</h3>
-            <p className="text-sm text-neutral-400 max-sm:text-[13px]">{subtext}</p>
+          <div className="flex-1 min-w-0">
+            <h3 className="font-semibold text-neutral-50 transition-colors duration-200 group-hover:text-white truncate max-sm:text-sm">{title}</h3>
+            <p className="text-sm text-neutral-400 mt-0.5 max-sm:text-xs">{subtext}</p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2 max-sm:w-full">
+        <div className="flex items-center gap-2 flex-shrink-0 max-sm:w-full">
           <Link href={targetHref} prefetch={false} className="cursor-pointer max-sm:w-full">
             <button
               type="button"
               className={[
-                "group relative inline-flex items-center justify-center gap-2 rounded-md px-4 py-2",
+                "group relative inline-flex items-center justify-center gap-2 rounded-md px-5 py-2.5",
                 "text-sm font-semibold text-white transition-all duration-200 ease-out",
                 "focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[var(--primary-500)] focus-visible:ring-offset-neutral-900",
-                "hover:-translate-y-0.5 active:translate-y-0 cursor-pointer",
-                "max-sm:w-full max-sm:px-4 max-sm:py-2 max-sm:text-[13px] max-sm:gap-1.5",
+                "hover:-translate-y-0.5 active:translate-y-0 cursor-pointer whitespace-nowrap",
+                "max-sm:w-full max-sm:px-4 max-sm:py-2 max-sm:text-xs max-sm:gap-1.5",
                 isPrimary
                   ? [
                       "bg-[var(--primary-500)] hover:bg-[var(--primary-500)]/90",
@@ -78,7 +78,7 @@ export function SubscriptionVideoRow({
 
               <MI
                 name={isPrimary ? "play_arrow" : "autorenew"}
-                className="text-[16px] leading-none align-middle transition-transform duration-200 group-hover:translate-x-0.5 group-hover:scale-110 max-sm:text-[15px]"
+                className="text-[18px] leading-none align-middle transition-transform duration-200 group-hover:translate-x-0.5 group-hover:scale-110 max-sm:text-[16px]"
               />
 
               <span>{primaryAction.label}</span>
