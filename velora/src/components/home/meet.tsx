@@ -177,26 +177,26 @@ export default function HomeMeetRibbon() {
   // };
 
   return (
-    <section className="mb-5 max-sm:mb-3 md:max-lg:mb-4">
+    <section className="mb-5 max-sm:mb-3 md:mb-4 lg:mb-5">
       <div
         className="mt-4 flex gap-3 overflow-x-auto scroll-smooth pl-2 pr-2 md:pl-0 md:pr-0
                    [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden
                    max-sm:mt-2 max-sm:gap-2 max-sm:pl-0 max-sm:pr-0
-                   md:max-lg:mt-3 md:max-lg:gap-2.5"
+                   md:mt-3 md:gap-2.5 lg:mt-4 lg:gap-3"
       >
         {/* Title-as-card (tanpa neon) */}
         <Link href="/meet" className="group min-w-[200px] rounded-xl border border-neutral-800 bg-neutral-900 px-3 py-2 text-neutral-300 transition-all duration-300 flex flex-col justify-between
           max-sm:min-w-[140px] max-sm:max-w-[140px] max-sm:px-2 max-sm:py-1.5 max-sm:rounded-lg
-          md:max-lg:min-w-[180px]">
+          md:min-w-[180px] lg:min-w-[200px]">
           <div>
-            <div className="text-sm font-semibold text-neutral-100 max-sm:text-xs md:max-lg:text-xs">Meet</div>
-            <div className="mt-0.5 text-[11px] text-neutral-400 max-sm:text-[9px] max-sm:mt-0 md:max-lg:text-[10px]">
+            <div className="text-sm font-semibold text-neutral-100 max-sm:text-xs md:text-xs lg:text-sm">Meet</div>
+            <div className="mt-0.5 text-[11px] text-neutral-400 max-sm:text-[9px] max-sm:mt-0 md:text-[10px] lg:text-[11px]">
               Find creators to talk with
             </div>
           </div>
           <div className="mt-2 w-fit rounded-md border border-neutral-700/70 px-2 py-1 text-[11px] font-medium text-[var(--primary-500)] hover:opacity-90 transition-opacity
             max-sm:mt-1.5 max-sm:px-1.5 max-sm:py-0.5 max-sm:text-[9px]
-            md:max-lg:mt-1.5 md:max-lg:px-1.5 md:max-lg:py-0.5 md:max-lg:text-[10px]">
+            md:mt-1.5 md:px-1.5 md:py-0.5 md:text-[10px] lg:mt-2 lg:text-[11px]">
             View all →
           </div>
         </Link>
@@ -204,43 +204,43 @@ export default function HomeMeetRibbon() {
         {/* Coming Soon Banner - Creative Design */}
         <div className="group flex-1 rounded-xl border border-transparent bg-gradient-to-r from-purple-950/80 via-blue-950/60 to-purple-950/80 px-4 py-2 text-neutral-300 transition-all duration-300 flex items-center justify-center hover:shadow-2xl hover:shadow-purple-500/40 relative overflow-hidden
           max-sm:px-3 max-sm:py-1.5 max-sm:rounded-lg
-          md:max-lg:px-3 md:max-lg:py-1.5">
+          md:px-3 md:py-1.5 lg:px-4 lg:py-2">
           {/* Animated background with moving gradient */}
           <div className="absolute inset-0 bg-gradient-to-r from-purple-600/0 via-purple-500/30 to-blue-600/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 animate-pulse" />
           
           {/* Top light rays */}
           <div className="absolute top-0 left-1/4 w-32 h-32 bg-gradient-to-b from-purple-500/40 to-transparent rounded-full blur-3xl -translate-y-1/2 group-hover:from-purple-500/60 transition-all duration-500
             max-sm:w-16 max-sm:h-16 max-sm:blur-2xl
-            md:max-lg:w-20 md:max-lg:h-20 md:max-lg:blur-2xl" />
+            md:w-20 md:h-20 md:blur-2xl lg:w-24 lg:h-24 lg:blur-3xl" />
           <div className="absolute top-0 right-1/4 w-32 h-32 bg-gradient-to-b from-blue-500/40 to-transparent rounded-full blur-3xl -translate-y-1/2 group-hover:from-blue-500/60 transition-all duration-500
             max-sm:w-16 max-sm:h-16 max-sm:blur-2xl
-            md:max-lg:w-20 md:max-lg:h-20 md:max-lg:blur-2xl" />
+            md:w-20 md:h-20 md:blur-2xl lg:w-24 lg:h-24 lg:blur-3xl" />
           
           {/* Bottom glow */}
           <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-48 h-24 bg-gradient-to-t from-purple-500/20 to-transparent rounded-full blur-3xl group-hover:from-purple-500/40 transition-all duration-500
             max-sm:w-24 max-sm:h-12 max-sm:blur-2xl
-            md:max-lg:w-32 md:max-lg:h-16 md:max-lg:blur-2xl" />
+            md:w-32 md:h-16 md:blur-2xl lg:w-40 lg:h-20 lg:blur-3xl" />
           
           {/* Border glow */}
           <div className="absolute inset-0 rounded-xl border border-purple-500/0 group-hover:border-purple-400/50 transition-all duration-300
-            max-sm:rounded-lg md:max-lg:rounded-lg" />
+            max-sm:rounded-lg md:rounded-lg lg:rounded-xl" />
           
-          <div className="relative z-10 flex items-center gap-4 w-full max-sm:gap-2 md:max-lg:gap-3">
+          <div className="relative z-10 flex items-center gap-4 w-full max-sm:gap-2 md:gap-3 lg:gap-4">
             {/* Icon container with 3D effect */}
             <div className="relative flex-shrink-0">
               {/* Rotating ring */}
               <div className="absolute inset-0 rounded-xl border border-purple-500/30 group-hover:border-purple-400/60 transition-all duration-300
-                max-sm:rounded-lg md:max-lg:rounded-lg" style={{ animation: 'spin 3s linear infinite' }} />
+                max-sm:rounded-lg md:rounded-lg lg:rounded-xl" style={{ animation: 'spin 3s linear infinite' }} />
               
               {/* Glow layers */}
               <div className="absolute inset-0 bg-gradient-to-br from-purple-500/40 to-blue-500/20 rounded-lg blur-lg group-hover:from-purple-500/60 group-hover:to-blue-500/40 transition-all duration-300
-                max-sm:blur-md md:max-lg:blur-md" />
+                max-sm:blur-md md:blur-md lg:blur-lg" />
               
               {/* Main icon */}
               <div className="relative bg-gradient-to-br from-purple-600 to-blue-600 rounded-lg px-4 py-2 shadow-xl shadow-purple-500/50 group-hover:shadow-2xl group-hover:shadow-purple-400/70 transition-all duration-300
                 max-sm:px-2 max-sm:py-1 max-sm:rounded-md
-                md:max-lg:px-3 md:max-lg:py-1.5 md:max-lg:rounded-md">
-                <span className="material-icons-round text-white text-2xl leading-none block max-sm:text-base md:max-lg:text-lg">videocam</span>
+                md:px-3 md:py-1.5 md:rounded-md lg:px-4 lg:py-2 lg:rounded-lg">
+                <span className="material-icons-round text-white text-2xl leading-none block max-sm:text-base md:text-lg lg:text-xl">videocam</span>
               </div>
             </div>
             
@@ -248,19 +248,19 @@ export default function HomeMeetRibbon() {
             <div className="flex-1">
               <div className="text-lg font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-300 via-blue-300 to-purple-300 group-hover:from-purple-100 group-hover:via-blue-100 group-hover:to-purple-100 transition-all duration-300 animate-pulse
                 max-sm:text-xs max-sm:font-bold
-                md:max-lg:text-sm md:max-lg:font-bold" style={{ animationDuration: '3s' }}>
+                md:text-sm md:font-bold lg:text-base lg:font-black" style={{ animationDuration: '3s' }}>
                 Coming Soon
               </div>
               <div className="text-[11px] text-purple-200/80 group-hover:text-purple-100 transition-colors duration-300 font-semibold tracking-wide
                 max-sm:text-[8px] max-sm:font-medium
-                md:max-lg:text-[9px] md:max-lg:font-medium">
+                md:text-[9px] md:font-medium lg:text-[10px] lg:font-semibold">
                 🌟 Meet feature launching soon
               </div>
             </div>
             
             {/* Floating particles */}
-            <div className="absolute top-2 right-4 text-xl opacity-60 group-hover:opacity-100 transition-opacity duration-300 animate-bounce max-sm:hidden md:max-lg:hidden" style={{ animationDelay: '0s' }}>✨</div>
-            <div className="absolute bottom-2 right-8 text-lg opacity-40 group-hover:opacity-70 transition-opacity duration-300 animate-bounce max-sm:hidden md:max-lg:hidden" style={{ animationDelay: '0.2s' }}>🚀</div>
+            <div className="absolute top-2 right-4 text-xl opacity-60 group-hover:opacity-100 transition-opacity duration-300 animate-bounce max-sm:hidden md:hidden lg:block" style={{ animationDelay: '0s' }}>✨</div>
+            <div className="absolute bottom-2 right-8 text-lg opacity-40 group-hover:opacity-70 transition-opacity duration-300 animate-bounce max-sm:hidden md:hidden lg:block" style={{ animationDelay: '0.2s' }}>🚀</div>
           </div>
         </div>
 
