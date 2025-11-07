@@ -24,17 +24,17 @@ export default function StudioRecentPanel({
   const showCount = expanded ? Number.MAX_SAFE_INTEGER : 3;
 
   return (
-    <section className="rounded-2xl border border-neutral-800 bg-neutral-900/60">
+    <section className="rounded-2xl max-sm:rounded-lg border border-neutral-800 bg-neutral-900/60">
       {/* Header */}
-      <header className="flex flex-wrap items-center justify-between gap-3 border-b border-neutral-800 p-4">
-        <div className="flex items-center gap-3">
-          <h2 className="text-xl font-semibold text-neutral-50">Recent</h2>
+      <header className="flex flex-wrap items-center justify-between gap-3 max-sm:gap-2 border-b border-neutral-800 p-4 max-sm:p-3">
+        <div className="flex items-center gap-3 max-sm:gap-2 max-sm:flex-col max-sm:w-full max-sm:items-start">
+          <h2 className="text-xl max-sm:text-lg font-semibold text-neutral-50">Recent</h2>
 
           {/* Tabs */}
-          <div className="flex rounded-lg bg-neutral-800 p-1">
+          <div className="flex rounded-lg bg-neutral-800 p-1 max-sm:w-full max-sm:justify-between">
             <button
               onClick={() => setTab("uploads")}
-              className={`rounded-md px-3 py-1 text-sm transition-colors cursor-pointer ${
+              className={`rounded-md px-3 py-1 max-sm:px-2 max-sm:py-1 text-sm max-sm:text-xs transition-colors cursor-pointer max-sm:flex-1 ${
                 tab === "uploads"
                   ? "bg-neutral-700 text-neutral-50"
                   : "text-neutral-300 hover:text-neutral-100"
@@ -45,7 +45,7 @@ export default function StudioRecentPanel({
             </button>
             <button
               onClick={() => setTab("ads")}
-              className={`rounded-md px-3 py-1 text-sm transition-colors cursor-pointer ${
+              className={`rounded-md px-3 py-1 max-sm:px-2 max-sm:py-1 text-sm max-sm:text-xs transition-colors cursor-pointer max-sm:flex-1 ${
                 tab === "ads"
                   ? "bg-neutral-700 text-neutral-50"
                   : "text-neutral-300 hover:text-neutral-100"
@@ -56,7 +56,7 @@ export default function StudioRecentPanel({
             </button>
             <button
               onClick={() => setTab("meets")}
-              className={`rounded-md px-3 py-1 text-sm transition-colors cursor-pointer ${
+              className={`rounded-md px-3 py-1 max-sm:px-2 max-sm:py-1 text-sm max-sm:text-xs transition-colors cursor-pointer max-sm:flex-1 ${
                 tab === "meets"
                   ? "bg-neutral-700 text-neutral-50"
                   : "text-neutral-300 hover:text-neutral-100"
@@ -71,14 +71,14 @@ export default function StudioRecentPanel({
         {/* View all / Show less */}
         <button
           onClick={() => setExpanded((v) => !v)}
-          className="rounded-full bg-[var(--primary-500)] px-3 py-1.5 text-sm font-semibold text-white transition hover:bg-opacity-90 cursor-pointer"
+          className="rounded-full bg-[var(--primary-500)] px-3 py-1.5 max-sm:px-2.5 max-sm:py-1 text-sm max-sm:text-xs font-semibold text-white transition hover:bg-opacity-90 cursor-pointer max-sm:w-full"
         >
           {expanded ? "Show less" : "View all"}
         </button>
       </header>
 
       {/* Body */}
-      <div className="p-4">
+      <div className="p-4 max-sm:p-3">
         {tab === "uploads" ? (
           <StudioRecentUploads items={videos} showCount={showCount} />
         ) : tab === "ads" ? (

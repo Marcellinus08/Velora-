@@ -63,37 +63,37 @@ function StatCard({
   gradient?: string;
 }) {
   return (
-    <div className="group relative rounded-2xl border border-neutral-800/50 bg-neutral-900/60 backdrop-blur-sm p-5 transition-all duration-300 hover:border-neutral-700 hover:shadow-lg hover:shadow-purple-900/10 hover:-translate-y-1">
+    <div className="group relative rounded-2xl max-sm:rounded-lg border border-neutral-800/50 bg-neutral-900/60 backdrop-blur-sm p-5 max-sm:p-3 transition-all duration-300 hover:border-neutral-700 hover:shadow-lg hover:shadow-purple-900/10 hover:-translate-y-1">
       {/* Gradient background on hover */}
-      <div className={`absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 ${gradient || 'bg-gradient-to-br from-purple-600/5 via-blue-600/5 to-pink-600/5'}`} />
+      <div className={`absolute inset-0 rounded-2xl max-sm:rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 ${gradient || 'bg-gradient-to-br from-purple-600/5 via-blue-600/5 to-pink-600/5'}`} />
       
       <div className="relative">
         <div className="flex items-center justify-between">
-          <p className="text-sm font-medium text-neutral-400 group-hover:text-neutral-300 transition-colors">
+          <p className="text-sm max-sm:text-xs font-medium text-neutral-400 group-hover:text-neutral-300 transition-colors">
             {label}
           </p>
-          <div className="text-neutral-500 group-hover:text-purple-400 transition-colors">
+          <div className="text-neutral-500 group-hover:text-purple-400 transition-colors max-sm:scale-90">
             {rightIcon ?? null}
           </div>
         </div>
-        <p className="mt-3 text-2xl font-bold bg-gradient-to-br from-neutral-50 to-neutral-300 bg-clip-text text-transparent group-hover:from-purple-300 group-hover:to-blue-300 transition-all">
+        <p className="mt-3 max-sm:mt-2 text-2xl max-sm:text-lg font-bold bg-gradient-to-br from-neutral-50 to-neutral-300 bg-clip-text text-transparent group-hover:from-purple-300 group-hover:to-blue-300 transition-all">
           {value}
         </p>
       </div>
       
       {/* Bottom accent line */}
-      <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-purple-500/0 to-transparent group-hover:via-purple-500/50 transition-all duration-300 rounded-b-2xl" />
+      <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-purple-500/0 to-transparent group-hover:via-purple-500/50 transition-all duration-300 rounded-b-2xl max-sm:rounded-b-lg" />
     </div>
   );
 }
 
 export default function StudioStats({ totals }: { totals: Totals }) {
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <div className="grid grid-cols-1 gap-4 max-sm:gap-3 sm:grid-cols-2 xl:grid-cols-4">
       {/* Videos */}
       <StatCard
         label={
-          <span className="inline-flex items-center">
+          <span className="inline-flex items-center max-sm:text-[11px]">
             Videos
             <InfoHint text="Total videos in your studio (Published, Unlisted, or Draft)." />
           </span>
@@ -106,7 +106,7 @@ export default function StudioStats({ totals }: { totals: Totals }) {
       {/* Campaigns */}
       <StatCard
         label={
-          <span className="inline-flex items-center">
+          <span className="inline-flex items-center max-sm:text-[11px]">
             Campaigns
             <InfoHint text="Number of ad campaigns you created to promote your content (Running / Paused / Ended)." />
           </span>
@@ -119,7 +119,7 @@ export default function StudioStats({ totals }: { totals: Totals }) {
       {/* Meets (replaces Buyers) */}
       <StatCard
         label={
-          <span className="inline-flex items-center">
+          <span className="inline-flex items-center max-sm:text-[11px]">
             Meets
             <InfoHint text="Total number of completed meet bookings with participants." />
           </span>
@@ -132,7 +132,7 @@ export default function StudioStats({ totals }: { totals: Totals }) {
       {/* Earnings */}
       <StatCard
         label={
-          <span className="inline-flex items-center">
+          <span className="inline-flex items-center max-sm:text-[11px]">
             Earnings
             <InfoHint text="Earnings from video sales (60%) and meet bookings (80%). Withdrawable according to the payout policy." />
           </span>
