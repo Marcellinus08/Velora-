@@ -118,7 +118,7 @@ export default function FeedbackModal({ open, onClose }: Props) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 max-sm:p-3 max-sm:items-end"
       role="dialog"
       aria-modal="true"
       onKeyDown={(e) => e.key === "Escape" && onClose()}
@@ -131,30 +131,30 @@ export default function FeedbackModal({ open, onClose }: Props) {
       />
 
       {/* Modal */}
-      <div className="relative z-10 w-full max-w-md rounded-2xl border border-neutral-800 bg-neutral-900 p-5 shadow-xl">
-        <div className="mb-3 flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-neutral-50">Send Feedback</h3>
+      <div className="relative z-10 w-full max-w-md rounded-2xl max-sm:rounded-t-2xl max-sm:rounded-b-none border border-neutral-800 max-sm:border-b-0 bg-neutral-900 p-5 max-sm:p-4 shadow-xl max-sm:max-h-[90vh] max-sm:overflow-y-auto">
+        <div className="mb-3 max-sm:mb-2 flex items-center justify-between max-sm:sticky max-sm:top-0 max-sm:bg-neutral-900 max-sm:pb-2 max-sm:z-10">
+          <h3 className="text-lg max-sm:text-base font-semibold text-neutral-50">Send Feedback</h3>
           <button
             onClick={onClose}
-            className="rounded-full p-2 text-neutral-400 hover:bg-neutral-800 hover:text-neutral-50 cursor-pointer"
+            className="rounded-full p-2 max-sm:p-1.5 text-neutral-400 hover:bg-neutral-800 hover:text-neutral-50 cursor-pointer"
             aria-label="Close"
             type="button"
           >
-            <MI name="close" className="text-[16px] leading-none align-middle" />
+            <MI name="close" className="text-[16px] max-sm:text-[14px] leading-none align-middle" />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4 max-sm:space-y-3">
           {/* Type */}
           <div>
-            <label className="mb-1 block text-sm text-neutral-300">Type</label>
-            <div className="grid grid-cols-3 gap-2">
+            <label className="mb-1 max-sm:mb-0.5 block text-sm max-sm:text-xs text-neutral-300">Type</label>
+            <div className="grid grid-cols-3 gap-2 max-sm:gap-1.5">
               {(["Idea", "Bug", "Other"] as const).map((t) => (
                 <button
                   key={t}
                   type="button"
                   onClick={() => setType(t)}
-                  className={`rounded-lg border px-3 py-2 text-sm cursor-pointer ${
+                  className={`rounded-lg border px-3 py-2 max-sm:px-2 max-sm:py-1.5 text-sm max-sm:text-xs cursor-pointer ${
                     type === t
                       ? "border-[var(--primary-500)] bg-neutral-800 text-neutral-50"
                       : "border-neutral-700 bg-neutral-900 text-neutral-300 hover:border-neutral-600"
@@ -168,77 +168,77 @@ export default function FeedbackModal({ open, onClose }: Props) {
 
           {/* Message */}
           <div>
-            <label className="mb-1 block text-sm text-neutral-300">Message</label>
+            <label className="mb-1 max-sm:mb-0.5 block text-sm max-sm:text-xs text-neutral-300">Message</label>
             <textarea
               required
               rows={5}
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              className="w-full rounded-lg border border-neutral-700 bg-neutral-800 p-3 text-neutral-50 placeholder:text-neutral-400 focus:border-[var(--primary-500)] focus:ring-0"
+              className="w-full rounded-lg border border-neutral-700 bg-neutral-800 p-3 max-sm:p-2 text-neutral-50 max-sm:text-sm placeholder:text-neutral-400 focus:border-[var(--primary-500)] focus:ring-0"
               placeholder="Describe the issue or your idea…"
             />
           </div>
 
           {/* Media Upload (optional) */}
           <div>
-            <label className="mb-1 block text-sm text-neutral-300">
+            <label className="mb-1 max-sm:mb-0.5 block text-sm max-sm:text-xs text-neutral-300">
               Attachment (optional)
             </label>
-            <div className="space-y-2">
+            <div className="space-y-2 max-sm:space-y-1.5">
               <input
                 id="media-input"
                 type="file"
                 accept="image/*,video/mp4,video/webm"
                 onChange={handleMediaChange}
-                className="w-full rounded-lg border border-neutral-700 bg-neutral-800 px-3 py-2 text-neutral-50 file:mr-3 file:rounded-md file:border-0 file:bg-[var(--primary-500)] file:px-3 file:py-1 file:text-sm file:text-white hover:file:bg-opacity-90 file:cursor-pointer cursor-pointer"
+                className="w-full rounded-lg border border-neutral-700 bg-neutral-800 px-3 py-2 max-sm:px-2 max-sm:py-1.5 text-neutral-50 max-sm:text-sm file:mr-3 max-sm:file:mr-2 file:rounded-md file:border-0 file:bg-[var(--primary-500)] file:px-3 file:py-1 max-sm:file:px-2 max-sm:file:py-0.5 file:text-sm max-sm:file:text-xs file:text-white hover:file:bg-opacity-90 file:cursor-pointer cursor-pointer"
               />
-              <p className="text-xs text-neutral-400">
+              <p className="text-xs max-sm:text-[10px] text-neutral-400">
                 Images (JPEG, PNG, GIF, WebP) or videos (MP4, WebM). Max 5MB.
               </p>
               
               {/* Preview selected file */}
               {media && (
-                <div className="flex items-center justify-between rounded-lg border border-neutral-700 bg-neutral-800 p-2">
-                  <div className="flex items-center gap-2">
-                    <MI name={media.type.startsWith('image/') ? 'image' : 'videocam'} className="text-sm text-neutral-400" />
-                    <span className="text-sm text-neutral-50 truncate">
+                <div className="flex items-center justify-between rounded-lg border border-neutral-700 bg-neutral-800 p-2 max-sm:p-1.5 max-sm:flex-col max-sm:gap-2">
+                  <div className="flex items-center gap-2 max-sm:gap-1.5 max-sm:w-full">
+                    <MI name={media.type.startsWith('image/') ? 'image' : 'videocam'} className="text-sm max-sm:text-xs text-neutral-400 max-sm:flex-shrink-0" />
+                    <span className="text-sm max-sm:text-xs text-neutral-50 truncate">
                       {media.name}
                     </span>
-                    <span className="text-xs text-neutral-400">
+                    <span className="text-xs max-sm:text-[10px] text-neutral-400 max-sm:flex-shrink-0">
                       ({(media.size / 1024 / 1024).toFixed(1)}MB)
                     </span>
                   </div>
                   <button
                     type="button"
                     onClick={removeMedia}
-                    className="rounded-full p-1 text-neutral-400 hover:bg-neutral-700 hover:text-neutral-50 cursor-pointer"
+                    className="rounded-full p-1 max-sm:p-0.5 max-sm:w-full max-sm:bg-neutral-700 text-neutral-400 hover:bg-neutral-700 hover:text-neutral-50 cursor-pointer max-sm:text-xs"
                     aria-label="Remove file"
                   >
-                    <MI name="close" className="text-sm" />
+                    <MI name="close" className="text-sm max-sm:text-xs max-sm:inline" />
+                    <span className="hidden max-sm:inline ml-1">Remove</span>
                   </button>
                 </div>
               )}
             </div>
           </div>
-
           {/* Email (optional) */}
           <div>
-            <label className="mb-1 block text-sm text-neutral-300">Email (optional)</label>
+            <label className="mb-1 max-sm:mb-0.5 block text-sm max-sm:text-xs text-neutral-300">Email (optional)</label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-lg border border-neutral-700 bg-neutral-800 px-3 py-2 text-neutral-50 placeholder:text-neutral-400 focus:border-[var(--primary-500)] focus:ring-0"
+              className="w-full rounded-lg border border-neutral-700 bg-neutral-800 px-3 py-2 max-sm:px-2 max-sm:py-1.5 text-neutral-50 max-sm:text-sm placeholder:text-neutral-400 focus:border-[var(--primary-500)] focus:ring-0"
               placeholder="We'll contact you if needed"
             />
           </div>
 
           {/* Actions */}
-          <div className="mt-2 flex items-center justify-end gap-2">
+          <div className="mt-2 max-sm:mt-1 flex items-center justify-end gap-2 max-sm:flex-col-reverse max-sm:pt-2 max-sm:sticky max-sm:bottom-0 max-sm:bg-neutral-900 max-sm:pb-1">
             <button
               type="button"
               onClick={onClose}
-              className="rounded-full px-4 py-2 text-sm font-semibold text-neutral-300 hover:bg-neutral-800 cursor-pointer"
+              className="rounded-full px-4 py-2 max-sm:px-3 max-sm:py-2 max-sm:w-full text-sm max-sm:text-xs font-semibold text-neutral-300 hover:bg-neutral-800 cursor-pointer"
               disabled={busy}
             >
               Cancel
@@ -246,7 +246,7 @@ export default function FeedbackModal({ open, onClose }: Props) {
             <button
               type="submit"
               disabled={busy || !message.trim()}
-              className="rounded-full bg-[var(--primary-500)] px-4 py-2 text-sm font-semibold text-white hover:bg-opacity-90 disabled:opacity-60 cursor-pointer"
+              className="rounded-full bg-[var(--primary-500)] px-4 py-2 max-sm:px-3 max-sm:py-2 max-sm:w-full text-sm max-sm:text-xs font-semibold text-white hover:bg-opacity-90 disabled:opacity-60 cursor-pointer"
             >
               {busy ? "Sending…" : "Send"}
             </button>
