@@ -45,7 +45,7 @@ export function LeaderboardLazy({ allEntries, isLoading, onUserClick, currentUse
         score: user.total_points,
         avatarUrl: user.avatar_url,
         avatarNode: user.avatar_url ? (
-          <img src={user.avatar_url} alt="" className="h-full w-full object-cover" />
+          <img src={user.avatar_url} alt="" className="h-full w-full rounded-full object-cover" />
         ) : (
           <AbstractProfile address={user.user_addr as `0x${string}`} size="lg" showTooltip={false} ring={false} />
         ),
@@ -123,27 +123,29 @@ export function LeaderboardLazy({ allEntries, isLoading, onUserClick, currentUse
                 }`}
                 onClick={() => onUserClick(e.handle)}
               >
-                <td className="whitespace-nowrap py-5 pl-6 pr-3 max-sm:py-3 max-sm:pl-3 max-sm:pr-2">
+                <td className="whitespace-nowrap py-5 pl-6 pr-3 max-sm:py-3 max-sm:pl-3 max-sm:pr-1.5">
                   {isTopThree ? (
-                    <div className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-neutral-800/80 text-base font-bold text-neutral-200 max-sm:h-8 max-sm:w-8 max-sm:text-sm">
+                    <div className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-neutral-800/80 text-base font-bold text-neutral-200 max-sm:h-7 max-sm:w-7 max-sm:text-xs">
                       {e.rank}
                     </div>
                   ) : (
-                    <div className="inline-flex h-10 w-10 items-center justify-center text-base font-bold text-neutral-400 max-sm:h-8 max-sm:w-8 max-sm:text-sm">
+                    <div className="inline-flex h-10 w-10 items-center justify-center text-base font-bold text-neutral-400 max-sm:h-7 max-sm:w-7 max-sm:text-xs">
                       {e.rank}
                     </div>
                   )}
                 </td>
                 <td className="px-3 py-5 max-sm:px-2 max-sm:py-3">
-                  <div className="flex items-center gap-4 max-sm:gap-2">
-                    <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-neutral-800 max-sm:h-10 max-sm:w-10">
-                      {e.avatarNode}
+                  <div className="flex items-center gap-4 max-sm:gap-2.5">
+                    <div className="relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-full bg-neutral-800 max-sm:h-9 max-sm:w-9">
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        {e.avatarNode}
+                      </div>
                     </div>
-                    <div>
+                    <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2 font-semibold text-neutral-50 max-sm:text-sm max-sm:gap-1.5">
-                        <span>{e.name}</span>
+                        <span className="truncate">{e.name}</span>
                         {isCurrentUser && (
-                          <span className="rounded-full bg-purple-500/20 px-2.5 py-0.5 text-xs font-medium text-purple-400 ring-1 ring-purple-500/30 max-sm:px-2 max-sm:py-0 max-sm:text-[10px]">
+                          <span className="flex-shrink-0 rounded-full bg-purple-500/20 px-2.5 py-0.5 text-xs font-medium text-purple-400 ring-1 ring-purple-500/30 max-sm:px-1.5 max-sm:py-0.5 max-sm:text-[9px]">
                             You
                           </span>
                         )}
