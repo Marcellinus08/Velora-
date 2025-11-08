@@ -282,20 +282,20 @@ export default function CommunityPage() {
   return (
     <div className="flex h-full grow flex-row overflow-x-hidden">
       <Sidebar />
-      <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8 xl:ml-64 max-sm:px-3 max-sm:py-3 max-sm:pb-20 max-sm:overflow-x-hidden md:pb-20 xl:pb-6">
-        <div className="flex flex-col gap-6 max-sm:gap-4 max-sm:max-w-full">
-          <div className="flex flex-col items-start gap-4 md:flex-row md:items-center md:justify-between max-sm:gap-3">
+      <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8 xl:ml-64 max-sm:px-3 max-sm:py-3 max-sm:pb-20 max-sm:overflow-x-hidden md:pb-20 xl:pb-6 md:px-5 md:py-5">
+        <div className="flex flex-col gap-6 max-sm:gap-4 max-sm:max-w-full md:gap-5">
+          <div className="flex flex-col items-start gap-4 md:flex-row md:items-center md:justify-between max-sm:gap-3 md:gap-4">
             <div className="max-sm:w-full">
-              <h2 className="text-2xl font-bold text-neutral-50 max-sm:text-lg">Community Discussions</h2>
-              <p className="text-sm text-neutral-400 mt-1 max-sm:text-xs max-sm:mt-0.5">Share ideas, ask questions, and engage with the community</p>
+              <h2 className="text-2xl font-bold text-neutral-50 max-sm:text-lg md:text-xl">Community Discussions</h2>
+              <p className="text-sm text-neutral-400 mt-1 max-sm:text-xs max-sm:mt-0.5 md:text-sm md:mt-1">Share ideas, ask questions, and engage with the community</p>
             </div>
 
             {address && (
               <button
                 onClick={() => setOpen(true)}
-                className="cursor-pointer flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold text-white bg-[var(--primary-500)] hover:bg-[var(--primary-500)]/90 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary-500)]/40 max-sm:w-full max-sm:justify-center max-sm:px-4 max-sm:py-2.5 max-sm:text-sm max-sm:rounded-lg"
+                className="cursor-pointer flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold text-white bg-[var(--primary-500)] hover:bg-[var(--primary-500)]/90 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary-500)]/40 max-sm:w-full max-sm:justify-center max-sm:px-4 max-sm:py-2.5 max-sm:text-sm max-sm:rounded-lg md:rounded-full md:px-4 md:py-2 md:text-sm md:w-auto"
               >
-                <svg className="size-5 max-sm:size-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden>
+                <svg className="size-5 max-sm:size-4 md:size-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden>
                   <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
                 </svg>
                 <span>Create New Post</span>
@@ -305,7 +305,7 @@ export default function CommunityPage() {
 
           <CommunityTabs value={category} onChange={setCategory} />
 
-          {error && <div className="rounded-md border border-red-700 bg-red-900/30 p-3 text-sm text-red-200 max-sm:p-2 max-sm:text-xs max-sm:rounded-lg">{error}</div>}
+          {error && <div className="rounded-md border border-red-700 bg-red-900/30 p-3 text-sm text-red-200 max-sm:p-2 max-sm:text-xs max-sm:rounded-lg md:p-3 md:text-sm md:rounded-md">{error}</div>}
 
           {/* Loading State dengan Skeleton */}
           {loading ? (
@@ -326,10 +326,10 @@ export default function CommunityPage() {
               
               {/* Loading indicator saat fetch more */}
               {loadingMore && (
-                <div className="flex justify-center items-center py-8 max-sm:py-4">
+                <div className="flex justify-center items-center py-8 max-sm:py-4 md:py-6">
                   <div className="flex items-center gap-2">
-                    <div className="h-5 w-5 animate-spin rounded-full border-2 border-[var(--primary-500)] border-t-transparent max-sm:h-4 max-sm:w-4" />
-                    <span className="text-sm text-neutral-400 max-sm:text-xs">Loading more posts...</span>
+                    <div className="h-5 w-5 animate-spin rounded-full border-2 border-[var(--primary-500)] border-t-transparent max-sm:h-4 max-sm:w-4 md:h-5 md:w-5" />
+                    <span className="text-sm text-neutral-400 max-sm:text-xs md:text-sm">Loading more posts...</span>
                   </div>
                 </div>
               )}

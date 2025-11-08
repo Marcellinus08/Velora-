@@ -99,13 +99,13 @@ function MediaGrid({ media }: { media?: { url: string; mime?: string | null }[] 
 
   if (!valid.length) return null;
   return (
-    <div className="mt-3 max-sm:mt-2 grid grid-cols-2 gap-2 max-sm:gap-1.5 sm:grid-cols-3 md:grid-cols-4 max-sm:w-full max-sm:overflow-hidden">
+    <div className="mt-3 max-sm:mt-2 grid grid-cols-2 gap-2 max-sm:gap-1.5 sm:grid-cols-3 md:grid-cols-4 max-sm:w-full max-sm:overflow-hidden md:gap-2">
       {valid.map((m, i) => (
-        <div key={`${m.url}-${i}`} className="relative overflow-hidden rounded-lg max-sm:rounded-md border border-neutral-800 max-sm:w-full">
+        <div key={`${m.url}-${i}`} className="relative overflow-hidden rounded-lg max-sm:rounded-md border border-neutral-800 max-sm:w-full md:rounded-lg">
           {m.mime?.startsWith?.("video/") ? (
-            <video src={m.url} className="h-40 max-sm:h-24 w-full object-cover" controls playsInline />
+            <video src={m.url} className="h-40 max-sm:h-24 w-full object-cover md:h-40" controls playsInline />
           ) : (
-            <img src={m.url} className="h-40 max-sm:h-24 w-full object-cover" alt="" />
+            <img src={m.url} className="h-40 max-sm:h-24 w-full object-cover md:h-40" alt="" />
           )}
         </div>
       ))}
@@ -116,44 +116,44 @@ function MediaGrid({ media }: { media?: { url: string; mime?: string | null }[] 
 /* ===== Skeleton loading (sesuai gaya CardsGrid: animate-pulse kotak abu) ===== */
 function PostSkeleton() {
   return (
-    <div className="rounded-lg border border-neutral-800 bg-neutral-900 p-4 max-sm:p-3 max-sm:rounded-md max-sm:w-full max-sm:overflow-hidden">
-      <div className="flex items-start gap-4 max-sm:gap-2.5 animate-pulse max-sm:w-full">
+    <div className="rounded-lg border border-neutral-800 bg-neutral-900 p-4 max-sm:p-3 max-sm:rounded-md max-sm:w-full max-sm:overflow-hidden md:p-4 md:rounded-lg">
+      <div className="flex items-start gap-4 max-sm:gap-2.5 animate-pulse max-sm:w-full md:gap-3.5">
         {/* avatar */}
-        <div className="size-10 max-sm:size-8 rounded-full bg-neutral-800/60" />
+        <div className="size-10 max-sm:size-8 rounded-full bg-neutral-800/60 md:size-10" />
 
         {/* body */}
         <div className="flex-1">
           {/* header row */}
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 max-sm:gap-1.5">
-              <div className="h-4 max-sm:h-3 w-28 max-sm:w-20 rounded bg-neutral-800/60" />
-              <div className="h-3 max-sm:h-2.5 w-24 max-sm:w-16 rounded bg-neutral-800/60" />
+            <div className="flex items-center gap-2 max-sm:gap-1.5 md:gap-2">
+              <div className="h-4 max-sm:h-3 w-28 max-sm:w-20 rounded bg-neutral-800/60 md:h-4 md:w-28" />
+              <div className="h-3 max-sm:h-2.5 w-24 max-sm:w-16 rounded bg-neutral-800/60 md:h-3 md:w-24" />
             </div>
-            <div className="h-3 max-sm:h-2.5 w-20 max-sm:w-14 rounded bg-neutral-800/60" />
+            <div className="h-3 max-sm:h-2.5 w-20 max-sm:w-14 rounded bg-neutral-800/60 md:h-3 md:w-20" />
           </div>
 
           {/* title */}
-          <div className="mt-2 max-sm:mt-1.5 h-5 max-sm:h-4 w-2/3 max-sm:w-4/5 rounded bg-neutral-800/60" />
+          <div className="mt-2 max-sm:mt-1.5 h-5 max-sm:h-4 w-2/3 max-sm:w-4/5 rounded bg-neutral-800/60 md:mt-2 md:h-5" />
 
           {/* content lines */}
-          <div className="mt-2 max-sm:mt-1.5 space-y-2 max-sm:space-y-1.5">
-            <div className="h-3 max-sm:h-2.5 w-full rounded bg-neutral-800/60" />
-            <div className="h-3 max-sm:h-2.5 w-5/6 rounded bg-neutral-800/60" />
-            <div className="h-3 max-sm:h-2.5 w-4/6 rounded bg-neutral-800/60" />
+          <div className="mt-2 max-sm:mt-1.5 space-y-2 max-sm:space-y-1.5 md:mt-2 md:space-y-2">
+            <div className="h-3 max-sm:h-2.5 w-full rounded bg-neutral-800/60 md:h-3" />
+            <div className="h-3 max-sm:h-2.5 w-5/6 rounded bg-neutral-800/60 md:h-3" />
+            <div className="h-3 max-sm:h-2.5 w-4/6 rounded bg-neutral-800/60 md:h-3" />
           </div>
 
           {/* media thumb placeholders (opsional) */}
-          <div className="mt-3 max-sm:mt-2 grid grid-cols-2 gap-2 max-sm:gap-1.5 sm:grid-cols-3 md:grid-cols-4 max-sm:w-full max-sm:overflow-hidden">
+          <div className="mt-3 max-sm:mt-2 grid grid-cols-2 gap-2 max-sm:gap-1.5 sm:grid-cols-3 md:grid-cols-4 max-sm:w-full max-sm:overflow-hidden md:mt-3 md:gap-2">
             {Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="h-40 max-sm:h-24 w-full rounded-lg max-sm:rounded-md bg-neutral-800/60" />
+              <div key={i} className="h-40 max-sm:h-24 w-full rounded-lg max-sm:rounded-md bg-neutral-800/60 md:h-40 md:rounded-lg" />
             ))}
           </div>
 
           {/* actions */}
-          <div className="mt-4 max-sm:mt-3 flex flex-wrap items-center gap-6 max-sm:gap-4">
-            <div className="h-4 max-sm:h-3 w-20 max-sm:w-16 rounded bg-neutral-800/60" />
-            <div className="h-4 max-sm:h-3 w-24 max-sm:w-20 rounded bg-neutral-800/60" />
-            <div className="h-4 max-sm:h-3 w-16 max-sm:w-12 rounded bg-neutral-800/60" />
+          <div className="mt-4 max-sm:mt-3 flex flex-wrap items-center gap-6 max-sm:gap-4 md:mt-4 md:gap-6">
+            <div className="h-4 max-sm:h-3 w-20 max-sm:w-16 rounded bg-neutral-800/60 md:h-4 md:w-20" />
+            <div className="h-4 max-sm:h-3 w-24 max-sm:w-20 rounded bg-neutral-800/60 md:h-4 md:w-24" />
+            <div className="h-4 max-sm:h-3 w-16 max-sm:w-12 rounded bg-neutral-800/60 md:h-4 md:w-16" />
           </div>
         </div>
       </div>
@@ -228,42 +228,42 @@ export default function CommunityPostRow({
   const likeIcon = post.liked ? "favorite" : "favorite_border";
 
   return (
-    <div className="rounded-lg border border-neutral-800 bg-neutral-900 p-4 max-sm:p-3 max-sm:rounded-md transition-colors hover:bg-neutral-800 max-sm:w-full max-sm:overflow-hidden">
-      <div className="flex items-start gap-4 max-sm:gap-2.5 max-sm:w-full">
+    <div className="rounded-lg border border-neutral-800 bg-neutral-900 p-4 max-sm:p-3 max-sm:rounded-md transition-colors hover:bg-neutral-800 max-sm:w-full max-sm:overflow-hidden md:p-4 md:rounded-lg">
+      <div className="flex items-start gap-4 max-sm:gap-2.5 max-sm:w-full md:gap-3.5">
         {/* Avatar */}
         {dbAvatar ? (
           <img
             src={dbAvatar}
             alt="author avatar"
-            className="size-10 max-sm:size-8 rounded-full object-cover"
+            className="size-10 max-sm:size-8 rounded-full object-cover md:size-10"
             onError={(e) => {
               (e.currentTarget as HTMLImageElement).src = identicon;
             }}
           />
         ) : ETH_RE.test(addrLower) ? (
-          <div className="size-10 max-sm:size-8 overflow-hidden rounded-full">
+          <div className="size-10 max-sm:size-8 overflow-hidden rounded-full md:size-10">
             <AbstractProfile
               address={addrLower as `0x${string}`}
               size="sm"
               showTooltip={false}
-              className="!h-10 !w-10 max-sm:!h-8 max-sm:!w-8 !rounded-full"
+              className="!h-10 !w-10 max-sm:!h-8 max-sm:!w-8 !rounded-full md:!h-10 md:!w-10"
             />
           </div>
         ) : (
-          <img src={identicon} alt="author avatar" className="size-10 max-sm:size-8 rounded-full object-cover" />
+          <img src={identicon} alt="author avatar" className="size-10 max-sm:size-8 rounded-full object-cover md:size-10" />
         )}
 
         {/* Body */}
         <div className="flex-1 min-w-0">
           {/* HEADER: kiri (nama + kategori), kanan (waktu + menu) — sejajar rapi */}
           <div className="flex items-start justify-between gap-2">
-            <div className="flex flex-col gap-0.5 max-sm:gap-0 sm:flex-row sm:items-center sm:gap-2 flex-1 min-w-0">
-              <p className="font-semibold text-neutral-50 max-sm:text-sm truncate">{displayName}</p>
-              <p className="text-xs max-sm:text-xs text-neutral-400 truncate sm:text-xs">
+            <div className="flex flex-col gap-0.5 max-sm:gap-0 sm:flex-row sm:items-center sm:gap-2 flex-1 min-w-0 md:flex-row md:items-center md:gap-2">
+              <p className="font-semibold text-neutral-50 max-sm:text-sm truncate md:text-base">{displayName}</p>
+              <p className="text-xs max-sm:text-xs text-neutral-400 truncate sm:text-xs md:text-xs">
                 posted in <span className="font-medium text-neutral-50">{post.category}</span>
               </p>
             </div>
-            <div className="flex items-center gap-1 text-sm max-sm:text-xs text-neutral-400 flex-shrink-0">
+            <div className="flex items-center gap-1 text-sm max-sm:text-xs text-neutral-400 flex-shrink-0 md:text-sm">
               <span className="max-sm:hidden">{post.timeAgo}</span>
               <span className="hidden max-sm:inline text-[10px]">{post.timeAgo}</span>
               {canDelete && (
@@ -290,10 +290,10 @@ export default function CommunityPostRow({
           </div>
 
           {/* TITLE */}
-          <h3 className="mt-2 max-sm:mt-1.5 text-lg max-sm:text-base font-bold text-neutral-50 break-words">{post.title}</h3>
+          <h3 className="mt-2 max-sm:mt-1.5 text-lg max-sm:text-base font-bold text-neutral-50 break-words md:mt-2 md:text-lg">{post.title}</h3>
 
           {/* CONTENT */}
-          <div className="mt-1 max-sm:text-sm text-neutral-400 break-words">
+          <div className="mt-1 max-sm:text-sm text-neutral-400 break-words md:text-base">
             {!expanded ? (
               <>
                 {contentText.slice(0, 220)}
@@ -324,11 +324,11 @@ export default function CommunityPostRow({
           <MediaGrid media={post.media} />
 
           {/* Actions */}
-          <div className="mt-4 max-sm:mt-3 flex flex-wrap items-center gap-6 max-sm:gap-4 text-sm max-sm:text-xs text-neutral-400">
+          <div className="mt-4 max-sm:mt-3 flex flex-wrap items-center gap-6 max-sm:gap-4 text-sm max-sm:text-xs text-neutral-400 md:mt-4 md:gap-6 md:text-sm">
             <button
               onClick={onLike}
               className={
-                "flex items-center gap-1.5 max-sm:gap-1 hover:text-neutral-50 cursor-pointer " +
+                "flex items-center gap-1.5 max-sm:gap-1 hover:text-neutral-50 cursor-pointer md:gap-1.5 " +
                 (post.liked ? "text-[var(--primary-500)] hover:text-opacity-80" : "")
               }
             >
@@ -338,13 +338,13 @@ export default function CommunityPostRow({
 
             <button
               onClick={() => setOpenReplies((v) => !v)}
-              className="flex items-center gap-1.5 max-sm:gap-1 hover:text-neutral-50 cursor-pointer"
+              className="flex items-center gap-1.5 max-sm:gap-1 hover:text-neutral-50 cursor-pointer md:gap-1.5"
             >
               <MI name="chat_bubble_outline" />
               <span>{openReplies ? `Hide ${replyCount}` : replyCount} {replyCount === 1 ? 'Reply' : 'Replies'}</span>
             </button>
 
-            <button onClick={handleShare} className="flex items-center gap-1.5 max-sm:gap-1 hover:text-neutral-50 cursor-pointer">
+            <button onClick={handleShare} className="flex items-center gap-1.5 max-sm:gap-1 hover:text-neutral-50 cursor-pointer md:gap-1.5">
               <MI name="share" />
               <span>Share</span>
             </button>
