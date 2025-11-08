@@ -188,20 +188,20 @@ export default function LeaderboardPage() {
       <main className="flex-1 overflow-y-auto px-4 py-6 sm:px-6 lg:px-8 xl:ml-64 max-sm:px-3 max-sm:py-3 max-sm:pb-20 md:pb-20 xl:pb-6">
         <div className="flex flex-col gap-6 max-sm:gap-4">
           {/* Simple Header */}
-          <div className="flex flex-col items-start gap-4 md:flex-row md:items-center md:justify-between max-sm:gap-3">
-            <div className="flex items-center gap-3 max-sm:gap-2.5">
-              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-yellow-500/10 border border-yellow-500/20 flex-shrink-0 max-sm:h-10 max-sm:w-10">
-                <svg className="h-6 w-6 text-yellow-400 max-sm:h-5 max-sm:w-5" fill="currentColor" viewBox="0 0 20 20">
+          <div className="flex flex-col items-start gap-4 md:flex-row md:items-center md:justify-between max-sm:gap-2.5">
+            <div className="flex items-center gap-3 max-sm:gap-2">
+              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-yellow-500/10 border border-yellow-500/20 flex-shrink-0 max-sm:h-9 max-sm:w-9">
+                <svg className="h-6 w-6 text-yellow-400 max-sm:h-4.5 max-sm:w-4.5" fill="currentColor" viewBox="0 0 20 20">
                   <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                 </svg>
               </div>
               <div className="min-w-0">
-                <h2 className="text-2xl font-bold text-neutral-50 max-sm:text-lg">Leaderboard</h2>
-                <p className="text-sm text-neutral-400 max-sm:text-xs">Top performing community members</p>
+                <h2 className="text-2xl font-bold text-neutral-50 max-sm:text-base">Leaderboard</h2>
+                <p className="text-sm text-neutral-400 max-sm:text-[11px]">Top performing community members</p>
               </div>
             </div>
             
-            <div className="flex items-center gap-4 text-sm text-neutral-400 max-sm:text-xs max-sm:ml-auto max-sm:self-end">
+            <div className="flex items-center gap-4 text-sm text-neutral-400 max-sm:text-[11px] max-sm:ml-auto max-sm:self-end">
               <span>{fmt(leaderboardData.length)} players</span>
             </div>
           </div>
@@ -209,28 +209,28 @@ export default function LeaderboardPage() {
           {/* Current user highlight */}
           {currentUser && (
             <div 
-              className="flex items-center justify-between rounded-xl border border-purple-500/30 bg-purple-500/5 px-6 py-4 cursor-pointer hover:bg-purple-500/10 transition-all duration-300 hover:border-purple-500/50 group max-sm:px-3 max-sm:py-3 max-sm:rounded-lg"
+              className="flex items-center justify-between rounded-xl border border-purple-500/30 bg-purple-500/5 px-6 py-4 cursor-pointer hover:bg-purple-500/10 transition-all duration-300 hover:border-purple-500/50 group max-sm:px-3 max-sm:py-2.5 max-sm:rounded-lg"
               onClick={() => openProfile(currentUser.handle)}
             >
-              <div className="flex items-center gap-4 max-sm:gap-2.5 flex-1 min-w-0">
-                <div className="relative h-12 w-12 overflow-hidden rounded-full border-2 border-purple-500/40 bg-neutral-800 flex-shrink-0 max-sm:h-9 max-sm:w-9 max-sm:border">
+              <div className="flex items-center gap-4 max-sm:gap-2 flex-1 min-w-0">
+                <div className="relative h-12 w-12 overflow-hidden rounded-full border-2 border-purple-500/40 bg-neutral-800 flex-shrink-0 max-sm:h-8 max-sm:w-8 max-sm:border">
                   <div className="absolute inset-0 flex items-center justify-center">
                     {currentUser.avatarNode}
                   </div>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="text-lg font-bold text-neutral-50 max-sm:text-sm max-sm:leading-tight">{currentUser.name}</div>
-                  <div className="text-sm text-neutral-400 max-sm:text-[11px] max-sm:leading-tight whitespace-nowrap">Your ranking position</div>
+                  <div className="text-lg font-bold text-neutral-50 max-sm:text-xs max-sm:leading-tight">{currentUser.name}</div>
+                  <div className="text-sm text-neutral-400 max-sm:text-[10px] max-sm:leading-tight whitespace-nowrap">Your ranking position</div>
                 </div>
               </div>
-              <div className="flex items-center gap-8 max-sm:gap-3 flex-shrink-0">
+              <div className="flex items-center gap-8 max-sm:gap-2.5 flex-shrink-0">
                 <div className="text-right max-sm:text-center">
-                  <div className="text-xs font-medium uppercase tracking-wide text-neutral-500 max-sm:text-[9px]">Rank</div>
-                  <div className="mt-1 text-2xl font-bold text-purple-400 max-sm:text-lg max-sm:mt-0 max-sm:leading-tight">#{currentUser.rank}</div>
+                  <div className="text-xs font-medium uppercase tracking-wide text-neutral-500 max-sm:text-[8px]">Rank</div>
+                  <div className="mt-1 text-2xl font-bold text-purple-400 max-sm:text-base max-sm:mt-0 max-sm:leading-tight">#{currentUser.rank}</div>
                 </div>
                 <div className="text-right max-sm:text-center">
-                  <div className="text-xs font-medium uppercase tracking-wide text-neutral-500 max-sm:text-[9px]">Score</div>
-                  <div className="mt-1 text-2xl font-bold text-yellow-400 max-sm:text-lg max-sm:mt-0 max-sm:leading-tight">{fmt(currentUser.score)}</div>
+                  <div className="text-xs font-medium uppercase tracking-wide text-neutral-500 max-sm:text-[8px]">Score</div>
+                  <div className="mt-1 text-2xl font-bold text-yellow-400 max-sm:text-base max-sm:mt-0 max-sm:leading-tight">{fmt(currentUser.score)}</div>
                 </div>
               </div>
             </div>
