@@ -100,7 +100,31 @@ export default function SubscriptionPage() {
     }
 
     async function loadDirectFromSupabase(buyerAddr: string) {
-      let { data, error } = await supabase
+      type VideoRow = {
+        id: string;
+        title: string | null;
+        description: string | null;
+        category: string | null;
+        duration_seconds: number | null;
+        thumb_url: string | null;
+        thumb_path: string | null;
+        video_url: string | null;
+        video_path: string | null;
+        abstract_id: string | null;
+      };
+      type JoinedRow = {
+        id: string;
+        created_at: string;
+        buyer_id: string;
+        video_id: string;
+        tx_hash?: string | null;
+        price_cents: number | null;
+        currency: string | null;
+        tasks_done: boolean | null;
+        status: string | null;
+        videos: VideoRow | VideoRow[] | null;
+      };
+      const joinRes = await supabase
         .from("video_purchases")
         .select(
           `
@@ -110,8 +134,24 @@ export default function SubscriptionPage() {
         )
         .eq("buyer_id", buyerAddr)
         .order("created_at", { ascending: false });
+      let data: JoinedRow[] | null = null;
+      let error = (joinRes as any).error as any;
+      if (!error && (joinRes as any).data) {
+        data = (joinRes as any).data as JoinedRow[];
+      }
 
       if (error || !data) {
+        type PurchaseRow = {
+          id: string;
+          created_at: string;
+          buyer_id: string;
+          video_id: string;
+          tx_hash?: string | null;
+          price_cents: number | null;
+          currency: string | null;
+          tasks_done: boolean | null;
+          status: string | null;
+        };
         const { data: pchs, error: e1 } = await supabase
           .from("video_purchases")
           .select(
@@ -121,9 +161,10 @@ export default function SubscriptionPage() {
           .order("created_at", { ascending: false });
 
         if (e1) throw e1;
-        if (!pchs?.length) return { available: [], completed: [] };
+        const purchases = (pchs as PurchaseRow[] | null) || [];
+        if (!purchases.length) return { available: [], completed: [] };
 
-        const ids = Array.from(new Set(pchs.map((p) => p.video_id)));
+        const ids = Array.from(new Set(purchases.map((p) => p.video_id)));
         const { data: vids, error: e2 } = await supabase
           .from("videos")
           .select(
@@ -133,15 +174,15 @@ export default function SubscriptionPage() {
 
         if (e2) throw e2;
 
-        const vmap = new Map<string, any>();
-        (vids || []).forEach((v) => vmap.set(String(v.id), v));
+        const vmap = new Map<string, VideoRow>();
+        ((vids as VideoRow[] | null) || []).forEach((v) => vmap.set(String(v.id), v));
 
-        const rows = (pchs || []).map((p) => ({ ...p, videos: vmap.get(String(p.video_id)) || null }));
-        data = rows as any;
+        const rows = purchases.map((p) => ({ ...p, videos: vmap.get(String(p.video_id)) || null }));
+        data = rows as unknown as JoinedRow[];
       }
 
       // Fetch user progress untuk semua video yang dibeli
-      const videoIds = Array.from(new Set((data || []).map(r => r.video_id)));
+  const videoIds = Array.from(new Set(((data || []) as JoinedRow[]).map(r => r.video_id)));
       const { data: progressData } = await supabase
         .from("user_video_progress")
         .select("video_id, has_completed_task, has_shared")
@@ -149,12 +190,13 @@ export default function SubscriptionPage() {
         .in("video_id", videoIds);
 
       const progressMap = new Map<string, any>();
-      (progressData || []).forEach((p) => progressMap.set(p.video_id, p));
+      ((progressData as Array<{ video_id: string; has_completed_task?: boolean; has_shared?: boolean }> | null) || [])
+        .forEach((p) => progressMap.set(p.video_id, p));
 
       const avail: VideoItem[] = [];
       const comp: VideoItem[] = [];
 
-      for (const r of data || []) {
+      for (const r of (data || []) as JoinedRow[]) {
         const videoData = Array.isArray(r.videos) ? r.videos[0] : r.videos;
         const payload = toPayload(r, videoData || {});
         

@@ -6,12 +6,12 @@ import { supabaseAdmin } from "@/lib/supabase-admin";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-type RouteCtx = { params: { id: string } };
+type RouteCtx = { params: Promise<{ id: string }> };
 const ETH_RE = /^0x[a-f0-9]{40}$/;
 
 export async function POST(req: Request, { params }: RouteCtx) {
   try {
-    const postId = params.id;
+    const { id: postId } = await params; // await the params Promise per Next.js 15
     const body = await req.json().catch(() => ({}));
     const abstractId = String(body.abstractId || "").toLowerCase();
 

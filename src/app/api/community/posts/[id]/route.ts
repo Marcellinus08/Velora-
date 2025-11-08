@@ -5,12 +5,12 @@ import { sbService } from "@/lib/supabase-server";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-type RouteContext = { params: { id: string } };
+type RouteContext = { params: Promise<{ id: string }> };
 
 // Handle PUT request untuk edit post
 export async function PUT(req: Request, { params }: RouteContext) {
   try {
-    const postId = params.id;
+    const { id: postId } = await params; // await params Promise per Next.js 15
     const body = await req.json().catch(() => ({}));
     const { abstractId, title, content } = body;
 
@@ -74,7 +74,7 @@ export async function PUT(req: Request, { params }: RouteContext) {
 
 export async function DELETE(req: Request, { params }: RouteContext) {
   try {
-    const postId = params.id;
+    const { id: postId } = await params; // await params Promise per Next.js 15
     const body = await req.json().catch(() => ({}));
     const abstractId = String(body.abstractId || "").toLowerCase();
 

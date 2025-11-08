@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 
@@ -63,7 +63,7 @@ type VideoRow = {
   video_purchases?: Array<{ buyer_id: string }>;
 };
 
-export default function VideoPage() {
+function VideoPageInner() {
   const sp = useSearchParams();
   const idFromQuery = sp.get("id") || "";
 
@@ -606,5 +606,13 @@ export default function VideoPage() {
         </>
       )}
     </main>
+  );
+}
+
+export default function VideoPage() {
+  return (
+    <Suspense fallback={null}>
+      <VideoPageInner />
+    </Suspense>
   );
 }

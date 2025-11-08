@@ -1,7 +1,7 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, Suspense } from "react";
 import dynamic from "next/dynamic";
 import Sidebar from "@/components/sidebar";
 import { CarouselSkeleton } from "@/components/home/carousel-skeleton";
@@ -29,27 +29,21 @@ const CardsGrid = dynamic(() => import("@/components/home/cardsgrid"), {
   ssr: true,
 });
 
-export default function Home() {
+function HomeContent() {
   const searchParams = useSearchParams();
   const campaignId = searchParams?.get("campaign");
   const carouselRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // Scroll to carousel when campaign parameter is present
     if (campaignId && carouselRef.current) {
       setTimeout(() => {
-        carouselRef.current?.scrollIntoView({ 
-          behavior: "smooth", 
-          block: "center" 
-        });
+        carouselRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
       }, 500);
     }
   }, [campaignId]);
 
   return (
-    <div className="flex h-full grow flex-row">
-      <Sidebar />
-      <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8 relative overflow-hidden xl:ml-64
+    <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8 relative overflow-hidden xl:ml-64
         max-sm:px-3 max-sm:py-3 max-sm:pb-20 
         xl:pb-6">
         {/* Background decorative elements */}
@@ -100,7 +94,17 @@ export default function Home() {
             <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-500/20 to-cyan-500/20 backdrop-blur-sm border border-blue-500/20 animate-pulse" style={{ animationDelay: '2s', animationDuration: '4s' }} />
           </div>
         </div>
-      </main>
+    </main>
+  );
+}
+
+export default function Home() {
+  return (
+    <div className="flex h-full grow flex-row">
+      <Sidebar />
+      <Suspense fallback={null}>
+        <HomeContent />
+      </Suspense>
     </div>
   );
 }

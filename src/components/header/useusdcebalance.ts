@@ -52,7 +52,7 @@ export function useUsdceBalance(pollMs = 60_000) {
     try {
       // 1) Coba ambil dari util (mapping per-chain)
       //    Catatan: beberapa versi util menerima chainId sebagai argumen kedua.
-      const cfg = getContractWithCurrentChain?.("usdce", chainId as any) ?? getContractWithCurrentChain?.("usdce");
+  const cfg = getContractWithCurrentChain?.("usdce");
       if (cfg?.address) return cfg.address as `0x${string}`;
     } catch {
       // diamkan, lanjut fallback
@@ -91,7 +91,7 @@ export function useUsdceBalance(pollMs = 60_000) {
         });
         const [decR, balR] = res ?? [];
         decimals = Number(decR?.result ?? 6);
-        balance = BigInt(balR?.result ?? 0n);
+  balance = BigInt(balR?.result ?? 0);
       } else {
         const [dec, bal] = await Promise.all([
           client.readContract({ address: tokenAddress, abi: ERC20_MIN_ABI, functionName: "decimals" }),
@@ -101,7 +101,7 @@ export function useUsdceBalance(pollMs = 60_000) {
         balance = bal as bigint;
       }
 
-      const amount = Number(formatUnits(balance ?? 0n, decimals || 6));
+  const amount = Number(formatUnits((balance ?? BigInt(0)), decimals || 6));
       setText(formatUSD(amount));
     } catch {
       setText("$0");

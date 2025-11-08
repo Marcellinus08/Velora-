@@ -158,10 +158,10 @@ export default function UploadCreate() {
       // jaga-jaga: pastikan profile row ada
       (async () => {
         try {
-          await supabase
+          await (supabase as any)
             .from("profiles")
             .upsert(
-              { abstract_id: addrLower },
+              { abstract_id: addrLower } as any,
               { onConflict: "abstract_id", ignoreDuplicates: false }
             );
         } catch {
@@ -304,7 +304,7 @@ export default function UploadCreate() {
   // Insert with targeted fallback: hanya drop field yang kolomnya TIDAK ADA.
   async function insertVideoRowSmart(payload: Record<string, any>) {
     // 1) coba full
-    let { error } = await supabase.from("videos").insert(payload);
+  let { error } = await (supabase as any).from("videos").insert(payload as any);
     if (!error) return;
 
     // jika error karena kolom tidak ada, kita hapus field yang bikin error, lalu retry
@@ -318,7 +318,7 @@ export default function UploadCreate() {
       if (strip.length) {
         const trimmed = { ...payload };
         for (const k of strip) delete (trimmed as any)[k];
-        const second = await supabase.from("videos").insert(trimmed);
+  const second = await (supabase as any).from("videos").insert(trimmed as any);
         if (second.error) throw second.error;
         return;
       }

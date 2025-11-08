@@ -46,7 +46,8 @@ export async function GET(req: NextRequest) {
             thumb: v.thumb_url || "/placeholder-thumb.png",
             purchasedAt: p.created_at,
             finishedAt: p.finished_at,
-            priceUsd: Math.max(0, (Number(p.price_cents || 0) / 100).toFixed ? Number((p.price_cents / 100).toFixed(2)) : Number(p.price_cents || 0) / 100),
+            // price_cents is expected to be an integer number of cents; convert to USD with 2 decimals.
+            priceUsd: Math.max(0, Number((Number(p.price_cents || 0) / 100).toFixed(2))),
             progress_pct: p.progress_pct ?? 0,
             tasks_done: !!p.tasks_done,
             status: p.status as "active" | "completed" | "refunded",

@@ -5,7 +5,7 @@ import { supabaseAdmin } from "@/lib/supabase-admin";
 export const dynamic = "force-dynamic";
 
 type RouteContext = {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 };
 
 /**
@@ -14,7 +14,7 @@ type RouteContext = {
  */
 export async function PATCH(req: Request, { params }: RouteContext) {
   try {
-    const { id } = params;
+    const { id } = await params; // await Promise-based params
     const body = await req.json();
     const { is_read } = body;
 
@@ -91,7 +91,7 @@ export async function PATCH(req: Request, { params }: RouteContext) {
  */
 export async function DELETE(req: Request, { params }: RouteContext) {
   try {
-    const { id } = params;
+    const { id } = await params; // await Promise-based params
 
     const { error } = await supabaseAdmin
       .from("notifications")

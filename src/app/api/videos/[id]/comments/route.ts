@@ -7,7 +7,7 @@ import { v4 as uuidv4 } from "uuid";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-type RouteCtx = { params: { id: string } };
+type RouteCtx = { params: Promise<{ id: string }> };
 const ETH_RE = /^0x[a-f0-9]{40}$/;
 
 /**
@@ -16,7 +16,7 @@ const ETH_RE = /^0x[a-f0-9]{40}$/;
  */
 export async function GET(req: Request, { params }: RouteCtx) {
   try {
-    const videoId = params.id;
+    const { id: videoId } = await params; // await Promise-based params
     const { searchParams } = new URL(req.url);
     const limit = Math.min(parseInt(searchParams.get("limit") || "50"), 100);
     const offset = parseInt(searchParams.get("offset") || "0");
@@ -53,7 +53,7 @@ export async function GET(req: Request, { params }: RouteCtx) {
  */
 export async function POST(req: Request, { params }: RouteCtx) {
   try {
-    const videoId = params.id;
+    const { id: videoId } = await params; // await Promise-based params
     const body = await req.json().catch(() => ({}));
     const userAddr = String(body.userAddr || "").toLowerCase();
     const content = String(body.content || "").trim();
@@ -256,7 +256,7 @@ export async function POST(req: Request, { params }: RouteCtx) {
  */
 export async function DELETE(req: Request, { params }: RouteCtx) {
   try {
-    const videoId = params.id;
+    const { id: videoId } = await params; // await Promise-based params
     const body = await req.json().catch(() => ({}));
     const commentId = String(body.commentId || "");
     const userAddr = String(body.userAddr || "").toLowerCase();

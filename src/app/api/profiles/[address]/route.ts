@@ -6,9 +6,10 @@ const ETH_RE = /^0x[a-fA-F0-9]{40}$/;
 
 export async function GET(
   _req: NextRequest,
-  { params }: { params: { address: string } }
+  { params }: { params: Promise<{ address: string }> }
 ) {
-  const addr = (params.address || "").trim().toLowerCase();
+  const { address } = await params; // await Promise-based params
+  const addr = (address || "").trim().toLowerCase();
   if (!ETH_RE.test(addr)) {
     return NextResponse.json({ error: "Bad address" }, { status: 400 });
   }

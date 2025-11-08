@@ -67,9 +67,11 @@ function CrudMenu({
 export default function StudioRecentUploads({
   items = [],
   showCount = 3,
+  expanded = false,
 }: {
   items?: StudioVideo[];
   showCount?: number;
+  expanded?: boolean;
 }) {
   const [rows, setRows] = useState<StudioVideo[]>(items);
   useEffect(() => setRows(items), [items]);
@@ -102,7 +104,7 @@ export default function StudioRecentUploads({
     <>
       <div className="rounded-2xl max-sm:rounded-lg border border-neutral-800/50 bg-neutral-900/40 backdrop-blur-sm overflow-hidden">
         <ul className="divide-y divide-neutral-800/50">
-          {rows.slice(0, showCount).map((v) => (
+          {(expanded ? rows : rows.slice(0, showCount)).map((v) => (
             <li key={v.id} className="group relative p-4 max-sm:p-3 hover:bg-neutral-800/20 transition-all duration-200">
               {/* Hover gradient effect */}
               <div className="absolute inset-0 bg-gradient-to-r from-purple-600/0 via-blue-600/0 to-transparent opacity-0 group-hover:from-purple-600/5 group-hover:via-blue-600/5 group-hover:opacity-100 transition-opacity duration-300" />

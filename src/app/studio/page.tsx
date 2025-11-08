@@ -106,12 +106,23 @@ export default function StudioPage() {
     
     try {
       const { supabase } = await import("@/lib/supabase");
-      
+      type CampaignRow = {
+        id: string;
+        title: string | null;
+        banner_url: string | null;
+        status: string;
+        duration_days: number | null;
+        start_date: string;
+        end_date: string;
+        created_at: string;
+        cta_text: string | null;
+        description: string | null;
+      };
       const { data: campaigns, error } = await supabase
         .from("campaigns")
-        .select("*")
+        .select("id,title,banner_url,status,duration_days,start_date,end_date,created_at,cta_text,description")
         .eq("creator_addr", me)
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false }) as { data: CampaignRow[] | null; error: any };
 
       if (error) {
         console.error("[Studio] Failed to fetch campaigns:", error);
@@ -123,10 +134,11 @@ export default function StudioPage() {
         // Fetch clicks for each campaign
         const campaignIds = campaigns.map(c => c.id);
         
+        type ClickRow = { campaign_id: string };
         const { data: clicks, error: clicksError } = await supabase
           .from("campaign_clicks")
           .select("campaign_id")
-          .in("campaign_id", campaignIds);
+          .in("campaign_id", campaignIds) as { data: ClickRow[] | null; error: any };
 
         if (clicksError) {
           console.error("[Studio] Failed to fetch clicks:", clicksError);
@@ -135,7 +147,7 @@ export default function StudioPage() {
         // Count clicks per campaign
         const clicksPerCampaign = new Map<string, number>();
         if (clicks) {
-          clicks.forEach(click => {
+          (clicks as ClickRow[]).forEach((click) => {
             const count = clicksPerCampaign.get(click.campaign_id) || 0;
             clicksPerCampaign.set(click.campaign_id, count + 1);
           });
@@ -143,9 +155,9 @@ export default function StudioPage() {
 
         const now = new Date();
         
-        const campaignAds: StudioAd[] = campaigns.map(c => {
+  const campaignAds: StudioAd[] = (campaigns as CampaignRow[]).map((c: CampaignRow) => {
           // Determine real-time status based on dates
-          let realStatus = c.status;
+          let realStatus: StudioAd["status"] = (c.status as StudioAd["status"]) || "active";
           
           const endDate = new Date(c.end_date);
           const startDate = new Date(c.start_date);
@@ -156,20 +168,16 @@ export default function StudioPage() {
           }
           // If campaign hasn't started yet, keep as pending or original status
           else if (now < startDate) {
-            realStatus = c.status === "paused" ? "paused" : "pending";
+            realStatus = (c.status === "paused" ? "paused" : "paused"); // treat pending as paused for display
           }
           // If currently within date range and status is active, keep it active
           else if (now >= startDate && now <= endDate) {
-            if (c.status === "paused") {
-              realStatus = "paused";
-            } else {
-              realStatus = "active";
-            }
+            realStatus = c.status === "paused" ? "paused" : "active";
           }
           
           return {
             id: c.id,
-            title: c.title,
+            title: c.title || "Untitled",
             banner_url: c.banner_url,
             status: realStatus,
             clicks: clicksPerCampaign.get(c.id) || 0,
@@ -201,6 +209,17 @@ export default function StudioPage() {
       const { supabase } = await import("@/lib/supabase");
       
       // Fetch all meets where user is the creator
+      type MeetRow = {
+        id: string;
+        participant_addr: string;
+        status: string;
+        scheduled_at: string;
+        duration_minutes: number | null;
+        rate_cents_per_min: number | null;
+        total_price_cents: number | null;
+        created_at: string;
+        participant?: { username: string | null; avatar_url: string | null } | null;
+      };
       const { data: meetsData, error: fetchError } = await supabase
         .from("meets")
         .select(`
@@ -221,17 +240,17 @@ export default function StudioPage() {
       }
 
       if (meetsData && meetsData.length > 0) {
-        const meetItems = meetsData.map((m): StudioMeet => ({
+        const meetItems = (meetsData as MeetRow[]).map((m): StudioMeet => ({
           id: m.id,
-          participant_addr: m.participant_addr,
-          participant_name: m.participant?.username,
-          participant_avatar: m.participant?.avatar_url,
-          status: m.status,
-          scheduled_at: m.scheduled_at,
-          duration_minutes: m.duration_minutes || 0,
-          rate_usd_per_min: (m.rate_cents_per_min || 0) / 100,
-          total_price_cents: m.total_price_cents || 0,
-          created_at: m.created_at,
+            participant_addr: m.participant_addr,
+            participant_name: m.participant?.username || undefined,
+            participant_avatar: m.participant?.avatar_url || undefined,
+            status: (m.status as StudioMeet["status"]) || "pending",
+            scheduled_at: m.scheduled_at,
+            duration_minutes: m.duration_minutes || 0,
+            rate_usd_per_min: (m.rate_cents_per_min || 0) / 100,
+            total_price_cents: m.total_price_cents || 0,
+            created_at: m.created_at,
         }));
 
         setMeets(meetItems);
@@ -261,6 +280,7 @@ export default function StudioPage() {
       const { supabase } = await import("@/lib/supabase");
 
       // Get all videos owned by this user directly from database
+      type VideoRow = { id: string; price_cents: number | null };
       const { data: myVideos, error: videosError } = await supabase
         .from("videos")
         .select("id, price_cents")
@@ -275,11 +295,12 @@ export default function StudioPage() {
         return;
       }
       
-      const videoIds = myVideos.map(v => v.id);
+      const videoIds = (myVideos as VideoRow[]).map(v => v.id);
       
       console.log('[Studio Stats] Video IDs:', videoIds);
 
       // Fetch all purchases for these videos
+      type PurchaseRow = { buyer_id: string; video_id: string };
       const { data: purchases, error: purchaseError } = await supabase
         .from("video_purchases")
         .select("buyer_id, video_id")
@@ -290,12 +311,12 @@ export default function StudioPage() {
 
       if (purchases && purchases.length > 0) {
         // Count total purchases (not unique buyers)
-        const totalPurchases = purchases.length;
+        const totalPurchases = (purchases as PurchaseRow[]).length;
         console.log('[Studio Stats] Total Purchases:', totalPurchases);
 
         // Create price map
         const priceMap = new Map<string, number>();
-        myVideos.forEach(v => {
+        (myVideos as VideoRow[]).forEach(v => {
           if (v.price_cents) priceMap.set(v.id, v.price_cents);
         });
 
@@ -303,7 +324,7 @@ export default function StudioPage() {
         const buyersPerVideo = new Map<string, number>();
         const revenuePerVideo = new Map<string, number>();
 
-        purchases.forEach(p => {
+        (purchases as PurchaseRow[]).forEach(p => {
           // Count purchases per video
           buyersPerVideo.set(p.video_id, (buyersPerVideo.get(p.video_id) || 0) + 1);
 
@@ -337,7 +358,7 @@ export default function StudioPage() {
           .eq("creator_addr", me)
           .eq("status", "completed");
         
-        const totalMeetEarnings = completedMeets?.reduce((sum, meet) => {
+        const totalMeetEarnings = (completedMeets as Array<{ total_price_cents: number | null }> | null)?.reduce((sum, meet) => {
           const meetTotal = (meet.total_price_cents || 0) / 100;
           return sum + (meetTotal * 0.8); // 80% for creator (payMeet: 80/20)
         }, 0) || 0;
@@ -359,7 +380,7 @@ export default function StudioPage() {
           .eq("creator_addr", me)
           .eq("status", "completed");
         
-        const totalMeetEarnings = completedMeets?.reduce((sum, meet) => {
+        const totalMeetEarnings = (completedMeets as Array<{ total_price_cents: number | null }> | null)?.reduce((sum, meet) => {
           const meetTotal = (meet.total_price_cents || 0) / 100;
           return sum + (meetTotal * 0.8); // 80% for creator (payMeet: 80/20)
         }, 0) || 0;

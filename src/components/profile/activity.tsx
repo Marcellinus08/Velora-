@@ -1,10 +1,12 @@
 // src/components/profile/history.tsx
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactElement } from "react";
 import type { HistoryItem } from "./types";
 
-const kindIcon: Record<HistoryItem["kind"], JSX.Element> = {
+// Map each history kind to an icon ReactElement. Avoid referencing the global JSX namespace
+// directly to prevent issues when the JSX import source changes (React 17+ automatic runtime).
+const kindIcon: Record<HistoryItem["kind"], ReactElement> = {
   order: (
     <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
       <path d="M3 4a2 2 0 012-2h3l1 1h5a2 2 0 012 2v1H3V4zm0 3h14v7a2 2 0 01-2 2H5a2 2 0 01-2-2V7z" />

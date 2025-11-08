@@ -36,7 +36,10 @@ export function useUserPoints(userAddress?: `0x${string}` | null) {
         }
 
         // Sum all points
-        const total = data?.reduce((sum, record) => sum + (record.total_points_earned || 0), 0) || 0;
+        const total = (data as Array<{ total_points_earned: number | null }> | null)?.reduce(
+          (sum, record) => sum + (record.total_points_earned || 0),
+          0
+        ) || 0;
 
         if (mounted) {
           setTotalPoints(total);

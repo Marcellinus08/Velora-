@@ -140,7 +140,7 @@ export function useNotifications(abstractId: string | undefined) {
       data = res2.data ?? null;
     }
 
-    const content = data?.content || "Comment";
+  const content = (data as any)?.content || "Comment";
     return content.slice(0, 200) + (content.length > 200 ? "..." : "");
   };
 

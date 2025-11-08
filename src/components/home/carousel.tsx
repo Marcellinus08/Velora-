@@ -134,15 +134,17 @@ export default function Carousel({
       // Only track clicks from users who are NOT the campaign creator
       if (!isCreator) {
         try {
-          const { error: clickError } = await supabase.from("campaign_clicks").insert({
-            campaign_id: slide.campaign_id,
-            user_addr: address?.toLowerCase() || null,
-            user_agent: navigator.userAgent,
-          });
+          const { error: clickError } = await (supabase as any)
+            .from("campaign_clicks")
+            .insert({ 
+              campaign_id: slide.campaign_id, 
+              user_addr: address?.toLowerCase() || null, 
+              user_agent: navigator.userAgent 
+            });
 
           if (!clickError) {
             // Update total clicks manually (avoids function permission issues)
-            await supabase
+            await (supabase as any)
               .from("campaigns")
               .update({ 
                 total_clicks: 0, // Will be incremented by trigger if available

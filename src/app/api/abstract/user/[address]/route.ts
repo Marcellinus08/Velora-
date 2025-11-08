@@ -21,12 +21,14 @@ function extractAvatarUrl(data: any): string | null {
   );
 }
 
+// Next.js 15 dynamic route params are provided as a Promise and must be awaited.
 export async function GET(
   _request: NextRequest,
-  { params }: { params: { address: string } }
+  { params }: { params: Promise<{ address: string }> }
 ) {
   try {
-    const raw = params?.address?.trim() || "";
+    const { address: rawAddress } = await params; // await the params Promise
+    const raw = rawAddress?.trim() || "";
     const address = raw.toLowerCase();
     if (!ETH_RE.test(address)) {
       return NextResponse.json({ error: "Invalid address" }, { status: 400 });

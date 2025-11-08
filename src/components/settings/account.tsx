@@ -75,7 +75,7 @@ export default function SettingsAccount() {
 
       try {
         const r = await fetch(`/api/profiles/${address}`, { cache: "no-store" });
-        const p = (await r.json()) as DbProfile | { error?: string };
+  const p = (await r.json()) as DbProfile | { error?: string };
         if (!mounted) return;
 
         if ("error" in p) {
@@ -87,14 +87,16 @@ export default function SettingsAccount() {
             setAvatarUrl(null);
           }
         } else {
-          setDb(p);
-          originalUsernameRef.current = p.username ?? "";
-          originalAvatarUrlRef.current = p.avatar_url ?? null;
+          // Narrow to DbProfile; TS didn't infer the else branch properly with the 'in' check above.
+          const prof = p as DbProfile;
+          setDb(prof);
+          originalUsernameRef.current = prof.username ?? "";
+          originalAvatarUrlRef.current = prof.avatar_url ?? null;
 
           if (!isPreviewActive) {
-            setUsername(p.username ?? "");
+            setUsername(prof.username ?? "");
             // cache-busting agar tidak ketahan cache lama
-            setAvatarUrl(p.avatar_url ? `${p.avatar_url}?v=${Date.now()}` : null);
+            setAvatarUrl(prof.avatar_url ? `${prof.avatar_url}?v=${Date.now()}` : null);
           }
         }
       } catch (e) {

@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
-export default function TaskPage() {
+function TaskPageInner() {
   const router = useRouter();
   const sp = useSearchParams();
   
@@ -20,5 +20,13 @@ export default function TaskPage() {
         <p className="text-gray-400">Redirecting to video page...</p>
       </div>
     </main>
+  );
+}
+
+export default function TaskPage() {
+  return (
+    <Suspense fallback={null}>
+      <TaskPageInner />
+    </Suspense>
   );
 }

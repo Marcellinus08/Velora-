@@ -64,10 +64,12 @@ export default function AdBanner() {
   async function trackClick() {
     try {
       // Best-effort logging; kalau RLS block, abaikan
-      await supabase.from("campaign_clicks").insert({
-        campaign_id: campaign.id,
-        platform: "web",
-      } as any);
+      if (campaign) {
+        await supabase.from("campaign_clicks").insert({
+          campaign_id: campaign.id,
+          platform: "web",
+        } as any);
+      }
     } catch {
       /* ignore */
     }

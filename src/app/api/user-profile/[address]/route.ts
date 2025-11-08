@@ -6,10 +6,11 @@ const ETH_RE = /^0x[a-fA-F0-9]{40}$/;
 
 export async function GET(
   _req: NextRequest,
-  { params }: { params: { address: string } }
+  { params }: { params: Promise<{ address: string }> }
 ) {
   try {
-    const address = (params?.address || "").trim();
+    const { address: raw } = await params; // await dynamic params Promise
+    const address = (raw || "").trim();
 
     // Jika address tidak valid, kembalikan objek kosong (hindari 4xx di FE)
     if (!ETH_RE.test(address)) {

@@ -605,9 +605,9 @@ export default function Comments({
       );
       return;
     }
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from("video_comments")
-      .update({ is_deleted: true, content: "[deleted]" })
+      .update({ is_deleted: true, content: "[deleted]" } as any)
       .eq("id", commentId)
       .eq("user_addr", myAddr); // guard
 
@@ -625,9 +625,9 @@ export default function Comments({
   /* -------- actions: edit -------- */
   const onEdit = async (commentId: string, newText: string) => {
     if (!myAddr) return;
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from("video_comments")
-      .update({ content: newText, is_edited: true })
+      .update({ content: newText, is_edited: true } as any)
       .eq("id", commentId)
       .eq("user_addr", myAddr);
 
@@ -707,7 +707,8 @@ export default function Comments({
           .select("avatar_url")
           .eq("abstract_id", addrLower)
           .maybeSingle();
-        if (prof?.avatar_url) setAvatarMap((m) => ({ ...m, [addrLower]: prof.avatar_url }));
+        const profAny = prof as any;
+        if (profAny?.avatar_url) setAvatarMap((m) => ({ ...m, [addrLower]: profAny.avatar_url }));
       }
 
       toast.success("Comment posted!", "Your comment has been added", 2000);
@@ -786,7 +787,8 @@ export default function Comments({
           .select("avatar_url")
           .eq("abstract_id", addrLower)
           .maybeSingle();
-        if (prof?.avatar_url) setAvatarMap((m) => ({ ...m, [addrLower]: prof.avatar_url }));
+        const profAny2 = prof as any;
+        if (profAny2?.avatar_url) setAvatarMap((m) => ({ ...m, [addrLower]: profAny2.avatar_url }));
       }
 
       toast.success("Comment posted!", "Your comment has been added", 2000);
@@ -807,10 +809,10 @@ export default function Comments({
       return;
     }
     if (!liked) {
-      const { error } = await supabase.from("video_comment_likes").insert({
+      const { error } = await (supabase as any).from("video_comment_likes").insert({
         comment_id: commentId,
         user_addr: myAddr,
-      });
+      } as any);
       if (!error) {
         setRoots((prev) => {
           const c = structuredClone(prev) as UiNode[];

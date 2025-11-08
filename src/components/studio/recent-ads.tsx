@@ -34,10 +34,12 @@ function formatDate(dateStr: string) {
 export default function StudioRecentAds({
   items = [],
   showCount = 3,
+  expanded = false,
   onStatusChange,
 }: {
   items?: StudioAd[];
   showCount?: number;
+  expanded?: boolean;
   onStatusChange?: () => void;
 }) {
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
@@ -50,10 +52,11 @@ export default function StudioRecentAds({
     
     try {
       const { supabase } = await import("@/lib/supabase");
-      
-      const { error } = await supabase
+
+      // Loosen typing for Supabase update payload to avoid strict 'never' inference
+      const { error } = await (supabase as any)
         .from("campaigns")
-        .update({ status: newStatus })
+        .update({ status: newStatus } as any)
         .eq("id", ad.id);
       
       if (error) {
@@ -90,7 +93,7 @@ export default function StudioRecentAds({
           </div>
         ) : (
           <ul className="divide-y divide-neutral-800/50">
-            {items.slice(0, showCount).map((ad) => {
+            {(expanded ? items : items.slice(0, showCount)).map((ad) => {
               const isActive = ad.status === "active";
               const isPaused = ad.status === "paused";
               const isEnded = ad.status === "ended";

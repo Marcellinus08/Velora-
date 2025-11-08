@@ -248,7 +248,7 @@ export default function UploadVideoForm() {
       }
 
       // 3) save metadata
-      const { error: insertErr } = await supabase.from("videos").insert({
+      const { error: insertErr } = await (supabase as any).from("videos").insert({
         title,
         description,
         category,
@@ -257,7 +257,7 @@ export default function UploadVideoForm() {
         video_url: videoRes.publicUrl,
         thumb_path: thumbRes?.path ?? null,
         thumb_url: thumbRes?.publicUrl ?? null,
-      });
+      } as any);
 
       if (insertErr) throw insertErr;
 

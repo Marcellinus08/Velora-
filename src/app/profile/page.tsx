@@ -1,7 +1,7 @@
 // src/app/profile/page.tsx
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { useAccount } from "wagmi";
@@ -38,7 +38,7 @@ const formatCurrency = (amount: number, currency: string = "USDC"): string => {
 
 const fmtNum = (n?: number) => (n == null ? "-" : Intl.NumberFormat("en-US").format(n));
 
-export default function ProfilePage() {
+function ProfilePageInner() {
   const { address } = useAccount();
   const searchParams = useSearchParams();
   const addrParam = searchParams?.get("addr");
@@ -143,7 +143,7 @@ export default function ProfilePage() {
           .from("profiles")
           .select("username, avatar_url, bio, abstract_id")
           .eq("abstract_id", userAddress)
-          .single();
+          .single<{ username: string | null; avatar_url: string | null; bio: string | null; abstract_id: string }>();
 
         // Count followers (people who follow this user)
         const { count: followersCount } = await supabase
@@ -161,22 +161,22 @@ export default function ProfilePage() {
         const { data: progressData } = await supabase
           .from("user_video_progress")
           .select("total_points_earned")
-          .eq("user_addr", userAddress);
+          .eq("user_addr", userAddress) as { data: Array<{ total_points_earned: number | null }> | null };
 
         const totalPoints =
-          progressData?.reduce(
-            (sum, record) => sum + (record.total_points_earned || 0),
+          (progressData as Array<{ total_points_earned: number | null }> | undefined)?.reduce(
+            (sum: number, record) => sum + (record.total_points_earned || 0),
             0
           ) || 0;
 
         // Get user's rank from leaderboard
         const { data: allUsers } = await supabase
           .from("user_video_progress")
-          .select("user_addr, total_points_earned");
+          .select("user_addr, total_points_earned") as unknown as { data: Array<{ user_addr: string; total_points_earned: number | null }> | null };
 
         // Calculate ranks
         const userPointsMap = new Map<string, number>();
-        allUsers?.forEach((record) => {
+  (allUsers || [])?.forEach((record: { user_addr: string; total_points_earned: number | null }) => {
           const addr = record.user_addr.toLowerCase();
           const points = record.total_points_earned || 0;
           userPointsMap.set(addr, (userPointsMap.get(addr) || 0) + points);
@@ -861,5 +861,13 @@ export default function ProfilePage() {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function ProfilePage() {
+  return (
+    <Suspense fallback={null}>
+      <ProfilePageInner />
+    </Suspense>
   );
 }

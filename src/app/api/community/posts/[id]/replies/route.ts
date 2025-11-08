@@ -16,9 +16,9 @@ type Row = {
 
 const ETH_RE = /^0x[a-f0-9]{40}$/;
 
-export async function GET(req: Request, { params }: { params: { id: string } }) {
+export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const postId = params.id;
+    const { id: postId } = await params; // await the params Promise
     const { searchParams } = new URL(req.url);
     const me = (searchParams.get("me") || "").toLowerCase();
 
@@ -120,10 +120,10 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
   }
 }
 
-export async function POST(req: Request, { params }: { params: { id: string } }) {
+export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const body = await req.json().catch(() => ({}));
-    const postId = params.id;
+    const { id: postId } = await params; // await the params Promise
     const abstractId = String(body.abstractId || "").trim().toLowerCase();
     const content = String(body.content || "").trim();
     const parentId = body.parentId ? String(body.parentId) : null;

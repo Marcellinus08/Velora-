@@ -3,10 +3,11 @@ import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { content, abstractId } = await req.json();
+    const { id } = await params; // await Promise-based params
     
     if (!content?.trim() || !abstractId) {
       return NextResponse.json(
@@ -19,7 +20,7 @@ export async function PUT(
     const { data: reply } = await supabaseAdmin
       .from("community_replies")
       .select("abstract_id")
-      .eq("id", params.id)
+      .eq("id", id)
       .single();
 
     if (!reply) {
@@ -42,7 +43,7 @@ export async function PUT(
       .update({ 
         content: content.trim()
       })
-      .eq("id", params.id)
+      .eq("id", id)
       .select();
 
     if (error) throw error;
@@ -59,10 +60,11 @@ export async function PUT(
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { abstractId } = await req.json();
+    const { id: replyId } = await params; // await Promise-based params
     
     if (!abstractId) {
       return NextResponse.json(
@@ -70,8 +72,6 @@ export async function DELETE(
         { status: 400 }
       );
     }
-
-    const replyId = params.id;
 
     // Get reply data before deletion
     const { data: reply } = await supabaseAdmin

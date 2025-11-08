@@ -4,10 +4,11 @@ import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const vid = (params.id || "").trim();
+    const { id } = await params; // await Promise-based params
+    const vid = (id || "").trim();
     if (!vid) {
       return NextResponse.json({ error: "Missing id" }, { status: 400 });
     }
@@ -52,10 +53,11 @@ export async function PATCH(
 // Menambahkan fungsi DELETE
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const vid = (params.id || "").trim();
+    const { id } = await params; // await Promise-based params
+    const vid = (id || "").trim();
     if (!vid) {
       return NextResponse.json({ error: "Missing id" }, { status: 400 });
     }
