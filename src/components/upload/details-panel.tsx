@@ -133,23 +133,40 @@ export default function UploadDetailsPanel({
               <div className="w-1.5 h-1.5 rounded-full bg-purple-400"></div>
               <label className="text-sm font-semibold text-neutral-200">Category</label>
             </div>
-            <select
-              value={category}
-              onChange={(e) => onChangeCategory(e.target.value)}
-              aria-label="Video category"
-              className={`w-full rounded-lg border border-neutral-700 bg-neutral-950/50 px-3 py-2 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500/20 ${
-                category === "" ? "text-neutral-500" : "text-neutral-100"
-              }`}
-            >
-              <option value="" disabled>
-                — Select category —
-              </option>
-              {categories.map((c) => (
-                <option key={c} value={c}>
-                  {c}
+            <div className="relative">
+              <select
+                value={category}
+                onChange={(e) => onChangeCategory(e.target.value)}
+                aria-label="Video category"
+                className={`peer w-full appearance-none rounded-lg border border-neutral-700/80 bg-neutral-900/90 px-3 py-2 pr-10 shadow-sm backdrop-blur-sm focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500/20 transition-colors ${
+                  category === "" ? "text-neutral-500" : "text-neutral-100"
+                }`}
+              >
+                <option value="" disabled>
+                  — Select a category —
                 </option>
-              ))}
-            </select>
+                {categories.map((c) => (
+                  <option key={c} value={c} className="bg-neutral-900 text-neutral-100">
+                    {c}
+                  </option>
+                ))}
+              </select>
+              {/* Custom arrow */}
+              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+                <svg
+                  className="h-4 w-4 text-neutral-400 peer-focus:text-purple-400 transition-colors"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  aria-hidden="true"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.06z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -160,7 +177,7 @@ export default function UploadDetailsPanel({
           <h4 className="text-lg font-bold text-white">
             Tasks / Quiz <span className="text-xs text-neutral-400">(max 5)</span>
           </h4>
-          <span className="text-xs font-semibold text-amber-300 bg-amber-500/10 px-2.5 py-1 rounded-full border border-amber-500/20">{tasks.length}/5</span>
+          <span className="text-xs font-semibold text-purple-300 bg-purple-500/10 px-2.5 py-1 rounded-full border border-purple-500/20">{tasks.length}/5</span>
         </div>
 
         <div className="mt-4 space-y-4">
@@ -170,7 +187,7 @@ export default function UploadDetailsPanel({
               <div key={idx} className="rounded-lg border border-neutral-700/50 bg-neutral-900/60 p-4">
                 <div className="flex items-start justify-between gap-2 mb-3">
                   <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center text-xs font-bold">{idx + 1}</div>
+                    <div className="w-6 h-6 rounded-full bg-purple-500/20 text-purple-400 flex items-center justify-center text-xs font-bold">{idx + 1}</div>
                     <label className="text-sm font-semibold text-neutral-200">{qLabel}</label>
                   </div>
                   {idx > 0 && (
@@ -189,7 +206,7 @@ export default function UploadDetailsPanel({
                   value={t.question}
                   onChange={(e) => onChangeTask(idx, { ...t, question: e.target.value })}
                   placeholder="Write the question…"
-                  className="w-full mb-3 rounded-lg border border-neutral-700 bg-neutral-950/50 px-3 py-2 text-neutral-100 placeholder:text-neutral-500 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500/20"
+                  className="w-full mb-3 rounded-lg border border-neutral-700 bg-neutral-950/50 px-3 py-2 text-neutral-100 placeholder:text-neutral-500 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500/20"
                 />
 
                 {/* Options + choose correct */}
@@ -199,7 +216,7 @@ export default function UploadDetailsPanel({
                       key={oi}
                       className={`flex items-center gap-2 rounded-lg border px-3 py-2 cursor-pointer transition-all ${
                         t.answerIndex === oi
-                          ? "border-amber-500/50 bg-amber-500/10"
+                          ? "border-purple-500/50 bg-purple-500/10"
                           : "border-neutral-700 bg-neutral-900/40 hover:border-neutral-600"
                       }`}
                     >
@@ -208,7 +225,7 @@ export default function UploadDetailsPanel({
                         name={`ans-${idx}`}
                         checked={t.answerIndex === oi}
                         onChange={() => onChangeTask(idx, { ...t, answerIndex: oi })}
-                        className="accent-amber-500"
+                        className="accent-purple-500"
                         aria-label={`Correct option ${oi + 1}`}
                       />
                       <input
@@ -219,7 +236,7 @@ export default function UploadDetailsPanel({
                           onChangeTask(idx, { ...t, options: next });
                         }}
                         placeholder={`Option ${oi + 1}`}
-                        className="flex-1 rounded-md border border-neutral-700 bg-transparent px-2 py-1 text-sm text-neutral-100 placeholder:text-neutral-500 focus:border-amber-500 focus:outline-none"
+                        className="flex-1 rounded-md border border-neutral-700 bg-transparent px-2 py-1 text-sm text-neutral-100 placeholder:text-neutral-500 focus:border-purple-500 focus:outline-none"
                       />
                     </label>
                   ))}
@@ -235,7 +252,7 @@ export default function UploadDetailsPanel({
             type="button"
             disabled={!canAddMoreTasks}
             onClick={onAddEmptyTask}
-            className="inline-flex items-center gap-2 px-6 py-2.5 rounded-lg bg-gradient-to-r from-amber-500 to-amber-600 text-white font-medium text-sm enabled:hover:shadow-lg enabled:hover:shadow-amber-500/50 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200"
+            className="inline-flex items-center gap-2 px-6 py-2.5 rounded-lg bg-gradient-to-r from-purple-500 to-purple-600 text-white font-medium text-sm enabled:hover:shadow-lg enabled:hover:shadow-purple-500/50 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200"
             title={canAddMoreTasks ? "Add question" : "Max 5 questions"}
           >
             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
@@ -269,11 +286,11 @@ export default function UploadDetailsPanel({
             step={step_cents}
             value={priceCents}
             onChange={(e) => onChangePriceCents(Number(e.target.value))}
-            className="w-full accent-amber-500"
+            className="w-full accent-purple-500"
           />
-          <div className="mt-2 flex justify-between text-xs text-neutral-400">
+            <div className="mt-2 flex justify-between text-xs text-neutral-400">
             <span>${(min_cents / 100).toFixed(2)}</span>
-            <span className="font-bold text-amber-300">${(priceCents / 100).toFixed(2)}</span>
+            <span className="font-bold text-purple-300">${(priceCents / 100).toFixed(2)}</span>
             <span>${(max_cents / 100).toFixed(2)}</span>
           </div>
         </div>
@@ -294,7 +311,7 @@ export default function UploadDetailsPanel({
                 if (isNaN(v)) return;
                 onChangePriceCents(clampToRangeStep(v));
               }}
-              className="w-full rounded-lg border border-neutral-700 bg-neutral-950/50 px-3 py-2 text-neutral-100 placeholder:text-neutral-500 focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500/20"
+              className="w-full rounded-lg border border-neutral-700 bg-neutral-950/50 px-3 py-2 text-neutral-100 placeholder:text-neutral-500 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500/20"
               placeholder={`${(min_cents / 100).toFixed(2)} - ${(max_cents / 100).toFixed(2)}`}
             />
 
@@ -302,7 +319,7 @@ export default function UploadDetailsPanel({
 
             <div className="flex items-center justify-between">
               <span className="text-xs text-neutral-400">You earn (60%)</span>
-              <span className="text-sm font-bold text-green-300">
+              <span className="text-sm font-bold text-purple-300">
                 ${dollars(creatorEarn)}
               </span>
             </div>
@@ -337,7 +354,7 @@ export default function UploadDetailsPanel({
             <div className="mt-2 flex flex-1 flex-col justify-center gap-3">
               {/* Segmented progress bar (thicker) */}
               <div className="flex h-3 w-full overflow-hidden rounded-full bg-neutral-800/50">
-                <div className="h-full bg-cyan-500" style={{ width: "40%" }} />
+                <div className="h-full bg-purple-500" style={{ width: "40%" }} />
                 <div className="h-full bg-amber-500" style={{ width: "20%" }} />
                 <div className="h-full bg-emerald-500" style={{ width: "40%" }} />
               </div>
@@ -352,14 +369,14 @@ export default function UploadDetailsPanel({
 
             {/* Legend chips pinned to bottom (no extra bottom space) */}
             <div className="mt-auto grid grid-cols-3 gap-2 text-[11px]">
-              <div className="flex items-center justify-between rounded-md bg-cyan-500/10 px-2 py-1.5 border border-cyan-500/20">
-                <span className="flex items-center gap-1 text-cyan-300">
+              <div className="flex items-center justify-between rounded-md bg-purple-500/10 px-2 py-1.5 border border-purple-500/20">
+                <span className="flex items-center gap-1 text-purple-300">
                   <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="currentColor">
                     <path d="M7 4h-2l-1 2v2h2l1 6h10l2-8h-12l-1-2zm1 14a2 2 0 100 4 2 2 0 000-4zm8 0a2 2 0 100 4 2 2 0 000-4z" />
                   </svg>
                   Buy
                 </span>
-                <span className="font-bold text-cyan-200">{buyPts}</span>
+                <span className="font-bold text-purple-200">{buyPts}</span>
               </div>
               <div className="flex items-center justify-between rounded-md bg-amber-500/10 px-2 py-1.5 border border-amber-500/20">
                 <span className="flex items-center gap-1 text-amber-300">

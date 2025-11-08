@@ -29,6 +29,8 @@ const CATEGORIES = [
   "Lifestyle",
   "How-to & Style",
   "Film & Animation",
+  "Podcast",
+  "Other",
 ] as const;
 
 const STUDIO_BUCKET = "studio";

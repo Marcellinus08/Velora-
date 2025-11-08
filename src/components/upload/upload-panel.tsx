@@ -19,7 +19,7 @@ export default function UploadActionPanel({
   return (
     <section className="rounded-2xl border border-neutral-700/50 bg-gradient-to-br from-neutral-900/80 to-neutral-800/40 backdrop-blur-sm p-6 shadow-2xl">
       <div className="flex items-center gap-3 mb-4">
-        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center">
+        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center">
           <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
             <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
           </svg>
@@ -34,11 +34,11 @@ export default function UploadActionPanel({
         <div className="mt-4">
           <div className="mb-3 flex items-center justify-between text-sm">
             <span className="font-semibold text-neutral-200">Uploading…</span>
-            <span className="text-green-300 font-bold">{progress}%</span>
+            <span className="text-purple-300 font-bold">{progress}%</span>
           </div>
-          <div className="h-2.5 w-full overflow-hidden rounded-full bg-neutral-800/50 border border-green-500/20">
+          <div className="h-2.5 w-full overflow-hidden rounded-full bg-neutral-800/50 border border-purple-500/20">
             <div
-              className="h-2.5 bg-gradient-to-r from-green-500 to-emerald-500 transition-all shadow-lg shadow-green-500/50"
+              className="h-2.5 bg-gradient-to-r from-purple-500 to-purple-600 transition-all shadow-lg shadow-purple-500/50"
               style={{ width: `${progress}%` }}
             />
           </div>
@@ -50,7 +50,7 @@ export default function UploadActionPanel({
           onClick={onStartUpload}
           disabled={!canStart}
           aria-disabled={!canStart}
-          className="inline-flex items-center gap-2 justify-center rounded-lg bg-gradient-to-r from-green-500 to-emerald-600 px-6 py-2.5 text-sm font-bold text-white transition-all hover:shadow-lg hover:shadow-green-500/50 disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
+          className="inline-flex items-center gap-2 justify-center rounded-lg bg-gradient-to-r from-purple-500 to-purple-600 px-6 py-2.5 text-sm font-bold text-white transition-all hover:shadow-lg hover:shadow-purple-500/50 disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
         >
           <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
             <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
