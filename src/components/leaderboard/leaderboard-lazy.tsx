@@ -141,9 +141,9 @@ export function LeaderboardLazy({ allEntries, isLoading, onUserClick, currentUse
                         {e.avatarNode}
                       </div>
                     </div>
-                    <div className="min-w-0 flex-1">
+                    <div className="flex-1">
                       <div className="flex items-center gap-2 font-semibold text-neutral-50 max-sm:text-sm max-sm:gap-1.5">
-                        <span className="truncate">{e.name}</span>
+                        <span>{e.name}</span>
                         {isCurrentUser && (
                           <span className="flex-shrink-0 rounded-full bg-purple-500/20 px-2.5 py-0.5 text-xs font-medium text-purple-400 ring-1 ring-purple-500/30 max-sm:px-1.5 max-sm:py-0.5 max-sm:text-[9px]">
                             You

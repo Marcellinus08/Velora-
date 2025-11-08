@@ -212,15 +212,15 @@ export default function LeaderboardPage() {
               className="flex items-center justify-between rounded-xl border border-purple-500/30 bg-purple-500/5 px-6 py-4 cursor-pointer hover:bg-purple-500/10 transition-all duration-300 hover:border-purple-500/50 group max-sm:px-3 max-sm:py-3 max-sm:rounded-lg"
               onClick={() => openProfile(currentUser.handle)}
             >
-              <div className="flex items-center gap-4 max-sm:gap-2.5">
+              <div className="flex items-center gap-4 max-sm:gap-2.5 flex-1 min-w-0">
                 <div className="relative h-12 w-12 overflow-hidden rounded-full border-2 border-purple-500/40 bg-neutral-800 flex-shrink-0 max-sm:h-9 max-sm:w-9 max-sm:border">
                   <div className="absolute inset-0 flex items-center justify-center">
                     {currentUser.avatarNode}
                   </div>
                 </div>
-                <div className="min-w-0">
-                  <div className="text-lg font-bold text-neutral-50 truncate max-sm:text-sm max-sm:leading-tight">{currentUser.name}</div>
-                  <div className="text-sm text-neutral-400 max-sm:text-[11px] max-sm:leading-tight">Your ranking position</div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-lg font-bold text-neutral-50 max-sm:text-sm max-sm:leading-tight">{currentUser.name}</div>
+                  <div className="text-sm text-neutral-400 max-sm:text-[11px] max-sm:leading-tight whitespace-nowrap">Your ranking position</div>
                 </div>
               </div>
               <div className="flex items-center gap-8 max-sm:gap-3 flex-shrink-0">
