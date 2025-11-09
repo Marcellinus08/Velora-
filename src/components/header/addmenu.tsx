@@ -51,7 +51,7 @@ export default function AddMenu() {
             </div>
 
             {/* Options */}
-            <div className="px-3 pb-8 pt-1">
+            <div className="px-3 pb-4 pt-1">
               {/* Create ads */}
               <button
                 onClick={handleCreateAds}
@@ -82,7 +82,7 @@ export default function AddMenu() {
             </div>
 
             {/* Safe area bottom padding - to cover tab bar */}
-            <div className="h-20" />
+            <div className="h-16" />
           </div>
         </>
       )}
