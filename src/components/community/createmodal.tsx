@@ -126,19 +126,24 @@ export default function CreatePostModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 max-sm:p-2"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-4 max-sm:p-0 max-sm:items-end"
       role="dialog"
       aria-modal="true"
       onKeyDown={(e) => e.key === "Escape" && onClose()}
     >
       <button
         aria-label="Close modal backdrop"
-        className="absolute inset-0 bg-black/70 backdrop-blur-sm cursor-pointer"
+        className="absolute inset-0 bg-black/30 sm:bg-black/70 cursor-pointer"
         onClick={onClose}
       />
-      <div className="relative z-10 w-full max-w-lg max-sm:max-w-full rounded-xl max-sm:rounded-lg border border-neutral-700/50 bg-neutral-900 shadow-2xl">
+      <div className="relative z-[60] w-full max-w-lg sm:rounded-xl max-sm:rounded-t-2xl max-sm:rounded-b-none sm:border border-neutral-700/50 max-sm:border-t max-sm:border-neutral-800 max-sm:border-b-0 bg-neutral-900 shadow-2xl max-sm:max-h-[75vh] max-sm:overflow-hidden max-sm:flex max-sm:flex-col max-sm:animate-slide-up">
+        {/* Handle bar - Mobile only */}
+        <div className="sm:hidden flex justify-center pt-3 pb-2">
+          <div className="w-10 h-1 bg-neutral-700 rounded-full" />
+        </div>
+
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-neutral-800 px-5 max-sm:px-3 py-3.5 max-sm:py-3">
+        <div className="flex items-center justify-between border-b border-neutral-800 px-5 max-sm:px-4 py-3.5 max-sm:py-3">
           <h3 className="text-lg max-sm:text-base font-bold text-neutral-50">
             Create New Post
           </h3>
@@ -155,8 +160,8 @@ export default function CreatePostModal({
           </button>
         </div>
         {/* Form Content */}
-        <form onSubmit={handleSubmit} className="px-5 max-sm:px-3 py-4 max-sm:py-3">
-          <div className="max-h-[65vh] max-sm:max-h-[70vh] space-y-4 max-sm:space-y-3 overflow-y-auto pr-2 max-sm:pr-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <form onSubmit={handleSubmit} className="px-5 max-sm:px-4 py-4 max-sm:py-3 flex-1 overflow-y-auto max-sm:pb-24">
+          <div className="sm:max-h-[65vh] space-y-4 max-sm:space-y-3 sm:overflow-y-auto sm:pr-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {/* Title */}
             <div>
               <label className="mb-1.5 max-sm:mb-1 block text-sm max-sm:text-xs font-medium text-neutral-200">
@@ -286,28 +291,14 @@ export default function CreatePostModal({
           </div>
 
           {/* Footer Actions */}
-          <div className="mt-6 max-sm:mt-4 flex items-center justify-end gap-3 max-sm:gap-2 border-t border-neutral-800 pt-5 max-sm:pt-3">
-            <button
-              type="button"
-              onClick={() => {
-                // Clean up URL on cancel
-                items.forEach((i) => URL.revokeObjectURL(i.url));
-                setItems([]);
-                onClose();
-              }}
-              disabled={submitting}
-              className="rounded-lg max-sm:rounded-md px-5 max-sm:px-4 py-2.5 max-sm:py-2 text-sm max-sm:text-xs font-medium text-neutral-300 bg-neutral-800 hover:bg-neutral-750 cursor-pointer transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Cancel
-            </button>
-
+          <div className="mt-6 max-sm:mt-4 flex items-center justify-end gap-3 max-sm:gap-2 max-sm:flex-col border-t border-neutral-800 pt-5 max-sm:pt-3 max-sm:pb-20">
             <button
               type="submit"
               disabled={submitting}
-              className="rounded-lg max-sm:rounded-md px-5 max-sm:px-4 py-2.5 max-sm:py-2 text-sm max-sm:text-xs font-medium text-white bg-[var(--primary-500)] hover:bg-[var(--primary-500)]/90 cursor-pointer transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              className="rounded-lg max-sm:rounded-md px-5 max-sm:px-4 py-2.5 max-sm:py-2.5 max-sm:w-full text-sm max-sm:text-sm font-medium text-white bg-[var(--primary-500)] hover:bg-[var(--primary-500)]/90 cursor-pointer transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {submitting ? (
-                <span className="flex items-center gap-2 max-sm:gap-1.5">
+                <span className="flex items-center justify-center gap-2 max-sm:gap-1.5">
                   <svg className="animate-spin h-4 w-4 max-sm:h-3 max-sm:w-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -317,6 +308,20 @@ export default function CreatePostModal({
               ) : (
                 "Publish"
               )}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                // Clean up URL on cancel
+                items.forEach((i) => URL.revokeObjectURL(i.url));
+                setItems([]);
+                onClose();
+              }}
+              disabled={submitting}
+              className="sm:hidden rounded-lg max-sm:rounded-md px-5 max-sm:px-4 py-2.5 max-sm:py-2 max-sm:w-full text-sm max-sm:text-sm font-medium text-neutral-300 bg-neutral-800 hover:bg-neutral-750 cursor-pointer transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Cancel
             </button>
           </div>
         </form>

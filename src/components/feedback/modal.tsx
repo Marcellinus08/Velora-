@@ -118,7 +118,7 @@ export default function FeedbackModal({ open, onClose }: Props) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 max-sm:p-3 max-sm:items-end"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-4 max-sm:p-0 max-sm:items-end"
       role="dialog"
       aria-modal="true"
       onKeyDown={(e) => e.key === "Escape" && onClose()}
@@ -126,13 +126,18 @@ export default function FeedbackModal({ open, onClose }: Props) {
       {/* Backdrop */}
       <button
         aria-label="Close backdrop"
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm cursor-pointer"
+        className="absolute inset-0 bg-black/30 sm:bg-black/60 cursor-pointer"
         onClick={onClose}
       />
 
-      {/* Modal */}
-      <div className="relative z-10 w-full max-w-md rounded-2xl max-sm:rounded-t-2xl max-sm:rounded-b-none border border-neutral-800 max-sm:border-b-0 bg-neutral-900 p-5 max-sm:p-4 shadow-xl max-sm:max-h-[90vh] max-sm:overflow-y-auto">
-        <div className="mb-3 max-sm:mb-2 flex items-center justify-between max-sm:sticky max-sm:top-0 max-sm:bg-neutral-900 max-sm:pb-2 max-sm:z-10">
+      {/* Modal - Bottom Sheet on Mobile, Centered Modal on Desktop */}
+      <div className="relative z-[60] w-full max-w-md sm:rounded-2xl max-sm:rounded-t-2xl max-sm:rounded-b-none sm:border border-neutral-800 max-sm:border-t max-sm:border-neutral-800 max-sm:border-b-0 bg-neutral-900 p-5 sm:p-5 max-sm:p-4 shadow-xl max-sm:max-h-[75vh] overflow-y-auto max-sm:animate-slide-up">
+        {/* Handle bar - Mobile only */}
+        <div className="sm:hidden flex justify-center pb-2 -mt-2">
+          <div className="w-10 h-1 bg-neutral-700 rounded-full" />
+        </div>
+
+        <div className="mb-3 flex items-center justify-between">
           <h3 className="text-lg max-sm:text-base font-semibold text-neutral-50">Send Feedback</h3>
           <button
             onClick={onClose}
@@ -234,21 +239,21 @@ export default function FeedbackModal({ open, onClose }: Props) {
           </div>
 
           {/* Actions */}
-          <div className="mt-2 max-sm:mt-1 flex items-center justify-end gap-2 max-sm:flex-col-reverse max-sm:pt-2 max-sm:sticky max-sm:bottom-0 max-sm:bg-neutral-900 max-sm:pb-1">
-            <button
-              type="button"
-              onClick={onClose}
-              className="rounded-full px-4 py-2 max-sm:px-3 max-sm:py-2 max-sm:w-full text-sm max-sm:text-xs font-semibold text-neutral-300 hover:bg-neutral-800 cursor-pointer"
-              disabled={busy}
-            >
-              Cancel
-            </button>
+          <div className="mt-4 flex items-center justify-end gap-2 max-sm:flex-col max-sm:gap-2 max-sm:pb-20">
             <button
               type="submit"
               disabled={busy || !message.trim()}
-              className="rounded-full bg-[var(--primary-500)] px-4 py-2 max-sm:px-3 max-sm:py-2 max-sm:w-full text-sm max-sm:text-xs font-semibold text-white hover:bg-opacity-90 disabled:opacity-60 cursor-pointer"
+              className="rounded-full bg-[var(--primary-500)] px-4 py-2 max-sm:px-3 max-sm:py-2.5 max-sm:w-full text-sm max-sm:text-sm font-semibold text-white hover:bg-opacity-90 disabled:opacity-60 cursor-pointer"
             >
               {busy ? "Sending…" : "Send"}
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="rounded-full px-4 py-2 max-sm:px-3 max-sm:py-2 max-sm:w-full text-sm max-sm:text-sm font-semibold text-neutral-300 hover:bg-neutral-800 cursor-pointer sm:hidden"
+              disabled={busy}
+            >
+              Cancel
             </button>
           </div>
         </form>
