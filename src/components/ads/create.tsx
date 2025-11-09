@@ -440,7 +440,7 @@ export default function CreateAd({
         <p className="text-sm text-neutral-400 mt-1 max-sm:text-xs max-sm:mt-0.5 md:text-sm md:mt-1">Promote your videos to a wider audience and boost engagement</p>
       </div>
 
-      <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[2fr_1fr] max-sm:mt-4 max-sm:gap-4 md:mt-5 md:gap-5">
+      <div className="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-[2fr_1fr] max-sm:mt-4 max-sm:gap-4 md:mt-5 md:gap-5">
         <AdForm
           title={title}
           description={description}
