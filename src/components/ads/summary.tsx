@@ -29,52 +29,52 @@ export default function AdSummary({
     "disabled:cursor-not-allowed disabled:opacity-60 aria-disabled:cursor-not-allowed aria-disabled:opacity-60";
 
   return (
-    <aside className="space-y-6">
+    <aside className="space-y-6 max-sm:space-y-4 md:space-y-5">
       {/* Payment Summary */}
-      <div className="rounded-3xl border border-neutral-700/50 bg-gradient-to-br from-neutral-900/80 to-neutral-800/40 backdrop-blur-sm p-6 shadow-2xl">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center">
-            <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div className="rounded-3xl border border-neutral-700/50 bg-gradient-to-br from-neutral-900/80 to-neutral-800/40 backdrop-blur-sm p-6 shadow-2xl max-sm:rounded-2xl max-sm:p-4 md:p-5 md:rounded-2xl">
+        <div className="flex items-center gap-3 mb-4 max-sm:gap-2.5 max-sm:mb-3 md:gap-2.5 md:mb-3.5">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center max-sm:w-7 max-sm:h-7 max-sm:rounded-md md:w-7 md:h-7 md:rounded-md">
+            <svg className="w-4 h-4 text-white max-sm:w-3.5 max-sm:h-3.5 md:w-3.5 md:h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
             </svg>
           </div>
-          <h3 className="text-lg font-bold text-white">Payment Summary</h3>
+          <h3 className="text-lg font-bold text-white max-sm:text-base md:text-base">Payment Summary</h3>
         </div>
 
-        <div className="space-y-4">
-          <div className="flex items-center justify-between p-3 rounded-xl bg-neutral-800/40">
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-blue-400"></div>
-              <span className="text-neutral-300 text-sm">Campaign Duration</span>
+        <div className="space-y-4 max-sm:space-y-3 md:space-y-3">
+          <div className="flex items-center justify-between p-3 rounded-xl bg-neutral-800/40 max-sm:p-2.5 max-sm:rounded-lg md:p-2.5 md:rounded-lg">
+            <div className="flex items-center gap-2 max-sm:gap-1.5 md:gap-2">
+              <div className="w-2 h-2 rounded-full bg-blue-400 max-sm:w-1.5 max-sm:h-1.5 md:w-2 md:h-2"></div>
+              <span className="text-neutral-300 text-sm max-sm:text-xs md:text-sm">Campaign Duration</span>
             </div>
-            <span className="text-neutral-100 font-medium">
+            <span className="text-neutral-100 font-medium max-sm:text-sm md:text-sm">
               {durationDays} {durationDays > 1 ? "days" : "day"}
             </span>
           </div>
 
           <div className="h-px bg-gradient-to-r from-transparent via-neutral-600 to-transparent" />
 
-          <div className="flex items-center justify-between p-4 rounded-xl bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border border-emerald-500/20">
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-emerald-400"></div>
-              <span className="text-emerald-200 font-medium">Total Amount</span>
+          <div className="flex items-center justify-between p-4 rounded-xl bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border border-emerald-500/20 max-sm:p-3 max-sm:rounded-lg md:p-3 md:rounded-lg">
+            <div className="flex items-center gap-2 max-sm:gap-1.5 md:gap-2">
+              <div className="w-3 h-3 rounded-full bg-emerald-400 max-sm:w-2 max-sm:h-2 md:w-2.5 md:h-2.5"></div>
+              <span className="text-emerald-200 font-medium max-sm:text-sm md:text-sm">Total Amount</span>
             </div>
-            <span className="text-emerald-100 text-xl font-bold">{fmtUSD(priceUsd)}</span>
+            <span className="text-emerald-100 text-xl font-bold max-sm:text-lg md:text-lg">{fmtUSD(priceUsd)}</span>
           </div>
 
           {/* User Active Campaign Warning (Small) - Below Total Amount */}
           {userActiveCampaign?.hasActiveCampaign && (
-            <div className="p-3 rounded-lg bg-red-900/20 border border-red-500/30">
-              <div className="flex items-start gap-2">
-                <svg className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="p-3 rounded-lg bg-red-900/20 border border-red-500/30 max-sm:p-2.5 max-sm:rounded-md md:p-2.5 md:rounded-md">
+              <div className="flex items-start gap-2 max-sm:gap-1.5 md:gap-2">
+                <svg className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5 max-sm:w-3.5 max-sm:h-3.5 md:w-4 md:h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                 </svg>
-                <div className="flex-1 text-xs">
-                  <p className="font-semibold text-red-300 mb-1">You Already Have an Active Campaign</p>
+                <div className="flex-1 text-xs max-sm:text-[11px] md:text-xs">
+                  <p className="font-semibold text-red-300 mb-1 max-sm:mb-0.5 md:mb-0.5">You Already Have an Active Campaign</p>
                   <p className="text-red-200/80">
                     <strong>{userActiveCampaign.activeCampaign?.title}</strong>
                   </p>
-                  <p className="text-red-200/70 mt-1">
+                  <p className="text-red-200/70 mt-1 max-sm:mt-0.5 md:mt-0.5">
                     Ends: {new Date(userActiveCampaign.activeCampaign?.end_date || '').toLocaleString('en-US', {
                       month: 'short',
                       day: 'numeric',
@@ -88,7 +88,7 @@ export default function AdSummary({
           )}
 
           {!canPayOnChain && (
-            <p className="mt-2 text-xs text-amber-300">
+            <p className="mt-2 text-xs text-amber-300 max-sm:text-[11px] max-sm:mt-1.5 md:text-xs md:mt-2">
               On-chain payment nonaktif{" "}
               {!TREASURY_ADDRESS ? (
                 <>
@@ -111,17 +111,17 @@ export default function AdSummary({
               onPaid?.(tx);
             }}
             disabled={!!payDisabled || saving}
-            className={`mt-6 inline-flex w-full items-center justify-center rounded-xl bg-purple-600 hover:bg-purple-700 px-6 py-4 text-sm font-bold text-white shadow-xl shadow-purple-500/20 transition-all duration-200 transform hover:scale-105 ${disabledCls}`}
+            className={`mt-6 inline-flex w-full items-center justify-center rounded-xl bg-purple-600 hover:bg-purple-700 px-6 py-4 text-sm font-bold text-white shadow-xl shadow-purple-500/20 transition-all duration-200 transform hover:scale-105 max-sm:mt-4 max-sm:py-3 max-sm:px-5 max-sm:rounded-lg max-sm:text-sm md:mt-5 md:py-3.5 md:px-5 md:rounded-lg md:text-sm ${disabledCls}`}
           >
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 max-sm:gap-2 md:gap-2">
               {saving ? (
                 <>
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin max-sm:w-3.5 max-sm:h-3.5 md:w-4 md:h-4"></div>
                   Publishing...
                 </>
               ) : (
                 <>
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 max-sm:w-4 max-sm:h-4 md:w-4 md:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                   </svg>
                   Pay & Publish Ad
@@ -136,17 +136,17 @@ export default function AdSummary({
             }}
             disabled={!!payDisabled || saving}
             aria-disabled={!!payDisabled || saving}
-            className={`mt-6 inline-flex w-full items-center justify-center rounded-xl bg-purple-600 hover:bg-purple-700 px-6 py-4 text-sm font-bold text-white shadow-xl shadow-purple-500/20 transition-all duration-200 transform hover:scale-105 cursor-pointer ${disabledCls}`}
+            className={`mt-6 inline-flex w-full items-center justify-center rounded-xl bg-purple-600 hover:bg-purple-700 px-6 py-4 text-sm font-bold text-white shadow-xl shadow-purple-500/20 transition-all duration-200 transform hover:scale-105 cursor-pointer max-sm:mt-4 max-sm:py-3 max-sm:px-5 max-sm:rounded-lg max-sm:text-sm md:mt-5 md:py-3.5 md:px-5 md:rounded-lg md:text-sm ${disabledCls}`}
           >
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 max-sm:gap-2 md:gap-2">
               {saving ? (
                 <>
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin max-sm:w-3.5 max-sm:h-3.5 md:w-4 md:h-4"></div>
                   Publishing...
                 </>
               ) : (
                 <>
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 max-sm:w-4 max-sm:h-4 md:w-4 md:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                   </svg>

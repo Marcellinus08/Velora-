@@ -434,13 +434,13 @@ export default function CreateAd({
   return (
     <>
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-neutral-50">
+        <h1 className="text-2xl font-bold tracking-tight text-neutral-50 max-sm:text-xl md:text-xl">
           Create Advertisement
         </h1>
-        <p className="text-sm text-neutral-400 mt-1">Promote your videos to a wider audience and boost engagement</p>
+        <p className="text-sm text-neutral-400 mt-1 max-sm:text-xs max-sm:mt-0.5 md:text-sm md:mt-1">Promote your videos to a wider audience and boost engagement</p>
       </div>
 
-      <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[2fr_1fr]">
+      <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[2fr_1fr] max-sm:mt-4 max-sm:gap-4 md:mt-5 md:gap-5">
         <AdForm
           title={title}
           description={description}
@@ -458,47 +458,47 @@ export default function CreateAd({
           onChangeCtaText={setCtaText}
         />
 
-        <aside className="space-y-6">
+        <aside className="space-y-6 max-sm:space-y-4 md:space-y-5">
           {/* Campaign Slots Status - At the Top */}
           {loadingSlots ? (
-            <div className="rounded-3xl border border-neutral-700/50 bg-gradient-to-br from-neutral-900/80 to-neutral-800/40 backdrop-blur-sm p-6 shadow-2xl">
-              <div className="flex items-center gap-2 text-sm text-neutral-400">
-                <div className="h-4 w-4 animate-spin rounded-full border-2 border-neutral-600 border-t-purple-500"></div>
+            <div className="rounded-3xl border border-neutral-700/50 bg-gradient-to-br from-neutral-900/80 to-neutral-800/40 backdrop-blur-sm p-6 shadow-2xl max-sm:rounded-2xl max-sm:p-4 md:p-5 md:rounded-2xl">
+              <div className="flex items-center gap-2 text-sm text-neutral-400 max-sm:gap-1.5 max-sm:text-xs md:gap-2 md:text-sm">
+                <div className="h-4 w-4 animate-spin rounded-full border-2 border-neutral-600 border-t-purple-500 max-sm:h-3.5 max-sm:w-3.5 md:h-4 md:w-4"></div>
                 <span>Checking slots...</span>
               </div>
             </div>
           ) : slotsInfo ? (
-            <div className={`rounded-3xl border backdrop-blur-sm p-6 shadow-2xl ${
+            <div className={`rounded-3xl border backdrop-blur-sm p-6 shadow-2xl max-sm:rounded-2xl max-sm:p-4 md:p-5 md:rounded-2xl ${
               slotsInfo.isFull 
                 ? 'border-red-500/30 bg-gradient-to-br from-red-900/20 to-red-800/10' 
                 : slotsInfo.availableSlots <= 2
                 ? 'border-yellow-500/30 bg-gradient-to-br from-yellow-900/20 to-yellow-800/10'
                 : 'border-green-500/30 bg-gradient-to-br from-green-900/20 to-green-800/10'
             }`}>
-              <div className="flex items-center gap-3 mb-4">
+              <div className="flex items-center gap-3 mb-4 max-sm:gap-2.5 max-sm:mb-3 md:gap-2.5 md:mb-3.5">
                 {slotsInfo.isFull ? (
-                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center">
-                    <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center max-sm:w-7 max-sm:h-7 max-sm:rounded-md md:w-7 md:h-7 md:rounded-md">
+                    <svg className="w-4 h-4 text-white max-sm:w-3.5 max-sm:h-3.5 md:w-3.5 md:h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                     </svg>
                   </div>
                 ) : slotsInfo.availableSlots <= 2 ? (
-                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-yellow-500 to-yellow-600 flex items-center justify-center">
-                    <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-yellow-500 to-yellow-600 flex items-center justify-center max-sm:w-7 max-sm:h-7 max-sm:rounded-md md:w-7 md:h-7 md:rounded-md">
+                    <svg className="w-4 h-4 text-white max-sm:w-3.5 max-sm:h-3.5 md:w-3.5 md:h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   </div>
                 ) : (
-                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-green-500 to-teal-500 flex items-center justify-center">
-                    <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-green-500 to-teal-500 flex items-center justify-center max-sm:w-7 max-sm:h-7 max-sm:rounded-md md:w-7 md:h-7 md:rounded-md">
+                    <svg className="w-4 h-4 text-white max-sm:w-3.5 max-sm:h-3.5 md:w-3.5 md:h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   </div>
                 )}
-                <h3 className="text-lg font-bold text-white">Campaign Slots Status</h3>
+                <h3 className="text-lg font-bold text-white max-sm:text-base md:text-base">Campaign Slots Status</h3>
               </div>
               
-              <p className={`text-sm mb-4 ${
+              <p className={`text-sm mb-4 max-sm:text-xs max-sm:mb-3 md:text-sm md:mb-3 ${
                 slotsInfo.isFull 
                   ? 'text-red-200' 
                   : slotsInfo.availableSlots <= 2
@@ -508,10 +508,10 @@ export default function CreateAd({
                 {slotsInfo.message}
               </p>
 
-              <div className="space-y-3">
-                <div className="flex items-center justify-between p-3 rounded-xl bg-neutral-800/40">
-                  <span className="text-neutral-300 text-sm">Active Campaigns</span>
-                  <span className={`font-bold ${
+              <div className="space-y-3 max-sm:space-y-2.5 md:space-y-2.5">
+                <div className="flex items-center justify-between p-3 rounded-xl bg-neutral-800/40 max-sm:p-2.5 max-sm:rounded-lg md:p-2.5 md:rounded-lg">
+                  <span className="text-neutral-300 text-sm max-sm:text-xs md:text-sm">Active Campaigns</span>
+                  <span className={`font-bold max-sm:text-sm md:text-base ${
                     slotsInfo.isFull ? 'text-red-400' : 'text-neutral-100'
                   }`}>
                     {slotsInfo.activeCount}/{slotsInfo.maxSlots}
@@ -519,22 +519,22 @@ export default function CreateAd({
                 </div>
                 
                 {!slotsInfo.isFull && (
-                  <div className="flex items-center justify-between p-3 rounded-xl bg-green-500/10 border border-green-500/20">
-                    <span className="text-green-200 text-sm">Available Slots</span>
-                    <span className="font-bold text-green-100 text-lg">{slotsInfo.availableSlots}</span>
+                  <div className="flex items-center justify-between p-3 rounded-xl bg-green-500/10 border border-green-500/20 max-sm:p-2.5 max-sm:rounded-lg md:p-2.5 md:rounded-lg">
+                    <span className="text-green-200 text-sm max-sm:text-xs md:text-sm">Available Slots</span>
+                    <span className="font-bold text-green-100 text-lg max-sm:text-base md:text-base">{slotsInfo.availableSlots}</span>
                   </div>
                 )}
               </div>
 
               {slotsInfo.isFull && slotsInfo.nextAvailableDate && (
-                <div className="mt-4 pt-4 border-t border-red-500/20">
-                  <p className="text-xs text-red-200 mb-2 font-medium flex items-center gap-1">
-                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div className="mt-4 pt-4 border-t border-red-500/20 max-sm:mt-3 max-sm:pt-3 md:mt-3.5 md:pt-3.5">
+                  <p className="text-xs text-red-200 mb-2 font-medium flex items-center gap-1 max-sm:text-[11px] max-sm:mb-1.5 max-sm:gap-0.5 md:text-xs md:mb-2 md:gap-1">
+                    <svg className="w-3 h-3 max-sm:w-2.5 max-sm:h-2.5 md:w-3 md:h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                     Next Available Slot:
                   </p>
-                  <p className="text-sm text-red-100 font-semibold mb-1">
+                  <p className="text-sm text-red-100 font-semibold mb-1 max-sm:text-xs max-sm:mb-0.5 md:text-sm md:mb-1">
                     {new Date(slotsInfo.nextAvailableDate).toLocaleString('en-US', {
                       month: 'short',
                       day: 'numeric',
@@ -543,7 +543,7 @@ export default function CreateAd({
                       hour12: true
                     })}
                   </p>
-                  <p className="text-xs text-red-300">
+                  <p className="text-xs text-red-300 max-sm:text-[11px] md:text-xs">
                     (In {Math.ceil((new Date(slotsInfo.nextAvailableDate).getTime() - Date.now()) / (1000 * 60 * 60))} hours)
                   </p>
                 </div>
