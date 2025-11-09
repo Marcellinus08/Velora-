@@ -478,14 +478,14 @@ export default function UploadCreate() {
     <div>
       {/* Header - Same style as Ads */}
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-neutral-50">
+        <h1 className="text-2xl font-bold tracking-tight text-neutral-50 max-sm:text-xl md:text-xl">
           Upload Video
         </h1>
-        <p className="text-sm text-neutral-400 mt-1">Share your content with the community and start earning rewards</p>
+        <p className="text-sm text-neutral-400 mt-1 max-sm:text-xs max-sm:mt-0.5 md:text-sm md:mt-1">Share your content with the community and start earning rewards</p>
       </div>
 
       {/* TOP: FILE + THUMBNAIL */}
-      <section className="mt-6">
+      <section className="mt-6 max-sm:mt-4 md:mt-5">
         <UploadFilePanel
           ref={videoRef}
           accept={ACCEPT}
@@ -505,7 +505,7 @@ export default function UploadCreate() {
       </section>
 
       {/* BOTTOM: details + actions */}
-      <div className="mt-6 space-y-6">
+      <div className="mt-6 space-y-6 max-sm:mt-4 max-sm:space-y-4 md:mt-5 md:space-y-5">
         <UploadDetailsPanel
           title={title}
           description={description}
