@@ -38,12 +38,12 @@ export function LeaderboardPagination({
   };
 
   return (
-    <div className="flex items-center justify-between max-sm:flex-col max-sm:gap-2 max-sm:items-start">
+    <div className="flex items-center justify-between max-sm:flex-wrap max-sm:gap-2">
       <div className="text-sm text-neutral-400 max-sm:text-xs max-sm:hidden">
         Showing {startItem}-{endItem} of {totalItems.toLocaleString()} players
       </div>
 
-      <div className="flex items-center gap-4 max-sm:w-full max-sm:justify-between max-sm:gap-4">
+      <div className="flex items-center gap-4 max-sm:w-full max-sm:justify-between max-sm:gap-3">
         {onItemsPerPageChange && (
           <div className="flex items-center gap-2 max-sm:gap-1.5">
             <label className="text-sm text-neutral-500 max-sm:text-xs max-sm:whitespace-nowrap">Rows per page:</label>
@@ -60,16 +60,16 @@ export function LeaderboardPagination({
           </div>
         )}
 
-        <div className="flex items-center gap-4 max-sm:gap-3">
+        <div className="flex items-center gap-4 max-sm:gap-2">
           <span className="text-sm text-neutral-500 max-sm:text-xs max-sm:whitespace-nowrap">
             Page {currentPage} of {totalPages}
           </span>
           
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 max-sm:gap-1.5">
             <button
               onClick={handlePrevious}
               disabled={!hasPrevious}
-              className="rounded border border-neutral-700 bg-neutral-800 px-4 py-2 text-sm font-medium text-neutral-200 transition-all duration-200 hover:bg-neutral-700 disabled:cursor-not-allowed disabled:opacity-50 max-sm:px-3 max-sm:py-1.5 max-sm:text-xs"
+              className="rounded border border-neutral-700 bg-neutral-800 px-4 py-2 text-sm font-medium text-neutral-200 transition-all duration-200 hover:bg-neutral-700 disabled:cursor-not-allowed disabled:opacity-50 max-sm:px-2.5 max-sm:py-1.5 max-sm:text-xs"
             >
               Prev
             </button>
@@ -77,7 +77,7 @@ export function LeaderboardPagination({
             <button
               onClick={handleNext}
               disabled={!hasNext}
-              className="rounded border border-neutral-700 bg-neutral-800 px-4 py-2 text-sm font-medium text-neutral-200 transition-all duration-200 hover:bg-neutral-700 disabled:cursor-not-allowed disabled:opacity-50 max-sm:px-3 max-sm:py-1.5 max-sm:text-xs"
+              className="rounded border border-neutral-700 bg-neutral-800 px-4 py-2 text-sm font-medium text-neutral-200 transition-all duration-200 hover:bg-neutral-700 disabled:cursor-not-allowed disabled:opacity-50 max-sm:px-2.5 max-sm:py-1.5 max-sm:text-xs"
             >
               Next
             </button>
