@@ -250,7 +250,7 @@ export default function FeedbackModal({ open, onClose }: Props) {
             <button
               type="button"
               onClick={onClose}
-              className="rounded-full px-4 py-2 max-sm:px-3 max-sm:py-2 max-sm:w-full text-sm max-sm:text-sm font-semibold text-neutral-300 hover:bg-neutral-800 cursor-pointer sm:hidden"
+              className="rounded-full px-4 py-2 max-sm:px-3 max-sm:py-2 max-sm:w-full text-sm max-sm:text-sm font-semibold text-neutral-300 bg-neutral-800 hover:bg-neutral-750 cursor-pointer sm:hidden"
               disabled={busy}
             >
               Cancel
