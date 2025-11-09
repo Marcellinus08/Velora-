@@ -177,6 +177,9 @@ body {
 .skel{position:relative;overflow:hidden;background-color:rgba(38,38,38,.6)}
 .skel::after{content:"";position:absolute;inset:0;background-image:linear-gradient(90deg,transparent,rgba(255,255,255,.06),transparent);background-size:200% 100%;animation:shimmer 1.25s infinite linear}
 
+@keyframes slide-up{0%{transform:translateY(100%)}100%{transform:translateY(0)}}
+.animate-slide-up{animation:slide-up 0.3s ease-out}
+
 /* Global cursor pointer untuk semua elemen interaktif*/
 button:not(:disabled),
 a,
