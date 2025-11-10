@@ -257,14 +257,19 @@ try {
                           <div className="flex-1 min-w-0">
                             <p className="text-sm text-neutral-200 leading-5">
                               {notif.type === "follow" || hasActorInMessage ? (
-                                // For follow or messages with actor name, use full message
-                                <span className={!notif.isRead ? "text-neutral-300" : "text-neutral-400"}>
-                                  {messageWithTarget}
-                                </span>
+                                // For follow or messages with actor name, show username in bold white
+                                <>
+                                  <span className={`font-semibold ${!notif.isRead ? "text-white" : "text-neutral-100"}`}>
+                                    {displayName}
+                                  </span>{" "}
+                                  <span className={!notif.isRead ? "text-neutral-300" : "text-neutral-400"}>
+                                    {notif.type === "follow" ? "started following you" : messageWithTarget.replace(displayName, "").trim()}
+                                  </span>
+                                </>
                               ) : (
                                 // For other notifications, show displayName + action
                                 <>
-                                  <span className={`font-semibold ${!notif.isRead ? "text-white" : ""}`}>
+                                  <span className={`font-semibold ${!notif.isRead ? "text-white" : "text-neutral-100"}`}>
                                     {displayName}
                                   </span>{" "}
                                   <span className={!notif.isRead ? "text-neutral-300" : "text-neutral-400"}>
@@ -471,14 +476,19 @@ try {
                         <div className="flex-1 min-w-0">
                           <p className="text-sm text-neutral-200">
                             {notif.type === "follow" || hasActorInMessage ? (
-                              // For follow or messages with actor name, use full message
-                              <span className={!notif.isRead ? "text-neutral-300" : "text-neutral-400"}>
-                                {messageWithTarget}
-                              </span>
+                              // For follow or messages with actor name, show username in bold white
+                              <>
+                                <span className={`font-semibold ${!notif.isRead ? "text-white" : "text-neutral-100"}`}>
+                                  {displayName}
+                                </span>{" "}
+                                <span className={!notif.isRead ? "text-neutral-300" : "text-neutral-400"}>
+                                  {notif.type === "follow" ? "started following you" : messageWithTarget.replace(displayName, "").trim()}
+                                </span>
+                              </>
                             ) : (
                               // For other notifications, show displayName + action
                               <>
-                                <span className={`font-semibold ${!notif.isRead ? "text-white" : ""}`}>
+                                <span className={`font-semibold ${!notif.isRead ? "text-white" : "text-neutral-100"}`}>
                                   {displayName}
                                 </span>{" "}
                                 <span className={!notif.isRead ? "text-neutral-300" : "text-neutral-400"}>
