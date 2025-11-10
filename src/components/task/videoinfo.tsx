@@ -7,6 +7,7 @@ import { supabase } from "@/lib/supabase";
 import { AbstractProfile } from "@/components/abstract-profile";
 import RecommendationPanel from "./recommendationpanel";
 import { toast } from "@/components/ui/toast";
+import { useFollowButton } from "@/hooks/use-follow-button";
 import type { VideoInfo, RecommendedVideo } from "./types";
 
 /* ================= Helpers ================= */
@@ -75,9 +76,14 @@ export default function VideoInfoSection({
 }) {
   const [expanded, setExpanded] = useState(false);
 
-  // follow state
-  const [isFollowing, setIsFollowing] = useState(false);
-  const [followBusy, setFollowBusy] = useState(false);
+  // creator wallet lower
+  const walletLower =
+    typeof video.creator.wallet === "string"
+      ? (video.creator.wallet.toLowerCase() as `0x${string}`)
+      : ("" as `0x${string}`);
+
+  // Use follow hook - will automatically check database and update state
+  const { isFollowing, isLoading: followBusy, isSelf, handleFollow } = useFollowButton(walletLower);
 
   // like state (heart like seperti Community)
   const [likeCount, setLikeCount] = useState<number>(initialLikes || 0);
@@ -89,48 +95,8 @@ export default function VideoInfoSection({
   const [earnedSharePoints, setEarnedSharePoints] = useState(claimedSharePoints);
   const [shareBusy, setShareBusy] = useState(false);
 
-  // creator wallet lower
-  const walletLower =
-    typeof video.creator.wallet === "string"
-      ? (video.creator.wallet.toLowerCase() as `0x${string}`)
-      : ("" as `0x${string}`);
-
   // apakah user sedang melihat profil sendiri?
   const myAddr = useMemo(() => getAbstractAddressFromSession(), []);
-  const isSelf = !!myAddr && !!walletLower && myAddr === walletLower;
-
-  // Cek status mengikuti saat mount/pada perubahan wallet creator
-  useEffect(() => {
-    let active = true;
-    (async () => {
-      if (!walletLower) return;
-      const me = getAbstractAddressFromSession();
-      if (!me) return;
-
-      try {
-        // Use follow status API
-        const response = await fetch("/api/profiles/follow/status", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            follower_addr: me,
-            followee_addr: walletLower,
-          }),
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          if (active) setIsFollowing(data.isFollowing);
-        }
-      } catch (error) {
-        console.error("[VideoInfo] Error checking follow status:", error);
-      }
-    })();
-
-    return () => {
-      active = false;
-    };
-  }, [walletLower]);
 
   // ===== Like loader (count + liked-by-me)
   useEffect(() => {
@@ -214,7 +180,7 @@ export default function VideoInfoSection({
   );
   const likeIcon = liked ? "favorite" : "favorite_border";
 
-  // Toggle follow/unfollow
+  // Toggle follow/unfollow - use the hook's handleFollow function
   const onToggleFollow = async () => {
     const me = getAbstractAddressFromSession();
     if (!me) {
@@ -226,7 +192,7 @@ export default function VideoInfoSection({
       return;
     }
     if (!walletLower) return;
-    if (me === walletLower) {
+    if (isSelf) {
       toast.info(
         "Not Allowed",
         "You cannot follow your own profile\nTry following other creators instead",
@@ -235,44 +201,14 @@ export default function VideoInfoSection({
       return;
     }
 
-    setFollowBusy(true);
+    // Call the hook's handleFollow which will handle the API calls
     try {
+      await handleFollow();
+      
+      // Show success toast based on new state
       if (isFollowing) {
-        // Unfollow
-        const response = await fetch("/api/profiles/follow", {
-          method: "DELETE",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            follower_addr: me,
-            followee_addr: walletLower,
-          }),
-        });
-
-        if (!response.ok) {
-          const err = await response.json();
-          throw new Error(err.error || "Failed to unfollow");
-        }
-
-        setIsFollowing(false);
         toast.success("Success", `You've unfollowed ${video.creator.name}`, 3000);
       } else {
-        // Follow
-        const response = await fetch("/api/profiles/follow", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            follower_addr: me,
-            followee_addr: walletLower,
-            followee_username: video.creator.name,
-          }),
-        });
-
-        if (!response.ok) {
-          const err = await response.json();
-          throw new Error(err.error || "Failed to follow");
-        }
-
-        setIsFollowing(true);
         toast.success(
           "Success",
           `You're now following ${video.creator.name}! 🎉`,
@@ -286,8 +222,6 @@ export default function VideoInfoSection({
         `${e?.message || "Unknown error"}\nTry again later`,
         5000
       );
-    } finally {
-      setFollowBusy(false);
     }
   };
 
@@ -464,14 +398,35 @@ export default function VideoInfoSection({
               <button
                 onClick={onToggleFollow}
                 disabled={followBusy || !walletLower}
-                className={cn(
-                  "rounded-full px-4 py-2 text-sm font-semibold transition disabled:opacity-60 disabled:cursor-not-allowed",
+                className={`rounded-full px-6 py-2.5 text-sm font-semibold transition-all duration-200 flex items-center gap-2 ${
                   isFollowing
-                    ? "bg-neutral-700 text-neutral-100 hover:bg-neutral-600"
-                    : "bg-[var(--primary-500)] text-white hover:bg-violet-600"
-                )}
+                    ? "bg-neutral-700 text-neutral-200 hover:bg-neutral-600 border border-neutral-600"
+                    : "bg-purple-600 text-white hover:bg-purple-700 shadow-lg shadow-purple-500/30"
+                } ${followBusy ? "opacity-60 cursor-not-allowed" : ""}`}
               >
-                {isFollowing ? (followBusy ? "…" : "Following") : followBusy ? "…" : "Follow"}
+                {followBusy ? (
+                  <>
+                    <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                    <span>Loading...</span>
+                  </>
+                ) : isFollowing ? (
+                  <>
+                    <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
+                    </svg>
+                    <span>Following</span>
+                  </>
+                ) : (
+                  <>
+                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                    </svg>
+                    <span>Follow</span>
+                  </>
+                )}
               </button>
             )}
           </div>

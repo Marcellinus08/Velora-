@@ -38,7 +38,7 @@ export default function CommunityPage() {
   const { confirm, Dialog } = useConfirmDialog();
 
   const [open, setOpen] = useState(false);
-  const [category, setCategory] = useState<string>("All Topics");
+  const [category, setCategory] = useState<string>("All");
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -61,7 +61,7 @@ export default function CommunityPage() {
     setError(null);
     try {
       const qs: string[] = ["page=1"];
-      if (category !== "All Topics") qs.push(`category=${encodeURIComponent(category)}`);
+      if (category !== "All") qs.push(`category=${encodeURIComponent(category)}`);
       if (me) qs.push(`me=${me}`);
       const res = await fetch(`/api/community/posts?${qs.join("&")}`, { cache: "no-store" });
       const json = await safeJson(res);
@@ -82,7 +82,7 @@ export default function CommunityPage() {
     try {
       const nextPage = page + 1;
       const qs: string[] = [`page=${nextPage}`];
-      if (category !== "All Topics") qs.push(`category=${encodeURIComponent(category)}`);
+      if (category !== "All") qs.push(`category=${encodeURIComponent(category)}`);
       if (me) qs.push(`me=${me}`);
       const res = await fetch(`/api/community/posts?${qs.join("&")}`, { cache: "no-store" });
       const json = await safeJson(res);

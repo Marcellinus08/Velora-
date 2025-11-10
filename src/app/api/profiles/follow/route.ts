@@ -21,8 +21,11 @@ export async function POST(req: Request) {
     const body = await req.json();
     const { follower_addr, followee_addr, followee_username } = body;
 
+    console.log("[Follow API] POST request:", { follower_addr, followee_addr, followee_username });
+
     // Validation
     if (!follower_addr || !followee_addr) {
+      console.error("[Follow API] Missing required fields:", { follower_addr, followee_addr });
       return NextResponse.json(
         {
           error: "Missing required fields",

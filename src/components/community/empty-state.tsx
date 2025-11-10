@@ -12,7 +12,7 @@ interface CommunityEmptyStateProps {
 }
 
 export function CommunityEmptyState({ category }: CommunityEmptyStateProps) {
-  const isAllTopics = category === "All Topics";
+  const isAllTopics = category === "All";
   
   const config = {
     icon: isAllTopics ? MessageSquare : TrendingUp,

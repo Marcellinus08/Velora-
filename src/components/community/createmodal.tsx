@@ -186,14 +186,22 @@ export default function CreatePostModal({
                 defaultValue=""
               >
                 <option value="">Select a category</option>
-                <option>All Topics</option>
+                <option>Education</option>
+                <option>Technology</option>
                 <option>Cooking</option>
-                <option>Business</option>
+                <option>Gaming</option>
+                <option>Sports</option>
+                <option>Travel</option>
                 <option>Music</option>
-                <option>Arts & Crafts</option>
-                <option>Development</option>
-                <option>Fitness</option>
                 <option>Photography</option>
+                <option>Finance</option>
+                <option>Comedy</option>
+                <option>News</option>
+                <option>Lifestyle</option>
+                <option>How-to & Style</option>
+                <option>Film & Animation</option>
+                <option>Podcast</option>
+                <option>Other</option>
               </select>
             </div>
 

@@ -16,19 +16,21 @@ export async function isUserFollowing(
     const normalizedFollower = followerAddr.toLowerCase();
     const normalizedFollowee = followeeAddr.toLowerCase();
 
-    const { data, error } = await supabase
+    console.log("[Follow Utils] Checking:", { normalizedFollower, normalizedFollowee });
+
+    const { count, error } = await supabase
       .from("profiles_follows")
       .select("id", { count: "exact", head: true })
       .eq("follower_addr", normalizedFollower)
-      .eq("followee_addr", normalizedFollowee)
-      .maybeSingle();
+      .eq("followee_addr", normalizedFollowee);
 
     if (error) {
       console.error("[Follow Utils] Error checking follow status:", error);
       return false;
     }
 
-    return !!data;
+    console.log("[Follow Utils] Count result:", count);
+    return (count ?? 0) > 0;
   } catch (error) {
     console.error("[Follow Utils] Error in isUserFollowing:", error);
     return false;
