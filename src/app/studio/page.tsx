@@ -468,7 +468,7 @@ export default function StudioPage() {
         </div>
 
         {/* Stats with enhanced styling */}
-        <div className="relative mt-6 max-sm:mt-4">
+        <div className="relative mt-5 max-sm:mt-4">
           <div className="absolute inset-0 bg-gradient-to-r from-purple-500/3 via-blue-500/3 to-pink-500/3 rounded-2xl blur-xl opacity-0 hover:opacity-100 transition-opacity duration-500" />
           <div className="relative">
             <StudioStats
@@ -483,7 +483,7 @@ export default function StudioPage() {
         </div>
 
         {/* Actions with staggered animation */}
-        <div className="relative mt-6 max-sm:mt-4">
+        <div className="relative mt-8 max-sm:mt-5">
           <div className="absolute inset-0 bg-gradient-to-r from-violet-500/5 via-transparent to-emerald-500/5 rounded-2xl" />
           <div className="relative">
             <StudioActions />
