@@ -25,22 +25,13 @@ export default function SiteHeader() {
 
   const { username, avatarUrl, loading: avatarLoading } = useProfileAvatar(address as `0x${string}` | undefined);
   const usdceText = useUsdceBalance();
-  const { totalPoints } = useUserPoints(address as `0x${string}` | undefined);
+  const { totalPoints, loading: pointsLoading } = useUserPoints(address as `0x${string}` | undefined);
 
   const [openWallet, setOpenWallet] = React.useState(false);
   const [openPoints, setOpenPoints] = React.useState(false);
   
-  // Show skeleton while data is loading after connection
-  const [isPending] = useTransition();
-  const [wasConnected, setWasConnected] = React.useState(false);
-  
-  React.useEffect(() => {
-    if (isConnected && !wasConnected) {
-      setWasConnected(true);
-    }
-  }, [isConnected, wasConnected]);
-  
-  const showWalletSkeleton = isConnected && (!totalPoints || !usdceText);
+  // Show skeleton only while actively loading
+  const showWalletSkeleton = isConnected && (pointsLoading || avatarLoading);
 
   return (
     <header
@@ -86,7 +77,7 @@ export default function SiteHeader() {
               >
                 <MI name="star" className="text-[18px] text-yellow-400 group-hover:scale-110 transition-transform" />
                 <span className="text-sm font-semibold text-neutral-50">
-                  {totalPoints.toLocaleString()}
+                  {(totalPoints ?? 0).toLocaleString()}
                 </span>
               </button>
 
@@ -99,7 +90,7 @@ export default function SiteHeader() {
                 title="Open wallet"
               >
                 <MI name="account_balance_wallet" className="text-[18px] text-[var(--primary-500)] group-hover:scale-110 transition-transform" />
-                <span className="text-sm font-semibold text-neutral-50">USDC.e {usdceText}</span>
+                <span className="text-sm font-semibold text-neutral-50">USDC.e {usdceText || "$0"}</span>
               </button>
             </div>
 

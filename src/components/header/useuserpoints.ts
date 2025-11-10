@@ -8,7 +8,7 @@ import { supabase } from "@/lib/supabase";
  */
 export function useUserPoints(userAddress?: `0x${string}` | null) {
   const [totalPoints, setTotalPoints] = useState<number>(0);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState<boolean>(false);
 
   useEffect(() => {
     if (!userAddress) {
@@ -18,6 +18,7 @@ export function useUserPoints(userAddress?: `0x${string}` | null) {
     }
 
     let mounted = true;
+    setLoading(true);
 
     const fetchTotalPoints = async () => {
       try {
