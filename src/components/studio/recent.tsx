@@ -54,7 +54,8 @@ export default function StudioRecentPanel({
             >
               Ads
             </button>
-            <button
+            {/* Meets Tab - COMING SOON */}
+            {/* <button
               onClick={() => setTab("meets")}
               className={`rounded-md px-3 py-1 max-sm:px-2 max-sm:py-1 text-sm max-sm:text-xs transition-colors cursor-pointer max-sm:flex-1 ${
                 tab === "meets"
@@ -64,7 +65,7 @@ export default function StudioRecentPanel({
               aria-pressed={tab === "meets"}
             >
               Meets
-            </button>
+            </button> */}
           </div>
         </div>
 
@@ -83,9 +84,11 @@ export default function StudioRecentPanel({
           <StudioRecentUploads items={videos} showCount={showCount} />
         ) : tab === "ads" ? (
           <StudioRecentAds items={ads} showCount={showCount} onStatusChange={onAdsUpdate} />
-        ) : (
+        ) : null}
+        {/* Meets content - COMING SOON */}
+        {/* : (
           <StudioRecentMeets items={meets} showCount={showCount} />
-        )}
+        )} */}
       </div>
     </section>
   );

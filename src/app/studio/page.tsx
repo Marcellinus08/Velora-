@@ -58,8 +58,9 @@ export default function StudioPage() {
   const [error, setError] = useState<string | null>(null);
   const [videos, setVideos] = useState<StudioVideo[]>([]);
   const [ads, setAds] = useState<StudioAd[]>([]);
-  const [meets, setMeets] = useState<StudioMeet[]>([]);
-  const [meetsTotal, setMeetsTotal] = useState(0);
+  // Meets - COMING SOON
+  // const [meets, setMeets] = useState<StudioMeet[]>([]);
+  // const [meetsTotal, setMeetsTotal] = useState(0);
   const [earningsUsd, setEarningsUsd] = useState(0);
 
   async function load() {
@@ -91,7 +92,8 @@ export default function StudioPage() {
       // Fetch stats and related data
       await fetchStudioStats(items);
       await fetchCampaigns();
-      await fetchMeets();
+      // Meets - COMING SOON
+      // await fetchMeets();
     } catch (e: any) {
       console.error("[studio page] load videos failed:", e);
       setError(e?.message || "Failed to load videos");
@@ -202,6 +204,8 @@ export default function StudioPage() {
     }
   }
 
+  // Meets function - COMING SOON
+  /*
   async function fetchMeets() {
     if (!me) return;
     
@@ -271,6 +275,7 @@ export default function StudioPage() {
       setMeetsTotal(0);
     }
   }
+  */
 
   async function fetchStudioStats(videoItems: StudioVideo[]) {
     if (!me || videoItems.length === 0) return;
@@ -463,14 +468,14 @@ export default function StudioPage() {
         </div>
 
         {/* Stats with enhanced styling */}
-        <div className="relative mt-6 max-sm:mt-4">
+        <div className="relative mt-5 max-sm:mt-4">
           <div className="absolute inset-0 bg-gradient-to-r from-purple-500/3 via-blue-500/3 to-pink-500/3 rounded-2xl blur-xl opacity-0 hover:opacity-100 transition-opacity duration-500" />
           <div className="relative">
             <StudioStats
               totals={{
                 videos: videos.length,
                 campaigns: ads.length,
-                meets: meetsTotal,
+                meets: 0, // meetsTotal - COMING SOON
                 earningsUsd: earningsUsd,
               }}
             />
@@ -478,7 +483,7 @@ export default function StudioPage() {
         </div>
 
         {/* Actions with staggered animation */}
-        <div className="relative mt-6 max-sm:mt-4">
+        <div className="relative mt-8 max-sm:mt-5">
           <div className="absolute inset-0 bg-gradient-to-r from-violet-500/5 via-transparent to-emerald-500/5 rounded-2xl" />
           <div className="relative">
             <StudioActions />
@@ -503,7 +508,7 @@ export default function StudioPage() {
               <StudioRecentPanel
                 videos={videos}
                 ads={ads}
-                meets={meets}
+                meets={[]} // meets - COMING SOON
                 onAdsUpdate={() => {
                   // Reload campaigns when status changes
                   fetchCampaigns();
