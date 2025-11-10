@@ -253,7 +253,7 @@ export default function Carousel({
                 </div>
               )}
               
-              <div className="absolute inset-0 flex m-5 flex-col justify-center p-8 text-white pb-16
+              <div className="absolute inset-0 flex m-10 flex-col justify-center p-8 text-white pb-16
                 max-sm:m-2.5 max-sm:p-3 max-sm:pb-10">
                 <h2 className={`text-4xl font-bold line-clamp-2 ${
                   slide.type === "static" 
