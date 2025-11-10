@@ -475,6 +475,8 @@ export default function Comments({
 
   // address -> avatar_url (DB). if empty, AbstractProfile will be used
   const [avatarMap, setAvatarMap] = useState<Record<string, string>>({});
+  // address -> username (DB). if empty, use shortAddr
+  const [usernameMap, setUsernameMap] = useState<Record<string, string>>({});
 
   useEffect(() => {
     let alive = true;
@@ -509,17 +511,57 @@ export default function Comments({
           if (myAddr && r.user_addr?.toLowerCase() === myAddr) likedByMeSet.add(r.comment_id);
         });
 
-        // 3) build tree map
+        // 3) Fetch usernames and avatars first
+        const addrs = Array.from(
+          new Set(
+            [
+              ...comments.map((c) => (c.user_addr || "").toLowerCase()),
+              myAddr,
+            ].filter(Boolean)
+          )
+        );
+        
+        const mapUrls: Record<string, string> = {};
+        const mapUsernames: Record<string, string> = {};
+        
+        if (addrs.length) {
+          const { data: profs } = await supabase
+            .from("profiles")
+            .select("abstract_id, avatar_url, username")
+            .in("abstract_id", addrs);
+
+          (profs || []).forEach((p: any) => {
+            const addr = (p?.abstract_id || "").toLowerCase();
+            if (addr) {
+              if (p?.avatar_url) mapUrls[addr] = p.avatar_url;
+              if (p?.username) mapUsernames[addr] = p.username;
+            }
+          });
+
+          if (alive) {
+            setAvatarMap(mapUrls);
+            setUsernameMap(mapUsernames);
+          }
+        } else {
+          if (alive) {
+            setAvatarMap({});
+            setUsernameMap({});
+          }
+        }
+
+        // 4) build tree map with usernames
         const map = new Map<string, UiNode>();
         const rootsTmp: UiNode[] = [];
 
         comments.forEach((r) => {
           const addr = (r.user_addr || "anonymous").toLowerCase();
+          const username = mapUsernames[addr] || shortAddr(addr) || "Anonymous";
+          
           map.set(r.id, {
             id: r.id,
             createdAt: r.created_at,
             addr,
-            name: shortAddr(addr) || "Anonymous",
+            name: username,
             text: r.content || "",
             likeCount: likeCountMap.get(r.id) || 0,
             likedByMe: likedByMeSet.has(r.id),
@@ -541,32 +583,6 @@ export default function Comments({
 
         if (!alive) return;
         setRoots(rootsTmp);
-
-        // 4) avatar urls from profiles
-        const addrs = Array.from(
-          new Set(
-            [
-              ...comments.map((c) => (c.user_addr || "").toLowerCase()),
-              myAddr,
-            ].filter(Boolean)
-          )
-        );
-        if (addrs.length) {
-          const { data: profs } = await supabase
-            .from("profiles")
-            .select("abstract_id, avatar_url")
-            .in("abstract_id", addrs);
-
-          const mapUrls: Record<string, string> = {};
-          (profs || []).forEach((p: any) => {
-            const addr = (p?.abstract_id || "").toLowerCase();
-            if (addr && p?.avatar_url) mapUrls[addr] = p.avatar_url;
-          });
-
-          if (alive) setAvatarMap(mapUrls);
-        } else {
-          if (alive) setAvatarMap({});
-        }
       } finally {
         if (alive) setLoading(false);
       }
@@ -578,6 +594,7 @@ export default function Comments({
   }, [videoId, myAddr]);
 
   const getAvatarUrl = (addr: string) => avatarMap[addr] || null;
+  const getUsername = (addr: string) => usernameMap[addr] || shortAddr(addr) || "Anonymous";
 
   /* -------- helpers -------- */
   function removeAndPromote(list: UiNode[], targetId: string): UiNode[] {
@@ -687,11 +704,30 @@ export default function Comments({
 
       if (!data) return;
       const addrLower = (data.user_addr || "anonymous").toLowerCase();
+      
+      // Fetch username if not in map
+      let username = usernameMap[addrLower];
+      if (!username) {
+        const { data: prof } = await supabase
+          .from("profiles")
+          .select("avatar_url, username")
+          .eq("abstract_id", addrLower)
+          .maybeSingle();
+        const profAny = prof as any;
+        if (profAny?.username) {
+          username = profAny.username;
+          setUsernameMap((m) => ({ ...m, [addrLower]: profAny.username }));
+        }
+        if (profAny?.avatar_url) {
+          setAvatarMap((m) => ({ ...m, [addrLower]: profAny.avatar_url }));
+        }
+      }
+      
       const node: UiNode = {
         id: data.id,
         createdAt: data.created_at,
         addr: addrLower,
-        name: shortAddr(addrLower) || "Anonymous",
+        name: username || shortAddr(addrLower) || "Anonymous",
         text: data.content || "",
         likeCount: 0,
         likedByMe: false,
@@ -700,16 +736,6 @@ export default function Comments({
         depth: 0,
       };
       setRoots((prev) => [...prev, node]);
-
-      if (!avatarMap[addrLower]) {
-        const { data: prof } = await supabase
-          .from("profiles")
-          .select("avatar_url")
-          .eq("abstract_id", addrLower)
-          .maybeSingle();
-        const profAny = prof as any;
-        if (profAny?.avatar_url) setAvatarMap((m) => ({ ...m, [addrLower]: profAny.avatar_url }));
-      }
 
       toast.success("Comment posted!", "Your comment has been added", 2000);
     } catch (err: any) {
@@ -752,11 +778,30 @@ export default function Comments({
 
       if (!data) return;
       const addrLower = (data.user_addr || "anonymous").toLowerCase();
+      
+      // Fetch username if not in map
+      let username = usernameMap[addrLower];
+      if (!username) {
+        const { data: prof } = await supabase
+          .from("profiles")
+          .select("avatar_url, username")
+          .eq("abstract_id", addrLower)
+          .maybeSingle();
+        const profAny2 = prof as any;
+        if (profAny2?.username) {
+          username = profAny2.username;
+          setUsernameMap((m) => ({ ...m, [addrLower]: profAny2.username }));
+        }
+        if (profAny2?.avatar_url) {
+          setAvatarMap((m) => ({ ...m, [addrLower]: profAny2.avatar_url }));
+        }
+      }
+      
       const node: UiNode = {
         id: data.id,
         createdAt: data.created_at,
         addr: addrLower,
-        name: shortAddr(addrLower) || "Anonymous",
+        name: username || shortAddr(addrLower) || "Anonymous",
         text: data.content || "",
         likeCount: 0,
         likedByMe: false,
@@ -780,16 +825,6 @@ export default function Comments({
         clone.push(node);
         return clone;
       });
-
-      if (!avatarMap[addrLower]) {
-        const { data: prof } = await supabase
-          .from("profiles")
-          .select("avatar_url")
-          .eq("abstract_id", addrLower)
-          .maybeSingle();
-        const profAny2 = prof as any;
-        if (profAny2?.avatar_url) setAvatarMap((m) => ({ ...m, [addrLower]: profAny2.avatar_url }));
-      }
 
       toast.success("Comment posted!", "Your comment has been added", 2000);
     } catch (err: any) {
