@@ -19,6 +19,7 @@ export default function AdsClient() {
     async function fetchMyVideos() {
       if (status !== "connected" || !address) {
         console.log("Not connected or no address:", { status, address });
+        setMyVideos([]); // Clear videos if not connected
         return;
       }
 
@@ -30,23 +31,18 @@ export default function AdsClient() {
         .order("created_at", { ascending: false });
 
       console.log("Videos fetched:", { data, error, count: data?.length });
-      if (data) {
-        setMyVideos(data);
-        if (data.length === 0) {
-          console.log("No videos found for this user. Please upload videos first in Studio.");
-          // Untuk testing, tambahkan dummy video jika tidak ada
-          setMyVideos([
-            { id: "test-1", title: "Test Video 1" },
-            { id: "test-2", title: "Test Video 2" }
-          ]);
-        }
-      } else if (error) {
+      
+      if (error) {
         console.error("Error fetching videos:", error);
-        // Untuk testing, tambahkan dummy video jika ada error
-        setMyVideos([
-          { id: "test-1", title: "Test Video 1" },
-          { id: "test-2", title: "Test Video 2" }
-        ]);
+        setMyVideos([]); // Set empty array on error
+        return;
+      }
+      
+      // Set user's actual videos (could be empty array if no videos)
+      setMyVideos(data || []);
+      
+      if (!data || data.length === 0) {
+        console.log("No videos found for this user. Please upload videos first in Studio.");
       }
     }
 

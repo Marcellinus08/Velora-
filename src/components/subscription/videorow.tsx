@@ -32,13 +32,22 @@ export function SubscriptionVideoRow({
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between max-sm:gap-3">
         <div className="flex items-center gap-4 flex-1 min-w-0 max-sm:gap-3">
           <div className="relative h-20 w-32 flex-shrink-0 overflow-hidden rounded-md ring-1 ring-neutral-700/50 transition-all duration-200 group-hover:ring-2 group-hover:ring-purple-500/50 max-sm:h-16 max-sm:w-24">
-            <Image
-              src={thumb}
-              alt={`${title} thumbnail`}
-              fill
-              className="object-cover transition-transform duration-200 group-hover:scale-105"
-              sizes="(max-width: 640px) 96px, 128px"
-            />
+            {thumb ? (
+              <Image
+                src={thumb}
+                alt={`${title} thumbnail`}
+                fill
+                className="object-cover transition-transform duration-200 group-hover:scale-105"
+                sizes="(max-width: 640px) 96px, 128px"
+                unoptimized={thumb.includes('supabase.co')}
+              />
+            ) : (
+              <div className="absolute inset-0 bg-neutral-800 flex items-center justify-center">
+                <span className="material-icons-round text-neutral-600 text-3xl">
+                  videocam
+                </span>
+              </div>
+            )}
           </div>
           <div className="flex-1 min-w-0">
             <h3 className="font-semibold text-neutral-50 transition-colors duration-200 group-hover:text-white truncate max-sm:text-sm">{title}</h3>

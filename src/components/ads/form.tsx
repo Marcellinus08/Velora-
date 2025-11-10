@@ -22,7 +22,32 @@ export default function AdForm({
   onChangeCtaText,
 }: FormProps) {
   function handleChoose(e: React.ChangeEvent<HTMLInputElement>) {
-    onChooseMedia(e.target.files?.[0] ?? null);
+    const file = e.target.files?.[0];
+    
+    if (!file) {
+      onChooseMedia(null);
+      return;
+    }
+    
+    // Validate file type - only allow JPG and PNG
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+    if (!validTypes.includes(file.type.toLowerCase())) {
+      alert('Invalid file type. Please upload only JPG or PNG images.');
+      e.target.value = ''; // Reset input
+      onChooseMedia(null);
+      return;
+    }
+    
+    // Validate file size (max 10MB)
+    const maxSize = 10 * 1024 * 1024; // 10MB in bytes
+    if (file.size > maxSize) {
+      alert('File size too large. Maximum size is 10MB.');
+      e.target.value = ''; // Reset input
+      onChooseMedia(null);
+      return;
+    }
+    
+    onChooseMedia(file);
   }
 
   return (
@@ -51,6 +76,7 @@ export default function AdForm({
               value={selectedVideoId}
               onChange={(e) => onChangeVideoId?.(e.target.value)}
               className="w-full rounded-xl border border-neutral-600/50 bg-neutral-800/50 backdrop-blur-sm px-4 py-3 text-neutral-100 focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 focus:outline-none transition-all duration-200 appearance-none cursor-pointer max-sm:rounded-lg max-sm:px-3 max-sm:py-2.5 max-sm:text-sm md:rounded-xl md:px-4 md:py-3 md:text-base"
+              disabled={myVideos.length === 0}
             >
               <option value="">-- Choose a video --</option>
               {myVideos.length > 0 ? (
@@ -60,7 +86,7 @@ export default function AdForm({
                   </option>
                 ))
               ) : (
-                <option disabled className="bg-neutral-800">Loading videos...</option>
+                <option disabled className="bg-neutral-800">No videos available</option>
               )}
             </select>
             <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none max-sm:pr-2 md:pr-3">
@@ -70,11 +96,17 @@ export default function AdForm({
             </div>
           </div>
           {myVideos.length === 0 && (
-            <div className="mt-2 flex items-center gap-2 text-xs text-amber-400 max-sm:mt-1.5 max-sm:text-[11px] max-sm:gap-1.5 md:mt-2 md:text-xs md:gap-2">
-              <svg className="w-4 h-4 max-sm:w-3.5 max-sm:h-3.5 md:w-4 md:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="mt-2 flex items-start gap-2 text-xs text-amber-400 max-sm:mt-1.5 max-sm:text-[11px] max-sm:gap-1.5 md:mt-2 md:text-xs md:gap-2">
+              <svg className="w-4 h-4 flex-shrink-0 mt-0.5 max-sm:w-3.5 max-sm:h-3.5 md:w-4 md:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 15.5c-.77.833.192 2.5 1.732 2.5z" />
               </svg>
-              No videos found. Please upload a video first in Studio.
+              <span>
+                No videos found. Please{" "}
+                <a href="/studio" className="underline hover:text-amber-300 transition-colors">
+                  upload a video in Studio
+                </a>
+                {" "}first before creating an ad campaign.
+              </span>
             </div>
           )}
         </div>
@@ -129,7 +161,7 @@ export default function AdForm({
           <div className="relative">
             <input
               type="file"
-              accept="image/*,video/*"
+              accept="image/jpeg,image/jpg,image/png"
               onChange={handleChoose}
               className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
             />
@@ -141,8 +173,8 @@ export default function AdForm({
                   </svg>
                 </div>
                 <div>
-                  <p className="text-neutral-200 font-medium max-sm:text-sm md:text-sm">Click to upload carousel banner</p>
-                  <p className="text-xs text-neutral-400 mt-1 max-sm:text-[11px] max-sm:mt-0.5 md:text-xs md:mt-1">PNG, JPG, MP4 up to 10MB • 16:9 ratio recommended</p>
+                  <p className="text-neutral-200 font-medium max-sm:text-sm md:text-sm">Click to upload campaign banner</p>
+                  <p className="text-xs text-neutral-400 mt-1 max-sm:text-[11px] max-sm:mt-0.5 md:text-xs md:mt-1">PNG or JPG up to 10MB • 16:9 ratio recommended</p>
                   <p className="text-xs text-purple-400 mt-1 max-sm:text-[11px] max-sm:mt-0.5 md:text-xs md:mt-1">Preview shows exactly how it will appear in carousel</p>
                 </div>
               </div>
@@ -171,20 +203,12 @@ export default function AdForm({
               {/* Container dengan aspect ratio yang sama dengan carousel */}
               <div className="relative w-full">
                 <div className="relative w-full h-[200px] sm:h-[280px] lg:h-[360px] max-sm:h-[160px] md:h-[220px]">
-                  {media?.type.startsWith("image/") ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img 
-                      src={mediaURL} 
-                      alt="Carousel Preview" 
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    <video 
-                      src={mediaURL} 
-                      controls 
-                      className="h-full w-full object-cover"
-                    />
-                  )}
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img 
+                    src={mediaURL} 
+                    alt="Campaign Banner Preview" 
+                    className="h-full w-full object-cover"
+                  />
                   {/* Overlay gradient sama seperti carousel */}
                   <div className="absolute inset-0 bg-gradient-to-br from-black/60 via-black/40 to-black/50 pointer-events-none" />
                   <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-black/80 via-black/40 to-transparent pointer-events-none max-sm:h-12 md:h-14" />

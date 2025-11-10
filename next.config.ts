@@ -17,19 +17,35 @@ const nextConfig: NextConfig = {
         hostname: "images.unsplash.com",
         pathname: "/**",
       },
-      { protocol: "https", hostname: "api.dicebear.com" },
+      { 
+        protocol: "https", 
+        hostname: "api.dicebear.com",
+        pathname: "/**",
+      },
       {
         protocol: "https",
         hostname: "lh3.googleusercontent.com",
         pathname: "/**",
       },
-      ...(SUPABASE_HOST
+      {
+        protocol: "https",
+        hostname: "abstract-assets.abs.xyz",
+        pathname: "/**",
+      },
+      // Supabase storage - explicit hostname
+      {
+        protocol: "https" as const,
+        hostname: "kpdfvndcstsoxmondwqv.supabase.co",
+        pathname: "/**",
+      },
+      // Fallback pattern for Supabase storage (if hostname is different)
+      ...(SUPABASE_HOST && SUPABASE_HOST !== "kpdfvndcstsoxmondwqv.supabase.co"
         ? [
             {
-              protocol: "https",
-              hostname: SUPABASE_HOST, // contoh: kpdfvndcsstsoxmondwqv.supabase.co
-              pathname: "/storage/**", // /storage/v1/object/public/<bucket>/...
-            } as const,
+              protocol: "https" as const,
+              hostname: SUPABASE_HOST,
+              pathname: "/**",
+            },
           ]
         : []),
     ],

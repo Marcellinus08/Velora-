@@ -339,6 +339,17 @@ export default function CreateAd({
   async function onPublishWithTx(txHash: `0x${string}`) {
     console.log("onPublishWithTx called with tx:", txHash, "formValid:", formValid);
     
+    // Validate media file type - only allow images
+    if (media && !media.type.startsWith('image/')) {
+      toast.error(
+        "Invalid File Type",
+        "Only image files (JPG, PNG) are allowed for campaign banners.",
+        4000
+      );
+      setSaving(false);
+      return;
+    }
+    
     // Check if user already has an active campaign before publishing
     if (userActiveCampaign?.hasActiveCampaign) {
       const campaign = userActiveCampaign.activeCampaign;
