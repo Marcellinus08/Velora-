@@ -10,6 +10,7 @@ import Comments from "@/components/task/comments";
 import VideoPlayer from "@/components/task/videoplayer";
 import { BuyVideoButton } from "@/components/payments/TreasuryButtons";
 import { TaskPageSkeleton } from "@/components/skeletons/task-skeleton";
+import RecommendationPanel from "@/components/task/recommendationpanel";
 import type { RecommendedVideo, VideoInfo } from "@/components/task/types";
 import type { Address } from "viem";
 
@@ -524,7 +525,8 @@ function VideoPageInner() {
 
       {!loading && row && (
         <>
-          <div className="grid grid-cols-12 items-stretch gap-8">
+          {/* Desktop Layout (unchanged) */}
+          <div className="hidden lg:grid grid-cols-12 items-stretch gap-8">
             {/* Player kiri */}
             <section className="col-span-12 lg:col-span-8">
               <VideoPlayer 
@@ -597,12 +599,108 @@ function VideoPageInner() {
             )}
           </div>
 
-          {/* Comments tersambung DB */}
-          <Comments 
-            videoId={row.id} 
-            currentUserAddr={me}
-            isLocked={isLocked}
-          />
+          {/* Comments tersambung DB - Desktop */}
+          <div className="hidden lg:block">
+            <Comments 
+              videoId={row.id} 
+              currentUserAddr={me}
+              isLocked={isLocked}
+            />
+          </div>
+
+          {/* Mobile & Tablet Layout - YouTube Style */}
+          <div className="lg:hidden flex flex-col gap-0">
+            {/* 1. Video Player (paling atas) */}
+            <section className="w-full">
+              <VideoPlayer 
+                videoUrl={videoSrc || ''} 
+                thumbnailUrl={safeThumb(row.thumb_url)}
+                isLocked={isLocked}
+                price={row.price_cents ? {
+                  amount: row.price_cents / 100,
+                  currency: row.currency || 'USD'
+                } : undefined}
+                points={totalPoints}
+                unlockButtonElement={
+                  isLocked && (row.abstract_id || row.creator_addr) && row.price_cents ? (
+                    <BuyVideoButton
+                      videoId={row.id}
+                      creator={(row.creator_addr || row.abstract_id) as Address}
+                      priceUsd={row.price_cents / 100}
+                      className="mt-6 px-8 py-3 bg-[var(--primary-500)] text-white rounded-full font-semibold hover:bg-violet-600 active:scale-95 transition-all duration-200 cursor-pointer shadow-lg hover:shadow-violet-500/50 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center gap-3"
+                      onSuccess={() => {
+                        setTimeout(() => {
+                          window.location.reload();
+                        }, 2000);
+                      }}
+                    >
+                      <span className="hover:translate-x-0.5 transition-transform duration-200">Purchase Now</span>
+                      <span className="text-sm font-medium opacity-90">${row.price_cents / 100}</span>
+                    </BuyVideoButton>
+                  ) : undefined
+                }
+              />
+            </section>
+
+            {/* 2. Video Info Section (title, description, like, profile, follow) */}
+            {videoInfo && (
+              <div className="w-full px-4 py-4">
+                <VideoInfoSection
+                  video={videoInfo}
+                  recommendations={reco}
+                  videoId={row.id}
+                  initialLikes={initialLikes}
+                  sharePoints={Math.floor(totalPoints * 0.4)}
+                  totalPoints={totalPoints}
+                  userAddress={me || undefined}
+                  hasShared={hasShared}
+                  claimedSharePoints={sharePoints}
+                  isLocked={isLocked}
+                  hideRecommendations={true}
+                />
+              </div>
+            )}
+
+            {/* 3. Comments Preview (collapsed/preview only) */}
+            <div className="w-full px-4 py-2">
+              <Comments 
+                videoId={row.id} 
+                currentUserAddr={me}
+                isLocked={isLocked}
+              />
+            </div>
+
+            {/* 4. Your Task Panel */}
+            <section className="w-full px-4 py-2">
+              <TaskPanel 
+                className="w-full" 
+                tasks={tasks} 
+                totalPoints={totalPoints}
+                isLocked={isLocked}
+                videoId={row.id}
+                userAddress={me || undefined}
+                hasCompletedTask={hasCompletedTask}
+                earnedTaskPoints={taskPoints}
+                pointsBreakdown={
+                  totalPoints > 0 ? {
+                    purchasePoints: Math.floor(totalPoints * 0.4),
+                    taskPoints: Math.floor(totalPoints * 0.2),
+                    sharePoints: Math.floor(totalPoints * 0.4),
+                    totalPoints: totalPoints
+                  } : undefined
+                }
+              />
+            </section>
+
+            {/* 5. Recommended for You (paling bawah) */}
+            {reco && reco.length > 0 && (
+              <section className="w-full px-4 py-4">
+                <div className="rounded-2xl border border-neutral-800 bg-neutral-900/60 p-4">
+                  <RecommendationPanel items={reco} />
+                </div>
+              </section>
+            )}
+          </div>
         </>
       )}
     </main>

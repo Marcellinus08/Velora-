@@ -59,6 +59,7 @@ export default function VideoInfoSection({
   hasShared = false,
   claimedSharePoints = 0,
   isLocked = false,
+  hideRecommendations = false,
 }: {
   video: VideoInfo;
   recommendations: RecommendedVideo[];
@@ -70,6 +71,7 @@ export default function VideoInfoSection({
   hasShared?: boolean;
   claimedSharePoints?: number;
   isLocked?: boolean;
+  hideRecommendations?: boolean;
 }) {
   const [expanded, setExpanded] = useState(false);
 
@@ -293,7 +295,7 @@ export default function VideoInfoSection({
     <section className="col-span-12">
       <div className="grid grid-cols-12 gap-6">
         {/* LEFT */}
-        <div className="col-span-12 lg:col-span-8">
+        <div className={hideRecommendations ? "col-span-12" : "col-span-12 lg:col-span-8"}>
           <h1 className="text-2xl md:text-3xl font-bold leading-snug text-neutral-50">
             {video.title}
           </h1>
@@ -514,12 +516,14 @@ export default function VideoInfoSection({
           </div>
         </div>
 
-        {/* RIGHT: rekomendasi */}
-        <aside className="col-span-12 lg:col-span-4">
-          <div className="rounded-2xl border border-neutral-800 bg-neutral-900/60 p-4">
-            <RecommendationPanel items={recommendations} />
-          </div>
-        </aside>
+        {/* RIGHT: rekomendasi - hanya tampil jika tidak hideRecommendations */}
+        {!hideRecommendations && (
+          <aside className="col-span-12 lg:col-span-4">
+            <div className="rounded-2xl border border-neutral-800 bg-neutral-900/60 p-4">
+              <RecommendationPanel items={recommendations} />
+            </div>
+          </aside>
+        )}
       </div>
     </section>
   );
