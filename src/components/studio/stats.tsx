@@ -89,7 +89,7 @@ function StatCard({
 
 export default function StudioStats({ totals }: { totals: Totals }) {
   return (
-    <div className="grid grid-cols-1 gap-4 max-sm:gap-3 sm:grid-cols-2 xl:grid-cols-4">
+    <div className="grid grid-cols-1 gap-4 max-sm:gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3">
       {/* Videos */}
       <StatCard
         label={
@@ -116,8 +116,8 @@ export default function StudioStats({ totals }: { totals: Totals }) {
         gradient="bg-gradient-to-br from-blue-600/5 via-cyan-600/5 to-teal-600/5"
       />
 
-      {/* Meets (replaces Buyers) */}
-      <StatCard
+      {/* Meets (replaces Buyers) - COMING SOON */}
+      {/* <StatCard
         label={
           <span className="inline-flex items-center max-sm:text-[11px]">
             Meets
@@ -127,7 +127,7 @@ export default function StudioStats({ totals }: { totals: Totals }) {
         value={fmtInt(totals.meets)}
         rightIcon={<MI name="video_call" />}
         gradient="bg-gradient-to-br from-pink-600/5 via-rose-600/5 to-red-600/5"
-      />
+      /> */}
 
       {/* Earnings */}
       <StatCard

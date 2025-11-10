@@ -58,8 +58,9 @@ export default function StudioPage() {
   const [error, setError] = useState<string | null>(null);
   const [videos, setVideos] = useState<StudioVideo[]>([]);
   const [ads, setAds] = useState<StudioAd[]>([]);
-  const [meets, setMeets] = useState<StudioMeet[]>([]);
-  const [meetsTotal, setMeetsTotal] = useState(0);
+  // Meets - COMING SOON
+  // const [meets, setMeets] = useState<StudioMeet[]>([]);
+  // const [meetsTotal, setMeetsTotal] = useState(0);
   const [earningsUsd, setEarningsUsd] = useState(0);
 
   async function load() {
@@ -91,7 +92,8 @@ export default function StudioPage() {
       // Fetch stats and related data
       await fetchStudioStats(items);
       await fetchCampaigns();
-      await fetchMeets();
+      // Meets - COMING SOON
+      // await fetchMeets();
     } catch (e: any) {
       console.error("[studio page] load videos failed:", e);
       setError(e?.message || "Failed to load videos");
@@ -202,6 +204,8 @@ export default function StudioPage() {
     }
   }
 
+  // Meets function - COMING SOON
+  /*
   async function fetchMeets() {
     if (!me) return;
     
@@ -271,6 +275,7 @@ export default function StudioPage() {
       setMeetsTotal(0);
     }
   }
+  */
 
   async function fetchStudioStats(videoItems: StudioVideo[]) {
     if (!me || videoItems.length === 0) return;
@@ -470,7 +475,7 @@ export default function StudioPage() {
               totals={{
                 videos: videos.length,
                 campaigns: ads.length,
-                meets: meetsTotal,
+                meets: 0, // meetsTotal - COMING SOON
                 earningsUsd: earningsUsd,
               }}
             />
@@ -503,7 +508,7 @@ export default function StudioPage() {
               <StudioRecentPanel
                 videos={videos}
                 ads={ads}
-                meets={meets}
+                meets={[]} // meets - COMING SOON
                 onAdsUpdate={() => {
                   // Reload campaigns when status changes
                   fetchCampaigns();
