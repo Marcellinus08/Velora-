@@ -1,7 +1,7 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { useEffect, useRef, Suspense } from "react";
+import { useEffect, useRef, Suspense, useState } from "react";
 import dynamic from "next/dynamic";
 import Sidebar from "@/components/sidebar";
 import { CarouselSkeleton } from "@/components/home/carousel-skeleton";
@@ -33,6 +33,7 @@ function HomeContent() {
   const searchParams = useSearchParams();
   const campaignId = searchParams?.get("campaign");
   const carouselRef = useRef<HTMLDivElement>(null);
+  const [selectedCategory, setSelectedCategory] = useState("All");
 
   useEffect(() => {
     if (campaignId && carouselRef.current) {
@@ -74,7 +75,10 @@ function HomeContent() {
         <div className="relative max-sm:mb-4">
           <div className="absolute inset-0 bg-gradient-to-r from-neutral-800/20 via-purple-500/10 to-neutral-800/20 rounded-xl opacity-0 hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
           <div className="relative">
-            <Categories />
+            <Categories 
+              selectedCategory={selectedCategory}
+              onCategoryChange={setSelectedCategory}
+            />
           </div>
         </div>
 
@@ -82,7 +86,7 @@ function HomeContent() {
         <div className="relative">
           <div className="absolute inset-0 bg-gradient-to-br from-purple-500/3 via-transparent to-blue-500/3 rounded-2xl" />
           <div className="relative">
-            <CardsGrid />
+            <CardsGrid selectedCategory={selectedCategory} />
           </div>
         </div>
 

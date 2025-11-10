@@ -121,7 +121,7 @@ const resolveTotalPoints = (row: VideoRow) => {
 const isAddr = (s?: string | null) => !!s && /^0x[a-fA-F0-9]{40}$/.test(s || "");
 
 /* ================== Grid ================== */
-export default function CardsGrid() {
+export default function CardsGrid({ selectedCategory = "All" }: { selectedCategory?: string }) {
   const { address } = useAccount();
   const buyer = (address ?? "").toLowerCase();
 
@@ -221,11 +221,19 @@ export default function CardsGrid() {
         let lastError: any = null;
 
         for (const sel of selects) {
-          const { data: d, error } = await supabase
+          let query = supabase
             .from("videos")
-            .select(sel)
+            .select(sel);
+          
+          // Filter by category if not "All"
+          if (selectedCategory && selectedCategory !== "All") {
+            query = query.eq("category", selectedCategory);
+          }
+          
+          const { data: d, error } = await query
             .order("created_at", { ascending: false })
             .range(0, 7); // Load 8 items first
+            
           if (!error) {
             data = d;
             break;
@@ -251,7 +259,7 @@ export default function CardsGrid() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [selectedCategory]); // Re-run when category changes
 
   // 1b) Load lebih banyak video ketika di-scroll
   const fetchMore = useCallback(async () => {
@@ -280,11 +288,19 @@ export default function CardsGrid() {
       const offset = (page - 1) * 8; // 8 items per page
 
       for (const sel of selects) {
-        const { data: d, error } = await supabase
+        let query = supabase
           .from("videos")
-          .select(sel)
+          .select(sel);
+        
+        // Filter by category if not "All"
+        if (selectedCategory && selectedCategory !== "All") {
+          query = query.eq("category", selectedCategory);
+        }
+        
+        const { data: d, error } = await query
           .order("created_at", { ascending: false })
           .range(offset, offset + 7);
+          
         if (!error) {
           data = d;
           break;
@@ -307,7 +323,7 @@ export default function CardsGrid() {
     } finally {
       setLoadingMore(false);
     }
-  }, [page]);
+  }, [page, selectedCategory]);
 
   const handleFetchMore = useCallback(async () => {
     setLoadingMore(true);
@@ -430,18 +446,9 @@ export default function CardsGrid() {
     return <div className="pt-6 text-sm text-red-300">Failed to load videos: {err}</div>;
   }
 
-  if (!items.length) {
-    return (
-      <div className="pt-6 text-center py-12">
-        <p className="text-neutral-400">No videos available yet</p>
-        <p className="text-neutral-500 text-sm mt-1">Check back later for new content!</p>
-      </div>
-    );
-  }
-
   return (
     <div>
-      {/* Enhanced Section Header */}
+      {/* Enhanced Section Header - Always show */}
       <div className="mb-6 max-sm:mb-4">
         <div className="flex items-start justify-between flex-wrap gap-2">
           <div className="flex items-start gap-3 max-sm:gap-2">
@@ -462,7 +469,7 @@ export default function CardsGrid() {
               <span className="text-xs font-bold text-purple-400 max-sm:text-[10px]">{items.length}</span>
             </div>
             <span className="text-sm font-medium text-neutral-300 max-sm:text-[11px]">
-              {items.length} video{items.length !== 1 ? 's' : ''}
+              video{items.length !== 1 ? 's' : ''}
             </span>
           </div>
         </div>
@@ -470,9 +477,29 @@ export default function CardsGrid() {
         <p className="text-sm text-neutral-400 mt-2 max-sm:text-xs max-sm:mt-1">Discover amazing content</p>
       </div>
 
-      <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-x-4 gap-y-8
-        max-sm:grid-cols-1 max-sm:gap-y-4">
-      {items.map((v) => {
+      {/* Empty State or Video Grid */}
+      {!items.length ? (
+        <div className="py-12">
+          <div className="flex flex-col items-center justify-center text-center max-w-md mx-auto">
+            <div className="w-20 h-20 rounded-full bg-neutral-800/60 border border-neutral-700 flex items-center justify-center mb-4">
+              <svg className="w-10 h-10 text-neutral-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-semibold text-neutral-300 mb-2">
+              {selectedCategory === "All" ? "No videos available yet" : `No videos in ${selectedCategory}`}
+            </h3>
+            <p className="text-sm text-neutral-500">
+              {selectedCategory === "All" 
+                ? "Check back later for new content!" 
+                : "There are no videos available in this category yet. Try selecting a different category."}
+            </p>
+          </div>
+        </div>
+      ) : (
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-x-4 gap-y-8
+          max-sm:grid-cols-1 max-sm:gap-y-4">
+        {items.map((v) => {
         const addrLower = v.creator?.abstract_id?.toLowerCase() || "";
         const fetchedAbstract = addrLower ? absAvatars[addrLower] : "";
         const avatarSrc = v.creator?.avatar_url || fetchedAbstract || "";
@@ -589,7 +616,8 @@ export default function CardsGrid() {
           </div>
         );
       })}
-      </div>
+        </div>
+      )}
 
       {/* Observer target untuk infinite scroll */}
       <div ref={observerTarget} className="mt-8 flex justify-center">

@@ -22,7 +22,12 @@ const cats = [
   { name: "Other", icon: "" },
 ];
 
-export default function Categories() {
+type CategoriesProps = {
+  selectedCategory?: string;
+  onCategoryChange?: (category: string) => void;
+};
+
+export default function Categories({ selectedCategory = "All", onCategoryChange }: CategoriesProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [hasDragged, setHasDragged] = useState(false);
@@ -64,11 +69,13 @@ export default function Categories() {
     }
   };
 
-  const handleCategoryClick = (e: MouseEvent<HTMLButtonElement>) => {
+  const handleCategoryClick = (e: MouseEvent<HTMLButtonElement>, categoryName: string) => {
     if (hasDragged) {
       e.preventDefault();
       e.stopPropagation();
+      return;
     }
+    onCategoryChange?.(categoryName);
   };
 
   return (
@@ -86,14 +93,14 @@ export default function Categories() {
           {cats.map((cat, i) => (
             <button
               key={cat.name}
-              onClick={handleCategoryClick}
+              onClick={(e) => handleCategoryClick(e, cat.name)}
               className={`group relative whitespace-nowrap rounded-xl px-4 py-2.5 text-sm font-medium transition-all duration-300 cursor-pointer ${
-                i === 0
+                cat.name === selectedCategory
                   ? "bg-gradient-to-r from-purple-600 to-purple-500 text-white shadow-lg hover:from-purple-700 hover:to-purple-600 hover:shadow-xl"
                   : "bg-neutral-800/60 text-neutral-200 hover:bg-neutral-700/80 border border-neutral-700/50 hover:border-neutral-600"
               } max-sm:px-3 max-sm:py-1.5 max-sm:text-xs max-sm:rounded-lg max-sm:font-semibold`}
             >
-              {i === 0 && (
+              {cat.name === selectedCategory && (
                 <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-purple-600 to-purple-500 opacity-20 blur-lg group-hover:opacity-40 transition-opacity duration-300 max-sm:rounded-lg max-sm:blur-md" />
               )}
               <div className="relative">
