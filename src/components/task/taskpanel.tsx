@@ -25,6 +25,7 @@ export default function TaskPanel({
   hasCompletedTask = false,
   earnedTaskPoints = 0,
   pointsBreakdown,
+  isCreator = false,
 }: {
   className?: string;
   /** list of tasks for current video (fetched from DB) */
@@ -55,6 +56,8 @@ export default function TaskPanel({
     sharePoints: number;
     totalPoints: number;
   };
+  /** apakah user adalah creator video ini */
+  isCreator?: boolean;
 }) {
   const [started, setStarted] = useState(false);
   const [completed, setCompleted] = useState(hasCompletedTask); // Set to true jika sudah pernah complete
@@ -94,6 +97,101 @@ export default function TaskPanel({
         <p className="mt-2 text-sm text-neutral-400">
           No tasks available for this video yet.
         </p>
+      </div>
+    );
+  }
+
+  // If user is the creator, show preview mode
+  if (isCreator) {
+    return (
+      <div className={`rounded-2xl border border-neutral-800 bg-neutral-900/60 p-6 ${className}`}>
+        <div className="mb-4 flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-purple-500/20 to-violet-500/20 border border-purple-500/30">
+            <svg className="h-5 w-5 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+            </svg>
+          </div>
+          <div>
+            <h2 className="text-lg font-bold text-neutral-50">Your Tasks</h2>
+            <p className="text-xs text-neutral-400">Preview Mode - Your Video</p>
+          </div>
+        </div>
+
+        <div className="mb-4 rounded-lg bg-purple-500/10 border border-purple-500/20 p-3">
+          <div className="flex items-start gap-2">
+            <svg className="h-4 w-4 text-purple-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+            </svg>
+            <div className="flex-1">
+              <p className="text-xs font-medium text-purple-300">This is your video</p>
+              <p className="text-xs text-neutral-400 mt-1">
+                Viewers will answer these tasks to earn points. You cannot complete tasks on your own videos.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-3">
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-neutral-400">Total Tasks:</span>
+            <span className="font-semibold text-neutral-100">{tasks.length} questions</span>
+          </div>
+          {totalPoints > 0 && (
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-neutral-400">Points per viewer:</span>
+              <span className="font-semibold text-yellow-400">{Math.floor(totalPoints * 0.2)} pts</span>
+            </div>
+          )}
+        </div>
+
+        {/* Task Preview List */}
+        <div className="mt-4 space-y-2 max-h-[400px] overflow-y-auto custom-scrollbar">
+          <p className="text-xs font-semibold text-neutral-400 uppercase tracking-wide mb-2">Task Preview:</p>
+          {tasks.map((task, idx) => (
+            <div key={idx} className="rounded-lg border border-neutral-700 bg-neutral-800/40 p-3">
+              <div className="flex items-start gap-2 mb-2">
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-neutral-700 text-xs font-bold text-neutral-300 flex-shrink-0">
+                  {idx + 1}
+                </span>
+                <p className="flex-1 text-sm font-medium text-neutral-200">{task.question}</p>
+              </div>
+              <div className="ml-7 space-y-1">
+                {task.options.map((opt, optIdx) => (
+                  <div
+                    key={optIdx}
+                    className={`text-xs px-2 py-1.5 rounded ${
+                      task.answerIndex === optIdx
+                        ? "bg-green-500/20 text-green-300 border border-green-500/30 font-medium"
+                        : "bg-neutral-700/40 text-neutral-400"
+                    }`}
+                  >
+                    {String.fromCharCode(65 + optIdx)}. {opt}
+                    {task.answerIndex === optIdx && (
+                      <span className="ml-1.5 text-[10px] font-bold">✓</span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <style jsx>{`
+          .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+          }
+          .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgb(38 38 38 / 0.4);
+            border-radius: 3px;
+          }
+          .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgb(82 82 82);
+            border-radius: 3px;
+          }
+          .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: rgb(115 115 115);
+          }
+        `}</style>
       </div>
     );
   }
@@ -265,10 +363,22 @@ export default function TaskPanel({
   };
 
   return (
-    <div className={`min-h-0 h-full rounded-2xl bg-neutral-800 p-6 flex flex-col ${className}`}>
-      {/* Header: judul */}
-      <div className="flex items-center justify-between">
-        <h2 className="text-xl font-bold text-neutral-50">Your Task</h2>
+    <div className={`min-h-0 h-full rounded-2xl border border-neutral-800 bg-neutral-900/60 p-6 flex flex-col ${className}`}>
+      {/* Header: judul dengan desain baru */}
+      <div className="mb-4 flex items-center gap-3">
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-purple-500/20 to-violet-500/20 border border-purple-500/30">
+          <svg className="h-5 w-5 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+          </svg>
+        </div>
+        <div>
+          <h2 className="text-lg font-bold text-neutral-50">Your Task</h2>
+          {!started && !completed && (
+            <p className="text-xs text-neutral-400">
+              {tasks.length} {tasks.length === 1 ? 'Question' : 'Questions'} • {allPoints} Points
+            </p>
+          )}
+        </div>
       </div>
 
       {!started || completed ? (

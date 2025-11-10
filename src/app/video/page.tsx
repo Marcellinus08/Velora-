@@ -580,6 +580,7 @@ function VideoPageInner() {
                 userAddress={me || undefined}
                 hasCompletedTask={hasCompletedTask}
                 earnedTaskPoints={taskPoints}
+                isCreator={isCreator}
                 pointsBreakdown={
                   !isCreator && totalPoints > 0 ? {
                     purchasePoints: Math.floor(totalPoints * 0.4),
@@ -690,6 +691,7 @@ function VideoPageInner() {
                 userAddress={me || undefined}
                 hasCompletedTask={hasCompletedTask}
                 earnedTaskPoints={taskPoints}
+                isCreator={isCreator}
                 pointsBreakdown={
                   !isCreator && totalPoints > 0 ? {
                     purchasePoints: Math.floor(totalPoints * 0.4),
