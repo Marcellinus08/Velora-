@@ -306,22 +306,30 @@ export default function UploadCreate() {
   // Insert with targeted fallback: hanya drop field yang kolomnya TIDAK ADA.
   async function insertVideoRowSmart(payload: Record<string, any>) {
     // 1) coba full
-  let { error } = await (supabase as any).from("videos").insert(payload as any);
+    let { error } = await (supabase as any).from("videos").insert(payload as any);
     if (!error) return;
 
-    // jika error karena kolom tidak ada, kita hapus field yang bikin error, lalu retry
-    if (isUndefinedColumnErr(error)) {
+    console.log('[insertVideoRowSmart] First insert failed:', error);
+
+    // jika error karena kolom tidak ada atau generated column, kita hapus field yang bikin error, lalu retry
+    if (isUndefinedColumnErr(error) || error?.message?.includes('cannot insert') || error?.message?.includes('GENERATED')) {
       const msg = (error?.message || "").toLowerCase();
       const strip: string[] = [];
       if (msg.includes("tasks_json")) strip.push("tasks_json");
       if (msg.includes("currency")) strip.push("currency");
+      if (msg.includes("points_total")) strip.push("points_total"); // Handle generated column
       // (tambahkan nama kolom lain kalau memang belum ada di schema)
 
       if (strip.length) {
+        console.log('[insertVideoRowSmart] Retrying without fields:', strip);
         const trimmed = { ...payload };
         for (const k of strip) delete (trimmed as any)[k];
-  const second = await (supabase as any).from("videos").insert(trimmed as any);
-        if (second.error) throw second.error;
+        const second = await (supabase as any).from("videos").insert(trimmed as any);
+        if (second.error) {
+          console.error('[insertVideoRowSmart] Second insert also failed:', second.error);
+          throw second.error;
+        }
+        console.log('[insertVideoRowSmart] Second insert succeeded!');
         return;
       }
     }
