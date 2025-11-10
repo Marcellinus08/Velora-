@@ -66,12 +66,40 @@ const {
     }
   };
 
-  const handleNotificationClick = async (id: string, isRead: boolean) => {
-if (!isRead) {
+  const handleNotificationClick = async (
+    id: string, 
+    isRead: boolean,
+    targetType: string,
+    targetId: string,
+    actorAddress: string,
+    notifType: string
+  ) => {
+    // Mark as read jika belum
+    if (!isRead) {
       try {
         await markAsRead(id);
-} catch (error) {
-}
+      } catch (error) {
+        console.error("Failed to mark as read:", error);
+      }
+    }
+
+    // Navigate ke halaman terkait berdasarkan tipe notifikasi
+    try {
+      if (notifType === "follow") {
+        // Follow notification - ke profile orang yang follow
+        router.push(`/profile?address=${actorAddress}`);
+      } else if (targetType === "video") {
+        // Video related - ke halaman video
+        router.push(`/video?id=${targetId}`);
+      } else if (targetType === "post" || targetType === "reply") {
+        // Community post/reply - ke halaman community
+        router.push(`/community?postId=${targetId}`);
+      } else if (targetType === "profile") {
+        // Profile related - ke profile
+        router.push(`/profile?address=${targetId}`);
+      }
+    } catch (error) {
+      console.error("Failed to navigate:", error);
     }
   };
 
@@ -108,7 +136,7 @@ try {
             >
               <MI name="arrow_back" className="text-[24px]" />
             </button>
-            <h1 className="text-lg font-semibold text-neutral-100">Notifikasi</h1>
+            <h1 className="text-lg font-semibold text-neutral-100">Notifications</h1>
           </div>
 
           {/* Notification List - No Tabs */}
@@ -183,7 +211,14 @@ try {
                     <div
                       key={notif.id}
                       onClick={() => {
-                        handleNotificationClick(notif.id, notif.isRead);
+                        handleNotificationClick(
+                          notif.id, 
+                          notif.isRead, 
+                          notif.targetType, 
+                          notif.targetId, 
+                          notif.actorAddress,
+                          notif.type
+                        );
                         setShowMobileNotifications(false);
                       }}
                       className={`
@@ -373,7 +408,14 @@ try {
                 return (
                   <div
                     key={notif.id}
-                    onClick={() => handleNotificationClick(notif.id, notif.isRead)}
+                    onClick={() => handleNotificationClick(
+                      notif.id, 
+                      notif.isRead, 
+                      notif.targetType, 
+                      notif.targetId, 
+                      notif.actorAddress,
+                      notif.type
+                    )}
                     className={`
                       group relative flex items-start gap-3 px-4 py-3 border-b border-neutral-800 
                       hover:bg-neutral-800/70 cursor-pointer transition-all duration-200

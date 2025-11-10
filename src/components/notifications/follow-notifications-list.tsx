@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Heart, Loader2, X } from "lucide-react";
 import { useFollowNotifications } from "@/hooks/use-follow-notifications";
+import { useRouter } from "next/navigation";
 
 interface FollowNotificationItemProps {
   userAddr?: string;
@@ -17,6 +18,7 @@ export function FollowNotificationsList({
   userAddr,
   maxItems = 5,
 }: FollowNotificationItemProps) {
+  const router = useRouter();
   const {
     notifications,
     unreadCount,
@@ -86,14 +88,22 @@ export function FollowNotificationsList({
         {displayNotifications.map((notif) => (
           <div
             key={notif.id}
+            onClick={async () => {
+              // Mark as read jika belum
+              if (!notif.is_read) {
+                await markAsRead(notif.id);
+              }
+              // Navigate ke profile orang yang follow
+              router.push(`/profile?address=${notif.actor_addr}`);
+            }}
             className={`
-              p-3 rounded-lg border transition-all duration-200
+              p-3 rounded-lg border transition-all duration-200 cursor-pointer
               ${
                 notif.is_read
                   ? "border-neutral-700 bg-neutral-900/40"
                   : "border-violet-700/50 bg-violet-900/20"
               }
-              hover:border-neutral-600
+              hover:border-neutral-600 hover:bg-neutral-800/60
             `}
           >
             <div className="flex items-start gap-2">
