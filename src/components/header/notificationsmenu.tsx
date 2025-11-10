@@ -172,14 +172,21 @@ try {
                 {notifications.map((notif) => {
                   const displayName = notif.actorName || `${notif.actorAddress.slice(0, 6)}…${notif.actorAddress.slice(-4)}`;
                   
+                  // Check if message already contains actor name (from hook)
+                  // This happens when hook has already formatted the full message
+                  const hasActorInMessage = notif.message.includes(displayName);
+                  
                   let messageWithTarget: string;
                   
-                  if (notif.targetType === "video") {
+                  if (notif.type === "follow" || hasActorInMessage) {
+                    // For follow or messages that already contain actor name, use full message
+                    messageWithTarget = notif.message;
+                  } else if (notif.targetType === "video") {
                     if (notif.type === "video_like") {
                       messageWithTarget = `liked your video: ${notif.targetTitle || "Unknown"}`;
                     } else if (notif.type === "video_comment") {
                       const commentSnippet = notif.commentText ? notif.commentText.substring(0, 50) : "...";
-                      messageWithTarget = `commented on your video: ${commentSnippet} : ${notif.commentText || ""}`;
+                      messageWithTarget = `commented on your video: ${commentSnippet}`;
                     } else if (notif.type === "video_purchase") {
                       messageWithTarget = `purchased your video: ${notif.targetTitle || "Unknown"}`;
                     } else {
@@ -187,10 +194,10 @@ try {
                     }
                   } else if (notif.targetType === "post") {
                     if (notif.type === "like") {
-                      messageWithTarget = `liked your post: ${notif.targetTitle || "Unknown"} `;
+                      messageWithTarget = `liked your post: ${notif.targetTitle || "Unknown"}`;
                     } else if (notif.type === "reply") {
                       const replySnippet = notif.targetTitle ? notif.targetTitle.substring(0, 50) : "...";
-                      messageWithTarget = `replied to your post: ${replySnippet} : ${notif.targetTitle || ""}`;
+                      messageWithTarget = `replied to your post: ${replySnippet}`;
                     } else {
                       messageWithTarget = notif.message;
                     }
@@ -199,7 +206,7 @@ try {
                       messageWithTarget = `liked your reply: ${notif.targetTitle || "Unknown"}`;
                     } else if (notif.type === "nested_reply") {
                       const replySnippet = notif.targetTitle ? notif.targetTitle.substring(0, 50) : "...";
-                      messageWithTarget = `replied to your reply: ${replySnippet} : ${notif.targetTitle || ""}`;
+                      messageWithTarget = `replied to your reply: ${replySnippet}`;
                     } else {
                       messageWithTarget = notif.message;
                     }
@@ -249,12 +256,22 @@ try {
                         <div className="flex items-start justify-between gap-2">
                           <div className="flex-1 min-w-0">
                             <p className="text-sm text-neutral-200 leading-5">
-                              <span className={`font-semibold ${!notif.isRead ? "text-white" : ""}`}>
-                                {displayName}
-                              </span>{" "}
-                              <span className={!notif.isRead ? "text-neutral-300" : "text-neutral-400"}>
-                                {messageWithTarget}
-                              </span>
+                              {notif.type === "follow" || hasActorInMessage ? (
+                                // For follow or messages with actor name, use full message
+                                <span className={!notif.isRead ? "text-neutral-300" : "text-neutral-400"}>
+                                  {messageWithTarget}
+                                </span>
+                              ) : (
+                                // For other notifications, show displayName + action
+                                <>
+                                  <span className={`font-semibold ${!notif.isRead ? "text-white" : ""}`}>
+                                    {displayName}
+                                  </span>{" "}
+                                  <span className={!notif.isRead ? "text-neutral-300" : "text-neutral-400"}>
+                                    {messageWithTarget}
+                                  </span>
+                                </>
+                              )}
                             </p>
                             <p className="text-xs text-neutral-500 mt-1">
                               {formatDistanceToNow(new Date(notif.createdAt), { addSuffix: true })}
@@ -359,18 +376,24 @@ try {
                 // ✅ Show avatar from DB or fallback to AbstractProfile
                 const displayName = notif.actorName || `${notif.actorAddress.slice(0, 6)}…${notif.actorAddress.slice(-4)}`;
                 
+                // Check if message already contains actor name (from hook)
+                const hasActorInMessage = notif.message.includes(displayName);
+                
                 // ✅ Build message with target title - different format for video vs community
                 let messageWithTarget: string;
                 
-                if (notif.targetType === "video") {
+                if (notif.type === "follow" || hasActorInMessage) {
+                  // For follow or messages that already contain actor name, use full message
+                  messageWithTarget = notif.message;
+                } else if (notif.targetType === "video") {
                   // VIDEO NOTIFICATIONS - Format: {actor} {action} video: {videoTitle}
                   if (notif.type === "video_like") {
                     // Video Like: {actor} liked your video: {videoTitle}
                     messageWithTarget = `liked your video: ${notif.targetTitle || "Unknown"}`;
                   } else if (notif.type === "video_comment") {
-                    // Video Comment: {actor} commented on your video: "{commentSnippet}" : {isiComment}
+                    // Video Comment: {actor} commented on your video: "{commentSnippet}"
                     const commentSnippet = notif.commentText ? notif.commentText.substring(0, 50) : "...";
-                    messageWithTarget = `commented on your video: ${commentSnippet} : ${notif.commentText || ""}`;
+                    messageWithTarget = `commented on your video: ${commentSnippet}`;
                   } else if (notif.type === "video_purchase") {
                     // Video Purchase: {actor} purchased your video: {videoTitle}
                     messageWithTarget = `purchased your video: ${notif.targetTitle || "Unknown"}`;
@@ -381,11 +404,11 @@ try {
                   // COMMUNITY POST NOTIFICATIONS - Format: {actor} {action} post: {postTitle}
                   if (notif.type === "like") {
                     // Community Post Like: {actor} liked your post: {postTitle}
-                    messageWithTarget = `liked your post: ${notif.targetTitle || "Unknown"} `;
+                    messageWithTarget = `liked your post: ${notif.targetTitle || "Unknown"}`;
                   } else if (notif.type === "reply") {
-                    // Community Reply: {actor} replied to your post: {replySnippet} : {isiReply}
+                    // Community Reply: {actor} replied to your post: {replySnippet}
                     const replySnippet = notif.targetTitle ? notif.targetTitle.substring(0, 50) : "...";
-                    messageWithTarget = `replied to your post: ${replySnippet} : ${notif.targetTitle || ""}`;
+                    messageWithTarget = `replied to your post: ${replySnippet}`;
                   } else {
                     messageWithTarget = notif.message;
                   }
@@ -395,9 +418,9 @@ try {
                     // Reply Like: {actor} liked your reply: {replyContent}
                     messageWithTarget = `liked your reply: ${notif.targetTitle || "Unknown"}`;
                   } else if (notif.type === "nested_reply") {
-                    // Nested Reply: {actor} replied to your reply: {replySnippet} : {isiReply}
+                    // Nested Reply: {actor} replied to your reply: {replySnippet}
                     const replySnippet = notif.targetTitle ? notif.targetTitle.substring(0, 50) : "...";
-                    messageWithTarget = `replied to your reply: ${replySnippet} : ${notif.targetTitle || ""}`;
+                    messageWithTarget = `replied to your reply: ${replySnippet}`;
                   } else {
                     messageWithTarget = notif.message;
                   }
@@ -447,12 +470,22 @@ try {
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1 min-w-0">
                           <p className="text-sm text-neutral-200">
-                            <span className={`font-semibold ${!notif.isRead ? "text-white" : ""}`}>
-                              {displayName}
-                            </span>{" "}
-                            <span className={!notif.isRead ? "text-neutral-300" : "text-neutral-400"}>
-                              {messageWithTarget}
-                            </span>
+                            {notif.type === "follow" || hasActorInMessage ? (
+                              // For follow or messages with actor name, use full message
+                              <span className={!notif.isRead ? "text-neutral-300" : "text-neutral-400"}>
+                                {messageWithTarget}
+                              </span>
+                            ) : (
+                              // For other notifications, show displayName + action
+                              <>
+                                <span className={`font-semibold ${!notif.isRead ? "text-white" : ""}`}>
+                                  {displayName}
+                                </span>{" "}
+                                <span className={!notif.isRead ? "text-neutral-300" : "text-neutral-400"}>
+                                  {messageWithTarget}
+                                </span>
+                              </>
+                            )}
                           </p>
                           <p className="text-xs text-neutral-500 mt-1">
                             {formatDistanceToNow(new Date(notif.createdAt), { addSuffix: true })}
