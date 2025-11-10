@@ -32,6 +32,7 @@ export default function WalletDropdown({
   const { logout } = useLoginWithAbstract();
   const [openFeedback, setOpenFeedback] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [imgError, setImgError] = useState(false);
 
   const copyAddress = () => {
     if (address) {
@@ -52,7 +53,7 @@ export default function WalletDropdown({
               title="Open wallet menu"
               type="button"
             >
-              <AvatarTrigger avatarUrl={avatarUrl} avatarLoading={avatarLoading} />
+              <AvatarTrigger avatarUrl={avatarUrl} avatarLoading={avatarLoading} address={address} />
             </button>
           </DropdownMenuTrigger>
 
@@ -68,17 +69,22 @@ export default function WalletDropdown({
                   {avatarLoading ? (
                     // ✅ Loading: show skeleton
                     <div className="skel h-full w-full rounded-full" />
-                  ) : avatarUrl ? (
-                    // Dari DB
+                  ) : avatarUrl && !imgError ? (
+                    // Dari DB - with error handling
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
                       src={avatarUrl}
                       alt="Avatar"
                       className="h-full w-full object-cover"
+                      onError={() => {
+                        console.warn(`Failed to load avatar in dropdown: ${avatarUrl}`);
+                        setImgError(true);
+                      }}
                     />
                   ) : (
-                    // Fallback: AbstractProfile (jika tidak ada di DB)
+                    // Fallback: AbstractProfile (jika tidak ada di DB atau error)
                     <AbstractProfile
+                      address={address}
                       size="xs"
                       showTooltip={false}
                       className="!h-12 !w-12 max-sm:!h-8 max-sm:!w-8 md:!h-11 md:!w-11"

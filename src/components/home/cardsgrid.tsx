@@ -30,6 +30,41 @@ type VideoRow = {
   } | null;
 };
 
+/* Avatar component with error handling */
+function CreatorAvatar({ 
+  avatarSrc, 
+  address 
+}: { 
+  avatarSrc: string; 
+  address?: string;
+}) {
+  const [imgError, setImgError] = useState(false);
+  
+  if (!avatarSrc || imgError) {
+    return address ? (
+      <AbstractProfile address={address as `0x${string}`} size="xs" showTooltip={false} className="!h-6 !w-6" />
+    ) : (
+      <svg viewBox="0 0 24 24" className="h-6 w-6 text-neutral-500" fill="currentColor" aria-hidden="true">
+        <path d="M12 12a5 5 0 100-10 5 5 0 000 10zm0 2c-4.418 0-8 2.239-8 5v1h16v-1c0-2.761-3.582-5-8-5z" />
+      </svg>
+    );
+  }
+  
+  return (
+    <img
+      src={avatarSrc}
+      alt="Avatar"
+      className="h-full w-full object-cover"
+      crossOrigin="anonymous"
+      referrerPolicy="no-referrer"
+      onError={() => {
+        console.warn(`Failed to load creator avatar: ${avatarSrc}`);
+        setImgError(true);
+      }}
+    />
+  );
+}
+
 const isAddressLike = (s?: string | null): s is `0x${string}` =>
   !!s && /^0x[a-fA-F0-9]{40}$/.test(s);
 
@@ -501,24 +536,7 @@ export default function CardsGrid() {
 
               <div className="flex items-center gap-2 text-sm text-neutral-400 mobile-video-card-author">
                 <div className="h-6 w-6 overflow-hidden rounded-full bg-neutral-800 ring-1 ring-neutral-700">
-                  {avatarSrc ? (
-                    <img
-                      src={avatarSrc}
-                      alt="Avatar"
-                      className="h-full w-full object-cover"
-                      crossOrigin="anonymous"
-                      referrerPolicy="no-referrer"
-                      onError={(e) => {
-                        (e.currentTarget as HTMLImageElement).style.display = "none";
-                      }}
-                    />
-                  ) : addrLower ? (
-                    <AbstractProfile address={addrLower as `0x${string}`} size="xs" showTooltip={false} className="!h-6 !w-6" />
-                  ) : (
-                    <svg viewBox="0 0 24 24" className="h-6 w-6 text-neutral-500" fill="currentColor" aria-hidden="true">
-                      <path d="M12 12a5 5 0 100-10 5 5 0 000 10zm0 2c-4.418 0-8 2.239-8 5v1h16v-1c0-2.761-3.582-5-8-5z" />
-                    </svg>
-                  )}
+                  <CreatorAvatar avatarSrc={avatarSrc} address={addrLower} />
                 </div>
                 <span>{author}</span>
               </div>

@@ -71,7 +71,17 @@ export async function POST(req: NextRequest) {
 
       if (insErr) {
         console.error("[profiles/upsert] insert error:", insErr);
-        return NextResponse.json({ error: "Insert failed" }, { status: 500 });
+        console.error("[profiles/upsert] error details:", JSON.stringify(insErr, null, 2));
+        
+        // Check if error is about missing updated_at column
+        if (insErr.message && insErr.message.includes('updated_at')) {
+          return NextResponse.json({ 
+            error: "Database schema error: missing updated_at column. Please run migration.", 
+            details: insErr.message 
+          }, { status: 500 });
+        }
+        
+        return NextResponse.json({ error: "Insert failed", details: insErr.message }, { status: 500 });
       }
 
       return NextResponse.json(inserted ?? { abstract_id: addr, username: usernameInput ?? null });
@@ -103,7 +113,17 @@ export async function POST(req: NextRequest) {
 
       if (updErr) {
         console.error("[profiles/upsert] update error:", updErr);
-        return NextResponse.json({ error: "Update failed" }, { status: 500 });
+        console.error("[profiles/upsert] error details:", JSON.stringify(updErr, null, 2));
+        
+        // Check if error is about missing updated_at column
+        if (updErr.message && updErr.message.includes('updated_at')) {
+          return NextResponse.json({ 
+            error: "Database schema error: missing updated_at column. Please run migration.", 
+            details: updErr.message 
+          }, { status: 500 });
+        }
+        
+        return NextResponse.json({ error: "Update failed", details: updErr.message }, { status: 500 });
       }
 
       return NextResponse.json(updated ?? { abstract_id: addr, username: usernameInput });

@@ -38,9 +38,21 @@ export function useProfileAvatar(address?: `0x${string}`) {
         if (alive) setUsername(dbUser);
 
         if (dbAvatar) {
-          if (alive) setAvatarUrl(`${dbAvatar}?v=${Date.now()}`);
-          if (alive) setLoading(false);
-          return;
+          // Validate avatar URL is accessible
+          try {
+            const avatarCheck = await fetch(dbAvatar, { method: 'HEAD' });
+            if (avatarCheck.ok) {
+              if (alive) setAvatarUrl(`${dbAvatar}?v=${Date.now()}`);
+              if (alive) setLoading(false);
+              return;
+            } else {
+              console.warn(`Avatar URL not accessible (${avatarCheck.status}): ${dbAvatar}`);
+              // Fall through to Abstract fallback
+            }
+          } catch (err) {
+            console.warn(`Avatar URL check failed: ${dbAvatar}`, err);
+            // Fall through to Abstract fallback
+          }
         }
 
         // Fallback: Abstract profile picture
