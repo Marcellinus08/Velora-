@@ -490,6 +490,9 @@ export default function CardsGrid() {
 
         // ====== Ownership ======
         const isOwned = owned.has(String(v.id));
+        
+        // ====== Check if user is the creator/owner of this video ======
+        const isCreator = buyer && addrLower && buyer === addrLower;
 
         return (
           <div
@@ -498,7 +501,7 @@ export default function CardsGrid() {
           >
             {/* Elegant Thumbnail */}
             <div className="relative w-full overflow-hidden rounded-t-xl">
-              {/* Points badge - simple and clean */}
+              {/* Points badge - simple and clean - Show for everyone including creator */}
               {totalPoints > 0 && (
                 <div className="absolute left-2 top-2 z-10 flex items-center gap-1.5 rounded-full border border-neutral-700 bg-neutral-900/85 px-2.5 py-1 text-xs font-semibold text-neutral-100 backdrop-blur">
                   <span
@@ -542,12 +545,12 @@ export default function CardsGrid() {
               </div>
 
               <div className="mt-auto flex items-end justify-between">
-                <p className={`text-base font-bold mobile-video-card-price ${isOwned ? "text-violet-300" : "text-neutral-50"}`}>
-                  {isOwned ? "Owned" : priceText}
+                <p className={`text-base font-bold mobile-video-card-price ${isOwned || isCreator ? "text-violet-300" : "text-neutral-50"}`}>
+                  {isCreator ? "Your Video" : isOwned ? "Owned" : priceText}
                 </p>
 
                 {/* Simple Action Buttons */}
-                {isOwned ? (
+                {isCreator || isOwned ? (
                   <Link href={`/video?id=${v.id}`} prefetch={false} className="relative z-10">
                     <button
                       type="button"

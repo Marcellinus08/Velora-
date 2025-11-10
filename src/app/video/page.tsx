@@ -499,6 +499,12 @@ function VideoPageInner() {
 
   const videoSrc = useMemo(() => (row ? safe(row.video_url, row.video_path || "") : ""), [row]);
   const initialLikes = row?.likes_count ?? 0;
+  
+  // Check if current user is the creator/owner of this video
+  const isCreator = useMemo(() => {
+    if (!me || !row || !row.abstract_id) return false;
+    return me.toLowerCase() === row.abstract_id.toLowerCase();
+  }, [me, row]);
 
   const isLocked = useMemo(() => {
     if (!row) return false;
@@ -509,9 +515,12 @@ function VideoPageInner() {
     // Jika tidak ada wallet (belum connect), locked
     if (!me) return true;
     
+    // Jika user adalah creator, TIDAK LOCKED (bisa akses video sendiri)
+    if (isCreator) return false;
+    
     // Gunakan state hasPurchased yang sudah di-cek dari database
     return !hasPurchased;
-  }, [row, me, hasPurchased]);
+  }, [row, me, hasPurchased, isCreator]);
 
   return (
     <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8">
@@ -565,14 +574,14 @@ function VideoPageInner() {
               <TaskPanel 
                 className="h-full" 
                 tasks={tasks} 
-                totalPoints={totalPoints}
+                totalPoints={isCreator ? 0 : totalPoints}
                 isLocked={isLocked}
                 videoId={row.id}
                 userAddress={me || undefined}
                 hasCompletedTask={hasCompletedTask}
                 earnedTaskPoints={taskPoints}
                 pointsBreakdown={
-                  totalPoints > 0 ? {
+                  !isCreator && totalPoints > 0 ? {
                     purchasePoints: Math.floor(totalPoints * 0.4),
                     taskPoints: Math.floor(totalPoints * 0.2),
                     sharePoints: Math.floor(totalPoints * 0.4),
@@ -589,8 +598,8 @@ function VideoPageInner() {
                 recommendations={reco}
                 videoId={row.id}
                 initialLikes={initialLikes}
-                sharePoints={Math.floor(totalPoints * 0.4)} // 40% dari total point untuk share
-                totalPoints={totalPoints} // Total point dari video
+                sharePoints={isCreator ? 0 : Math.floor(totalPoints * 0.4)} // 40% dari total point untuk share
+                totalPoints={isCreator ? 0 : totalPoints} // Total point dari video
                 userAddress={me || undefined}
                 hasShared={hasShared}
                 claimedSharePoints={sharePoints}
@@ -650,8 +659,8 @@ function VideoPageInner() {
                   recommendations={reco}
                   videoId={row.id}
                   initialLikes={initialLikes}
-                  sharePoints={Math.floor(totalPoints * 0.4)}
-                  totalPoints={totalPoints}
+                  sharePoints={isCreator ? 0 : Math.floor(totalPoints * 0.4)}
+                  totalPoints={isCreator ? 0 : totalPoints}
                   userAddress={me || undefined}
                   hasShared={hasShared}
                   claimedSharePoints={sharePoints}
@@ -675,14 +684,14 @@ function VideoPageInner() {
               <TaskPanel 
                 className="w-full" 
                 tasks={tasks} 
-                totalPoints={totalPoints}
+                totalPoints={isCreator ? 0 : totalPoints}
                 isLocked={isLocked}
                 videoId={row.id}
                 userAddress={me || undefined}
                 hasCompletedTask={hasCompletedTask}
                 earnedTaskPoints={taskPoints}
                 pointsBreakdown={
-                  totalPoints > 0 ? {
+                  !isCreator && totalPoints > 0 ? {
                     purchasePoints: Math.floor(totalPoints * 0.4),
                     taskPoints: Math.floor(totalPoints * 0.2),
                     sharePoints: Math.floor(totalPoints * 0.4),

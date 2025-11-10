@@ -56,29 +56,37 @@ export async function POST(req: NextRequest) {
 
     const userAddrLower = userAddr.toLowerCase();
 
-    // Get video's points_total from database if not provided
-    let videoTotalPoints = totalPoints;
-    if (!videoTotalPoints) {
-      const { data: videoData } = await supabaseAdmin
-        .from("videos")
-        .select("points_total")
-        .eq("id", videoId)
-        .single();
-      
-      videoTotalPoints = videoData?.points_total || 0;
+    // Get video data including creator info
+    const { data: videoData } = await supabaseAdmin
+      .from("videos")
+      .select("points_total, price_cents, abstract_id")
+      .eq("id", videoId)
+      .single();
+
+    if (!videoData) {
+      return NextResponse.json(
+        { error: "Video not found" },
+        { status: 404 }
+      );
     }
+
+    // Check if user is the creator/owner of the video
+    const isCreator = videoData.abstract_id?.toLowerCase() === userAddrLower;
+    
+    if (isCreator) {
+      return NextResponse.json(
+        { error: "Video creators cannot earn points from their own videos" },
+        { status: 403 }
+      );
+    }
+
+    // Get video's points_total from database if not provided
+    let videoTotalPoints = totalPoints || videoData.points_total || 0;
 
     // Untuk action task dan share, cek apakah video berbayar dan apakah user sudah beli
     if (action === "task" || action === "share") {
-      // Cek apakah video berbayar
-      const { data: videoData } = await supabaseAdmin
-        .from("videos")
-        .select("price_cents")
-        .eq("id", videoId)
-        .single();
-
-      if (videoData && videoData.price_cents > 0) {
-        // Video berbayar, cek apakah user sudah purchase
+      // Video berbayar, cek apakah user sudah purchase
+      if (videoData.price_cents > 0) {
         const { data: purchaseData } = await supabaseAdmin
           .from("video_purchases")
           .select("id")

@@ -459,19 +459,21 @@ export default function VideoInfoSection({
               </div>
             </div>
 
-            <button
-              onClick={onToggleFollow}
-              disabled={followBusy || isSelf || !walletLower}
-              className={cn(
-                "rounded-full px-4 py-2 text-sm font-semibold transition disabled:opacity-60 disabled:cursor-not-allowed",
-                isFollowing
-                  ? "bg-neutral-700 text-neutral-100 hover:bg-neutral-600"
-                  : "bg-[var(--primary-500)] text-white hover:bg-violet-600"
-              )}
-              title={isSelf ? "You cannot follow yourself" : undefined}
-            >
-              {isFollowing ? (followBusy ? "…" : "Following") : followBusy ? "…" : "Follow"}
-            </button>
+            {/* Hide Follow button if viewing own video */}
+            {!isSelf && (
+              <button
+                onClick={onToggleFollow}
+                disabled={followBusy || !walletLower}
+                className={cn(
+                  "rounded-full px-4 py-2 text-sm font-semibold transition disabled:opacity-60 disabled:cursor-not-allowed",
+                  isFollowing
+                    ? "bg-neutral-700 text-neutral-100 hover:bg-neutral-600"
+                    : "bg-[var(--primary-500)] text-white hover:bg-violet-600"
+                )}
+              >
+                {isFollowing ? (followBusy ? "…" : "Following") : followBusy ? "…" : "Follow"}
+              </button>
+            )}
           </div>
 
           {/* Description */}
