@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useAccount } from "wagmi";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 // Default slide - ajakan untuk membuat iklan
 const defaultSlide: SlideItem[] = [
@@ -54,9 +54,58 @@ export default function Carousel({
   const [index, setIndex] = useState(0);
   const [allSlides, setAllSlides] = useState<SlideItem[]>(defaultSlide);
   const [loading, setLoading] = useState(true);
+  const [highlightedCampaign, setHighlightedCampaign] = useState<string | null>(null);
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
+  const carouselRef = useRef<HTMLDivElement>(null);
   const { address } = useAccount();
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // Set highlighted campaign from campaignId prop
+  useEffect(() => {
+    if (campaignId) {
+      setHighlightedCampaign(campaignId);
+    }
+  }, [campaignId]);
+
+  // Remove highlight when clicking outside or pressing ESC
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (carouselRef.current && !carouselRef.current.contains(event.target as Node)) {
+        setHighlightedCampaign(null);
+        // Remove campaign parameter from URL
+        const params = new URLSearchParams(searchParams?.toString());
+        if (params.has('campaign')) {
+          params.delete('campaign');
+          const newUrl = params.toString() ? `/?${params.toString()}` : '/';
+          router.replace(newUrl, { scroll: false });
+        }
+      }
+    };
+
+    const handleEscKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setHighlightedCampaign(null);
+        // Remove campaign parameter from URL
+        const params = new URLSearchParams(searchParams?.toString());
+        if (params.has('campaign')) {
+          params.delete('campaign');
+          const newUrl = params.toString() ? `/?${params.toString()}` : '/';
+          router.replace(newUrl, { scroll: false });
+        }
+      }
+    };
+
+    if (highlightedCampaign) {
+      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('keydown', handleEscKey);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleEscKey);
+    };
+  }, [highlightedCampaign, router, searchParams]);
 
   // Fetch active campaigns and merge with default slide
   useEffect(() => {
@@ -116,6 +165,7 @@ export default function Carousel({
       );
       if (campaignIndex !== -1) {
         setIndex(campaignIndex);
+        setHighlightedCampaign(campaignId);
       }
     }
   }, [campaignId, allSlides]);
@@ -196,10 +246,10 @@ export default function Carousel({
   }, [index, allSlides, interval, loading]);
 
   return (
-    <div className={`relative w-full ${size} max-sm:h-[180px] lg:h-[500px]`}>
+    <div className={`relative w-full ${size} max-sm:h-[180px] lg:h-[500px]`} ref={carouselRef}>
       <div
         className={`h-full overflow-hidden rounded-xl max-sm:rounded-lg transition-all duration-300 ${
-          campaignId && allSlides[index]?.id === campaignId 
+          highlightedCampaign && allSlides[index]?.id === highlightedCampaign
             ? "ring-4 ring-yellow-400/50 shadow-2xl shadow-yellow-400/20" 
             : ""
         }`}
