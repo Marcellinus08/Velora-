@@ -7,14 +7,27 @@ import { MI } from "./MI";
 
 const RECENT_KEY = "vh_recent_queries";
 
+type VideoResult = {
+  id: string;
+  title: string;
+  thumbnail: string;
+  abstract_id: string;
+  views: number;
+  created_at: string;
+  price_cents: number;
+};
+
 export default function SearchBar() {
   const router = useRouter();
   const [q, setQ] = useState("");
   const [openSug, setOpenSug] = useState(false);
   const [recent, setRecent] = useState<string[]>([]);
   const [expanded, setExpanded] = useState(false); // State untuk expand search di mobile
+  const [videoResults, setVideoResults] = useState<VideoResult[]>([]);
+  const [loadingVideos, setLoadingVideos] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     try {
@@ -22,6 +35,45 @@ export default function SearchBar() {
       if (Array.isArray(saved)) setRecent(saved.slice(0, 8));
     } catch {}
   }, []);
+
+  // Debounced search for video results
+  useEffect(() => {
+    // Clear previous timer
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+
+    // Reset video results if query is empty
+    if (!q || q.trim().length < 2) {
+      setVideoResults([]);
+      setLoadingVideos(false);
+      return;
+    }
+
+    // Set loading state
+    setLoadingVideos(true);
+
+    // Debounce search by 300ms
+    debounceTimerRef.current = setTimeout(async () => {
+      try {
+        const response = await fetch(`/api/search/videos?q=${encodeURIComponent(q)}&limit=5`);
+        if (response.ok) {
+          const data = await response.json();
+          setVideoResults(data.videos || []);
+        }
+      } catch (error) {
+        console.error("Error searching videos:", error);
+      } finally {
+        setLoadingVideos(false);
+      }
+    }, 300);
+
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, [q]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -66,13 +118,22 @@ export default function SearchBar() {
     const query = q.trim();
     if (!query) return;
     saveRecent(query);
-    setOpenSug(false);
-    setExpanded(false);
-    router.push(`/search?q=${encodeURIComponent(query)}`);
+    
+    // If there are video results, navigate to the first video
+    if (videoResults.length > 0) {
+      setOpenSug(false);
+      setExpanded(false);
+      setVideoResults([]);
+      router.push(`/video?id=${videoResults[0].id}`);
+    } else {
+      // Keep dropdown open to show results when they arrive
+      setOpenSug(true);
+    }
   }
   function clear() {
     setQ("");
     setOpenSug(true);
+    setVideoResults([]);
     inputRef.current?.focus();
   }
   function removeRecent(term: string) {
@@ -212,8 +273,77 @@ export default function SearchBar() {
           </button>
         </form>
 
-        {openSug && (recent.length > 0 || q) && (
+        {openSug && (recent.length > 0 || q || videoResults.length > 0) && (
           <div className="absolute left-0 right-0 top-[44px] mx-auto w-full max-w-[720px] rounded-xl border border-neutral-800 bg-neutral-900/95 backdrop-blur supports-[backdrop-filter]:bg-neutral-900/70">
+            {/* Video Results Section */}
+            {videoResults.length > 0 && (
+              <div className="border-b border-neutral-800">
+                <div className="px-4 py-2 text-xs text-neutral-400">
+                  <span>Videos</span>
+                </div>
+                <ul className="py-2">
+                  {videoResults.map((video) => (
+                    <li key={video.id} className="group relative">
+                      <button
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={() => {
+                          setOpenSug(false);
+                          setExpanded(false);
+                          setVideoResults([]);
+                          router.push(`/video?id=${video.id}`);
+                        }}
+                        className="flex w-full items-center gap-3 px-4 py-2 text-left hover:bg-neutral-800 cursor-pointer"
+                      >
+                        {/* Thumbnail */}
+                        <div className="flex-shrink-0 w-20 h-12 bg-neutral-800 rounded overflow-hidden">
+                          {video.thumbnail ? (
+                            <img 
+                              src={video.thumbnail} 
+                              alt={video.title}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <MI name="video_library" className="text-neutral-600" />
+                            </div>
+                          )}
+                        </div>
+                        
+                        {/* Video Info */}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm text-neutral-200 truncate font-medium">
+                            {video.title}
+                          </p>
+                          <div className="flex items-center gap-2 text-xs text-neutral-400 mt-0.5">
+                            <span className="truncate max-w-[120px]">
+                              {video.abstract_id.slice(0, 6)}...{video.abstract_id.slice(-4)}
+                            </span>
+                            <span>•</span>
+                            <span>{video.views.toLocaleString()} views</span>
+                            {video.price_cents > 0 && (
+                              <>
+                                <span>•</span>
+                                <span className="text-purple-400">${(video.price_cents / 100).toFixed(2)}</span>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* Loading State */}
+            {loadingVideos && (
+              <div className="px-4 py-3 flex items-center gap-2 text-sm text-neutral-400">
+                <div className="w-4 h-4 border-2 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
+                <span>Searching videos...</span>
+              </div>
+            )}
+
+            {/* Recent Searches Section */}
             {recent.length > 0 && (
               <div className="flex items-center justify-between px-4 py-2 text-xs text-neutral-400">
                 <span>Recent searches</span>
@@ -242,6 +372,7 @@ export default function SearchBar() {
                         }}
                         className="flex w-full items-center gap-3 px-4 py-2 pr-12 text-left text-sm text-neutral-200 hover:bg-neutral-800 cursor-pointer"
                       >
+                        <MI name="history" className="text-neutral-400 text-[16px]" />
                         <span className="truncate">{s}</span>
                       </button>
 
@@ -262,7 +393,6 @@ export default function SearchBar() {
                     </li>
                   );
                 })}
-              {q && <li className="px-4 pt-1 text-xs text-neutral-500">Press Enter to search "{q}".</li>}
             </ul>
           </div>
         )}
