@@ -11,21 +11,20 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ videos: [] });
     }
 
-    // Search videos by title with thumbnail
-    const { data: videos, error } = await sbAnonServer
+    // Get all videos and filter in JavaScript
+    const { data: allVideos, error } = await sbAnonServer
       .from("videos")
-      .select("id, title, abstract_id, thumb_url")
-      .ilike("title", `%${query}%`)
-      .limit(limit);
+      .select("id, title, abstract_id, thumb_url, category");
+    
+    if (error) throw error;
+    
+    // Filter by title or category
+    const videos = (allVideos || []).filter(video => 
+      video.title?.toLowerCase().includes(query.toLowerCase()) ||
+      video.category?.toLowerCase().includes(query.toLowerCase())
+    ).slice(0, limit);
 
-    if (error) {
-      console.error("[GET /api/search/videos] error:", error);
-      console.error("Query:", query);
-      return NextResponse.json(
-        { error: "Failed to search videos", details: error.message },
-        { status: 500 }
-      );
-    }
+
 
     console.log(`[GET /api/search/videos] Found ${videos?.length || 0} videos for query: "${query}"`);
     return NextResponse.json({ videos: videos || [] });
