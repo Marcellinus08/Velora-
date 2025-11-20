@@ -517,7 +517,6 @@ export default function CardsGrid({ selectedCategory = "All" }: { selectedCatego
                     : "text-neutral-400 hover:text-neutral-200"
                 }`}
               >
-                <span className="max-sm:hidden">🔥</span>
                 Trending
               </button>
             </div>
