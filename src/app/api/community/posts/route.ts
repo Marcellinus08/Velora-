@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { sbService } from "@/lib/supabase-server";
 
 export const runtime = "nodejs";
-export const dynamic = "force-dynamic";
+export const revalidate = 60; // Cache for 60 seconds
 
 function publicUrl(path: string) {
   const { data } = sbService.storage.from("community").getPublicUrl(path);

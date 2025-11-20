@@ -1,8 +1,9 @@
 // src/components/home/cardsgrid.tsx
 // "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, memo } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useAccount } from "wagmi";
 import { supabase } from "@/lib/supabase";
 import { AbstractProfile } from "@/components/abstract-profile";
@@ -51,12 +52,14 @@ function CreatorAvatar({
   }
   
   return (
-    <img
+    <Image
       src={avatarSrc}
       alt="Avatar"
+      width={24}
+      height={24}
       className="h-full w-full object-cover"
-      crossOrigin="anonymous"
-      referrerPolicy="no-referrer"
+      loading="lazy"
+      quality={75}
       onError={() => {
         console.warn(`Failed to load creator avatar: ${avatarSrc}`);
         setImgError(true);
@@ -612,11 +615,19 @@ export default function CardsGrid({ selectedCategory = "All" }: { selectedCatego
                 </div>
               )}
 
-              <div
-                className="aspect-video w-full bg-cover bg-center bg-no-repeat transition-transform duration-300 group-hover:scale-105"
-                style={{ backgroundImage: `url("${bg}")` }}
-                aria-label={v.title}
-              />
+              <div className="aspect-video w-full overflow-hidden bg-neutral-800">
+                <Image
+                  src={bg}
+                  alt={v.title}
+                  width={640}
+                  height={360}
+                  className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                  loading="lazy"
+                  quality={75}
+                  placeholder="blur"
+                  blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCwAB//2Q=="
+                />
+              </div>
             </div>
 
             {/* Clean Info Section */}

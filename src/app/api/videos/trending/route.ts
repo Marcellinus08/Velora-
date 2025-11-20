@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sbAnonServer } from "@/lib/supabase-server";
 
+export const revalidate = 300; // Cache for 5 minutes
+
 export async function GET(req: NextRequest) {
   try {
     // Get all videos with their stats

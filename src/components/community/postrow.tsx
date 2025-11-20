@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, memo } from "react";
+import Image from "next/image";
 import Replies from "./replies";
 import type { CommunityPost } from "./types";
 import { AbstractProfile } from "@/components/abstract-profile";
@@ -103,9 +104,17 @@ function MediaGrid({ media }: { media?: { url: string; mime?: string | null }[] 
       {valid.map((m, i) => (
         <div key={`${m.url}-${i}`} className="relative overflow-hidden rounded-lg max-sm:rounded-md border border-neutral-800 max-sm:w-full md:rounded-lg">
           {m.mime?.startsWith?.("video/") ? (
-            <video src={m.url} className="h-40 max-sm:h-24 w-full object-cover md:h-40" controls playsInline />
+            <video src={m.url} className="h-40 max-sm:h-24 w-full object-cover md:h-40" controls playsInline preload="metadata" />
           ) : (
-            <img src={m.url} className="h-40 max-sm:h-24 w-full object-cover md:h-40" alt="" />
+            <Image 
+              src={m.url} 
+              alt="Post media" 
+              width={400} 
+              height={160}
+              className="h-40 max-sm:h-24 w-full object-cover md:h-40"
+              loading="lazy"
+              quality={75}
+            />
           )}
         </div>
       ))}
@@ -162,7 +171,7 @@ function PostSkeleton() {
 }
 
 /* ===== Komponen utama ===== */
-export default function CommunityPostRow({
+const CommunityPostRow = memo(function CommunityPostRow({
   post,
   onLike,
   currentAddress, // alamat wallet user yang login
@@ -232,10 +241,14 @@ export default function CommunityPostRow({
       <div className="flex items-start gap-4 max-sm:gap-2.5 max-sm:w-full md:gap-3.5">
         {/* Avatar */}
         {dbAvatar ? (
-          <img
+          <Image
             src={dbAvatar}
             alt="author avatar"
+            width={40}
+            height={40}
             className="size-10 max-sm:size-8 rounded-full object-cover md:size-10"
+            loading="lazy"
+            quality={80}
             onError={(e) => {
               (e.currentTarget as HTMLImageElement).src = identicon;
             }}
@@ -250,7 +263,7 @@ export default function CommunityPostRow({
             />
           </div>
         ) : (
-          <img src={identicon} alt="author avatar" className="size-10 max-sm:size-8 rounded-full object-cover md:size-10" />
+          <Image src={identicon} alt="author avatar" width={40} height={40} className="size-10 max-sm:size-8 rounded-full object-cover md:size-10" loading="lazy" />
         )}
 
         {/* Body */}
@@ -371,4 +384,6 @@ export default function CommunityPostRow({
       </div>
     </div>
   );
-}
+});
+
+export default CommunityPostRow;

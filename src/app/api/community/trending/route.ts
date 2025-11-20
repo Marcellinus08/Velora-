@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sbAnonServer } from "@/lib/supabase-server";
 
+export const revalidate = 300; // Cache for 5 minutes
+
 function publicUrl(path: string) {
   const { data } = sbAnonServer.storage.from("community").getPublicUrl(path);
   return data.publicUrl;
