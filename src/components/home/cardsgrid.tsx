@@ -131,6 +131,8 @@ export default function CardsGrid({ selectedCategory = "All" }: { selectedCatego
   const [err, setErr] = useState<string>("");
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
+  const [sortMode, setSortMode] = useState<"latest" | "trending">("latest");
+  const [totalVideosCount, setTotalVideosCount] = useState<number>(0);
 
   // ===== OWNED: set id video yang sudah dibeli user ini
   const [owned, setOwned] = useState<Set<string>>(new Set());
@@ -199,6 +201,36 @@ export default function CardsGrid({ selectedCategory = "All" }: { selectedCatego
         setPage(1);
         setItems([]);
 
+        // Get total count first (regardless of mode)
+        let countQuery = supabase.from("videos").select("id", { count: "exact", head: true });
+        if (selectedCategory && selectedCategory !== "All") {
+          countQuery = countQuery.eq("category", selectedCategory);
+        }
+        const { count } = await countQuery;
+        if (active && count !== null) {
+          setTotalVideosCount(count);
+        }
+
+        // If trending mode, use trending API
+        if (sortMode === "trending") {
+          const res = await fetch("/api/videos/trending");
+          if (!res.ok) throw new Error("Failed to fetch trending videos");
+          const json = await res.json();
+          let data = json.videos || [];
+          
+          // Filter by category if not "All"
+          if (selectedCategory && selectedCategory !== "All") {
+            data = data.filter((v: any) => v.category === selectedCategory);
+          }
+          
+          if (active) {
+            setItems(data);
+            setHasMore(false); // Trending is limited to 10, no pagination
+          }
+          return;
+        }
+
+        // Latest mode - normal query
         const selects = [
           `
             id, title, description, category, thumb_url,
@@ -259,7 +291,7 @@ export default function CardsGrid({ selectedCategory = "All" }: { selectedCatego
     return () => {
       active = false;
     };
-  }, [selectedCategory]); // Re-run when category changes
+  }, [selectedCategory, sortMode]); // Re-run when category or sort mode changes
 
   // 1b) Load lebih banyak video ketika di-scroll
   const fetchMore = useCallback(async () => {
@@ -326,12 +358,14 @@ export default function CardsGrid({ selectedCategory = "All" }: { selectedCatego
   }, [page, selectedCategory]);
 
   const handleFetchMore = useCallback(async () => {
+    if (sortMode === "trending") return; // No pagination for trending
     setLoadingMore(true);
     await fetchMore();
-  }, [fetchMore]);
+  }, [fetchMore, sortMode]);
 
   // Hook infinite scroll - akan trigger fetchMore saat user scroll ke bawah
-  const observerTarget = useInfiniteScroll(handleFetchMore, hasMore && !loading);
+  // Disable for trending mode
+  const observerTarget = useInfiniteScroll(handleFetchMore, hasMore && !loading && sortMode === "latest");
   useEffect(() => {
     let alive = true;
 
@@ -462,15 +496,43 @@ export default function CardsGrid({ selectedCategory = "All" }: { selectedCatego
             </div>
           </div>
           
-          <div className="flex items-center gap-2 rounded-full bg-neutral-800/60 border border-neutral-700/50 px-3 py-1.5
-            max-sm:px-2 max-sm:py-1 max-sm:gap-1.5">
-            <div className="flex h-5 w-5 items-center justify-center rounded-full bg-purple-500/20
-              max-sm:h-4 max-sm:w-4">
-              <span className="text-xs font-bold text-purple-400 max-sm:text-[10px]">{items.length}</span>
+          <div className="flex items-center gap-2">
+            {/* Sort Toggle */}
+            <div className="flex items-center gap-1 bg-neutral-800/60 border border-neutral-700/50 rounded-full p-1">
+              <button
+                onClick={() => setSortMode("latest")}
+                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 max-sm:px-2 max-sm:py-1 ${
+                  sortMode === "latest"
+                    ? "bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-lg"
+                    : "text-neutral-400 hover:text-neutral-200"
+                }`}
+              >
+                Latest
+              </button>
+              <button
+                onClick={() => setSortMode("trending")}
+                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 flex items-center gap-1 max-sm:px-2 max-sm:py-1 ${
+                  sortMode === "trending"
+                    ? "bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-lg"
+                    : "text-neutral-400 hover:text-neutral-200"
+                }`}
+              >
+                <span className="max-sm:hidden">🔥</span>
+                Trending
+              </button>
             </div>
-            <span className="text-sm font-medium text-neutral-300 max-sm:text-[11px]">
-              video{items.length !== 1 ? 's' : ''}
-            </span>
+            
+            {/* Video Count */}
+            <div className="flex items-center gap-2 rounded-full bg-neutral-800/60 border border-neutral-700/50 px-3 py-1.5
+              max-sm:px-2 max-sm:py-1 max-sm:gap-1.5">
+              <div className="flex h-5 w-5 items-center justify-center rounded-full bg-purple-500/20
+                max-sm:h-4 max-sm:w-4">
+                <span className="text-xs font-bold text-purple-400 max-sm:text-[10px]">{totalVideosCount}</span>
+              </div>
+              <span className="text-sm font-medium text-neutral-300 max-sm:text-[11px]">
+                video{totalVideosCount !== 1 ? 's' : ''}
+              </span>
+            </div>
           </div>
         </div>
         
