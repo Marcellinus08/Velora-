@@ -11,10 +11,10 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ videos: [] });
     }
 
-    // Search videos by title only - simplified
+    // Search videos by title with thumbnail
     const { data: videos, error } = await sbAnonServer
       .from("videos")
-      .select("id, title, abstract_id")
+      .select("id, title, abstract_id, thumb_url")
       .ilike("title", `%${query}%`)
       .limit(limit);
 

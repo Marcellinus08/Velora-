@@ -11,6 +11,7 @@ type VideoResult = {
   id: string;
   title: string;
   abstract_id: string;
+  thumb_url?: string | null;
 };
 
 export default function SearchBar() {
@@ -284,8 +285,21 @@ export default function SearchBar() {
                         }}
                         className="flex w-full items-center gap-3 px-4 py-2.5 text-left hover:bg-neutral-800 cursor-pointer transition-colors"
                       >
-                        <MI name="video_library" className="text-neutral-400 text-[18px]" />
-                        <span className="text-sm text-neutral-200 font-medium">
+                        {/* Thumbnail */}
+                        <div className="flex-shrink-0 w-16 h-10 bg-neutral-800 rounded overflow-hidden">
+                          {video.thumb_url ? (
+                            <img 
+                              src={video.thumb_url} 
+                              alt={video.title}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <MI name="video_library" className="text-neutral-600 text-[16px]" />
+                            </div>
+                          )}
+                        </div>
+                        <span className="text-sm text-neutral-200 font-medium flex-1">
                           {video.title}
                         </span>
                       </button>
