@@ -10,11 +10,7 @@ const RECENT_KEY = "vh_recent_queries";
 type VideoResult = {
   id: string;
   title: string;
-  thumbnail: string;
   abstract_id: string;
-  views: number;
-  created_at: string;
-  price_cents: number;
 };
 
 export default function SearchBar() {
@@ -44,7 +40,7 @@ export default function SearchBar() {
     }
 
     // Reset video results if query is empty
-    if (!q || q.trim().length < 2) {
+    if (!q || q.trim().length < 1) {
       setVideoResults([]);
       setLoadingVideos(false);
       return;
@@ -56,7 +52,7 @@ export default function SearchBar() {
     // Debounce search by 300ms
     debounceTimerRef.current = setTimeout(async () => {
       try {
-        const response = await fetch(`/api/search/videos?q=${encodeURIComponent(q)}&limit=5`);
+        const response = await fetch(`/api/search/videos?q=${encodeURIComponent(q)}&limit=50`);
         if (response.ok) {
           const data = await response.json();
           setVideoResults(data.videos || []);
@@ -119,16 +115,8 @@ export default function SearchBar() {
     if (!query) return;
     saveRecent(query);
     
-    // If there are video results, navigate to the first video
-    if (videoResults.length > 0) {
-      setOpenSug(false);
-      setExpanded(false);
-      setVideoResults([]);
-      router.push(`/video?id=${videoResults[0].id}`);
-    } else {
-      // Keep dropdown open to show results when they arrive
-      setOpenSug(true);
-    }
+    // Keep dropdown open to show results
+    setOpenSug(true);
   }
   function clear() {
     setQ("");
@@ -278,10 +266,11 @@ export default function SearchBar() {
             {/* Video Results Section */}
             {videoResults.length > 0 && (
               <div className="border-b border-neutral-800">
-                <div className="px-4 py-2 text-xs text-neutral-400">
+                <div className="px-4 py-2 text-xs text-neutral-400 flex items-center justify-between">
                   <span>Videos</span>
+                  <span className="font-semibold text-purple-400">{videoResults.length} results</span>
                 </div>
-                <ul className="py-2">
+                <ul className="py-2 max-h-[500px] overflow-y-auto">
                   {videoResults.map((video) => (
                     <li key={video.id} className="group relative">
                       <button
@@ -289,48 +278,20 @@ export default function SearchBar() {
                         onClick={() => {
                           setOpenSug(false);
                           setExpanded(false);
+                          setQ('');
                           setVideoResults([]);
                           router.push(`/video?id=${video.id}`);
                         }}
-                        className="flex w-full items-center gap-3 px-4 py-2 text-left hover:bg-neutral-800 cursor-pointer"
+                        className="flex w-full items-center gap-3 px-4 py-2.5 text-left hover:bg-neutral-800 cursor-pointer transition-colors"
                       >
-                        {/* Thumbnail */}
-                        <div className="flex-shrink-0 w-20 h-12 bg-neutral-800 rounded overflow-hidden">
-                          {video.thumbnail ? (
-                            <img 
-                              src={video.thumbnail} 
-                              alt={video.title}
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center">
-                              <MI name="video_library" className="text-neutral-600" />
-                            </div>
-                          )}
-                        </div>
-                        
-                        {/* Video Info */}
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm text-neutral-200 truncate font-medium">
-                            {video.title}
-                          </p>
-                          <div className="flex items-center gap-2 text-xs text-neutral-400 mt-0.5">
-                            <span className="truncate max-w-[120px]">
-                              {video.abstract_id.slice(0, 6)}...{video.abstract_id.slice(-4)}
-                            </span>
-                            <span>•</span>
-                            <span>{video.views.toLocaleString()} views</span>
-                            {video.price_cents > 0 && (
-                              <>
-                                <span>•</span>
-                                <span className="text-purple-400">${(video.price_cents / 100).toFixed(2)}</span>
-                              </>
-                            )}
-                          </div>
-                        </div>
+                        <MI name="video_library" className="text-neutral-400 text-[18px]" />
+                        <span className="text-sm text-neutral-200 font-medium">
+                          {video.title}
+                        </span>
                       </button>
                     </li>
                   ))}
+
                 </ul>
               </div>
             )}
@@ -368,7 +329,7 @@ export default function SearchBar() {
                         onMouseDown={(e) => e.preventDefault()}
                         onClick={() => {
                           setQ(s);
-                          saveRecent(s);
+                          setOpenSug(true);
                         }}
                         className="flex w-full items-center gap-3 px-4 py-2 pr-12 text-left text-sm text-neutral-200 hover:bg-neutral-800 cursor-pointer"
                       >
