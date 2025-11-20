@@ -35,21 +35,21 @@ export default function SiteHeader() {
 
   return (
     <header
-      className="fixed top-0 left-0 right-0 z-40 grid w-full items-center gap-2 sm:gap-4 border-b border-neutral-800 bg-neutral-900 px-3 py-2 sm:px-6 lg:px-8
+      className="fixed top-0 left-0 right-0 z-40 grid w-full items-center gap-2 md:gap-3 lg:gap-4 border-b border-neutral-800 bg-neutral-900 px-3 py-2 md:px-4 lg:px-8
                  grid-cols-[auto_1fr_auto] xl:[grid-template-columns:var(--sidebar-w,16rem)_1fr_auto]"
     >
       {/* Column 1: Logo */}
-      <div className="flex items-center gap-2 sm:gap-4">
-        <Link href="/" aria-label="Home" className="flex items-center gap-1.5 sm:gap-2 select-none cursor-pointer">
+      <div className="flex items-center gap-2 md:gap-3 lg:gap-4">
+        <Link href="/" aria-label="Home" className="flex items-center gap-1.5 md:gap-2 select-none cursor-pointer">
           <Image
             src="/glonic_logo_main.png"
             alt="Glonic Logo"
             priority
             width={200}
             height={60}
-            className="h-7 w-auto sm:h-10 lg:h-8"
+            className="h-7 w-auto md:h-8 lg:h-8"
           />
-          <span className="text-base sm:text-2xl font-bold tracking-tight leading-none text-neutral-50">
+          <span className="text-base md:text-xl lg:text-2xl font-bold tracking-tight leading-none text-neutral-50">
             GLO<span className="text-[var(--primary-500)]">N</span>IC
           </span>
         </Link>
@@ -59,38 +59,38 @@ export default function SiteHeader() {
       <SearchBar />
 
       {/* Column 3: Right */}
-      <div className="flex items-center gap-1 sm:gap-2">
+      <div className="flex items-center gap-1 md:gap-1.5 lg:gap-2">
         {!isConnected ? (
           <div className="flex items-center gap-2">
-            <ConnectWalletButton className="min-w-20 sm:min-w-28 px-3 sm:px-4 text-xs sm:text-sm" />
+            <ConnectWalletButton className="min-w-20 md:min-w-24 lg:min-w-28 px-3 md:px-3.5 lg:px-4 text-xs md:text-xs lg:text-sm" />
           </div>
         ) : showWalletSkeleton ? (
           <HeaderWalletSectionSkeleton />
         ) : (
           <>
-            <div className="hidden items-center gap-4 rounded-full bg-neutral-800 px-4 py-1.5 sm:flex">
+            <div className="hidden md:flex items-center gap-2 lg:gap-4 rounded-full bg-neutral-800 px-2.5 py-1.5 lg:px-4">
               <button
                 onClick={() => setOpenPoints(true)}
-                className="group flex items-center gap-2 rounded-full px-2 py-1 outline-none transition hover:bg-neutral-700 cursor-pointer"
+                className="group flex items-center gap-1.5 lg:gap-2 rounded-full px-1.5 py-1 lg:px-2 outline-none transition hover:bg-neutral-700 cursor-pointer"
                 aria-label="Open points"
                 title="Open points"
               >
-                <MI name="star" className="text-[18px] text-yellow-400 group-hover:scale-110 transition-transform" />
-                <span className="text-sm font-semibold text-neutral-50">
+                <MI name="star" className="text-[16px] lg:text-[18px] text-yellow-400 group-hover:scale-110 transition-transform" />
+                <span className="text-xs lg:text-sm font-semibold text-neutral-50">
                   {(totalPoints ?? 0).toLocaleString()}
                 </span>
               </button>
 
-              <div className="h-5 w-px bg-neutral-700" />
+              <div className="h-4 lg:h-5 w-px bg-neutral-700" />
 
               <button
                 onClick={() => setOpenWallet(true)}
-                className="group flex items-center gap-2 rounded-full px-2 py-1 outline-none transition hover:bg-neutral-700 cursor-pointer"
+                className="group flex items-center gap-1.5 lg:gap-2 rounded-full px-1.5 py-1 lg:px-2 outline-none transition hover:bg-neutral-700 cursor-pointer"
                 aria-label="Open wallet"
                 title="Open wallet"
               >
-                <MI name="account_balance_wallet" className="text-[18px] text-[var(--primary-500)] group-hover:scale-110 transition-transform" />
-                <span className="text-sm font-semibold text-neutral-50">USDC.e {usdceText || "$0"}</span>
+                <MI name="account_balance_wallet" className="text-[16px] lg:text-[18px] text-[var(--primary-500)] group-hover:scale-110 transition-transform" />
+                <span className="text-xs lg:text-sm font-semibold text-neutral-50">USDC.e {usdceText || "$0"}</span>
               </button>
             </div>
 

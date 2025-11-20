@@ -313,14 +313,14 @@ try {
                 setShowMobileNotifications(true);
               }
             }}
-            className="relative flex size-8 sm:size-10 cursor-pointer border border-[var(--primary-500)] items-center justify-center overflow-hidden rounded-full text-neutral-50 transition-colors hover:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-[var(--primary-500)]/40"
+            className="relative flex size-8 md:size-9 lg:size-10 cursor-pointer border border-[var(--primary-500)] items-center justify-center overflow-hidden rounded-full text-neutral-50 transition-colors hover:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-[var(--primary-500)]/40"
             aria-label="Notification"
             title="Notification"
             type="button"
           >
-            <MI name="notifications" className="text-[16px] sm:text-[18px]" />
+            <MI name="notifications" className="text-[16px] md:text-[17px] lg:text-[18px]" />
             {unreadCount > 0 && (
-              <span className="absolute right-0.5 top-0.5 sm:right-1 sm:top-1 flex h-3.5 w-3.5 sm:h-4 sm:w-4 items-center justify-center rounded-full bg-[var(--primary-500)] text-[9px] sm:text-[10px] font-bold">
+              <span className="absolute right-0.5 top-0.5 md:right-1 md:top-1 flex h-3.5 w-3.5 md:h-4 md:w-4 items-center justify-center rounded-full bg-[var(--primary-500)] text-[9px] md:text-[10px] font-bold">
                 {unreadCount > 9 ? "9+" : unreadCount}
               </span>
             )}

@@ -164,8 +164,8 @@ export default function SearchBar() {
             {/* Mobile: Icon search button DIHAPUS */}
             {/* Desktop: Always show full search bar */}
             <div className="relative flex min-w-0 flex-1">
-            <span className="pointer-events-none absolute inset-y-0 left-3 sm:left-4 flex items-center">
-              <MI name="search" className="text-[16px] sm:text-[18px] text-neutral-400" />
+            <span className="pointer-events-none absolute inset-y-0 left-3 md:left-3.5 lg:left-4 flex items-center">
+              <MI name="search" className="text-[16px] md:text-[17px] lg:text-[18px] text-neutral-400" />
             </span>
 
             <input
@@ -174,7 +174,7 @@ export default function SearchBar() {
               value={q}
               onChange={(e) => setQ(e.target.value)}
               onFocus={() => setOpenSug(true)}
-              className="h-9 sm:h-10 w-full rounded-l-full border border-neutral-700 bg-neutral-950 pl-9 sm:pl-11 pr-12 sm:pr-[3.5rem] text-sm sm:text-base text-neutral-50 placeholder:text-neutral-400 outline-none focus:border-neutral-500"
+              className="h-9 md:h-9 lg:h-10 w-full rounded-l-full border border-neutral-700 bg-neutral-950 pl-9 md:pl-10 lg:pl-11 pr-12 md:pr-13 lg:pr-[3.5rem] text-sm md:text-sm lg:text-base text-neutral-50 placeholder:text-neutral-400 outline-none focus:border-neutral-500"
               placeholder="Search"
               aria-label="Search"
               inputMode="search"
@@ -186,21 +186,21 @@ export default function SearchBar() {
               <button
                 type="button"
                 onClick={clear}
-                className="absolute inset-y-0 right-12 sm:right-16 my-1 flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-full text-neutral-400 hover:bg-neutral-800 hover:text-neutral-200 cursor-pointer"
+                className="absolute inset-y-0 right-12 md:right-14 lg:right-16 my-1 flex h-7 w-7 md:h-7 md:w-7 lg:h-8 lg:w-8 items-center justify-center rounded-full text-neutral-400 hover:bg-neutral-800 hover:text-neutral-200 cursor-pointer"
                 aria-label="Clear text"
                 title="Clear"
               >
-                <MI name="close" className="text-[14px] sm:text-[16px]" />
+                <MI name="close" className="text-[14px] md:text-[15px] lg:text-[16px]" />
               </button>
             )}
 
             <button
               type="submit"
-              className="h-9 sm:h-10 w-12 sm:w-16 cursor-pointer rounded-r-full border border-l-0 border-neutral-700 bg-neutral-800 text-neutral-200 hover:bg-neutral-700 flex items-center justify-center"
+              className="h-9 md:h-9 lg:h-10 w-12 md:w-14 lg:w-16 cursor-pointer rounded-r-full border border-l-0 border-neutral-700 bg-neutral-800 text-neutral-200 hover:bg-neutral-700 flex items-center justify-center"
               aria-label="Search"
               title="Search"
             >
-              <MI name="search" className="text-[16px] sm:text-[18px]" />
+              <MI name="search" className="text-[16px] md:text-[17px] lg:text-[18px]" />
             </button>
           </div>
 

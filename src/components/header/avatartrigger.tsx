@@ -20,14 +20,14 @@ export default function AvatarTrigger({
     <div className={`rounded-full ring-2 ring-transparent hover:ring-[rgba(124,58,237,0.45)] ${className}`}>
       {avatarLoading ? (
         // ✅ Loading: show skeleton
-        <div className="skel block cursor-pointer rounded-full h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10" />
+        <div className="skel block cursor-pointer rounded-full h-8 w-8 md:h-9 md:w-9 lg:h-10 lg:w-10" />
       ) : avatarUrl && !imgError ? (
         // Dari DB - with error handling
         // eslint-disable-next-line @next/next/no-img-element
         <img
           src={avatarUrl}
           alt="Avatar"
-          className="block cursor-pointer rounded-full object-cover h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10"
+          className="block cursor-pointer rounded-full object-cover h-8 w-8 md:h-9 md:w-9 lg:h-10 lg:w-10"
           onError={() => {
             console.warn(`Failed to load avatar: ${avatarUrl}`);
             setImgError(true);
@@ -35,7 +35,7 @@ export default function AvatarTrigger({
         />
       ) : (
         // Fallback: AbstractProfile (jika tidak ada di DB atau error loading)
-        <AbstractProfile address={address} size="sm" showTooltip={false} className="!h-8 !w-8 sm:!h-9 sm:!w-9 md:!h-10 md:!w-10" />
+        <AbstractProfile address={address} size="sm" showTooltip={false} className="!h-8 !w-8 md:!h-9 md:!w-9 lg:!h-10 lg:!w-10" />
       )}
     </div>
   );
