@@ -39,6 +39,7 @@ export default function CommunityPage() {
 
   const [open, setOpen] = useState(false);
   const [category, setCategory] = useState<string>("All");
+  const [sortMode, setSortMode] = useState<"latest" | "trending">("latest");
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -60,6 +61,21 @@ export default function CommunityPage() {
     setHasMore(true);
     setError(null);
     try {
+      // If trending mode, use trending API
+      if (sortMode === "trending") {
+        const qs: string[] = [];
+        if (category !== "All") qs.push(`category=${encodeURIComponent(category)}`);
+        if (me) qs.push(`me=${me}`);
+        const res = await fetch(`/api/community/trending?${qs.join("&")}`, { cache: "no-store" });
+        const json = await safeJson(res);
+        if (!res.ok) throw new Error(json?.error || `HTTP ${res.status}`);
+        const trendingPosts = (json.posts || []) as CommunityPost[];
+        setPosts(trendingPosts);
+        setHasMore(false); // Trending is limited to 10, no pagination
+        return;
+      }
+
+      // Latest mode - normal pagination
       const qs: string[] = ["page=1"];
       if (category !== "All") qs.push(`category=${encodeURIComponent(category)}`);
       if (me) qs.push(`me=${me}`);
@@ -104,16 +120,18 @@ export default function CommunityPage() {
   }, [page, category, me]);
 
   const handleFetchMore = useCallback(async () => {
+    if (sortMode === "trending") return; // No pagination for trending
     setLoadingMore(true);
     await fetchMore();
-  }, [fetchMore]);
+  }, [fetchMore, sortMode]);
 
   // Hook infinite scroll - trigger fetchMore saat user scroll ke bawah
-  const observerTarget = useInfiniteScroll(handleFetchMore, hasMore && !loading);
+  // Disable for trending mode
+  const observerTarget = useInfiniteScroll(handleFetchMore, hasMore && !loading && sortMode === "latest");
 
   useEffect(() => {
     void loadInitial();
-  }, [category, me]);
+  }, [category, me, sortMode]);
 
   async function handleCreate(data: NewPostPayload) {
     if (!me) {
@@ -290,17 +308,43 @@ export default function CommunityPage() {
               <p className="text-sm text-neutral-400 mt-1 max-sm:text-xs max-sm:mt-0.5 md:text-sm md:mt-1">Share ideas, ask questions, and engage with the community</p>
             </div>
 
-            {address && (
-              <button
-                onClick={() => setOpen(true)}
-                className="cursor-pointer flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold text-white bg-[var(--primary-500)] hover:bg-[var(--primary-500)]/90 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary-500)]/40 max-sm:w-full max-sm:justify-center max-sm:px-4 max-sm:py-2.5 max-sm:text-sm max-sm:rounded-lg md:rounded-full md:px-4 md:py-2 md:text-sm md:w-auto"
-              >
-                <svg className="size-5 max-sm:size-4 md:size-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden>
-                  <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
-                </svg>
-                <span>Create New Post</span>
-              </button>
-            )}
+            <div className="flex items-center gap-2 max-sm:w-full max-sm:flex-col">
+              {/* Sort Toggle */}
+              <div className="flex items-center gap-1 bg-neutral-800/60 border border-neutral-700/50 rounded-full p-1 max-sm:w-full">
+                <button
+                  onClick={() => setSortMode("latest")}
+                  className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 max-sm:flex-1 max-sm:px-2 max-sm:py-1 ${
+                    sortMode === "latest"
+                      ? "bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-lg"
+                      : "text-neutral-400 hover:text-neutral-200"
+                  }`}
+                >
+                  Latest
+                </button>
+                <button
+                  onClick={() => setSortMode("trending")}
+                  className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 flex items-center justify-center gap-1 max-sm:flex-1 max-sm:px-2 max-sm:py-1 ${
+                    sortMode === "trending"
+                      ? "bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-lg"
+                      : "text-neutral-400 hover:text-neutral-200"
+                  }`}
+                >
+                  Trending
+                </button>
+              </div>
+
+              {address && (
+                <button
+                  onClick={() => setOpen(true)}
+                  className="cursor-pointer flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold text-white bg-[var(--primary-500)] hover:bg-[var(--primary-500)]/90 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary-500)]/40 max-sm:w-full max-sm:justify-center max-sm:px-4 max-sm:py-2.5 max-sm:text-sm max-sm:rounded-lg md:rounded-full md:px-4 md:py-2 md:text-sm md:w-auto"
+                >
+                  <svg className="size-5 max-sm:size-4 md:size-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden>
+                    <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
+                  </svg>
+                  <span>Create New Post</span>
+                </button>
+              )}
+            </div>
           </div>
 
           <CommunityTabs value={category} onChange={setCategory} />

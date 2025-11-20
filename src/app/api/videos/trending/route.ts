@@ -72,10 +72,21 @@ export async function GET(req: NextRequest) {
       };
     });
 
-    // Sort by trending score and take top 10
+    // Sort by trending score (descending), then by created_at if available
     const trendingVideos = videosWithScore
-      .sort((a, b) => b.trendingScore - a.trendingScore)
+      .sort((a, b) => {
+        if (b.trendingScore !== a.trendingScore) {
+          return b.trendingScore - a.trendingScore;
+        }
+        return 0; // Keep original order for ties
+      })
       .slice(0, 10);
+
+    // Log for debugging
+    console.log("[Video Trending] Top 10 videos:");
+    trendingVideos.forEach((video, idx) => {
+      console.log(`${idx + 1}. ${video.title} - Score: ${video.trendingScore} (Buyers: ${video.stats.buyers}, Likes: ${video.stats.likes}, Comments: ${video.stats.comments})`);
+    });
 
     return NextResponse.json({ videos: trendingVideos });
   } catch (e) {
