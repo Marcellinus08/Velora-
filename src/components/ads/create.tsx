@@ -9,7 +9,7 @@ import type { CreateAdProps } from "./types";
 import { toast } from "@/components/ui/toast";
 
 const DURATION_DAYS = 3;
-const PRICE_USD = 1;
+const PRICE_USD = 5;
 
 const PAID_FLAG = "vh_ad_paid_preview_fixed";
 const MIN_TITLE = 1;
