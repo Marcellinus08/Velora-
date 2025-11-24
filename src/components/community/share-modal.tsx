@@ -56,8 +56,10 @@ export default function CommunityShareModal({
       ),
       color: "bg-blue-600 hover:bg-blue-700",
       action: () => {
-        const fbText = mediaUrl ? shareText + "\n\n📸 " + mediaUrl : shareText;
-        const fbShareUrl = "https://www.facebook.com/sharer/sharer.php?u=" + encodeURIComponent(postUrl) + "&quote=" + encodeURIComponent(fbText);
+        const fbTextFull = mediaUrl 
+          ? shareText + "\n\n📸 " + mediaUrl + "\n\n#Glonic #AbstractChain @AbstractChain"
+          : shareText + "\n\n#Glonic #AbstractChain @AbstractChain";
+        const fbShareUrl = "https://www.facebook.com/sharer/sharer.php?u=" + encodeURIComponent(postUrl) + "&quote=" + encodeURIComponent(fbTextFull);
         window.open(fbShareUrl, "_blank", "width=600,height=400");
       }
     },
@@ -83,8 +85,11 @@ export default function CommunityShareModal({
       ),
       color: "bg-blue-500 hover:bg-blue-600",
       action: () => {
-        const telegramText = mediaUrl ? shareText + "\n\n📸 " + mediaUrl : shareText;
-        const telegramUrl = "https://t.me/share/url?url=" + encodeURIComponent(postUrl) + "&text=" + encodeURIComponent(telegramText);
+        // Untuk Telegram, tambahkan URL gambar di dalam text agar bisa preview
+        const telegramTextFull = mediaUrl 
+          ? shareText + "\n\n🎬 Read more: " + postUrl + "\n\n📸 " + mediaUrl + "\n\n#Glonic #AbstractChain @AbstractChain"
+          : shareTextWithUrl;
+        const telegramUrl = "https://t.me/share/url?url=" + encodeURIComponent(postUrl) + "&text=" + encodeURIComponent(telegramTextFull);
         window.open(telegramUrl, "_blank");
       }
     }
