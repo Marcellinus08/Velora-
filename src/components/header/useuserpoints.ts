@@ -22,8 +22,6 @@ export function useUserPoints(userAddress?: `0x${string}` | null) {
 
     const fetchTotalPoints = async () => {
       try {
-        setLoading(true);
-
         // Fetch sum of all points from user_video_progress
         const { data, error } = await supabase
           .from("user_video_progress")

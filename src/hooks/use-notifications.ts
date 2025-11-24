@@ -224,7 +224,10 @@ export function useNotifications(abstractId: string | undefined) {
         followsRes,
       ];
       for (const r of resArr) {
-        if ((r as any).error) throw new Error((r as any).error.message);
+        if ((r as any)?.error) {
+          console.error("[useNotifications] Error in batch fetch:", (r as any).error);
+          throw new Error((r as any).error?.message || "Failed to fetch");
+        }
       }
 
       // Kumpulkan ID untuk batch fetch

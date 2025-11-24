@@ -8,6 +8,7 @@ interface CommunityShareModalProps {
   postTitle: string;
   postContent: string;
   postUrl: string;
+  mediaUrl?: string;
 }
 
 export default function CommunityShareModal({ 
@@ -15,7 +16,8 @@ export default function CommunityShareModal({
   onClose, 
   postTitle, 
   postContent,
-  postUrl 
+  postUrl,
+  mediaUrl
 }: CommunityShareModalProps) {
   const [copied, setCopied] = useState(false);
 
@@ -23,8 +25,13 @@ export default function CommunityShareModal({
 
   // Format share text dengan konten post
   const contentPreview = postContent.length > 100 ? postContent.slice(0, 100) + '...' : postContent;
-  const shareText = `${postTitle}\n\n${contentPreview}`;
-  const shareTextWithUrl = `${shareText}\n\n🎬 Read more: ${postUrl}\n\n#Glonic #AbstractChain @AbstractChain`;
+  const shareText = postTitle + "\n\n" + contentPreview;
+  const shareTextWithUrl = shareText + "\n\n🎬 Read more: " + postUrl + "\n\n#Glonic #AbstractChain @AbstractChain";
+  
+  // Jika ada media, tambahkan URL gambar di akhir untuk semua platform
+  const shareTextWithMedia = mediaUrl 
+    ? shareText + "\n\n🎬 Read more: " + postUrl + "\n\n📸 " + mediaUrl + "\n\n#Glonic #AbstractChain @AbstractChain"
+    : shareTextWithUrl;
 
   const socialPlatforms = [
     {
@@ -36,7 +43,7 @@ export default function CommunityShareModal({
       ),
       color: "bg-black hover:bg-neutral-900 border-neutral-700",
       action: () => {
-        const twitterIntent = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareTextWithUrl)}`;
+        const twitterIntent = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareTextWithMedia)}`;
         window.open(twitterIntent, "_blank");
       }
     },
@@ -49,7 +56,8 @@ export default function CommunityShareModal({
       ),
       color: "bg-blue-600 hover:bg-blue-700",
       action: () => {
-        const fbShareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(postUrl)}&quote=${encodeURIComponent(shareText)}`;
+        const fbText = mediaUrl ? shareText + "\n\n📸 " + mediaUrl : shareText;
+        const fbShareUrl = "https://www.facebook.com/sharer/sharer.php?u=" + encodeURIComponent(postUrl) + "&quote=" + encodeURIComponent(fbText);
         window.open(fbShareUrl, "_blank", "width=600,height=400");
       }
     },
@@ -62,7 +70,7 @@ export default function CommunityShareModal({
       ),
       color: "bg-green-600 hover:bg-green-700",
       action: () => {
-        const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(shareTextWithUrl)}`;
+        const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(shareTextWithMedia)}`;
         window.open(whatsappUrl, "_blank");
       }
     },
@@ -75,7 +83,8 @@ export default function CommunityShareModal({
       ),
       color: "bg-blue-500 hover:bg-blue-600",
       action: () => {
-        const telegramUrl = `https://t.me/share/url?url=${encodeURIComponent(postUrl)}&text=${encodeURIComponent(shareText)}`;
+        const telegramText = mediaUrl ? shareText + "\n\n📸 " + mediaUrl : shareText;
+        const telegramUrl = "https://t.me/share/url?url=" + encodeURIComponent(postUrl) + "&text=" + encodeURIComponent(telegramText);
         window.open(telegramUrl, "_blank");
       }
     }
