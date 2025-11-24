@@ -160,13 +160,13 @@ export function WalletSheet({
   onClose,
   balanceText = "$0",
   totalSpentUsd = 0,
-  videosOwned = 0,
+  totalPurchases = 0,
 }: {
   open: boolean;
   onClose: () => void;
   balanceText?: string; // "$5.03" (kamu sudah punya helpernya: useUsdceBalance)
   totalSpentUsd?: number;
-  videosOwned?: number;
+  totalPurchases?: number;
 }) {
   const nf = new Intl.NumberFormat("en-US", { maximumFractionDigits: 2 });
 
@@ -201,7 +201,7 @@ export function WalletSheet({
         {/* Stats */}
         <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
           <StatCard label="Total Spent" value={`$${nf.format(totalSpentUsd)}`} />
-          <StatCard label="Videos Owned" value={videosOwned.toString()} />
+          <StatCard label="Total Purchases" value={totalPurchases.toString()} />
         </div>
       </div>
     </Modal>

@@ -79,3 +79,4 @@ export function useUserPoints(userAddress?: `0x${string}` | null) {
 
   return { totalPoints, loading };
 }
+
