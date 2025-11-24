@@ -484,7 +484,7 @@ function VideoPageInner() {
 
     return {
       title: safe(row.title, "Untitled"),
-      views: "Streaming",
+      views: row.category ? titleize(row.category) : "",
       heroImage: safeThumb(row.thumb_url),
       description: safe(row.description, "No description has been provided by the creator."),
       creator: {

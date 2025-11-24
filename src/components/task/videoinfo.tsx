@@ -240,8 +240,6 @@ export default function VideoInfoSection({
           <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-3 text-sm text-neutral-400">
               <span>{video.views}</span>
-              <span className="h-1 w-1 rounded-full bg-neutral-600" />
-              <span>Streaming</span>
             </div>
 
             <div className="flex items-center gap-2">
@@ -452,19 +450,6 @@ export default function VideoInfoSection({
             >
               {expanded ? "Show less" : "Show more"}
             </button>
-
-            {!!video.tags?.length && (
-              <div className="mt-3 flex flex-wrap gap-2">
-                {video.tags.map((t) => (
-                  <span
-                    key={t}
-                    className="rounded-full border border-neutral-700 bg-neutral-800/60 px-3 py-1 text-xs text-neutral-300"
-                  >
-                    {t}
-                  </span>
-                ))}
-              </div>
-            )}
           </div>
         </div>
 

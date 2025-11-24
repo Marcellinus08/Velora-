@@ -257,19 +257,27 @@ export const VideoCard = memo(function VideoCard({
           
           {/* Preview indicator when hovering */}
           {showVideo && videoUrl && countdown > 0 && (
-            <div className="absolute bottom-2 left-2 right-2 z-10 flex items-center justify-between gap-2">
-              <div className="flex items-center gap-1 rounded-full bg-black/60 px-2 py-1 text-xs text-white backdrop-blur-sm">
-                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
-                </svg>
-                <span>Preview</span>
+            <div className="absolute bottom-2 left-2 z-10">
+              <div className="flex items-center gap-2 rounded-lg bg-black/70 px-3 py-1.5 text-white backdrop-blur-sm">
+                <div className="relative">
+                  <div className="absolute inset-0 rounded-full bg-white/20" />
+                  <svg className="w-4 h-4 relative z-10" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" />
+                  </svg>
+                </div>
+                <span className="text-sm font-medium">Preview 15s</span>
               </div>
-              
-              <div className="flex items-center gap-1.5 rounded-full bg-black/60 px-2.5 py-1 text-xs font-semibold text-white backdrop-blur-sm">
-                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+            </div>
+          )}
+
+          {/* Countdown timer */}
+          {showVideo && videoUrl && countdown > 0 && (
+            <div className="absolute bottom-2 right-2 z-10">
+              <div className="flex items-center gap-1.5 rounded-lg bg-black/70 px-2.5 py-1 text-white backdrop-blur-sm">
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                <span>{countdown}s</span>
+                <span className="text-sm font-semibold tabular-nums">{countdown}s</span>
               </div>
             </div>
           )}
