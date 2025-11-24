@@ -16,6 +16,7 @@ import WalletDropdown from "./walletdropdown";
 import { useProfileAvatar } from "./useprofileavatar";
 import { useUsdceBalance } from "./useusdcebalance"; // <-- ini hook baru
 import { useUserPoints } from "./useuserpoints"; // <-- hook untuk total points
+import { usePortfolio } from "./useportfolio"; // <-- hook untuk portfolio & P/L
 import { PointsSheet, WalletSheet } from "./wallet-panels";
 import React, { useTransition } from "react";
 
@@ -26,12 +27,13 @@ export default function SiteHeader() {
   const { username, avatarUrl, loading: avatarLoading } = useProfileAvatar(address as `0x${string}` | undefined);
   const usdceText = useUsdceBalance();
   const { totalPoints, loading: pointsLoading } = useUserPoints(address as `0x${string}` | undefined);
+  const { totalSpentUsd, videosOwned, loading: portfolioLoading } = usePortfolio(address as `0x${string}` | undefined);
 
   const [openWallet, setOpenWallet] = React.useState(false);
   const [openPoints, setOpenPoints] = React.useState(false);
   
   // Show skeleton only while actively loading
-  const showWalletSkeleton = isConnected && (pointsLoading || avatarLoading);
+  const showWalletSkeleton = isConnected && (pointsLoading || avatarLoading || portfolioLoading);
 
   return (
     <header
@@ -113,8 +115,8 @@ export default function SiteHeader() {
         open={openWallet}
         onClose={() => setOpenWallet(false)}
         balanceText={usdceText}
-        portfolioUsd={0}
-        plUsd={0}
+        totalSpentUsd={totalSpentUsd}
+        videosOwned={videosOwned}
       />
     </header>
   );
