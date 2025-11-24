@@ -6,6 +6,7 @@ import Image from "next/image";
 import { supabase } from "@/lib/supabase";
 import { AbstractProfile } from "@/components/abstract-profile";
 import RecommendationPanel from "./recommendationpanel";
+import ShareModal from "./share-modal";
 import { toast } from "@/components/ui/toast";
 import { useFollowButton } from "@/hooks/use-follow-button";
 import type { VideoInfo, RecommendedVideo } from "./types";
@@ -94,6 +95,7 @@ export default function VideoInfoSection({
   const [isShared, setIsShared] = useState(hasShared);
   const [earnedSharePoints, setEarnedSharePoints] = useState(claimedSharePoints);
   const [shareBusy, setShareBusy] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
 
   // apakah user sedang melihat profil sendiri?
   const myAddr = useMemo(() => getAbstractAddressFromSession(), []);
@@ -273,15 +275,15 @@ export default function VideoInfoSection({
                       : 'bg-neutral-800 hover:bg-neutral-700 hover:scale-[1.03] active:scale-95'
                   }`}
                   onClick={async () => {
-                    // Jika sudah pernah share atau sedang proses, tidak bisa claim lagi
-                    if (isShared || shareBusy) {
+                    // Jika sedang proses, tidak bisa klik
+                    if (shareBusy) {
                       return;
                     }
 
                     setShareBusy(true);
 
-                    // Award points untuk share (hanya sekali)
-                    if (userAddress && totalPoints > 0) {
+                    // Award points untuk share (hanya sekali jika belum pernah share)
+                    if (!isShared && userAddress && totalPoints > 0) {
                       try {
                         const response = await fetch("/api/user-progress", {
                           method: "POST",
@@ -312,18 +314,11 @@ export default function VideoInfoSection({
                       }
                     }
 
-                    // Share to Twitter/X (tetap bisa share meskipun sudah pernah)
-                    const pointsText = totalPoints > 0 ? ` and get total ${totalPoints} points!` : '!';
-                    const url = typeof window !== "undefined" ? window.location.href : "";
-                    const text = `Check out this video: ${video.title}${pointsText}\n\n${url}\n\n@AbstractChain`;
-                    const twitterIntent = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
-                    
-                    // Buka Twitter intent
-                    window.open(twitterIntent, "_blank");
-                    
+                    // Buka modal share
+                    setShowShareModal(true);
                     setShareBusy(false);
                   }}
-                  disabled={isShared || shareBusy}
+                  disabled={shareBusy}
                 >
                   <div className="flex items-center gap-2">
                     <span
@@ -482,6 +477,15 @@ export default function VideoInfoSection({
           </aside>
         )}
       </div>
+
+      {/* Share Modal */}
+      <ShareModal
+        isOpen={showShareModal}
+        onClose={() => setShowShareModal(false)}
+        videoTitle={video.title}
+        videoUrl={typeof window !== "undefined" ? window.location.href : ""}
+        totalPoints={totalPoints}
+      />
     </section>
   );
 }
