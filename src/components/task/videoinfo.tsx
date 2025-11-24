@@ -484,7 +484,7 @@ export default function VideoInfoSection({
         onClose={() => setShowShareModal(false)}
         videoTitle={video.title}
         videoUrl={typeof window !== "undefined" ? window.location.href : ""}
-        totalPoints={totalPoints}
+        totalPoints={sharePoints}
       />
     </section>
   );
