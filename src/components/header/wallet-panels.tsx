@@ -40,7 +40,10 @@ function Modal({
         <div className="flex items-center justify-between border-b border-neutral-800 px-4 py-3 sm:px-6">
           <div className="flex items-center gap-2">
             <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-neutral-800">
-              <MI name={title === "Points" ? "star" : "account_balance_wallet"} className="text-[18px] text-[var(--primary-500)]" />
+              <MI 
+                name={title === "Points" ? "star" : "account_balance_wallet"} 
+                className={`text-[18px] ${title === "Points" ? "text-yellow-400" : "text-[var(--primary-500)]"}`} 
+              />
             </span>
             <h3 className="text-base font-semibold">{title}</h3>
           </div>
@@ -124,10 +127,16 @@ export function PointsSheet({
   open,
   onClose,
   points = 0,
+  purchasePoints = 0,
+  taskPoints = 0,
+  sharePoints = 0,
 }: {
   open: boolean;
   onClose: () => void;
   points?: number;
+  purchasePoints?: number;
+  taskPoints?: number;
+  sharePoints?: number;
 }) {
   const nf = new Intl.NumberFormat("en-US");
 
@@ -149,6 +158,25 @@ export function PointsSheet({
             </Link>
           }
         />
+
+        {/* Points Breakdown - 3 columns */}
+        <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <StatCard 
+            label="Purchase Points" 
+            value={`${nf.format(purchasePoints)} pts`}
+            sub="40% of video value"
+          />
+          <StatCard 
+            label="Task Points" 
+            value={`${nf.format(taskPoints)} pts`}
+            sub="20% of video value"
+          />
+          <StatCard 
+            label="Share Points" 
+            value={`${nf.format(sharePoints)} pts`}
+            sub="40% of video value"
+          />
+        </div>
       </div>
     </Modal>
   );

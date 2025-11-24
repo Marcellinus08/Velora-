@@ -26,7 +26,7 @@ export default function SiteHeader() {
 
   const { username, avatarUrl, loading: avatarLoading } = useProfileAvatar(address as `0x${string}` | undefined);
   const usdceText = useUsdceBalance();
-  const { totalPoints, loading: pointsLoading } = useUserPoints(address as `0x${string}` | undefined);
+  const { totalPoints, purchasePoints, taskPoints, sharePoints, loading: pointsLoading } = useUserPoints(address as `0x${string}` | undefined);
   const { totalSpentUsd, totalPurchases, loading: portfolioLoading } = usePortfolio(address as `0x${string}` | undefined);
 
   const [openWallet, setOpenWallet] = React.useState(false);
@@ -110,6 +110,9 @@ export default function SiteHeader() {
         open={openPoints}
         onClose={() => setOpenPoints(false)}
         points={totalPoints}
+        purchasePoints={purchasePoints}
+        taskPoints={taskPoints}
+        sharePoints={sharePoints}
       />
       <WalletSheet
         open={openWallet}
