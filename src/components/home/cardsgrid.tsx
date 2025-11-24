@@ -543,7 +543,7 @@ export default function CardsGrid({ selectedCategory = "All" }: { selectedCatego
         const isOwned = owned.has(String(v.id));
         
         // ====== Check if user is the creator/owner of this video ======
-        const isCreator = buyer && addrLower && buyer === addrLower;
+        const isCreator = !!(buyer && addrLower && buyer === addrLower);
 
         return (
           <VideoCard
