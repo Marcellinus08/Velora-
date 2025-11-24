@@ -123,17 +123,17 @@ export default function StudioRecentUploads({
                   
                   {/* Points badge */}
                   {typeof v.points === "number" && (
-                    <div className="absolute top-1.5 left-1.5">
-                      <span className="inline-flex items-center gap-1 rounded-full border border-neutral-700 bg-neutral-900/85 backdrop-blur px-2 py-0.5 text-[11px] max-sm:text-[10px] font-semibold text-neutral-100">
-                        <MI name="star" className="text-yellow-400 text-[12px] max-sm:text-[11px]" />
+                    <div className="absolute top-1 left-1 max-sm:top-1.5 max-sm:left-1.5">
+                      <span className="inline-flex items-center gap-0.5 rounded-md border border-neutral-700/80 bg-neutral-900/90 backdrop-blur px-1.5 py-0.5 text-[9px] max-sm:text-[8px] font-semibold text-neutral-100">
+                        <MI name="star" className="text-yellow-400 text-[9px] max-sm:text-[8px]" />
                         <span>{nf.format(v.points)}</span>
                       </span>
                     </div>
                   )}
                   
                   {/* Duration badge */}
-                  <div className="absolute bottom-1.5 right-1.5">
-                    <span className="rounded px-2 py-1 text-[11px] max-sm:text-[10px] font-semibold backdrop-blur-sm bg-black/70 text-white">
+                  <div className="absolute bottom-1 right-1 max-sm:bottom-1.5 max-sm:right-1.5">
+                    <span className="rounded px-1.5 py-0.5 text-[10px] max-sm:text-[9px] font-semibold backdrop-blur-sm bg-black/75 text-white">
                       {v.duration}
                     </span>
                   </div>
