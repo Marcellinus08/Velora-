@@ -12,6 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { EditModal } from "./editmodal";
+import CommunityShareModal from "./share-modal";
 
 /* ===== utils kecil ===== */
 const TTL = 5 * 60_000;
@@ -204,13 +205,10 @@ const CommunityPostRow = memo(function CommunityPostRow({
   const contentText = post.content || post.excerpt || "";
   const showReadMore = contentText.length > 220;
 
-  /* ===== Share ke X ===== */
+  /* ===== Share Modal ===== */
+  const [showShareModal, setShowShareModal] = useState(false);
   const handleShare = () => {
-    const text = `${post.title}\n\n${contentText.slice(0, 100)}\n`;
-    const intent = `https://twitter.com/intent/tweet?text=${encodeURIComponent(
-      text + (post.media?.[0]?.url ? post.media[0].url : "")
-    )}`;
-    window.open(intent, "_blank");
+    setShowShareModal(true);
   };
 
   /* ===== Delete visibility: hanya pemilik ===== */
@@ -378,6 +376,15 @@ const CommunityPostRow = memo(function CommunityPostRow({
               }}
             />
           )}
+
+          {/* Share Modal */}
+          <CommunityShareModal
+            isOpen={showShareModal}
+            onClose={() => setShowShareModal(false)}
+            postTitle={post.title}
+            postContent={contentText}
+            postUrl={typeof window !== "undefined" ? `${window.location.origin}/community?postId=${post.id}` : ""}
+          />
 
           {openReplies && <Replies postId={post.id} onPosted={() => setReplyCount((c) => c + 1)} openReplyBox={openReplies} />}
         </div>
