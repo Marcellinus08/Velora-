@@ -1,14 +1,11 @@
 // src/components/home/cardsgrid.tsx
 // "use client";
 
-import { useCallback, useEffect, useRef, useState, memo } from "react";
-import Link from "next/link";
-import Image from "next/image";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useAccount } from "wagmi";
 import { supabase } from "@/lib/supabase";
-import { AbstractProfile } from "@/components/abstract-profile";
-import { BuyVideoButton } from "@/components/payments/TreasuryButtons";
 import { useInfiniteScroll } from "@/hooks/use-infinite-scroll";
+import { VideoCard } from "@/components/home/video-card";
 
 /* ================== Types ================== */
 type VideoRow = {
@@ -17,6 +14,7 @@ type VideoRow = {
   description: string | null;
   category: string | null;
   thumb_url: string | null;
+  video_url?: string | null;
 
   price_cents?: number | null;
   currency?: string | null;
@@ -30,43 +28,6 @@ type VideoRow = {
     avatar_url: string | null;
   } | null;
 };
-
-/* Avatar component with error handling */
-function CreatorAvatar({ 
-  avatarSrc, 
-  address 
-}: { 
-  avatarSrc: string; 
-  address?: string;
-}) {
-  const [imgError, setImgError] = useState(false);
-  
-  if (!avatarSrc || imgError) {
-    return address ? (
-      <AbstractProfile address={address as `0x${string}`} size="xs" showTooltip={false} className="!h-6 !w-6" />
-    ) : (
-      <svg viewBox="0 0 24 24" className="h-6 w-6 text-neutral-500" fill="currentColor" aria-hidden="true">
-        <path d="M12 12a5 5 0 100-10 5 5 0 000 10zm0 2c-4.418 0-8 2.239-8 5v1h16v-1c0-2.761-3.582-5-8-5z" />
-      </svg>
-    );
-  }
-  
-  return (
-    <Image
-      src={avatarSrc}
-      alt="Avatar"
-      width={24}
-      height={24}
-      className="h-full w-full object-cover"
-      loading="lazy"
-      quality={75}
-      onError={() => {
-        console.warn(`Failed to load creator avatar: ${avatarSrc}`);
-        setImgError(true);
-      }}
-    />
-  );
-}
 
 const isAddressLike = (s?: string | null): s is `0x${string}` =>
   !!s && /^0x[a-fA-F0-9]{40}$/.test(s);
@@ -236,17 +197,17 @@ export default function CardsGrid({ selectedCategory = "All" }: { selectedCatego
         // Latest mode - normal query
         const selects = [
           `
-            id, title, description, category, thumb_url,
+            id, title, description, category, thumb_url, video_url,
             price_cents, currency, points_total,
             creator:profiles!videos_abstract_id_fkey(username, abstract_id, avatar_url)
           `,
           `
-            id, title, description, category, thumb_url,
+            id, title, description, category, thumb_url, video_url,
             price_cents, currency, total_points,
             creator:profiles!videos_abstract_id_fkey(username, abstract_id, avatar_url)
           `,
           `
-            id, title, description, category, thumb_url,
+            id, title, description, category, thumb_url, video_url,
             price_cents, currency,
             creator:profiles!videos_abstract_id_fkey(username, abstract_id, avatar_url)
           `,
@@ -301,17 +262,17 @@ export default function CardsGrid({ selectedCategory = "All" }: { selectedCatego
     try {
       const selects = [
         `
-          id, title, description, category, thumb_url,
+          id, title, description, category, thumb_url, video_url,
           price_cents, currency, points_total,
           creator:profiles!videos_abstract_id_fkey(username, abstract_id, avatar_url)
         `,
         `
-          id, title, description, category, thumb_url,
+          id, title, description, category, thumb_url, video_url,
           price_cents, currency, total_points,
           creator:profiles!videos_abstract_id_fkey(username, abstract_id, avatar_url)
         `,
         `
-          id, title, description, category, thumb_url,
+          id, title, description, category, thumb_url, video_url,
           price_cents, currency,
           creator:profiles!videos_abstract_id_fkey(username, abstract_id, avatar_url)
         `,
@@ -569,7 +530,6 @@ export default function CardsGrid({ selectedCategory = "All" }: { selectedCatego
         const avatarSrc = v.creator?.avatar_url || fetchedAbstract || "";
         const author =
           v.creator?.username?.trim() || shortId(v.creator?.abstract_id) || "Unknown";
-        const bg = v.thumb_url || "/placeholder-thumb.png";
 
         const priceText = fmtUSD(v.price_cents);
         const totalPoints = resolveTotalPoints(v);
@@ -586,106 +546,22 @@ export default function CardsGrid({ selectedCategory = "All" }: { selectedCatego
         const isCreator = buyer && addrLower && buyer === addrLower;
 
         return (
-          <div
+          <VideoCard
             key={v.id}
-            className="group flex flex-col rounded-xl bg-neutral-900 border border-neutral-800 transition-all duration-300 hover:shadow-lg hover:border-neutral-700 hover:scale-[1.01] transform mobile-video-card"
-          >
-            {/* Elegant Thumbnail */}
-            <div className="relative w-full overflow-hidden rounded-t-xl">
-              {/* Points badge - simple and clean - Show for everyone including creator */}
-              {totalPoints > 0 && (
-                <div className="absolute left-2 top-2 z-10 flex items-center gap-1.5 rounded-full border border-neutral-700 bg-neutral-900/85 px-2.5 py-1 text-xs font-semibold text-neutral-100 backdrop-blur">
-                  <span
-                    className="material-icons-round text-yellow-400 align-middle"
-                    style={{ fontSize: "16px" }}
-                    aria-hidden="true"
-                  >
-                    star
-                  </span>
-                  <span>{totalPoints}</span>
-                </div>
-              )}
-
-              {/* Simple owned indicator */}
-              {isOwned && (
-                <div className="absolute right-2 top-2 z-10 flex items-center justify-center w-7 h-7 rounded-full bg-[var(--primary-500)] text-white">
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                  </svg>
-                </div>
-              )}
-
-              <div className="aspect-video w-full overflow-hidden bg-neutral-800">
-                <Image
-                  src={bg}
-                  alt={v.title}
-                  width={640}
-                  height={360}
-                  className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                  loading="lazy"
-                  quality={75}
-                  placeholder="blur"
-                  blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCwAB//2Q=="
-                />
-              </div>
-            </div>
-
-            {/* Clean Info Section */}
-            <div className="flex flex-1 flex-col gap-2 p-3 pb-4">
-              <h3 className="text-base font-semibold leading-snug text-neutral-50 group-hover:text-[var(--primary-500)] transition-colors duration-200 mobile-video-card-title">
-                {v.title}
-              </h3>
-
-              <div className="flex items-center gap-2 text-sm text-neutral-400 mobile-video-card-author">
-                <div className="h-6 w-6 overflow-hidden rounded-full bg-neutral-800 ring-1 ring-neutral-700">
-                  <CreatorAvatar avatarSrc={avatarSrc} address={addrLower} />
-                </div>
-                <span>{author}</span>
-              </div>
-
-              <div className="mt-auto flex items-end justify-between">
-                <p className={`text-base font-bold mobile-video-card-price ${isOwned || isCreator ? "text-violet-300" : "text-neutral-50"}`}>
-                  {isCreator ? "Your Video" : isOwned ? "Owned" : priceText}
-                </p>
-
-                {/* Simple Action Buttons */}
-                {isCreator || isOwned ? (
-                  <Link href={`/video?id=${v.id}`} prefetch={false} className="relative z-10">
-                    <button
-                      type="button"
-                      className="group relative inline-flex items-center gap-2 rounded-full bg-neutral-700 px-4 py-2 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-neutral-600 hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[var(--primary-500)] focus-visible:ring-offset-neutral-900 cursor-pointer mobile-video-card-button"
-                      title="Watch this video"
-                    >
-                      <span className="material-icons-round text-[16px]" aria-hidden>
-                        play_arrow
-                      </span>
-                      Watch
-                    </button>
-                  </Link>
-                ) : canBuy ? (
-                  <div className="relative z-10">
-                    <BuyVideoButton
-                      videoId={v.id}
-                      creator={creatorAddress}
-                      priceUsd={priceUsd}
-                      className="group relative inline-flex items-center gap-2 rounded-full bg-purple-600 px-4 py-2 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-purple-700 hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-purple-500 focus-visible:ring-offset-neutral-900 cursor-pointer mobile-video-card-button"
-                    >
-                      Buy
-                    </BuyVideoButton>
-                  </div>
-                ) : (
-                  <button
-                    type="button"
-                    disabled
-                    className="inline-flex items-center gap-2 rounded-full bg-neutral-700 px-4 py-2 text-sm font-semibold text-white opacity-60 cursor-not-allowed mobile-video-card-button"
-                    title={priceUsd <= 0 ? "Free video" : "Invalid creator address"}
-                  >
-                    {priceUsd <= 0 ? "Free" : "Buy"}
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
+            videoId={v.id}
+            title={v.title}
+            thumbnailUrl={v.thumb_url || "/placeholder-thumb.png"}
+            videoUrl={v.video_url}
+            totalPoints={totalPoints}
+            isOwned={isOwned}
+            isCreator={isCreator}
+            creatorAvatar={avatarSrc}
+            creatorName={author}
+            creatorAddress={addrLower}
+            priceText={priceText}
+            priceUsd={priceUsd}
+            canBuy={canBuy}
+          />
         );
       })}
         </div>
