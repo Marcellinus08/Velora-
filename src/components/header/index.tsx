@@ -70,29 +70,32 @@ export default function SiteHeader() {
           <HeaderWalletSectionSkeleton />
         ) : (
           <>
-            <div className="hidden md:flex items-center gap-2 lg:gap-4 rounded-full bg-neutral-800 px-2.5 py-1.5 lg:px-4">
+            {/* Points & Wallet - Responsive untuk semua ukuran layar */}
+            <div className="flex items-center gap-1 md:gap-2 lg:gap-4 rounded-full bg-neutral-800 px-1.5 md:px-2.5 py-1 md:py-1.5 lg:px-4">
               <button
                 onClick={() => setOpenPoints(true)}
-                className="group flex items-center gap-1.5 lg:gap-2 rounded-full px-1.5 py-1 lg:px-2 outline-none transition hover:bg-neutral-700 cursor-pointer"
+                className="group flex items-center gap-1 lg:gap-2 rounded-full px-1 md:px-1.5 py-0.5 md:py-1 lg:px-2 outline-none transition hover:bg-neutral-700 cursor-pointer"
                 aria-label="Open points"
                 title="Open points"
               >
-                <MI name="star" className="text-[16px] lg:text-[18px] text-yellow-400 group-hover:scale-110 transition-transform" />
-                <span className="text-xs lg:text-sm font-semibold text-neutral-50">
+                <MI name="star" className="text-[14px] md:text-[16px] lg:text-[18px] text-yellow-400 group-hover:scale-110 transition-transform" />
+                <span className="text-[10px] md:text-xs lg:text-sm font-semibold text-neutral-50">
                   {(totalPoints ?? 0).toLocaleString()}
                 </span>
               </button>
 
-              <div className="h-4 lg:h-5 w-px bg-neutral-700" />
+              <div className="h-3 md:h-4 lg:h-5 w-px bg-neutral-700" />
 
               <button
                 onClick={() => setOpenWallet(true)}
-                className="group flex items-center gap-1.5 lg:gap-2 rounded-full px-1.5 py-1 lg:px-2 outline-none transition hover:bg-neutral-700 cursor-pointer"
+                className="group flex items-center gap-1 lg:gap-2 rounded-full px-1 md:px-1.5 py-0.5 md:py-1 lg:px-2 outline-none transition hover:bg-neutral-700 cursor-pointer"
                 aria-label="Open wallet"
                 title="Open wallet"
               >
-                <MI name="account_balance_wallet" className="text-[16px] lg:text-[18px] text-[var(--primary-500)] group-hover:scale-110 transition-transform" />
-                <span className="text-xs lg:text-sm font-semibold text-neutral-50">USDC.e {usdceText || "$0"}</span>
+                <MI name="account_balance_wallet" className="text-[14px] md:text-[16px] lg:text-[18px] text-[var(--primary-500)] group-hover:scale-110 transition-transform" />
+                <span className="text-[10px] md:text-xs lg:text-sm font-semibold text-neutral-50">
+                  <span className="hidden sm:inline">USDC.e </span>{usdceText || "$0"}
+                </span>
               </button>
             </div>
 

@@ -19,7 +19,7 @@ export default function SearchBar() {
   const [q, setQ] = useState("");
   const [openSug, setOpenSug] = useState(false);
   const [recent, setRecent] = useState<string[]>([]);
-  const [expanded, setExpanded] = useState(false); // State untuk expand search di mobile
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false); // State untuk mobile search overlay
   const [videoResults, setVideoResults] = useState<VideoResult[]>([]);
   const [loadingVideos, setLoadingVideos] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -76,15 +76,16 @@ export default function SearchBar() {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "/" && !e.metaKey && !e.ctrlKey && !e.altKey) {
         e.preventDefault();
-        setExpanded(true);
+        // Di mobile, buka overlay
+        if (window.innerWidth < 768) {
+          setMobileSearchOpen(true);
+        }
         setTimeout(() => inputRef.current?.focus(), 100);
         setOpenSug(true);
       }
       if (e.key === "Escape") {
         setOpenSug(false);
-        if (window.innerWidth < 640) {
-          setExpanded(false);
-        }
+        setMobileSearchOpen(false);
       }
     };
     window.addEventListener("keydown", onKey);
@@ -95,15 +96,11 @@ export default function SearchBar() {
     const handleClickOutside = (event: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
         setOpenSug(false);
-        // Di mobile, collapse search bar jika klik di luar
-        if (window.innerWidth < 640 && !q) {
-          setExpanded(false);
-        }
       }
     };
     document.addEventListener("click", handleClickOutside);
     return () => document.removeEventListener("click", handleClickOutside);
-  }, [q]);
+  }, []);
 
   function saveRecent(query: string) {
     const list = [query, ...recent.filter((x) => x !== query)].slice(0, 8);
@@ -135,37 +132,169 @@ export default function SearchBar() {
     localStorage.removeItem(RECENT_KEY);
   }
 
-  // Handle search icon click di mobile
-  const handleSearchIconClick = () => {
-    if (window.innerWidth < 640 && !expanded) {
-      setExpanded(true);
-      setTimeout(() => inputRef.current?.focus(), 100);
-      setOpenSug(true);
-    }
+  // Handle mobile search icon click
+  const handleMobileSearchClick = () => {
+    setMobileSearchOpen(true);
+    setTimeout(() => inputRef.current?.focus(), 100);
+  };
+
+  // Handle close mobile search
+  const handleCloseMobileSearch = () => {
+    setMobileSearchOpen(false);
+    setOpenSug(false);
+    setQ("");
+    setVideoResults([]);
   };
 
   return (
     <>
-      {/* Backdrop overlay ketika search expanded di mobile - DISABLED */}
-      {/* {expanded && (
-        <div 
-          className="sm:hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-30"
-          onClick={() => {
-            setExpanded(false);
-            setOpenSug(false);
-            setQ("");
-          }}
-        />
-      )} */}
-      
-      <div className="flex justify-start relative z-40">
-        <div ref={containerRef} className="relative transition-all duration-300 w-full max-w-[720px] hidden sm:block">
+      {/* Mobile Search Icon - Hanya tampil di mobile */}
+      <button
+        onClick={handleMobileSearchClick}
+        className="md:hidden flex items-center justify-center w-9 h-9 rounded-full hover:bg-neutral-800 transition-colors cursor-pointer"
+        aria-label="Search"
+      >
+        <MI name="search" className="text-[20px] text-neutral-200" />
+      </button>
+
+      {/* Mobile Search Overlay - Full screen seperti YouTube */}
+      {mobileSearchOpen && (
+        <div className="md:hidden fixed inset-0 z-50 bg-neutral-900">
+          {/* Header dengan back button dan search input */}
+          <div className="flex items-center gap-2 px-2 py-2 border-b border-neutral-800">
+            <button
+              onClick={handleCloseMobileSearch}
+              className="flex items-center justify-center w-10 h-10 rounded-full hover:bg-neutral-800 transition-colors cursor-pointer flex-shrink-0"
+              aria-label="Close search"
+            >
+              <MI name="arrow_back" className="text-[20px] text-neutral-200" />
+            </button>
+
+            <form onSubmit={onSubmit} className="flex-1 flex items-center gap-2">
+              <input
+                ref={inputRef}
+                type="text"
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+                onFocus={() => setOpenSug(true)}
+                className="flex-1 h-10 bg-neutral-800 rounded-full px-4 text-sm text-neutral-50 placeholder:text-neutral-400 outline-none border border-transparent focus:border-neutral-600"
+                placeholder="Search"
+                autoFocus
+              />
+              {q && (
+                <button
+                  type="button"
+                  onClick={clear}
+                  className="flex items-center justify-center w-10 h-10 rounded-full hover:bg-neutral-800 transition-colors cursor-pointer flex-shrink-0"
+                  aria-label="Clear"
+                >
+                  <MI name="close" className="text-[18px] text-neutral-400" />
+                </button>
+              )}
+            </form>
+          </div>
+
+          {/* Search Results / Recent Searches */}
+          <div className="overflow-y-auto h-[calc(100vh-60px)]">
+            {/* Video Results */}
+            {videoResults.length > 0 && (
+              <div className="border-b border-neutral-800">
+                <div className="px-4 py-3 text-xs text-neutral-400 flex items-center justify-between">
+                  <span>Videos</span>
+                  <span className="font-semibold text-purple-400">{videoResults.length} results</span>
+                </div>
+                <ul>
+                  {videoResults.map((video) => (
+                    <li key={video.id}>
+                      <button
+                        onClick={() => {
+                          handleCloseMobileSearch();
+                          router.push(`/video?id=${video.id}`);
+                        }}
+                        className="flex w-full items-center gap-3 px-4 py-3 hover:bg-neutral-800 cursor-pointer"
+                      >
+                        <div className="flex-shrink-0 w-20 h-12 bg-neutral-800 rounded overflow-hidden">
+                          {video.thumb_url ? (
+                            <img 
+                              src={video.thumb_url} 
+                              alt={video.title}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <MI name="video_library" className="text-neutral-600 text-[18px]" />
+                            </div>
+                          )}
+                        </div>
+                        <span className="text-sm text-neutral-200 font-medium flex-1 text-left line-clamp-2">
+                          {video.title}
+                        </span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* Loading State */}
+            {loadingVideos && (
+              <div className="px-4 py-4 flex items-center gap-3 text-sm text-neutral-400">
+                <div className="w-5 h-5 border-2 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
+                <span>Searching videos...</span>
+              </div>
+            )}
+
+            {/* Recent Searches */}
+            {recent.length > 0 && !q && (
+              <div>
+                <div className="flex items-center justify-between px-4 py-3 text-xs text-neutral-400">
+                  <span>Recent searches</span>
+                  <button
+                    onClick={clearAllRecent}
+                    className="rounded-md px-2 py-1 text-neutral-300 hover:bg-neutral-800 cursor-pointer"
+                  >
+                    Clear all
+                  </button>
+                </div>
+                <ul>
+                  {recent.map((s) => (
+                    <li key={s} className="group relative">
+                      <button
+                        onClick={() => {
+                          setQ(s);
+                          setOpenSug(true);
+                        }}
+                        className="flex w-full items-center gap-4 px-4 py-3 hover:bg-neutral-800 cursor-pointer"
+                      >
+                        <MI name="history" className="text-neutral-400 text-[20px] flex-shrink-0" />
+                        <span className="text-sm text-neutral-200 flex-1 text-left">{s}</span>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            removeRecent(s);
+                          }}
+                          className="flex items-center justify-center w-8 h-8 rounded-full hover:bg-neutral-700 cursor-pointer flex-shrink-0"
+                          aria-label="Remove"
+                        >
+                          <MI name="close" className="text-[16px] text-neutral-400" />
+                        </button>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Desktop/Tablet Search Bar - Hidden di mobile */}
+      <div className="hidden md:flex justify-start relative z-40">
+        <div ref={containerRef} className="relative transition-all duration-300 w-full max-w-[720px]">
           <form onSubmit={onSubmit} className="flex w-full items-center" role="search">
-            {/* Mobile: Icon search button DIHAPUS */}
-            {/* Desktop: Always show full search bar */}
             <div className="relative flex min-w-0 flex-1">
-            <span className="pointer-events-none absolute inset-y-0 left-3 md:left-3.5 lg:left-4 flex items-center">
-              <MI name="search" className="text-[16px] md:text-[17px] lg:text-[18px] text-neutral-400" />
+            <span className="pointer-events-none absolute inset-y-0 left-3 lg:left-4 flex items-center">
+              <MI name="search" className="text-[16px] lg:text-[18px] text-neutral-400" />
             </span>
 
             <input
@@ -174,7 +303,7 @@ export default function SearchBar() {
               value={q}
               onChange={(e) => setQ(e.target.value)}
               onFocus={() => setOpenSug(true)}
-              className="h-9 md:h-9 lg:h-10 w-full rounded-l-full border border-neutral-700 bg-neutral-950 pl-9 md:pl-10 lg:pl-11 pr-12 md:pr-13 lg:pr-[3.5rem] text-sm md:text-sm lg:text-base text-neutral-50 placeholder:text-neutral-400 outline-none focus:border-neutral-500"
+              className="h-9 lg:h-10 w-full rounded-l-full border border-neutral-700 bg-neutral-950 pl-10 lg:pl-11 pr-13 lg:pr-[3.5rem] text-sm lg:text-base text-neutral-50 placeholder:text-neutral-400 outline-none focus:border-neutral-500"
               placeholder="Search"
               aria-label="Search"
               inputMode="search"
@@ -186,21 +315,21 @@ export default function SearchBar() {
               <button
                 type="button"
                 onClick={clear}
-                className="absolute inset-y-0 right-12 md:right-14 lg:right-16 my-1 flex h-7 w-7 md:h-7 md:w-7 lg:h-8 lg:w-8 items-center justify-center rounded-full text-neutral-400 hover:bg-neutral-800 hover:text-neutral-200 cursor-pointer"
+                className="absolute inset-y-0 right-14 lg:right-16 my-1 flex h-7 lg:h-8 w-7 lg:w-8 items-center justify-center rounded-full text-neutral-400 hover:bg-neutral-800 hover:text-neutral-200 cursor-pointer"
                 aria-label="Clear text"
                 title="Clear"
               >
-                <MI name="close" className="text-[14px] md:text-[15px] lg:text-[16px]" />
+                <MI name="close" className="text-[15px] lg:text-[16px]" />
               </button>
             )}
 
             <button
               type="submit"
-              className="h-9 md:h-9 lg:h-10 w-12 md:w-14 lg:w-16 cursor-pointer rounded-r-full border border-l-0 border-neutral-700 bg-neutral-800 text-neutral-200 hover:bg-neutral-700 flex items-center justify-center"
+              className="h-9 lg:h-10 w-14 lg:w-16 cursor-pointer rounded-r-full border border-l-0 border-neutral-700 bg-neutral-800 text-neutral-200 hover:bg-neutral-700 flex items-center justify-center"
               aria-label="Search"
               title="Search"
             >
-              <MI name="search" className="text-[16px] md:text-[17px] lg:text-[18px]" />
+              <MI name="search" className="text-[17px] lg:text-[18px]" />
             </button>
           </div>
 
