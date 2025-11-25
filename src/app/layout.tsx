@@ -9,7 +9,7 @@ import type { ReactNode } from "react";
 
 export const metadata = {
   title: "Glonic",
-  description: "Platform video dengan poin & tugas",
+  description: "Video platform with points & tasks - Earn rewards by watching, completing tasks, and sharing content",
    icons: {
     icon: [{ url: "/glonic_logo_main.png", type: "image/png" }],
   },
