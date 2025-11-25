@@ -192,6 +192,63 @@ export default function SearchBar() {
                 </button>
               )}
             </form>
+
+            {/* Voice Search Button */}
+            <button
+              type="button"
+              onClick={() => {
+                const w = window as any;
+                const SR = w.SpeechRecognition || w.webkitSpeechRecognition;
+                if (!SR) {
+                  toast.error(
+                    "Voice Search Not Supported",
+                    "This feature requires Chrome/Edge browser\nPlease use a compatible browser",
+                    5000
+                  );
+                  return;
+                }
+                const isSecure = location.protocol === "https:" || location.hostname === "localhost";
+                if (!isSecure) {
+                  toast.error(
+                    "HTTPS Required",
+                    "Voice search requires HTTPS connection\nPlease use a secure connection",
+                    5000
+                  );
+                  return;
+                }
+                try {
+                  const rec = new SR();
+                  rec.lang = "en-US";
+                  rec.interimResults = false;
+                  rec.maxAlternatives = 1;
+                  rec.onresult = (e: any) => {
+                    const text = e.results?.[0]?.[0]?.transcript as string;
+                    if (!text) return;
+                    setQ(text);
+                    saveRecent(text);
+                    setOpenSug(true);
+                  };
+                  rec.onerror = () => {
+                    toast.error(
+                      "Voice Search Failed",
+                      "Could not recognize your voice\nPlease try again",
+                      4000
+                    );
+                  };
+                  rec.start();
+                } catch {
+                  toast.error(
+                    "Voice Search Error",
+                    "Failed to initialize voice recognition\nPlease check your microphone",
+                    5000
+                  );
+                }
+              }}
+              className="flex items-center justify-center w-10 h-10 rounded-full hover:bg-neutral-800 transition-colors cursor-pointer flex-shrink-0"
+              aria-label="Voice search"
+            >
+              <MI name="keyboard_voice" className="text-[20px] text-neutral-200" />
+            </button>
           </div>
 
           {/* Search Results / Recent Searches */}
@@ -208,6 +265,7 @@ export default function SearchBar() {
                     <li key={video.id}>
                       <button
                         onClick={() => {
+                          saveRecent(video.title); // Save to history when clicking video
                           handleCloseMobileSearch();
                           router.push(`/video?id=${video.id}`);
                         }}
@@ -244,10 +302,10 @@ export default function SearchBar() {
               </div>
             )}
 
-            {/* Recent Searches */}
-            {recent.length > 0 && !q && (
+            {/* Recent Searches - Tampil saat tidak ada query atau setelah ada hasil */}
+            {recent.length > 0 && (
               <div>
-                <div className="flex items-center justify-between px-4 py-3 text-xs text-neutral-400">
+                <div className="flex items-center justify-between px-4 py-3 text-xs text-neutral-400 border-t border-neutral-800">
                   <span>Recent searches</span>
                   <button
                     onClick={clearAllRecent}
@@ -259,29 +317,49 @@ export default function SearchBar() {
                 <ul>
                   {recent.map((s) => (
                     <li key={s} className="group relative">
-                      <button
-                        onClick={() => {
-                          setQ(s);
-                          setOpenSug(true);
-                        }}
-                        className="flex w-full items-center gap-4 px-4 py-3 hover:bg-neutral-800 cursor-pointer"
-                      >
-                        <MI name="history" className="text-neutral-400 text-[20px] flex-shrink-0" />
-                        <span className="text-sm text-neutral-200 flex-1 text-left">{s}</span>
-                        <button
+                      <div className="flex w-full items-center gap-4 px-4 py-3 hover:bg-neutral-800 cursor-pointer">
+                        <div 
+                          onClick={() => {
+                            setQ(s);
+                            setOpenSug(true);
+                          }}
+                          className="flex items-center gap-4 flex-1"
+                        >
+                          <MI name="history" className="text-neutral-400 text-[20px] flex-shrink-0" />
+                          <span className="text-sm text-neutral-200 flex-1 text-left">{s}</span>
+                        </div>
+                        <div
                           onClick={(e) => {
                             e.stopPropagation();
                             removeRecent(s);
                           }}
                           className="flex items-center justify-center w-8 h-8 rounded-full hover:bg-neutral-700 cursor-pointer flex-shrink-0"
                           aria-label="Remove"
+                          role="button"
                         >
                           <MI name="close" className="text-[16px] text-neutral-400" />
-                        </button>
-                      </button>
+                        </div>
+                      </div>
                     </li>
                   ))}
                 </ul>
+              </div>
+            )}
+
+            {/* Empty State */}
+            {!loadingVideos && !q && recent.length === 0 && (
+              <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
+                <MI name="search" className="text-[48px] text-neutral-700 mb-4" />
+                <p className="text-neutral-400 text-sm">Start searching for videos</p>
+              </div>
+            )}
+
+            {/* No Results State */}
+            {!loadingVideos && q && videoResults.length === 0 && (
+              <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
+                <MI name="search_off" className="text-[48px] text-neutral-700 mb-4" />
+                <p className="text-neutral-300 text-base font-medium mb-1">No results found</p>
+                <p className="text-neutral-500 text-sm">Try different keywords</p>
               </div>
             )}
           </div>
