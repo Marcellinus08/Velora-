@@ -146,18 +146,8 @@ export default function WalletDropdown({
                 </div>
                 <span>Studio</span>
               </DropdownMenuItem>
-              
-              <DropdownMenuItem
-                className="px-4 py-3 text-sm font-medium text-neutral-200 hover:text-neutral-50 hover:bg-neutral-800/60 rounded-lg transition-all cursor-pointer flex items-center gap-3 group max-sm:px-2.5 max-sm:py-2 max-sm:text-xs max-sm:gap-2 max-sm:rounded-md md:px-3.5 md:py-2.5 md:text-sm md:gap-2.5 md:rounded-md"
-                onClick={() => router.push("/settings")}
-              >
-                <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-neutral-800/60 group-hover:bg-purple-500/20 transition-colors max-sm:w-6 max-sm:h-6 max-sm:rounded-md md:w-7 md:h-7 md:rounded-md">
-                  <MI name="settings" className="text-[18px] text-neutral-400 group-hover:text-purple-400 transition-colors max-sm:text-[15px] md:text-[16px]" />
-                </div>
-                <span>Setting</span>
-              </DropdownMenuItem>
 
-              {/* Notifications - Mobile Only - Moved below Settings */}
+              {/* Notifications - Mobile Only - Moved above Settings */}
               <DropdownMenuItem
                 className="md:hidden px-4 py-3 text-sm font-medium text-neutral-200 hover:text-neutral-50 hover:bg-neutral-800/60 rounded-lg transition-all cursor-pointer flex items-center gap-3 group max-sm:px-2.5 max-sm:py-2 max-sm:text-xs max-sm:gap-2 max-sm:rounded-md"
                 onClick={() => setOpenNotifications(true)}
@@ -174,6 +164,16 @@ export default function WalletDropdown({
                 {unreadCount > 0 && (
                   <span className="ml-auto text-xs font-semibold text-[var(--primary-500)]">{unreadCount}</span>
                 )}
+              </DropdownMenuItem>
+              
+              <DropdownMenuItem
+                className="px-4 py-3 text-sm font-medium text-neutral-200 hover:text-neutral-50 hover:bg-neutral-800/60 rounded-lg transition-all cursor-pointer flex items-center gap-3 group max-sm:px-2.5 max-sm:py-2 max-sm:text-xs max-sm:gap-2 max-sm:rounded-md md:px-3.5 md:py-2.5 md:text-sm md:gap-2.5 md:rounded-md"
+                onClick={() => router.push("/settings")}
+              >
+                <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-neutral-800/60 group-hover:bg-purple-500/20 transition-colors max-sm:w-6 max-sm:h-6 max-sm:rounded-md md:w-7 md:h-7 md:rounded-md">
+                  <MI name="settings" className="text-[18px] text-neutral-400 group-hover:text-purple-400 transition-colors max-sm:text-[15px] md:text-[16px]" />
+                </div>
+                <span>Setting</span>
               </DropdownMenuItem>
 
               <div className="h-px my-2 bg-neutral-800/50 max-sm:my-1.5 md:my-2" />
