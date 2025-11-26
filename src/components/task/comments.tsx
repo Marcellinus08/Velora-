@@ -79,7 +79,12 @@ function AvatarCircle({
   url?: string | null;
   size?: "sm" | "md" | "lg";
 }) {
-  const box = size === "lg" ? "h-10 w-10" : size === "md" ? "h-8 w-8" : "h-6 w-6";
+  // Responsive sizes: smaller on mobile
+  const box = size === "lg" 
+    ? "max-sm:h-8 max-sm:w-8 sm:h-10 sm:w-10" 
+    : size === "md" 
+    ? "max-sm:h-7 max-sm:w-7 sm:h-8 sm:w-8" 
+    : "h-6 w-6";
   const apSize = size === "lg" ? "md" : size === "md" ? "sm" : "xs";
 
   if (url) {
@@ -143,7 +148,7 @@ function LikePill({
   return (
     <button
       onClick={handle}
-      className={`relative inline-flex items-center gap-1 rounded-full px-2 py-1 transition
+      className={`relative inline-flex items-center gap-1 rounded-full max-sm:px-1.5 max-sm:py-0.5 sm:px-2 sm:py-1 transition
       ${liked
         ? "bg-violet-600/20 text-violet-200 ring-1 ring-violet-500/50"
         : "bg-neutral-800/60 text-neutral-300 ring-1 ring-neutral-700/60 hover:bg-neutral-800"}
@@ -151,10 +156,10 @@ function LikePill({
       title={liked ? "Unlike" : "Like"}
     >
       {burst && liked && <span className="pointer-events-none absolute inset-0 -z-10 rounded-full animate-ping bg-violet-500/20" />}
-      <svg className={`h-4 w-4 ${liked ? "text-violet-300" : "text-neutral-300"}`} viewBox="0 0 20 20" fill="currentColor">
+      <svg className={`max-sm:h-3.5 max-sm:w-3.5 sm:h-4 sm:w-4 ${liked ? "text-violet-300" : "text-neutral-300"}`} viewBox="0 0 20 20" fill="currentColor">
         <path d="M2 10.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6zM6 10.333v5.43a2 2 0 001.106 1.79l.05.025A4 4 0 008.943 18h5.416a2 2 0 001.962-1.608l1.2-6A2 2 0 0015.56 8H12V4a2 2 0 00-2-2 1 1 0 00-1 1v.667a4 4 0 01-.8 2.4L6.8 7.933a4 4 0 00-.8 2.4z" />
       </svg>
-      <span className="text-[13px]">{count}</span>
+      <span className="max-sm:text-xs sm:text-[13px]">{count}</span>
     </button>
   );
 }
@@ -289,14 +294,16 @@ function CommentNode({
     );
   };
 
-  const menuRef = useClickOutside<HTMLDivElement>(menuOpen, () => setMenuOpen(false));
+  const menuRef = useClickOutside<HTMLDivElement>(menuOpen, () => {
+    setMenuOpen(false);
+  });
 
   return (
-    <div className="space-y-3">
+    <div className={`max-sm:space-y-2 sm:space-y-3 ${menuOpen ? 'max-sm:overflow-visible' : ''}`}>
       {/* Card */}
       <div
         className={[
-          "relative group rounded-xl border border-neutral-800 bg-neutral-900/60 p-3 transition-colors overflow-visible",
+          "relative group rounded-xl border border-neutral-800 bg-neutral-900/60 max-sm:p-2 sm:p-3 transition-colors max-sm:overflow-visible",
           isActive ? "ring-1 ring-[var(--primary-500)]/40 bg-neutral-900" : "hover:bg-neutral-900"
         ].join(" ")}
       >
@@ -327,45 +334,56 @@ function CommentNode({
               </button>
 
               {menuOpen && (
-                <div
-                  role="menu"
-                  className="absolute right-0 top-9 w-40 overflow-hidden rounded-xl border border-neutral-800 bg-neutral-900/95 shadow-lg"
-                >
-                  <button
-                    onMouseDown={(e) => e.preventDefault()}
-                    onClick={() => { setIsEditing(true); setMenuOpen(false); }}
-                    className="block w-full px-3 py-2 text-left text-sm text-neutral-200 hover:bg-neutral-800"
-                    role="menuitem"
+                <>
+                  {/* Invisible backdrop untuk mobile - close menu on outside click */}
+                  <div 
+                    className="max-sm:fixed max-sm:inset-0 max-sm:z-[100] sm:hidden max-sm:bg-black/20" 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setMenuOpen(false);
+                    }}
+                  />
+                  
+                  <div
+                    role="menu"
+                    className="absolute right-0 top-9 max-sm:min-w-[90px] sm:w-40 rounded-lg border border-neutral-800 bg-neutral-900 backdrop-blur-sm shadow-2xl z-[101]"
                   >
-                    Edit
-                  </button>
-                  <button
-                    onMouseDown={(e) => e.preventDefault()}
-                    onClick={confirmDelete}
-                    className="block w-full px-3 py-2 text-left text-sm text-red-400 hover:bg-neutral-800"
-                    role="menuitem"
-                  >
-                    Delete
-                  </button>
-                </div>
+                    <button
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => { setIsEditing(true); setMenuOpen(false); }}
+                      className="block w-full max-sm:px-2.5 max-sm:py-1.5 sm:px-3 sm:py-2 text-left max-sm:text-xs sm:text-sm text-neutral-200 hover:bg-neutral-800 rounded-t-lg transition-colors"
+                      role="menuitem"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={confirmDelete}
+                      className="block w-full max-sm:px-2.5 max-sm:py-1.5 sm:px-3 sm:py-2 text-left max-sm:text-xs sm:text-sm text-red-400 hover:bg-neutral-800 rounded-b-lg transition-colors"
+                      role="menuitem"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </>
               )}
             </div>
           </div>
         )}
 
         {/* Content */}
-        <div className="grid grid-cols-[40px_1fr] gap-3">
+        <div className="grid max-sm:grid-cols-[32px_1fr] sm:grid-cols-[40px_1fr] max-sm:gap-2 sm:gap-3">
           <AvatarCircle address={node.addr} url={avatarUrl || getAvatarUrl(node.addr)} size="lg" />
 
           <div>
             {/* pr-10 reserves space for the ⋮ area */}
             <div className="flex flex-wrap items-center gap-2 pr-10">
-              <p className="font-semibold text-neutral-50">{node.name}</p>
-              <span className="text-sm text-neutral-400">• {relTime(node.createdAt)}</span>
+              <p className="font-semibold text-neutral-50 max-sm:text-sm">{node.name}</p>
+              <span className="max-sm:text-xs sm:text-sm text-neutral-400">• {relTime(node.createdAt)}</span>
             </div>
 
             {!isEditing ? (
-              <p className="mt-1 text-neutral-50">{node.text}</p>
+              <p className="mt-1 text-neutral-50 max-sm:text-sm">{node.text}</p>
             ) : (
               <div className="mt-2">
                 <textarea
@@ -394,7 +412,7 @@ function CommentNode({
 
             {/* ACTIONS — hidden while editing */}
             {!isEditing && (
-              <div className="mt-2 flex flex-wrap items-center gap-3 text-sm">
+              <div className="max-sm:mt-1.5 sm:mt-2 flex flex-wrap items-center max-sm:gap-2 sm:gap-3 max-sm:text-xs sm:text-sm">
                 <LikePill
                   count={node.likeCount}
                   liked={node.likedByMe}
@@ -403,14 +421,14 @@ function CommentNode({
                 />
                 <button
                   onClick={() => (myAddr ? setOpenReply((v) => !v) : askConnect())}
-                  className="rounded-full px-2 py-1 text-neutral-300 hover:bg-neutral-800"
+                  className="rounded-full max-sm:px-1.5 max-sm:py-0.5 sm:px-2 sm:py-1 text-neutral-300 hover:bg-neutral-800"
                 >
                   Reply
                 </button>
                 {node.children.length > 0 && (
                   <button
                     onClick={() => setShowChildren((v) => !v)}
-                    className="rounded-full px-2 py-1 text-neutral-400 hover:bg-neutral-800"
+                    className="rounded-full max-sm:px-1.5 max-sm:py-0.5 sm:px-2 sm:py-1 text-neutral-400 hover:bg-neutral-800"
                   >
                     {showChildren ? "Hide" : `Show ${node.children.length} repl${node.children.length > 1 ? "ies" : "y"}`}
                   </button>
@@ -423,7 +441,7 @@ function CommentNode({
 
       {/* reply composer */}
       {openReply && myAddr && (
-        <div className="ml-10 flex items-start gap-3">
+        <div className="max-sm:ml-4 sm:ml-10 flex items-start gap-3">
           <AvatarCircle address={myAddr} url={getAvatarUrl(myAddr)} size="md" />
           <Composer
             onSend={async (text) => { await onReply(node.id, text); setOpenReply(false); setShowChildren(true); }}
@@ -433,7 +451,7 @@ function CommentNode({
 
       {/* children */}
       {showChildren && node.children.length > 0 && (
-        <div className="ml-10 border-l border-neutral-800 pl-4">
+        <div className="max-sm:ml-4 sm:ml-10 border-l border-neutral-800 max-sm:pl-2 sm:pl-4">
           {sortedKids.map((child) => (
             <CommentNode
               key={child.id}

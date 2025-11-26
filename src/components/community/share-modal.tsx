@@ -143,12 +143,12 @@ export default function CommunityShareModal({
           {/* Content */}
           <div className="p-6">
             {/* Social Media Grid */}
-            <div className="grid grid-cols-2 gap-3 mb-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
               {socialPlatforms.map((platform) => (
                 <button
                   key={platform.name}
                   onClick={platform.action}
-                  className={`flex items-center gap-3 p-4 rounded-xl border transition-all duration-200 hover:scale-[1.02] active:scale-95 ${platform.color}`}
+                  className={`flex items-center justify-center gap-3 p-4 rounded-xl border transition-all duration-200 hover:scale-[1.02] active:scale-95 ${platform.color}`}
                 >
                   <div className="text-white">
                     {platform.icon}
@@ -161,7 +161,7 @@ export default function CommunityShareModal({
             {/* Copy Link */}
             <div className="mt-4 p-4 bg-neutral-800/50 rounded-xl border border-neutral-700">
               <label className="text-xs font-medium text-neutral-400 mb-2 block">Or copy link</label>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                 <input
                   type="text"
                   value={postUrl}
@@ -170,13 +170,16 @@ export default function CommunityShareModal({
                 />
                 <button
                   onClick={handleCopyLink}
-                  className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 ${
+                  className={`flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 ${
                     copied
                       ? "bg-green-600 text-white"
                       : "bg-purple-600 hover:bg-purple-700 text-white"
                   }`}
                 >
-                  {copied ? "✓ Copied" : "Copy"}
+                  <span className="material-icons-round" style={{ fontSize: "16px" }}>
+                    {copied ? "check" : "content_copy"}
+                  </span>
+                  {copied ? "Copied!" : "Copy"}
                 </button>
               </div>
             </div>
