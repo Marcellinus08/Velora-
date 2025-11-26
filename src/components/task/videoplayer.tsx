@@ -138,10 +138,10 @@ export default function VideoPlayer({
           )}
           
           {/* Lock overlay */}
-          <div className={`absolute inset-0 flex flex-col items-center justify-center gap-4 text-white z-10 transition-opacity duration-300 ${showOverlay ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
-            <div className="bg-neutral-800/80 p-4 rounded-full">
+          <div className={`absolute inset-0 flex flex-col items-center justify-center gap-1 md:gap-3 text-white z-10 transition-opacity duration-300 pb-8 md:pb-0 ${showOverlay ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+            <div className="bg-neutral-800/80 p-2 md:p-4 rounded-full">
               <svg 
-                className="w-8 h-8" 
+                className="w-5 h-5 md:w-8 md:h-8" 
                 fill="none" 
                 viewBox="0 0 24 24" 
                 stroke="currentColor"
@@ -154,11 +154,11 @@ export default function VideoPlayer({
                 />
               </svg>
             </div>
-            <div className="text-center px-4 pointer-events-auto">
-              <h3 className="text-xl font-bold mb-2">Video Locked</h3>
+            <div className="text-center px-3 md:px-4 pointer-events-auto">
+              <h3 className="text-sm md:text-xl font-bold mb-0.5 md:mb-2">Video Locked</h3>
               {price && (
-                <div className="space-y-2 text-neutral-200 mb-4">
-                  <p>Purchase this video to access exclusive content and earn rewards</p>
+                <div className="space-y-0.5 md:space-y-2 text-neutral-200 mb-1.5 md:mb-4">
+                  <p className="text-[11px] md:text-base leading-tight px-2 md:px-0">Purchase this video to access exclusive content and earn rewards</p>
                 </div>
               )}
               
@@ -170,11 +170,11 @@ export default function VideoPlayer({
                     console.log('Default unlock button clicked');
                     onUnlock?.();
                   }}
-                  className="mt-4 px-8 py-3 bg-[var(--primary-500)] text-white rounded-full font-semibold hover:bg-violet-600 active:scale-95 transition-all duration-200 cursor-pointer shadow-lg hover:shadow-violet-500/50 flex items-center justify-center gap-2 group"
+                  className="mt-1.5 md:mt-4 px-4 md:px-8 py-1.5 md:py-3 bg-[var(--primary-500)] text-white rounded-full font-semibold hover:bg-violet-600 active:scale-95 transition-all duration-200 cursor-pointer shadow-lg hover:shadow-violet-500/50 flex items-center justify-center gap-2 group text-xs md:text-base"
                 >
                   <span className="group-hover:translate-x-1 transition-transform duration-200">Purchase Now</span>
                   {price && (
-                    <span className="text-sm font-medium opacity-90">
+                    <span className="text-[11px] md:text-sm font-medium opacity-90">
                       {price.amount} {price.currency}
                     </span>
                   )}
@@ -189,12 +189,12 @@ export default function VideoPlayer({
                     e.stopPropagation();
                     handlePreviewClick();
                   }}
-                  className="mt-3 px-6 py-2 bg-neutral-800/90 hover:bg-neutral-700/90 text-white rounded-full font-medium transition-colors duration-200 backdrop-blur-sm flex items-center justify-center gap-2 mx-auto group"
+                  className="mt-1.5 md:mt-3 px-3 md:px-6 py-1 md:py-2 bg-neutral-800/90 hover:bg-neutral-700/90 text-white rounded-full font-medium transition-colors duration-200 backdrop-blur-sm flex items-center justify-center gap-1.5 md:gap-2 mx-auto group"
                 >
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <svg className="w-3 h-3 md:w-4 md:h-4" fill="currentColor" viewBox="0 0 20 20">
                     <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
                   </svg>
-                  <span className="text-sm">Preview 15s</span>
+                  <span className="text-[11px] md:text-sm">Preview 15s</span>
                 </button>
               )}
             </div>
@@ -202,23 +202,23 @@ export default function VideoPlayer({
 
           {/* Preview indicator - Only show when video is actually playing */}
           {isPreviewPlaying && !showOverlay && (
-            <div className="absolute bottom-4 left-4 z-20">
-              <div className="flex items-center gap-2 rounded-lg bg-black/70 px-3 py-1.5 text-white backdrop-blur-sm">
-                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+            <div className="absolute bottom-2 left-2 md:bottom-4 md:left-4 z-20">
+              <div className="flex items-center gap-1.5 md:gap-2 rounded-lg bg-black/70 px-2 py-1 md:px-3 md:py-1.5 text-white backdrop-blur-sm">
+                <svg className="w-3 h-3 md:w-4 md:h-4" fill="currentColor" viewBox="0 0 20 20">
                   <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
                 </svg>
-                <span className="text-sm font-medium">Preview</span>
+                <span className="text-xs md:text-sm font-medium">Preview</span>
               </div>
             </div>
           )}
 
           {/* Countdown Timer - Show when preview is playing */}
           {isPreviewPlaying && countdown > 0 && (
-            <div className="absolute bottom-4 right-4 z-20 flex items-center gap-2 px-3 py-1.5 bg-black/70 text-white rounded-lg backdrop-blur-sm">
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="absolute bottom-2 right-2 md:bottom-4 md:right-4 z-20 flex items-center gap-1.5 md:gap-2 px-2 py-1 md:px-3 md:py-1.5 bg-black/70 text-white rounded-lg backdrop-blur-sm">
+              <svg className="w-3 h-3 md:w-4 md:h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              <span className="text-sm font-semibold tabular-nums">{countdown}s</span>
+              <span className="text-xs md:text-sm font-semibold tabular-nums">{countdown}s</span>
             </div>
           )}
         </div>

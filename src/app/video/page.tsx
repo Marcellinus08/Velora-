@@ -553,7 +553,7 @@ function VideoPageInner() {
                       videoId={row.id}
                       creator={(row.creator_addr || row.abstract_id) as Address}
                       priceUsd={row.price_cents / 100}
-                      className="mt-6 px-8 py-3 bg-[var(--primary-500)] text-white rounded-full font-semibold hover:bg-violet-600 active:scale-95 transition-all duration-200 cursor-pointer shadow-lg hover:shadow-violet-500/50 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center gap-3"
+                      className="mt-1.5 md:mt-6 px-4 md:px-8 py-1.5 md:py-3 bg-[var(--primary-500)] text-white rounded-full font-semibold hover:bg-violet-600 active:scale-95 transition-all duration-200 cursor-pointer shadow-lg hover:shadow-violet-500/50 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2 md:gap-3 text-xs md:text-base"
                       onSuccess={() => {
                         // Reload halaman setelah 2 detik agar toast terlihat
                         setTimeout(() => {
@@ -562,7 +562,7 @@ function VideoPageInner() {
                       }}
                     >
                       <span className="hover:translate-x-0.5 transition-transform duration-200">Purchase Now</span>
-                      <span className="text-sm font-medium opacity-90">${row.price_cents / 100}</span>
+                      <span className="text-[11px] md:text-sm font-medium opacity-90">${row.price_cents / 100}</span>
                     </BuyVideoButton>
                   ) : undefined
                 }
@@ -637,7 +637,7 @@ function VideoPageInner() {
                       videoId={row.id}
                       creator={(row.creator_addr || row.abstract_id) as Address}
                       priceUsd={row.price_cents / 100}
-                      className="mt-6 px-8 py-3 bg-[var(--primary-500)] text-white rounded-full font-semibold hover:bg-violet-600 active:scale-95 transition-all duration-200 cursor-pointer shadow-lg hover:shadow-violet-500/50 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center gap-3"
+                      className="mt-1.5 md:mt-6 px-4 md:px-8 py-1.5 md:py-3 bg-[var(--primary-500)] text-white rounded-full font-semibold hover:bg-violet-600 active:scale-95 transition-all duration-200 cursor-pointer shadow-lg hover:shadow-violet-500/50 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2 md:gap-3 text-xs md:text-base"
                       onSuccess={() => {
                         setTimeout(() => {
                           window.location.reload();
@@ -645,7 +645,7 @@ function VideoPageInner() {
                       }}
                     >
                       <span className="hover:translate-x-0.5 transition-transform duration-200">Purchase Now</span>
-                      <span className="text-sm font-medium opacity-90">${row.price_cents / 100}</span>
+                      <span className="text-[11px] md:text-sm font-medium opacity-90">${row.price_cents / 100}</span>
                     </BuyVideoButton>
                   ) : undefined
                 }
