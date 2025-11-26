@@ -185,7 +185,7 @@ function ProfilePageInner() {
           .from("user_ads_progress")
           .select("total_ads_points")
           .eq("user_addr", userAddress)
-          .maybeSingle();
+          .maybeSingle() as { data: { total_ads_points: number } | null };
 
         const adsPoints = adsProgressData?.total_ads_points || 0;
         const totalPoints = videoPoints + adsPoints;
