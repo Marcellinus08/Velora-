@@ -37,11 +37,11 @@ export default function SiteHeader() {
 
   return (
     <header
-      className="fixed top-0 left-0 right-0 z-40 grid w-full items-center gap-2 md:gap-3 lg:gap-4 border-b border-neutral-800 bg-neutral-900 px-4 py-2 md:px-4 lg:px-8
+      className="fixed top-0 left-0 right-0 z-40 grid w-full items-center gap-2 md:gap-3 lg:gap-4 border-b border-neutral-800 bg-neutral-900 px-2 py-2 md:px-4 lg:px-8
                  grid-cols-[auto_1fr_auto] xl:[grid-template-columns:var(--sidebar-w,16rem)_1fr_auto]"
     >
       {/* Column 1: Logo */}
-      <div className="flex items-center gap-2 md:gap-3 lg:gap-4 -ml-1 md:ml-0">
+      <div className="flex items-center gap-2 md:gap-3 lg:gap-4 md:ml-0">
         <Link href="/" aria-label="Home" className="flex items-center gap-1.5 md:gap-2 select-none cursor-pointer">
           <Image
             src="/glonic_logo_main.png"
