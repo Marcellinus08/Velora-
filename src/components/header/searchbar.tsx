@@ -26,6 +26,16 @@ export default function SearchBar() {
   const containerRef = useRef<HTMLDivElement>(null);
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Expose function globally for MobileIcon to call
+  useEffect(() => {
+    (window as any).__openMobileSearch = () => {
+      setMobileSearchOpen(true);
+    };
+    return () => {
+      delete (window as any).__openMobileSearch;
+    };
+  }, []);
+
   useEffect(() => {
     try {
       const saved = JSON.parse(localStorage.getItem(RECENT_KEY) || "[]");
@@ -148,15 +158,6 @@ export default function SearchBar() {
 
   return (
     <>
-      {/* Mobile Search Icon - Hanya tampil di mobile */}
-      <button
-        onClick={handleMobileSearchClick}
-        className="md:hidden flex items-center justify-center w-9 h-9 rounded-full hover:bg-neutral-800 transition-colors cursor-pointer"
-        aria-label="Search"
-      >
-        <MI name="search" className="text-[20px] text-neutral-200" />
-      </button>
-
       {/* Mobile Search Overlay - Full screen seperti YouTube */}
       {mobileSearchOpen && (
         <div className="md:hidden fixed inset-0 z-50 bg-neutral-900">
@@ -367,11 +368,11 @@ export default function SearchBar() {
       )}
 
       {/* Desktop/Tablet Search Bar - Hidden di mobile */}
-      <div className="hidden md:flex justify-start relative z-40">
-        <div ref={containerRef} className="relative transition-all duration-300 w-full max-w-[720px]">
-          <form onSubmit={onSubmit} className="flex w-full items-center" role="search">
-            <div className="relative flex min-w-0 flex-1">
-            <span className="pointer-events-none absolute inset-y-0 left-3 lg:left-4 flex items-center">
+      <div className="hidden md:flex justify-start relative z-40" suppressHydrationWarning>
+        <div ref={containerRef} className="relative transition-all duration-300 w-full max-w-[720px]" suppressHydrationWarning>
+          <form onSubmit={onSubmit} className="flex w-full items-center" role="search" suppressHydrationWarning>
+            <div className="relative flex min-w-0 flex-1" suppressHydrationWarning>
+            <span className="pointer-events-none absolute inset-y-0 left-3 lg:left-4 flex items-center" suppressHydrationWarning>
               <MI name="search" className="text-[16px] lg:text-[18px] text-neutral-400" />
             </span>
 
@@ -387,6 +388,7 @@ export default function SearchBar() {
               inputMode="search"
               enterKeyHint="search"
               role="searchbox"
+              suppressHydrationWarning
             />
 
             {q && (
@@ -396,6 +398,7 @@ export default function SearchBar() {
                 className="absolute inset-y-0 right-14 lg:right-16 my-1 flex h-7 lg:h-8 w-7 lg:w-8 items-center justify-center rounded-full text-neutral-400 hover:bg-neutral-800 hover:text-neutral-200 cursor-pointer"
                 aria-label="Clear text"
                 title="Clear"
+                suppressHydrationWarning
               >
                 <MI name="close" className="text-[15px] lg:text-[16px]" />
               </button>
@@ -406,6 +409,7 @@ export default function SearchBar() {
               className="h-9 lg:h-10 w-14 lg:w-16 cursor-pointer rounded-r-full border border-l-0 border-neutral-700 bg-neutral-800 text-neutral-200 hover:bg-neutral-700 flex items-center justify-center"
               aria-label="Search"
               title="Search"
+              suppressHydrationWarning
             >
               <MI name="search" className="text-[17px] lg:text-[18px]" />
             </button>
@@ -464,6 +468,7 @@ export default function SearchBar() {
             className="ml-2 sm:ml-3 cursor-pointer hidden sm:flex h-9 sm:h-10 w-9 sm:w-10 items-center justify-center rounded-full bg-neutral-800 text-neutral-200 hover:bg-neutral-700"
             aria-label="Voice search"
             title="Voice search"
+            suppressHydrationWarning
           >
             <MI name="keyboard_voice" className="text-[16px] sm:text-[18px]" />
           </button>
@@ -583,3 +588,25 @@ export default function SearchBar() {
     </>
   );
 }
+
+// Mobile Icon Component - Export as property
+SearchBar.MobileIcon = function MobileSearchIcon() {
+  const handleClick = () => {
+    // Call global function to open mobile search
+    if ((window as any).__openMobileSearch) {
+      (window as any).__openMobileSearch();
+    }
+  };
+  
+  return (
+    <button
+      onClick={handleClick}
+      className="md:hidden flex size-8 cursor-pointer border border-[var(--primary-500)] items-center justify-center rounded-full text-neutral-50 transition-colors hover:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-[var(--primary-500)]/40"
+      aria-label="Search"
+      title="Search"
+      type="button"
+    >
+      <MI name="search" className="text-[16px]" />
+    </button>
+  );
+};

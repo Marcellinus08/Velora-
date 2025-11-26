@@ -37,11 +37,11 @@ export default function SiteHeader() {
 
   return (
     <header
-      className="fixed top-0 left-0 right-0 z-40 grid w-full items-center gap-2 md:gap-3 lg:gap-4 border-b border-neutral-800 bg-neutral-900 px-3 py-2 md:px-4 lg:px-8
+      className="fixed top-0 left-0 right-0 z-40 grid w-full items-center gap-2 md:gap-3 lg:gap-4 border-b border-neutral-800 bg-neutral-900 px-4 py-2 md:px-4 lg:px-8
                  grid-cols-[auto_1fr_auto] xl:[grid-template-columns:var(--sidebar-w,16rem)_1fr_auto]"
     >
       {/* Column 1: Logo */}
-      <div className="flex items-center gap-2 md:gap-3 lg:gap-4">
+      <div className="flex items-center gap-2 md:gap-3 lg:gap-4 -ml-1 md:ml-0">
         <Link href="/" aria-label="Home" className="flex items-center gap-1.5 md:gap-2 select-none cursor-pointer">
           <Image
             src="/glonic_logo_main.png"
@@ -58,10 +58,18 @@ export default function SiteHeader() {
       </div>
 
       {/* Column 2: Search */}
-      <SearchBar />
+      {/* Desktop/Tablet: always show SearchBar */}
+      <div className="hidden md:block">
+        <SearchBar />
+      </div>
+      
+      {/* Mobile: Always mount SearchBar for overlay functionality (hidden but functional) */}
+      <div className="block md:hidden absolute -left-[9999px] pointer-events-none">
+        <SearchBar />
+      </div>
 
       {/* Column 3: Right */}
-      <div className="flex items-center gap-1 md:gap-1.5 lg:gap-2">
+      <div className="flex items-center justify-end gap-1 md:gap-1.5 lg:gap-2">
         {!isConnected ? (
           <div className="flex items-center gap-2">
             <ConnectWalletButton className="min-w-20 md:min-w-24 lg:min-w-28 px-3 md:px-3.5 lg:px-4 text-xs md:text-xs lg:text-sm" />
@@ -99,8 +107,10 @@ export default function SiteHeader() {
               </button>
             </div>
 
+            {/* Mobile: Search icon only when logged in */}
+            <SearchBar.MobileIcon />
             <AddMenu />
-            <NotificationsMenu />
+            <NotificationsMenu className="hidden md:flex" />
             <WalletDropdown address={address as `0x${string}`} avatarUrl={avatarUrl} username={username} avatarLoading={avatarLoading} />
           </>
         )}

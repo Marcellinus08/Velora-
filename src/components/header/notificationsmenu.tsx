@@ -26,7 +26,7 @@ function getStoredAbstractAddress(): `0x${string}` | null {
   }
 }
 
-export default function NotificationsMenu() {
+export default function NotificationsMenu({ className = "" }: { className?: string }) {
   const { address: wagmiAddress } = useAccount();
   const [showMobileNotifications, setShowMobileNotifications] = useState(false);
   const router = useRouter();
@@ -123,7 +123,7 @@ try {
   }, [showMobileNotifications]);
 
   return (
-    <div className="relative">
+    <div className={`relative ${className}`}>
       {/* Mobile Fullscreen Notifications */}
       {showMobileNotifications && (
         <div className="max-sm:fixed max-sm:inset-0 max-sm:z-50 max-sm:bg-neutral-900 max-sm:flex max-sm:flex-col sm:hidden">
