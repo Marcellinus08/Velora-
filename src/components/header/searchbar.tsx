@@ -511,7 +511,6 @@ export default function SearchBar() {
                         onMouseDown={(e) => e.preventDefault()}
                         onClick={() => {
                           setOpenSug(false);
-                          setExpanded(false);
                           setQ('');
                           setVideoResults([]);
                           router.push(`/video?id=${video.id}`);
