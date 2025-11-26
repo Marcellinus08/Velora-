@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { createPortal } from "react-dom";
 import { toast } from "@/components/ui/toast";
 import { MI } from "./MI";
 
@@ -30,11 +31,25 @@ export default function SearchBar() {
   useEffect(() => {
     (window as any).__openMobileSearch = () => {
       setMobileSearchOpen(true);
+      // Close any open dropdowns by clicking outside
+      document.body.click();
     };
     return () => {
       delete (window as any).__openMobileSearch;
     };
   }, []);
+
+  // Prevent body scroll when mobile search is open
+  useEffect(() => {
+    if (mobileSearchOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [mobileSearchOpen]);
 
   useEffect(() => {
     try {
@@ -158,9 +173,14 @@ export default function SearchBar() {
 
   return (
     <>
-      {/* Mobile Search Overlay - Full screen seperti YouTube */}
-      {mobileSearchOpen && (
-        <div className="md:hidden fixed inset-0 z-50 bg-neutral-900">
+      {/* Mobile Search Overlay - Full screen seperti YouTube - Rendered in Portal */}
+      {mobileSearchOpen && typeof window !== 'undefined' && createPortal(
+        <div 
+          className="md:hidden fixed inset-0 z-[9999] bg-neutral-900"
+          onClick={(e) => e.stopPropagation()}
+          onTouchStart={(e) => e.stopPropagation()}
+          onTouchEnd={(e) => e.stopPropagation()}
+        >
           {/* Header dengan back button dan search input */}
           <div className="flex items-center gap-2 px-2 py-2 border-b border-neutral-800">
             <button
@@ -364,7 +384,8 @@ export default function SearchBar() {
               </div>
             )}
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Desktop/Tablet Search Bar - Hidden di mobile */}
