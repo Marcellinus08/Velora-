@@ -80,7 +80,9 @@ export default function SiteHeader() {
           <>
             {/* Mobile: Search & Create icons */}
             <SearchBar.MobileIcon />
-            <AddMenu />
+            <div className="md:hidden">
+              <AddMenu />
+            </div>
             
             {/* Points & Wallet - Responsive untuk semua ukuran layar */}
             <div className="flex items-center gap-1 md:gap-2 lg:gap-4 rounded-full bg-neutral-800 px-1.5 md:px-2.5 py-1 md:py-1.5 lg:px-4">
@@ -111,6 +113,11 @@ export default function SiteHeader() {
               </button>
             </div>
 
+            {/* Desktop/Tablet: Create button */}
+            <div className="hidden md:block">
+              <AddMenu />
+            </div>
+            
             <NotificationsMenu className="hidden md:flex" />
             <WalletDropdown address={address as `0x${string}`} avatarUrl={avatarUrl} username={username} avatarLoading={avatarLoading} />
           </>
