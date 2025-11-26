@@ -391,7 +391,7 @@ export default function SearchBar() {
       {/* Desktop/Tablet Search Bar - Hidden di mobile */}
       <div className="hidden md:flex justify-start relative z-40" suppressHydrationWarning>
         <div ref={containerRef} className="relative transition-all duration-300 w-full max-w-[720px]" suppressHydrationWarning>
-          <form onSubmit={onSubmit} className="flex w-full items-center" role="search" suppressHydrationWarning>
+          <form onSubmit={onSubmit} className="flex w-full items-center relative" role="search" suppressHydrationWarning>
             <div className="relative flex min-w-0 flex-1" suppressHydrationWarning>
             <span className="pointer-events-none absolute inset-y-0 left-3 lg:left-4 flex items-center" suppressHydrationWarning>
               <MI name="search" className="text-[16px] lg:text-[18px] text-neutral-400" />
@@ -496,7 +496,7 @@ export default function SearchBar() {
         </form>
 
         {openSug && (recent.length > 0 || q || videoResults.length > 0) && (
-          <div className="absolute left-0 right-0 top-[44px] mx-auto w-full max-w-[720px] rounded-xl border border-neutral-800 bg-neutral-900/95 backdrop-blur supports-[backdrop-filter]:bg-neutral-900/70">
+          <div className="absolute left-0 top-[44px] right-0 mr-[2.5rem] sm:mr-[3rem] rounded-xl border border-neutral-800 bg-neutral-900/95 backdrop-blur supports-[backdrop-filter]:bg-neutral-900/70">
             {/* Video Results Section */}
             {videoResults.length > 0 && (
               <div className="border-b border-neutral-800">
