@@ -53,7 +53,7 @@ export function useUserPoints(userAddress?: `0x${string}` | null) {
           .from("user_ads_progress")
           .select("total_ads_points")
           .eq("user_addr", userAddress.toLowerCase())
-          .maybeSingle();
+          .maybeSingle() as { data: { total_ads_points: number } | null };
 
         const adsPointsTotal = adsData?.total_ads_points || 0;
 
