@@ -201,7 +201,7 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    // 4. Campaign/Ads Creation Activity
+    // 4. Campaign/Ads Creation Activity (with points)
     if (!type || type === "all" || type === "content") {
       const { data: campaigns, error: cError } = await supabaseAdmin
         .from("campaigns")
@@ -218,6 +218,9 @@ export async function GET(req: NextRequest) {
             .select("*", { count: "exact", head: true })
             .eq("campaign_id", campaign.id);
 
+          // Calculate points earned from this campaign (creation_fee_cents / 10)
+          const adsPoints = campaign.creation_fee_cents ? Math.floor(campaign.creation_fee_cents / 10) : 0;
+
           activities.push({
             type: "campaign_created",
             id: `campaign_${campaign.id}`,
@@ -230,7 +233,7 @@ export async function GET(req: NextRequest) {
               clicks: clickCount || 0,
               status: campaign.status,
             },
-            points: 0, // No points for creating campaign
+            points: adsPoints,
             icon: "campaign",
           });
         }
@@ -491,6 +494,16 @@ export async function GET(req: NextRequest) {
 
     const totalPointsEarned = currentProgress?.reduce((sum, p) => sum + (p.total_points_earned || 0), 0) || 0;
 
+    // Get ads points from user_ads_progress
+    const { data: adsProgress } = await supabaseAdmin
+      .from("user_ads_progress")
+      .select("total_ads_points, campaigns_created")
+      .eq("user_addr", userAddr)
+      .maybeSingle();
+
+    const adsPointsTotal = adsProgress?.total_ads_points || 0;
+    const adsCreatedCount = adsProgress?.campaigns_created || 0;
+
     // Sort all activities by date (newest first)
     activities.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
@@ -555,6 +568,10 @@ export async function GET(req: NextRequest) {
         videoPurchases: videoPurchasesWithPoints,
         tasksCompleted: tasksCompletedWithPoints,
         videoShares: videoSharesWithPoints,
+        
+        // Ads stats
+        adsCreated: adsCreatedCount,
+        adsPoints: adsPointsTotal,
         
         // Additional stats
         videosUploaded: activities.filter((a) => a.type === "video_upload").length,

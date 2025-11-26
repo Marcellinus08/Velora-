@@ -182,7 +182,48 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    return NextResponse.json({ ok: true, campaign: row }, { status: 201 });
+    // Award points for creating campaign (50 points for $5 campaign)
+    const adsPoints = creationFeeCents / 10; // $5 = 500 cents = 50 points
+    
+    try {
+      // Check if user has ads_progress record
+      const { data: existingProgress } = await supabase
+        .from("user_ads_progress")
+        .select("*")
+        .eq("user_addr", creatorAddr)
+        .maybeSingle();
+
+      if (existingProgress) {
+        // Update existing record
+        const newTotalPoints = (existingProgress.total_ads_points || 0) + adsPoints;
+        const newCampaignsCount = (existingProgress.campaigns_created || 0) + 1;
+        
+        await supabase
+          .from("user_ads_progress")
+          .update({
+            total_ads_points: newTotalPoints,
+            campaigns_created: newCampaignsCount,
+            last_campaign_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          })
+          .eq("user_addr", creatorAddr);
+      } else {
+        // Create new record
+        await supabase
+          .from("user_ads_progress")
+          .insert({
+            user_addr: creatorAddr,
+            total_ads_points: adsPoints,
+            campaigns_created: 1,
+            last_campaign_at: new Date().toISOString(),
+          });
+      }
+    } catch (pointsError) {
+      console.error("Error awarding ads points:", pointsError);
+      // Don't fail the campaign creation if points fail
+    }
+
+    return NextResponse.json({ ok: true, campaign: row, pointsAwarded: adsPoints }, { status: 201 });
   } catch (e: any) {
     console.error("API /campaigns/create error:", e?.message || e);
     return NextResponse.json(

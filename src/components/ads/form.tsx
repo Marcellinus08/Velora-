@@ -52,6 +52,23 @@ export default function AdForm({
 
   return (
     <section className="rounded-3xl border border-neutral-700/50 bg-gradient-to-br from-neutral-900/80 to-neutral-800/40 backdrop-blur-sm p-6 sm:p-8 shadow-2xl max-sm:rounded-2xl max-sm:p-4 md:p-6 md:rounded-2xl">
+      {/* Points Info Banner */}
+      <div className="mb-6 max-sm:mb-4 md:mb-5 rounded-xl border border-yellow-500/30 bg-gradient-to-r from-yellow-500/10 to-amber-500/10 p-4 max-sm:p-3 md:p-3.5">
+        <div className="flex items-start gap-3 max-sm:gap-2 md:gap-2.5">
+          <div className="flex-shrink-0 w-8 h-8 max-sm:w-7 max-sm:h-7 md:w-7 md:h-7 rounded-lg bg-yellow-500/20 flex items-center justify-center">
+            <svg className="w-5 h-5 max-sm:w-4 max-sm:h-4 md:w-4 md:h-4 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+            </svg>
+          </div>
+          <div className="flex-1 min-w-0">
+            <h3 className="text-sm max-sm:text-xs md:text-sm font-semibold text-yellow-400 mb-1 max-sm:mb-0.5 md:mb-0.5">Earn Points with Every Campaign!</h3>
+            <p className="text-xs max-sm:text-[11px] md:text-xs text-neutral-300 leading-relaxed">
+              Create campaigns and earn <span className="font-semibold text-yellow-400">{Math.floor(priceUsd * 10)} points</span>. Points boost your ranking and unlock rewards!
+            </p>
+          </div>
+        </div>
+      </div>
+
       <div className="flex items-center gap-3 mb-6 max-sm:mb-4 max-sm:gap-2.5 md:mb-5 md:gap-3">
         <div className="w-10 h-10 rounded-xl bg-purple-600 flex items-center justify-center shadow-lg shadow-purple-500/20 max-sm:w-8 max-sm:h-8 max-sm:rounded-lg md:w-9 md:h-9 md:rounded-lg">
           <svg className="w-6 h-6 text-white max-sm:w-4 max-sm:h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

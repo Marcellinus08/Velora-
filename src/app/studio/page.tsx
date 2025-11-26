@@ -119,10 +119,11 @@ export default function StudioPage() {
         created_at: string;
         cta_text: string | null;
         description: string | null;
+        creation_fee_cents: number | null;
       };
       const { data: campaigns, error } = await supabase
         .from("campaigns")
-        .select("id,title,banner_url,status,duration_days,start_date,end_date,created_at,cta_text,description")
+        .select("id,title,banner_url,status,duration_days,start_date,end_date,created_at,cta_text,description,creation_fee_cents")
         .eq("creator_addr", me)
         .order("created_at", { ascending: false }) as { data: CampaignRow[] | null; error: any };
 
@@ -177,6 +178,9 @@ export default function StudioPage() {
             realStatus = c.status === "paused" ? "paused" : "active";
           }
           
+          // Calculate points: creation_fee_cents / 10 (e.g., 500 cents = $5 = 50 points)
+          const points = c.creation_fee_cents ? Math.floor(c.creation_fee_cents / 10) : 0;
+          
           return {
             id: c.id,
             title: c.title || "Untitled",
@@ -189,6 +193,7 @@ export default function StudioPage() {
             created_at: c.created_at,
             cta_text: c.cta_text,
             description: c.description,
+            points: points,
           };
         });
         
@@ -401,8 +406,29 @@ export default function StudioPage() {
   }
 
   useEffect(() => {
-    if (status === "connected" && me) void load();
+    if (status === "connected" && me) {
+      void load();
+      // Auto-sync ads points on page load
+      void syncAdsPoints();
+    }
   }, [status, me]);
+
+  // Auto-sync ads points to ensure user_ads_progress is up-to-date
+  async function syncAdsPoints() {
+    try {
+      const res = await fetch("/api/campaigns/sync-points", {
+        method: "POST",
+        cache: "no-store"
+      });
+      
+      if (res.ok) {
+        const result = await res.json();
+        console.log("[Studio] Ads points synced:", result);
+      }
+    } catch (error) {
+      console.error("[Studio] Failed to sync ads points:", error);
+    }
+  }
 
   // Create a full page skeleton if loading
   if (loading) {

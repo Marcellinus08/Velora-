@@ -136,6 +136,17 @@ function ProfilePageInner() {
 
       try {
         setLoading(true);
+        
+        // Auto-sync ads points before fetching profile data
+        try {
+          await fetch("/api/campaigns/sync-points", {
+            method: "POST",
+            cache: "no-store"
+          });
+        } catch (syncError) {
+          console.log("[Profile] Sync points failed (non-critical):", syncError);
+        }
+        
         const userAddress = targetAddress.toLowerCase();
 
         // Fetch profile data
@@ -163,22 +174,44 @@ function ProfilePageInner() {
           .select("total_points_earned")
           .eq("user_addr", userAddress) as { data: Array<{ total_points_earned: number | null }> | null };
 
-        const totalPoints =
+        const videoPoints =
           (progressData as Array<{ total_points_earned: number | null }> | undefined)?.reduce(
             (sum: number, record) => sum + (record.total_points_earned || 0),
             0
           ) || 0;
 
-        // Get user's rank from leaderboard
+        // Fetch ads points from user_ads_progress
+        const { data: adsProgressData } = await supabase
+          .from("user_ads_progress")
+          .select("total_ads_points")
+          .eq("user_addr", userAddress)
+          .maybeSingle();
+
+        const adsPoints = adsProgressData?.total_ads_points || 0;
+        const totalPoints = videoPoints + adsPoints;
+
+        // Get user's rank from leaderboard (include ads points)
         const { data: allUsers } = await supabase
           .from("user_video_progress")
           .select("user_addr, total_points_earned") as unknown as { data: Array<{ user_addr: string; total_points_earned: number | null }> | null };
+
+        // Fetch all ads points for ranking
+        const { data: allAdsUsers } = await supabase
+          .from("user_ads_progress")
+          .select("user_addr, total_ads_points");
 
         // Calculate ranks
         const userPointsMap = new Map<string, number>();
   (allUsers || [])?.forEach((record: { user_addr: string; total_points_earned: number | null }) => {
           const addr = record.user_addr.toLowerCase();
           const points = record.total_points_earned || 0;
+          userPointsMap.set(addr, (userPointsMap.get(addr) || 0) + points);
+        });
+
+        // Add ads points to ranking
+        (allAdsUsers || [])?.forEach((record: any) => {
+          const addr = record.user_addr.toLowerCase();
+          const points = record.total_ads_points || 0;
           userPointsMap.set(addr, (userPointsMap.get(addr) || 0) + points);
         });
 
@@ -392,7 +425,7 @@ function ProfilePageInner() {
           )}
 
           {activeTab === "activity" && activityStats && (
-            <div className="mt-4 max-sm:mt-3 grid grid-cols-2 gap-3 max-sm:gap-2 sm:grid-cols-4">
+            <div className="mt-4 max-sm:mt-3 grid grid-cols-2 gap-3 max-sm:gap-2 sm:grid-cols-3 lg:grid-cols-5">
               <div className="rounded-xl max-sm:rounded-lg border border-neutral-700/50 bg-neutral-800/50 p-4 max-sm:p-3 text-center backdrop-blur-sm">
                 <div className="text-xs max-sm:text-[10px] font-medium text-neutral-400">Points Earned</div>
                 <div className="mt-1 text-lg max-sm:text-base font-bold text-yellow-400">{fmtNum(activityStats.totalPointsEarned)}</div>
@@ -416,6 +449,13 @@ function ProfilePageInner() {
                 <div className="mt-1 text-lg font-bold text-orange-400 text-center">{activityStats.videoShares}</div>
                 <div className="mt-0.5 text-[10px] text-neutral-500 text-center">
                   {activityStats.videoShares * 4} pts
+                </div>
+              </div>
+              <div className="rounded-xl border border-neutral-700/50 bg-neutral-800/50 p-4 backdrop-blur-sm">
+                <div className="text-xs font-medium text-neutral-400 text-center">Ads Created</div>
+                <div className="mt-1 text-lg font-bold text-purple-400 text-center">{activityStats.adsCreated || 0}</div>
+                <div className="mt-0.5 text-[10px] text-neutral-500 text-center">
+                  {activityStats.adsPoints || 0} pts
                 </div>
               </div>
             </div>

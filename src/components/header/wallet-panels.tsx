@@ -130,6 +130,7 @@ export function PointsSheet({
   purchasePoints = 0,
   taskPoints = 0,
   sharePoints = 0,
+  adsPoints = 0,
 }: {
   open: boolean;
   onClose: () => void;
@@ -137,6 +138,7 @@ export function PointsSheet({
   purchasePoints?: number;
   taskPoints?: number;
   sharePoints?: number;
+  adsPoints?: number;
 }) {
   const nf = new Intl.NumberFormat("en-US");
 
@@ -152,30 +154,42 @@ export function PointsSheet({
             <Link 
               href="/profile"
               onClick={onClose}
-              className="rounded-xl border border-neutral-700 bg-neutral-900 px-4 py-2 text-sm font-medium text-neutral-200 hover:bg-neutral-800 transition-colors"
+              className="rounded-xl border border-neutral-700 bg-neutral-900 px-3 md:px-4 py-2 text-xs md:text-sm font-medium text-neutral-200 hover:bg-neutral-800 transition-colors"
             >
               View Portfolio
             </Link>
           }
         />
 
-        {/* Points Breakdown - 3 columns */}
-        <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <StatCard 
-            label="Purchase Points" 
-            value={`${nf.format(purchasePoints)} pts`}
-            sub="40% of video value"
-          />
-          <StatCard 
-            label="Task Points" 
-            value={`${nf.format(taskPoints)} pts`}
-            sub="20% of video value"
-          />
-          <StatCard 
-            label="Share Points" 
-            value={`${nf.format(sharePoints)} pts`}
-            sub="40% of video value"
-          />
+        {/* Points Breakdown - 2 rows on mobile, 2 cols on tablet/desktop */}
+        <div className="mt-4 space-y-4">
+          {/* Row 1: Purchase & Task */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
+            <StatCard 
+              label="Purchase Points" 
+              value={`${nf.format(purchasePoints)} pts`}
+              sub="40% of video value"
+            />
+            <StatCard 
+              label="Task Points" 
+              value={`${nf.format(taskPoints)} pts`}
+              sub="20% of video value"
+            />
+          </div>
+          
+          {/* Row 2: Share & Ads */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
+            <StatCard 
+              label="Share Points" 
+              value={`${nf.format(sharePoints)} pts`}
+              sub="40% of video value"
+            />
+            <StatCard 
+              label="Ads Points" 
+              value={`${nf.format(adsPoints)} pts`}
+              sub="Creating campaigns"
+            />
+          </div>
         </div>
       </div>
     </Modal>

@@ -50,6 +50,16 @@ export default function LeaderboardPage() {
         setLoading(true);
         setError(null);
 
+        // Auto-sync ads points before fetching leaderboard
+        try {
+          await fetch("/api/campaigns/sync-points", {
+            method: "POST",
+            cache: "no-store"
+          });
+        } catch (syncError) {
+          console.log("[Leaderboard] Sync points failed (non-critical):", syncError);
+        }
+
         // Aggregate total points per user from user_video_progress
         const { data, error: fetchError } = await supabase
           .from("user_video_progress")
@@ -65,12 +75,27 @@ export default function LeaderboardPage() {
           return;
         }
 
+        // Fetch ads points from user_ads_progress
+        const { data: adsData } = await supabase
+          .from("user_ads_progress")
+          .select(`
+            user_addr,
+            total_ads_points
+          `);
+
         // Group by user_addr and sum total_points_earned
         const userPointsMap = new Map<string, number>();
         (data || []).forEach((record: any) => {
           const addr = record.user_addr.toLowerCase();
           const points = record.total_points_earned || 0;
           userPointsMap.set(addr, (userPointsMap.get(addr) || 0) + points);
+        });
+
+        // Add ads points to the map
+        (adsData || []).forEach((record: any) => {
+          const addr = record.user_addr.toLowerCase();
+          const adsPoints = record.total_ads_points || 0;
+          userPointsMap.set(addr, (userPointsMap.get(addr) || 0) + adsPoints);
         });
 
         // Convert to array and filter out users with 0 points

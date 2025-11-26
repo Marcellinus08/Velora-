@@ -11,6 +11,7 @@ export function useUserPoints(userAddress?: `0x${string}` | null) {
   const [purchasePoints, setPurchasePoints] = useState<number>(0);
   const [taskPoints, setTaskPoints] = useState<number>(0);
   const [sharePoints, setSharePoints] = useState<number>(0);
+  const [adsPoints, setAdsPoints] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(false);
 
   useEffect(() => {
@@ -19,6 +20,7 @@ export function useUserPoints(userAddress?: `0x${string}` | null) {
       setPurchasePoints(0);
       setTaskPoints(0);
       setSharePoints(0);
+      setAdsPoints(0);
       setLoading(false);
       return;
     }
@@ -41,9 +43,19 @@ export function useUserPoints(userAddress?: `0x${string}` | null) {
             setPurchasePoints(0);
             setTaskPoints(0);
             setSharePoints(0);
+            setAdsPoints(0);
           }
           return;
         }
+
+        // Fetch ads points from user_ads_progress (silently handle missing records)
+        const { data: adsData } = await supabase
+          .from("user_ads_progress")
+          .select("total_ads_points")
+          .eq("user_addr", userAddress.toLowerCase())
+          .maybeSingle();
+
+        const adsPointsTotal = adsData?.total_ads_points || 0;
 
         // Sum all points by category
         const total = (data as Array<{ 
@@ -63,10 +75,11 @@ export function useUserPoints(userAddress?: `0x${string}` | null) {
         ) || { total: 0, purchase: 0, task: 0, share: 0 };
 
         if (mounted) {
-          setTotalPoints(total.total);
+          setTotalPoints(total.total + adsPointsTotal);
           setPurchasePoints(total.purchase);
           setTaskPoints(total.task);
           setSharePoints(total.share);
+          setAdsPoints(adsPointsTotal);
         }
       } catch (err) {
         console.error("[useUserPoints] Unexpected error:", err);
@@ -75,6 +88,7 @@ export function useUserPoints(userAddress?: `0x${string}` | null) {
           setPurchasePoints(0);
           setTaskPoints(0);
           setSharePoints(0);
+          setAdsPoints(0);
         }
       } finally {
         if (mounted) setLoading(false);
@@ -84,7 +98,7 @@ export function useUserPoints(userAddress?: `0x${string}` | null) {
     fetchTotalPoints();
 
     // Set up real-time subscription for points updates
-    const channel = supabase
+    const videoChannel = supabase
       .channel(`user_points_${userAddress}`)
       .on(
         "postgres_changes",
@@ -101,12 +115,30 @@ export function useUserPoints(userAddress?: `0x${string}` | null) {
       )
       .subscribe();
 
+    const adsChannel = supabase
+      .channel(`user_ads_points_${userAddress}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "user_ads_progress",
+          filter: `user_addr=eq.${userAddress.toLowerCase()}`,
+        },
+        () => {
+          // Re-fetch when data changes
+          fetchTotalPoints();
+        }
+      )
+      .subscribe();
+
     return () => {
       mounted = false;
-      channel.unsubscribe();
+      videoChannel.unsubscribe();
+      adsChannel.unsubscribe();
     };
   }, [userAddress]);
 
-  return { totalPoints, purchasePoints, taskPoints, sharePoints, loading };
+  return { totalPoints, purchasePoints, taskPoints, sharePoints, adsPoints, loading };
 }
 

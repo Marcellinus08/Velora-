@@ -25,6 +25,7 @@ export type StudioAd = {
   created_at: string;
   cta_text: string | null;
   description: string | null;
+  points?: number; // Points earned from creating this campaign
 };
 
 export type StudioMeet = {
