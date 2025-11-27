@@ -282,7 +282,7 @@ const CommunityPostRow = memo(function CommunityPostRow({
                   <DropdownMenuTrigger className="flex items-center gap-1.5 hover:text-neutral-50 cursor-pointer">
                     <MI name="more_vert" />
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" strategy="fixed">
+                  <DropdownMenuContent align="end">
                     <DropdownMenuItem onClick={() => setIsEditModalOpen(true)} className="cursor-pointer">
                       <MI name="edit" className="mr-2 text-[14px]" />
                       <span>Edit Post</span>
