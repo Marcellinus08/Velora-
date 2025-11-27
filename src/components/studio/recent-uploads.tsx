@@ -31,35 +31,49 @@ function CrudMenu({
   const [open, setOpen] = useState(false);
 
   return (
-    <div className="relative">
+    <>
+      {/* Desktop & Tablet - Dropdown menu */}
+      <div className="relative max-sm:hidden">
+        <button
+          onClick={() => setOpen((v) => !v)}
+          onBlur={() => setOpen(false)}
+          className="rounded-full p-1.5 text-neutral-300 hover:bg-neutral-800 hover:text-neutral-100 cursor-pointer"
+          aria-label="Open menu"
+          aria-expanded={open}
+          type="button"
+        >
+          <MI name="more_vert" className="text-[14px] leading-none align-middle" />
+        </button>
+
+        {open && (
+          <div className="absolute right-full top-0 mr-2 z-50 w-[90px] overflow-hidden rounded-2xl border border-neutral-800 bg-neutral-900/95 p-1 backdrop-blur shadow-lg">
+            <button
+              type="button"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => {
+                setOpen(false);
+                onEdit();
+              }}
+              className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-[13px] text-neutral-200 hover:bg-neutral-800/70 cursor-pointer"
+            >
+              <MI name="edit" className="text-[14px] leading-none align-middle" />
+              <span>Edit</span>
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Mobile - Direct Edit Button */}
       <button
-        onClick={() => setOpen((v) => !v)}
-        onBlur={() => setOpen(false)}
-        className="rounded-full p-1.5 text-neutral-300 hover:bg-neutral-800 hover:text-neutral-100 cursor-pointer"
-        aria-label="Open menu"
-        aria-expanded={open}
+        onClick={onEdit}
+        className="hidden max-sm:flex items-center gap-1.5 rounded-full bg-neutral-800/80 hover:bg-neutral-800 border border-neutral-700/50 px-3 py-1.5 text-neutral-200 hover:text-white transition-all duration-200 shadow-lg backdrop-blur-sm"
+        aria-label="Edit video"
         type="button"
       >
-        <MI name="more_vert" className="text-[14px] leading-none align-middle" />
+        <MI name="edit" className="text-[14px] leading-none" />
+        <span className="text-xs font-medium">Edit</span>
       </button>
-
-      {open && (
-        <div className="absolute right-0 max-sm:right-0 z-10 mt-2 w-20 max-sm:w-[88px] overflow-hidden rounded-2xl border border-neutral-800 bg-neutral-900/95 p-1 backdrop-blur shadow-lg">
-          <button
-            type="button"
-            onMouseDown={(e) => e.preventDefault()}
-            onClick={() => {
-              setOpen(false);
-              onEdit();
-            }}
-            className="flex w-full items-center gap-2 rounded-xl px-2.5 py-2 text-left text-[13px] text-neutral-200 hover:bg-neutral-800/70 cursor-pointer"
-          >
-            <MI name="edit" className="text-[14px] leading-none align-middle" />
-            <span>Edit</span>
-          </button>
-        </div>
-      )}
-    </div>
+    </>
   );
 }
 
