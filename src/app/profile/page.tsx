@@ -451,7 +451,7 @@ function ProfilePageInner() {
                   {activityStats.videoShares * 4} pts
                 </div>
               </div>
-              <div className="rounded-xl border border-neutral-700/50 bg-neutral-800/50 p-4 backdrop-blur-sm">
+              <div className="rounded-xl border border-neutral-700/50 bg-neutral-800/50 p-4 backdrop-blur-sm max-sm:col-span-2">
                 <div className="text-xs font-medium text-neutral-400 text-center">Ads Created</div>
                 <div className="mt-1 text-lg font-bold text-purple-400 text-center">{activityStats.adsCreated || 0}</div>
                 <div className="mt-0.5 text-[10px] text-neutral-500 text-center">

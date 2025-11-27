@@ -72,7 +72,7 @@ export default function StudioRecentPanel({
         {/* View all / Show less */}
         <button
           onClick={() => setExpanded((v) => !v)}
-          className="rounded-full bg-[var(--primary-500)] px-3 py-1.5 max-sm:px-2.5 max-sm:py-1 text-sm max-sm:text-xs font-semibold text-white transition hover:bg-opacity-90 cursor-pointer max-sm:w-full"
+          className="rounded-full bg-[var(--primary-500)] px-3 py-1.5 max-sm:px-4 max-sm:py-2 text-sm max-sm:text-base font-semibold text-white transition hover:bg-opacity-90 cursor-pointer max-sm:w-full"
         >
           {expanded ? "Show less" : "View all"}
         </button>

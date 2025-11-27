@@ -24,6 +24,7 @@ export function FollowNotificationsList({
     unreadCount,
     isLoading,
     markAsRead,
+    markAllAsRead,
     deleteNotification,
   } = useFollowNotifications({
     userAddr,
@@ -62,11 +63,25 @@ export function FollowNotificationsList({
         <h3 className="text-sm font-semibold text-neutral-100">
           Follow Notifications
         </h3>
-        {unreadCount > 0 && (
-          <span className="inline-flex items-center justify-center h-5 w-5 rounded-full bg-red-500 text-xs font-bold text-white">
-            {unreadCount > 99 ? "99+" : unreadCount}
-          </span>
-        )}
+        <div className="flex items-center gap-2">
+          {unreadCount > 0 && (
+            <>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  markAllAsRead();
+                }}
+                className="text-xs font-medium text-violet-400 hover:text-violet-300 transition-colors"
+                title="Mark all as read"
+              >
+                Mark all read
+              </button>
+              <span className="inline-flex items-center justify-center h-5 w-5 rounded-full bg-red-500 text-xs font-bold text-white">
+                {unreadCount > 99 ? "99+" : unreadCount}
+              </span>
+            </>
+          )}
+        </div>
       </div>
 
       {/* Loading state */}
@@ -144,7 +159,10 @@ export function FollowNotificationsList({
               <div className="flex items-center gap-1 flex-shrink-0">
                 {!notif.is_read && (
                   <button
-                    onClick={() => markAsRead(notif.id)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      markAsRead(notif.id);
+                    }}
                     className="p-1 hover:bg-neutral-700 rounded transition-colors"
                     title="Mark as read"
                   >
@@ -152,9 +170,12 @@ export function FollowNotificationsList({
                   </button>
                 )}
                 <button
-                  onClick={() => deleteNotification(notif.id)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    deleteNotification(notif.id);
+                  }}
                   className="p-1 hover:bg-neutral-700 rounded transition-colors text-neutral-400 hover:text-red-400"
-                  title="Dismiss"
+                  title="Delete"
                 >
                   <X size={14} />
                 </button>

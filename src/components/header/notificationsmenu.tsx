@@ -128,15 +128,28 @@ try {
       {showMobileNotifications && (
         <div className="max-sm:fixed max-sm:inset-0 max-sm:z-50 max-sm:bg-neutral-900 max-sm:flex max-sm:flex-col sm:hidden">
           {/* Header */}
-          <div className="flex items-center gap-3 px-4 py-3 border-b border-neutral-800 bg-neutral-900">
-            <button
-              onClick={() => setShowMobileNotifications(false)}
-              className="flex items-center justify-center text-neutral-100 hover:text-white transition-colors"
-              aria-label="Close notifications"
-            >
-              <MI name="arrow_back" className="text-[24px]" />
-            </button>
-            <h1 className="text-lg font-semibold text-neutral-100">Notifications</h1>
+          <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-neutral-800 bg-neutral-900">
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setShowMobileNotifications(false)}
+                className="flex items-center justify-center text-neutral-100 hover:text-white transition-colors"
+                aria-label="Close notifications"
+              >
+                <MI name="arrow_back" className="text-[24px]" />
+              </button>
+              <h1 className="text-lg font-semibold text-neutral-100">Notifications</h1>
+            </div>
+            {unreadCount > 0 && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleMarkAllAsRead();
+                }}
+                className="text-xs text-[var(--primary-500)] hover:text-[var(--primary-400)] transition-colors font-medium cursor-pointer"
+              >
+                Mark all as read
+              </button>
+            )}
           </div>
 
           {/* Notification List - No Tabs */}
@@ -283,13 +296,25 @@ try {
                             </p>
                           </div>
                           
-                          <div className="flex flex-col items-end gap-1 shrink-0">
-                            <span className="text-lg" title={notif.type}>
-                              {getNotificationIcon(notif.type)}
-                            </span>
-                            {!notif.isRead && (
-                              <span className="h-2 w-2 rounded-full bg-[var(--primary-500)]" />
-                            )}
+                          <div className="flex items-center gap-1 shrink-0">
+                            <div className="flex flex-col items-end gap-1">
+                              <span className="text-lg" title={notif.type}>
+                                {getNotificationIcon(notif.type)}
+                              </span>
+                              {!notif.isRead && (
+                                <span className="h-2 w-2 rounded-full bg-[var(--primary-500)]" />
+                              )}
+                            </div>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                deleteNotification(notif.id);
+                              }}
+                              className="text-neutral-500 hover:text-red-400 active:text-red-500 transition-colors p-1 cursor-pointer"
+                              aria-label="Delete notification"
+                            >
+                              <MI name="close" className="text-[18px]" />
+                            </button>
                           </div>
                         </div>
                       </div>

@@ -44,7 +44,7 @@ function CrudMenu({
       </button>
 
       {open && (
-        <div className="absolute right-0 z-10 mt-2 w-44 overflow-hidden rounded-2xl border border-neutral-800 bg-neutral-900/95 p-1 backdrop-blur">
+        <div className="absolute right-0 max-sm:right-0 z-10 mt-2 w-20 max-sm:w-[88px] overflow-hidden rounded-2xl border border-neutral-800 bg-neutral-900/95 p-1 backdrop-blur shadow-lg">
           <button
             type="button"
             onMouseDown={(e) => e.preventDefault()}
@@ -52,7 +52,7 @@ function CrudMenu({
               setOpen(false);
               onEdit();
             }}
-            className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-[13px] text-neutral-200 hover:bg-neutral-800/70 cursor-pointer"
+            className="flex w-full items-center gap-2 rounded-xl px-2.5 py-2 text-left text-[13px] text-neutral-200 hover:bg-neutral-800/70 cursor-pointer"
           >
             <MI name="edit" className="text-[14px] leading-none align-middle" />
             <span>Edit</span>

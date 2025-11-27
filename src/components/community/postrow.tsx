@@ -284,14 +284,15 @@ const CommunityPostRow = memo(function CommunityPostRow({
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                     <DropdownMenuItem onClick={() => setIsEditModalOpen(true)} className="cursor-pointer">
-                      <MI name="edit" className="mr-2" />
+                      <MI name="edit" className="mr-2 text-[14px]" />
                       <span>Edit Post</span>
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       onClick={requestDelete}
-                      className="cursor-pointer text-red-500 focus:text-red-500 hover:text-red-400"
+                      variant="destructive"
+                      className="cursor-pointer"
                     >
-                      <MI name="delete" className="mr-2" />
+                      <MI name="delete" className="mr-2 text-[14px]" />
                       <span>Delete Post</span>
                     </DropdownMenuItem>
                   </DropdownMenuContent>

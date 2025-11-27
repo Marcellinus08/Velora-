@@ -72,11 +72,11 @@ export default function StudioRecentSwitch({
             {/* View all / Show less */}
             <button
               onClick={() => setExpanded((v) => !v)}
-              className="inline-flex items-center gap-1 rounded-full bg-[var(--primary-500)] px-3 py-1.5 text-sm font-semibold text-white hover:bg-opacity-90"
+              className="inline-flex items-center gap-1 rounded-full bg-[var(--primary-500)] px-3 py-1.5 max-sm:px-4 max-sm:py-2 text-sm max-sm:text-base font-semibold text-white hover:bg-opacity-90"
               title={expanded ? "Collapse list" : "Show all items"}
             >
               {expanded ? "Show less" : "View all"}
-              <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+              <svg className="h-4 w-4 max-sm:h-5 max-sm:w-5" viewBox="0 0 20 20" fill="currentColor">
                 <path d="M5 10h8l-3-3 1.4-1.4L17.8 12l-6.4 6.4L10 17l3-3H5v-4z" />
               </svg>
             </button>

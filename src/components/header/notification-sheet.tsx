@@ -128,11 +128,24 @@ export function NotificationSheet({ open, onClose, abstractId }: NotificationShe
           </button>
           <h1 className="text-lg font-semibold text-neutral-100">Notifications</h1>
         </div>
-        {unreadCount > 0 && (
-          <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-[var(--primary-500)]/10 border border-[var(--primary-500)]/20">
-            <span className="text-xs font-semibold text-[var(--primary-500)]">{unreadCount} new</span>
-          </div>
-        )}
+        <div className="flex items-center gap-2">
+          {unreadCount > 0 && (
+            <>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  markAllAsRead();
+                }}
+                className="text-xs text-[var(--primary-500)] hover:text-[var(--primary-400)] transition-colors font-medium cursor-pointer"
+              >
+                Mark all as read
+              </button>
+              <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-[var(--primary-500)]/10 border border-[var(--primary-500)]/20">
+                <span className="text-xs font-semibold text-[var(--primary-500)]">{unreadCount} new</span>
+              </div>
+            </>
+          )}
+        </div>
       </div>
 
       {/* Notification List */}
@@ -270,13 +283,25 @@ export function NotificationSheet({ open, onClose, abstractId }: NotificationShe
                         </p>
                       </div>
                       
-                      <div className="flex flex-col items-end gap-1 shrink-0">
-                        <span className="text-lg" title={notif.type}>
-                          {getNotificationIcon(notif.type)}
-                        </span>
-                        {!notif.isRead && (
-                          <span className="h-2 w-2 rounded-full bg-[var(--primary-500)]" />
-                        )}
+                      <div className="flex items-center gap-1 shrink-0">
+                        <div className="flex flex-col items-end gap-1">
+                          <span className="text-lg" title={notif.type}>
+                            {getNotificationIcon(notif.type)}
+                          </span>
+                          {!notif.isRead && (
+                            <span className="h-2 w-2 rounded-full bg-[var(--primary-500)]" />
+                          )}
+                        </div>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            deleteNotification(notif.id);
+                          }}
+                          className="text-neutral-500 hover:text-red-400 active:text-red-500 transition-colors p-1 cursor-pointer"
+                          aria-label="Delete notification"
+                        >
+                          <MI name="close" className="text-[18px]" />
+                        </button>
                       </div>
                     </div>
                   </div>

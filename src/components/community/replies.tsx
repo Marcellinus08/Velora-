@@ -419,14 +419,15 @@ export default function Replies({ postId, onPosted, openReplyBox }: { postId: st
                       onClick={() => setEditingReplyId(node.id)} 
                       className="cursor-pointer"
                     >
-                      <MI name="edit" className="mr-2 text-neutral-400" />
+                      <MI name="edit" className="mr-2 text-[14px]" />
                       <span>Edit</span>
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       onClick={() => handleDelete(node.id)}
-                      className="cursor-pointer text-red-500 focus:text-red-500 hover:text-red-400"
+                      variant="destructive"
+                      className="cursor-pointer"
                     >
-                      <MI name="delete" className="mr-2" />
+                      <MI name="delete" className="mr-2 text-[14px]" />
                       <span>Delete</span>
                     </DropdownMenuItem>
                   </DropdownMenuContent>
