@@ -55,9 +55,10 @@ export type PriceRule = {
   default_cents: number;
 };
 
-// $1 – $100 (step $1)
+// $0 – $100 (step $1)
+// Database constraint updated to allow price_cents >= 0
 const DEFAULT_PRICE_RULE: PriceRule = {
-  min_cents: 100,
+  min_cents: 0,  // $0 for FREE videos
   max_cents: 10000,
   step_cents: 100,
   default_cents: 1999, // $19.99
@@ -289,18 +290,66 @@ export default function UploadCreate() {
     bucket: string,
     path: string,
     data: File | Blob,
-    contentType?: string
+    contentType?: string,
+    retries = 3
   ) {
-    const { data: uploadRes, error: uploadErr } = await supabase.storage
-      .from(bucket)
-      .upload(path, data, {
-        contentType,
-        cacheControl: "3600",
-        upsert: false,
-      });
-    if (uploadErr) throw uploadErr;
-    const { data: pub } = supabase.storage.from(bucket).getPublicUrl(path);
-    return { path: uploadRes?.path ?? path, publicUrl: pub.publicUrl };
+    let lastError: any = null;
+    
+    for (let attempt = 1; attempt <= retries; attempt++) {
+      try {
+        console.log(`[uploadToSupabase] Attempt ${attempt}/${retries} for ${path}`);
+        
+        const { data: uploadRes, error: uploadErr } = await supabase.storage
+          .from(bucket)
+          .upload(path, data, {
+            contentType,
+            cacheControl: "3600",
+            upsert: false,
+          });
+        
+        if (uploadErr) {
+          console.error(`[uploadToSupabase] Upload error on attempt ${attempt}:`, uploadErr);
+          lastError = uploadErr;
+          
+          // If it's a "Failed to fetch" or network error, retry
+          if (attempt < retries && (
+            uploadErr.message?.includes('Failed to fetch') ||
+            uploadErr.message?.includes('Network') ||
+            uploadErr.statusCode === 0
+          )) {
+            console.log(`[uploadToSupabase] Retrying in ${attempt * 1000}ms...`);
+            await new Promise(resolve => setTimeout(resolve, attempt * 1000));
+            continue;
+          }
+          
+          throw uploadErr;
+        }
+        
+        const { data: pub } = supabase.storage.from(bucket).getPublicUrl(path);
+        console.log(`[uploadToSupabase] Success on attempt ${attempt}`);
+        return { path: uploadRes?.path ?? path, publicUrl: pub.publicUrl };
+        
+      } catch (err: any) {
+        console.error(`[uploadToSupabase] Exception on attempt ${attempt}:`, err);
+        lastError = err;
+        
+        // Retry on network errors
+        if (attempt < retries && (
+          err.message?.includes('Failed to fetch') ||
+          err.message?.includes('Network') ||
+          err.name === 'TypeError'
+        )) {
+          console.log(`[uploadToSupabase] Retrying after exception in ${attempt * 1000}ms...`);
+          await new Promise(resolve => setTimeout(resolve, attempt * 1000));
+          continue;
+        }
+        
+        throw err;
+      }
+    }
+    
+    // If all retries failed
+    throw lastError || new Error('Upload failed after all retries');
   }
 
   // Insert with targeted fallback: hanya drop field yang kolomnya TIDAK ADA.
@@ -318,6 +367,9 @@ export default function UploadCreate() {
       if (msg.includes("tasks_json")) strip.push("tasks_json");
       if (msg.includes("currency")) strip.push("currency");
       if (msg.includes("points_total")) strip.push("points_total"); // Handle generated column
+      if (msg.includes("duration_seconds")) strip.push("duration_seconds");
+      if (msg.includes("thumb_path")) strip.push("thumb_path");
+      if (msg.includes("thumb_url")) strip.push("thumb_url");
       // (tambahkan nama kolom lain kalau memang belum ada di schema)
 
       if (strip.length) {
@@ -327,6 +379,7 @@ export default function UploadCreate() {
         const second = await (supabase as any).from("videos").insert(trimmed as any);
         if (second.error) {
           console.error('[insertVideoRowSmart] Second insert also failed:', second.error);
+          console.error('[insertVideoRowSmart] Payload was:', trimmed);
           throw second.error;
         }
         console.log('[insertVideoRowSmart] Second insert succeeded!');
@@ -335,6 +388,7 @@ export default function UploadCreate() {
     }
 
     // error lain → lempar biar ketahuan (mis. RLS, foreign key, dll.)
+    console.error('[insertVideoRowSmart] Unhandled error:', error);
     throw error;
   }
 
@@ -357,11 +411,17 @@ export default function UploadCreate() {
         setProgress((p) => (p >= 95 ? p : p + 1));
       }, 150);
 
+      console.log('[startUpload] Starting upload process...');
+      console.log('[startUpload] Bucket:', STUDIO_BUCKET);
+      console.log('[startUpload] File size:', (file.size / (1024 * 1024)).toFixed(2), 'MB');
+
       // 1) upload video
       const fileExt = (file.name.split(".").pop() || "mp4").toLowerCase();
       const base = file.name.replace(/\s+/g, "_");
       const stamp = Date.now();
       const videoPath = `videos/${stamp}_${base}`;
+      
+      console.log('[startUpload] Uploading video to:', videoPath);
       const videoRes = await uploadToSupabase(
         STUDIO_BUCKET,
         videoPath,
@@ -411,9 +471,9 @@ export default function UploadCreate() {
         currency: "USD",
         tasks_json: tasks, // kalau kolom tidak ada → akan di-trim otomatis
         
-        // Calculate total points: $1 = 10 points
-        // So points_total = (price_cents / 100) * 10
-        points_total: Math.floor((normalizedCents / 100) * 10),
+        // Calculate total points: $1 = 10 points, FREE videos ($0) get 0 points
+        // So points_total = price > 0 ? (price_cents / 100) * 10 : 0
+        points_total: normalizedCents > 0 ? Math.floor((normalizedCents / 100) * 10) : 0,
       };
 
       await insertVideoRowSmart(payload);
@@ -434,8 +494,27 @@ export default function UploadCreate() {
       resetAll();
     } catch (e: any) {
       // error reporting yang JELAS
-      const msg = pickErrMsg(e);
-      console.error("Upload failed:", e);
+      console.error("[startUpload] Upload failed:", e);
+      console.error("[startUpload] Error details:", {
+        message: e?.message,
+        statusCode: e?.statusCode,
+        error: e?.error,
+        name: e?.name,
+      });
+      
+      let msg = pickErrMsg(e);
+      
+      // Provide more helpful error messages
+      if (e?.message?.includes('Failed to fetch') || e?.name === 'TypeError') {
+        msg = "Network error: Please check your internet connection and try again.";
+      } else if (e?.statusCode === 413) {
+        msg = "File too large. Please upload a smaller video.";
+      } else if (e?.message?.includes('StorageUnknownError')) {
+        msg = "Storage configuration error. Please contact support or try again later.";
+      } else if (e?.message?.includes('bucket')) {
+        msg = "Storage bucket not found. Please contact support.";
+      }
+      
       if (timer.current) {
         clearInterval(timer.current);
         timer.current = null;
@@ -445,8 +524,8 @@ export default function UploadCreate() {
       setError(msg);
       toast.error(
         "Upload failed",
-        `Error: ${msg}\nPlease try again or check your file`,
-        6000
+        msg,
+        8000
       );
     }
   }

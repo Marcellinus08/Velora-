@@ -11,10 +11,22 @@ export function createClient() {
     return supabaseClient;
   }
 
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!supabaseUrl || !supabaseAnonKey) {
+    console.error("[Supabase] Missing environment variables!");
+    console.error("[Supabase] URL:", supabaseUrl ? "✓" : "✗");
+    console.error("[Supabase] Key:", supabaseAnonKey ? "✓" : "✗");
+    throw new Error("Supabase configuration is missing. Please check your environment variables.");
+  }
+
+  console.log("[Supabase] Initializing client with URL:", supabaseUrl);
+
   // Create new client only once
   supabaseClient = createSupabaseClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    supabaseUrl,
+    supabaseAnonKey,
     {
       auth: {
         persistSession: true,
@@ -26,14 +38,42 @@ export function createClient() {
           eventsPerSecond: 10,
         },
       },
-      // opsional: cegah cache default fetch
+      // Storage configuration with retry
       global: {
-        fetch: (input, init) =>
-          fetch(input as RequestInfo, { ...init, cache: "no-store" }),
+        fetch: async (input, init) => {
+          const maxRetries = 3;
+          let lastError: any;
+          
+          for (let i = 0; i < maxRetries; i++) {
+            try {
+              const response = await fetch(input as RequestInfo, { 
+                ...init, 
+                cache: "no-store",
+                // Add timeout
+                signal: AbortSignal.timeout(30000), // 30 seconds
+              });
+              return response;
+            } catch (error: any) {
+              lastError = error;
+              console.error(`[Supabase] Fetch attempt ${i + 1}/${maxRetries} failed:`, error);
+              
+              // If it's the last retry, throw
+              if (i === maxRetries - 1) {
+                throw error;
+              }
+              
+              // Wait before retry (exponential backoff)
+              await new Promise(resolve => setTimeout(resolve, Math.pow(2, i) * 1000));
+            }
+          }
+          
+          throw lastError;
+        },
       },
     }
   );
 
+  console.log("[Supabase] Client initialized successfully");
   return supabaseClient;
 }
 

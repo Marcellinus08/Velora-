@@ -64,11 +64,11 @@ export default function UploadDetailsPanel({
   const creatorEarn = Math.round(priceCents * 0.6);
   const platformFee = priceCents - creatorEarn;
 
-  /* points: total = price * 10 => cents / 10 */
-  const totalPoints = Math.round(priceCents / 10);
-  const buyPts = Math.round(totalPoints * 0.4);
-  const taskPts = Math.round(totalPoints * 0.2);
-  const sharePts = totalPoints - buyPts - taskPts;
+  /* points: total = price * 10 => cents / 10, FREE videos get 0 points */
+  const totalPoints = priceCents === 0 ? 0 : Math.round(priceCents / 10);
+  const buyPts = priceCents === 0 ? 0 : Math.round(totalPoints * 0.4);
+  const taskPts = priceCents === 0 ? 0 : Math.round(totalPoints * 0.2);
+  const sharePts = priceCents === 0 ? 0 : totalPoints - buyPts - taskPts;
 
   /* helpers */
   const clampToRangeStep = (vUsd: number) => {
@@ -270,6 +270,7 @@ export default function UploadDetailsPanel({
           <span className="text-xs text-neutral-400 max-sm:text-[11px] md:text-xs">
             Range ${(min_cents / 100).toFixed(2)} – ${(max_cents / 100).toFixed(2)} • step $
             {(step_cents / 100).toFixed(2)}
+            {priceCents === 0 && <span className="ml-2 text-emerald-400 font-semibold">• FREE (No points)</span>}
           </span>
         </div>
 
