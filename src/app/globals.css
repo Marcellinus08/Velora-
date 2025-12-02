@@ -132,6 +132,29 @@ html {
   display: none;
 }
 
+/* Hide all video controls on homepage video card preview */
+.mobile-video-card video {
+  pointer-events: none !important;
+}
+
+.mobile-video-card video::-webkit-media-controls,
+.mobile-video-card video::-webkit-media-controls-panel,
+.mobile-video-card video::-webkit-media-controls-play-button,
+.mobile-video-card video::-webkit-media-controls-start-playback-button,
+.mobile-video-card video::-webkit-media-controls-overlay-play-button,
+.mobile-video-card video::-webkit-media-controls-enclosure,
+.mobile-video-card video::-webkit-media-controls-volume-slider,
+.mobile-video-card video::-webkit-media-controls-mute-button,
+.mobile-video-card video::-webkit-media-controls-timeline,
+.mobile-video-card video::-webkit-media-controls-current-time-display,
+.mobile-video-card video::-webkit-media-controls-time-remaining-display,
+.mobile-video-card video::-webkit-media-controls-fullscreen-button {
+  display: none !important;
+  -webkit-appearance: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+}
+
 /* Pastikan konten masih bisa discroll */
 body {
   overflow: scroll;
@@ -283,6 +306,23 @@ body:has([data-radix-dropdown-menu-content]) {
   /* Mobile video card styling */
   .mobile-video-card {
     border-radius: 0.75rem !important;
+  }
+
+  /* Hide video controls on homepage video card preview */
+  .mobile-video-card video::-webkit-media-controls,
+  .mobile-video-card video::-webkit-media-controls-panel,
+  .mobile-video-card video::-webkit-media-controls-play-button,
+  .mobile-video-card video::-webkit-media-controls-start-playback-button,
+  .mobile-video-card video::-webkit-media-controls-overlay-play-button,
+  .mobile-video-card video::-webkit-media-controls-volume-slider,
+  .mobile-video-card video::-webkit-media-controls-mute-button,
+  .mobile-video-card video::-webkit-media-controls-timeline,
+  .mobile-video-card video::-webkit-media-controls-current-time-display,
+  .mobile-video-card video::-webkit-media-controls-time-remaining-display,
+  .mobile-video-card video::-webkit-media-controls-fullscreen-button {
+    display: none !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
   }
 
   .mobile-video-card-title {

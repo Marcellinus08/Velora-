@@ -277,31 +277,36 @@ export const VideoCard = memo(function VideoCard({
               muted
               playsInline
               preload="metadata"
+              controls={false}
+              disablePictureInPicture
+              controlsList="nodownload nofullscreen noremoteplayback"
+              style={{ pointerEvents: 'none' }}
+              onContextMenu={(e) => e.preventDefault()}
             />
           )}
           
           {/* Preview indicator when hovering */}
           {showVideo && videoUrl && countdown > 0 && (
-            <div className="absolute bottom-2 left-2 z-10">
-              <div className="flex items-center gap-1.5 rounded-md bg-black/70 px-2.5 py-1 text-white backdrop-blur-sm">
-                <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
-                </svg>
-                <span className="text-xs font-medium">Preview</span>
+            <>
+              <div className="absolute bottom-2 left-2 z-10">
+                <div className="flex items-center gap-1.5 rounded-md bg-black/70 px-2.5 py-1 text-white backdrop-blur-sm">
+                  <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
+                  </svg>
+                  <span className="text-xs font-medium">Preview</span>
+                </div>
               </div>
-            </div>
-          )}
 
-          {/* Countdown timer */}
-          {showVideo && videoUrl && countdown > 0 && (
-            <div className="absolute bottom-2 right-2 z-10">
-              <div className="flex items-center gap-1.5 rounded-md bg-black/70 px-2.5 py-1 text-white backdrop-blur-sm">
-                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <span className="text-xs font-semibold tabular-nums">{countdown}s</span>
+              {/* Countdown timer */}
+              <div className="absolute bottom-2 right-2 z-10">
+                <div className="flex items-center gap-1.5 rounded-md bg-black/70 px-2.5 py-1 text-white backdrop-blur-sm">
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span className="text-xs font-semibold tabular-nums">{countdown}s</span>
+                </div>
               </div>
-            </div>
+            </>
           )}
         </div>
       </div>
