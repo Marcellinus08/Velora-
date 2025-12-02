@@ -332,11 +332,13 @@ body:has([data-radix-dropdown-menu-content]) {
 
   video::-webkit-media-controls-play-button,
   video::-webkit-media-controls-volume-slider,
+  video::-webkit-media-controls-volume-slider-container,
   video::-webkit-media-controls-mute-button,
   video::-webkit-media-controls-fullscreen-button,
   video::-webkit-media-controls-timeline {
     display: flex !important;
     opacity: 1 !important;
+    visibility: visible !important;
   }
 }
 
@@ -364,11 +366,13 @@ body:has([data-radix-dropdown-menu-content]) {
 
   video::-webkit-media-controls-play-button,
   video::-webkit-media-controls-volume-slider,
+  video::-webkit-media-controls-volume-slider-container,
   video::-webkit-media-controls-mute-button,
   video::-webkit-media-controls-fullscreen-button,
   video::-webkit-media-controls-timeline {
     display: flex !important;
     opacity: 1 !important;
+    visibility: visible !important;
   }
 }
 
@@ -388,8 +392,23 @@ video::-webkit-media-controls-panel {
 
 /* Ensure volume and fullscreen buttons are always visible */
 video::-webkit-media-controls-volume-slider-container,
+video::-webkit-media-controls-volume-slider,
+video::-webkit-media-controls-mute-button,
 video::-webkit-media-controls-fullscreen-button {
   display: flex !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+/* Force volume slider to be visible */
+video::-webkit-media-controls-volume-slider-container {
+  width: auto !important;
+  min-width: 50px !important;
+}
+
+video::-webkit-media-controls-volume-slider {
+  width: 50px !important;
+  min-width: 50px !important;
 }
 
 /* ESC key handler for fullscreen - add event listener globally */
