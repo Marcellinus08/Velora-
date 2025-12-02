@@ -314,6 +314,30 @@ body:has([data-radix-dropdown-menu-content]) {
   .mobile-hide-scrollbar::-webkit-scrollbar {
     display: none !important;
   }
+
+  /* Ensure video controls are visible on mobile */
+  video {
+    width: 100% !important;
+  }
+
+  video::-webkit-media-controls {
+    display: flex !important;
+    opacity: 1 !important;
+  }
+
+  video::-webkit-media-controls-panel {
+    display: flex !important;
+    opacity: 1 !important;
+  }
+
+  video::-webkit-media-controls-play-button,
+  video::-webkit-media-controls-volume-slider,
+  video::-webkit-media-controls-mute-button,
+  video::-webkit-media-controls-fullscreen-button,
+  video::-webkit-media-controls-timeline {
+    display: flex !important;
+    opacity: 1 !important;
+  }
 }
 
 /* Tablet: Small devices (tablets, 640px and up) */
@@ -326,8 +350,61 @@ body:has([data-radix-dropdown-menu-content]) {
     grid-template-columns: repeat(2, 1fr) !important;
     gap: 1rem !important;
   }
+
+  /* Ensure video controls are visible on tablet */
+  video::-webkit-media-controls {
+    display: flex !important;
+    opacity: 1 !important;
+  }
+
+  video::-webkit-media-controls-panel {
+    display: flex !important;
+    opacity: 1 !important;
+  }
+
+  video::-webkit-media-controls-play-button,
+  video::-webkit-media-controls-volume-slider,
+  video::-webkit-media-controls-mute-button,
+  video::-webkit-media-controls-fullscreen-button,
+  video::-webkit-media-controls-timeline {
+    display: flex !important;
+    opacity: 1 !important;
+  }
 }
 
+/* Global video controls styling - ensure all controls are visible on all devices */
+video::-webkit-media-controls-enclosure {
+  overflow: visible !important;
+}
 
+video::-webkit-media-controls {
+  overflow: visible !important;
+}
 
+video::-webkit-media-controls-panel {
+  width: 100%;
+  display: flex !important;
+}
 
+/* Ensure volume and fullscreen buttons are always visible */
+video::-webkit-media-controls-volume-slider-container,
+video::-webkit-media-controls-fullscreen-button {
+  display: flex !important;
+}
+
+/* ESC key handler for fullscreen - add event listener globally */
+video {
+  outline: none;
+}
+
+video:fullscreen {
+  object-fit: contain;
+}
+
+video:-webkit-full-screen {
+  object-fit: contain;
+}
+
+video:-moz-full-screen {
+  object-fit: contain;
+}

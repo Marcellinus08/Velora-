@@ -101,6 +101,20 @@ function MediaGrid({ media }: { media?: { url: string; mime?: string | null }[] 
     };
   }, [media]);
 
+  // Add ESC key handler for fullscreen exit on mobile/tablet
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && document.fullscreenElement) {
+        document.exitFullscreen();
+      }
+    };
+    
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
+
   if (!valid.length) return null;
   
   // Helper to detect if file is video based on extension when mime is null
@@ -113,14 +127,30 @@ function MediaGrid({ media }: { media?: { url: string; mime?: string | null }[] 
   
   return (
     <>
-      <div className="mt-3 max-sm:mt-2 grid grid-cols-2 gap-2 max-sm:gap-1.5 sm:grid-cols-3 md:grid-cols-4 max-sm:w-full max-sm:overflow-hidden md:gap-2">
+      <div className="mt-3 max-sm:mt-2 grid grid-cols-1 sm:grid-cols-2 2xl:grid-cols-4 gap-2 max-sm:gap-2 md:gap-2 w-full">
         {valid.map((m, i) => (
-          <div key={`${m.url}-${i}`} className="relative overflow-hidden rounded-lg max-sm:rounded-md border border-neutral-800 max-sm:w-full md:rounded-lg">
+          <div key={`${m.url}-${i}`} className="relative overflow-hidden rounded-lg max-sm:rounded-md border border-neutral-800 md:rounded-lg group">
             {isVideo(m) ? (
-              <video src={m.url} className="h-40 max-sm:h-24 w-full object-cover md:h-40" controls playsInline preload="metadata" />
+              <>
+                <video 
+                  id={`video-${i}`}
+                  src={m.url} 
+                  className="h-48 sm:h-56 md:h-56 xl:h-64 2xl:h-40 w-full object-cover" 
+                  controls 
+                  playsInline 
+                  preload="metadata"
+                  controlsList="nodownload"
+                  onKeyDown={(e) => {
+                    // Allow ESC to exit fullscreen on mobile/tablet
+                    if (e.key === 'Escape' && document.fullscreenElement) {
+                      document.exitFullscreen();
+                    }
+                  }}
+                />
+              </>
             ) : (
               <div 
-                className="h-40 max-sm:h-24 w-full cursor-pointer hover:opacity-90 transition-opacity relative"
+                className="h-48 sm:h-56 md:h-56 xl:h-64 2xl:h-40 w-full cursor-pointer hover:opacity-90 transition-opacity relative"
                 onClick={() => setLightboxImage(m.url)}
               >
                 <Image 
@@ -306,8 +336,8 @@ const CommunityPostRow = memo(function CommunityPostRow({
   };
 
   return (
-    <div className="rounded-lg border border-neutral-800 bg-neutral-900 p-4 max-sm:p-3 max-sm:rounded-md transition-colors hover:bg-neutral-800 max-sm:w-full max-sm:overflow-hidden md:p-4 md:rounded-lg">
-      <div className="flex items-start gap-4 max-sm:gap-2.5 max-sm:w-full md:gap-3.5">
+    <div className="rounded-lg border border-neutral-800 bg-neutral-900 p-4 max-sm:p-3 max-sm:rounded-md transition-colors hover:bg-neutral-800 max-sm:w-[calc(100vw-2rem)] sm:w-full md:p-4 md:rounded-lg">
+      <div className="flex items-start gap-4 max-sm:gap-2.5 md:gap-3.5">
         {/* Avatar */}
         {dbAvatar ? (
           <Image
