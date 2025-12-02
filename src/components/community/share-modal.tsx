@@ -9,6 +9,7 @@ interface CommunityShareModalProps {
   postContent: string;
   postUrl: string;
   mediaUrl?: string;
+  allMedia?: { url: string; mime?: string | null }[];
 }
 
 export default function CommunityShareModal({ 
@@ -17,21 +18,35 @@ export default function CommunityShareModal({
   postTitle, 
   postContent,
   postUrl,
-  mediaUrl
+  mediaUrl,
+  allMedia
 }: CommunityShareModalProps) {
   const [copied, setCopied] = useState(false);
 
   if (!isOpen) return null;
 
-  // Format share text dengan konten post
-  const contentPreview = postContent.length > 100 ? postContent.slice(0, 100) + '...' : postContent;
-  const shareText = postTitle + "\n\n" + contentPreview;
-  const shareTextWithUrl = shareText + "\n\n🎬 Read more: " + postUrl + "\n\n#Glonic #AbstractChain @AbstractChain";
+  // Format share text dengan FULL konten post (tidak dipotong)
+  const shareText = postTitle + "\n\n" + postContent;
   
-  // Jika ada media, tambahkan URL gambar di akhir untuk semua platform
-  const shareTextWithMedia = mediaUrl 
-    ? shareText + "\n\n🎬 Read more: " + postUrl + "\n\n📸 " + mediaUrl + "\n\n#Glonic #AbstractChain @AbstractChain"
-    : shareTextWithUrl;
+  // Build media URLs text - include semua gambar dan video
+  let mediaText = "";
+  if (allMedia && allMedia.length > 0) {
+    allMedia.forEach((media, index) => {
+      const isVideo = media.mime?.startsWith?.("video/") || 
+        ['mp4', 'webm', 'mov', 'avi', 'mkv', 'flv', 'm4v'].includes(media.url.split('.').pop()?.toLowerCase() || '');
+      const emoji = isVideo ? "🎥" : "📸";
+      mediaText += `\n${emoji} ${media.url}`;
+    });
+  } else if (mediaUrl) {
+    mediaText = `\n📸 ${mediaUrl}`;
+  }
+  
+  const shareTextWithUrl = shareText + "\n\n🎬 Read more: " + postUrl + mediaText + "\n\n#Glonic #AbstractChain @AbstractChain";
+  
+  // Jika ada media, tambahkan URL media di akhir untuk semua platform
+  const shareTextWithMedia = (allMedia && allMedia.length > 0) || mediaUrl
+    ? shareText + "\n\n🎬 Read more: " + postUrl + mediaText + "\n\n#Glonic #AbstractChain @AbstractChain"
+    : shareText + "\n\n🎬 Read more: " + postUrl + "\n\n#Glonic #AbstractChain @AbstractChain";
 
   const socialPlatforms = [
     {
@@ -56,9 +71,10 @@ export default function CommunityShareModal({
       ),
       color: "bg-blue-600 hover:bg-blue-700",
       action: () => {
-        const fbTextFull = mediaUrl 
-          ? shareText + "\n\n📸 " + mediaUrl + "\n\n#Glonic #AbstractChain @AbstractChain"
-          : shareText + "\n\n#Glonic #AbstractChain @AbstractChain";
+        // Facebook dengan konten FULL (tidak dipotong) + semua media URLs
+        const fbTextFull = (allMedia && allMedia.length > 0) || mediaUrl
+          ? postTitle + "\n\n" + postContent + mediaText + "\n\n#Glonic #AbstractChain @AbstractChain"
+          : postTitle + "\n\n" + postContent + "\n\n#Glonic #AbstractChain @AbstractChain";
         const fbShareUrl = "https://www.facebook.com/sharer/sharer.php?u=" + encodeURIComponent(postUrl) + "&quote=" + encodeURIComponent(fbTextFull);
         window.open(fbShareUrl, "_blank", "width=600,height=400");
       }
@@ -85,9 +101,9 @@ export default function CommunityShareModal({
       ),
       color: "bg-blue-500 hover:bg-blue-600",
       action: () => {
-        // Untuk Telegram, tambahkan URL gambar di dalam text agar bisa preview
-        const telegramTextFull = mediaUrl 
-          ? shareText + "\n\n🎬 Read more: " + postUrl + "\n\n📸 " + mediaUrl + "\n\n#Glonic #AbstractChain @AbstractChain"
+        // Untuk Telegram, tambahkan semua media URLs agar bisa preview
+        const telegramTextFull = (allMedia && allMedia.length > 0) || mediaUrl
+          ? shareText + "\n\n🎬 Read more: " + postUrl + mediaText + "\n\n#Glonic #AbstractChain @AbstractChain"
           : shareTextWithUrl;
         const telegramUrl = "https://t.me/share/url?url=" + encodeURIComponent(postUrl) + "&text=" + encodeURIComponent(telegramTextFull);
         window.open(telegramUrl, "_blank");

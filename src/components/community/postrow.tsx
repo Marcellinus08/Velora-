@@ -487,6 +487,7 @@ const CommunityPostRow = memo(function CommunityPostRow({
             postContent={contentText}
             postUrl={typeof window !== "undefined" ? `${window.location.origin}/community?postId=${post.id}` : ""}
             mediaUrl={post.media?.[0]?.url}
+            allMedia={post.media}
           />
 
           {openReplies && <Replies postId={post.id} onPosted={() => setReplyCount((c) => c + 1)} openReplyBox={openReplies} />}
