@@ -61,7 +61,7 @@ export default function UploadDetailsPanel({
   const { min_cents, max_cents, step_cents } = priceRule;
 
   /* earnings */
-  const creatorEarn = Math.round(priceCents * 0.6);
+  const creatorEarn = Math.round(priceCents * 0.7);
   const platformFee = priceCents - creatorEarn;
 
   /* points: total = price * 10 => cents / 10, FREE videos get 0 points */
@@ -319,14 +319,14 @@ export default function UploadDetailsPanel({
             <div className="my-3 h-px bg-neutral-700/50 max-sm:my-2.5 md:my-2.5" />
 
             <div className="flex items-center justify-between">
-              <span className="text-xs text-neutral-400 max-sm:text-[11px] md:text-xs">You earn (60%)</span>
+              <span className="text-xs text-neutral-400 max-sm:text-[11px] md:text-xs">You earn (70%)</span>
               <span className="text-sm font-bold text-purple-300 max-sm:text-xs md:text-sm">
                 ${dollars(creatorEarn)}
               </span>
             </div>
 
             <div className="mt-2 flex items-center justify-between max-sm:mt-1.5 md:mt-2">
-              <span className="text-xs text-neutral-400 max-sm:text-[11px] md:text-xs">Platform (40%)</span>
+              <span className="text-xs text-neutral-400 max-sm:text-[11px] md:text-xs">Platform (30%)</span>
               <span className="text-sm font-semibold text-neutral-300 max-sm:text-xs md:text-sm">
                 ${dollars(platformFee)}
               </span>

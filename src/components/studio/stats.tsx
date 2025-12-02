@@ -134,7 +134,7 @@ export default function StudioStats({ totals }: { totals: Totals }) {
         label={
           <span className="inline-flex items-center max-sm:text-[11px]">
             Earnings
-            <InfoHint text="Earnings from video sales (60%) and meet bookings (80%). Withdrawable according to the payout policy." />
+            <InfoHint text="Earnings from video sales (70%) and meet bookings (80%). Withdrawable according to the payout policy." />
           </span>
         }
         value={fmtUsd(totals.earningsUsd)}

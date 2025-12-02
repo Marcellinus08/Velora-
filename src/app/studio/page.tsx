@@ -338,9 +338,9 @@ export default function StudioPage() {
           // Count purchases per video
           buyersPerVideo.set(p.video_id, (buyersPerVideo.get(p.video_id) || 0) + 1);
 
-          // Sum revenue per video (60% for creator)
+          // Sum revenue per video (70% for creator)
           const priceCents = priceMap.get(p.video_id) || 0;
-          const creatorEarnings = Math.round(priceCents * 0.6); // 60% for creator
+          const creatorEarnings = Math.round(priceCents * 0.7); // 70% for creator
           const creatorUsd = creatorEarnings / 100;
           revenuePerVideo.set(p.video_id, (revenuePerVideo.get(p.video_id) || 0) + creatorUsd);
         });
@@ -354,7 +354,7 @@ export default function StudioPage() {
 
         setVideos(updatedVideos);
 
-        // Calculate total video earnings (60% creator share)
+        // Calculate total video earnings (70% creator share)
         const totalVideoEarnings = Array.from(revenuePerVideo.values()).reduce((sum, rev) => sum + rev, 0);
         
         console.log('[Studio Stats] Buyers per video:', Array.from(buyersPerVideo.entries()));

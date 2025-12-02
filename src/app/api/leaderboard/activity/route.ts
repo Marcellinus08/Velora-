@@ -40,9 +40,9 @@ export async function GET(req: NextRequest) {
             .select("price_cents")
             .eq("video_id", video.id);
 
-          // Creator gets 60% of video sales (40% goes to platform)
+          // Creator gets 70% of video sales (30% goes to platform)
           const videoSalesTotal = sales?.reduce((sum, sale) => sum + ((sale.price_cents || 0) / 100), 0) || 0;
-          const videoEarnings = videoSalesTotal * 0.6; // 60% for creator
+          const videoEarnings = videoSalesTotal * 0.7; // 70% for creator
 
           activities.push({
             type: "video_upload",
@@ -522,9 +522,9 @@ export async function GET(req: NextRequest) {
           .select("price_cents")
           .eq("video_id", video.id);
         
-        // Creator gets 60% of video sales (40% goes to platform)
+        // Creator gets 70% of video sales (30% goes to platform)
         const videoSalesTotal = sales?.reduce((sum, sale) => sum + ((sale.price_cents || 0) / 100), 0) || 0;
-        totalVideoEarnings += videoSalesTotal * 0.6; // 60% for creator
+        totalVideoEarnings += videoSalesTotal * 0.7; // 70% for creator
       }
     }
 
@@ -539,7 +539,7 @@ export async function GET(req: NextRequest) {
     const meetTotal = allMeets?.reduce((sum, meet) => sum + ((meet.total_price_cents || 0) / 100), 0) || 0;
     const totalMeetEarnings = meetTotal * 0.8; // 80% for creator (payMeet: 80/20)
 
-    // Total profit = video sales (60%) + meet earnings (80%)
+    // Total profit = video sales (70%) + meet earnings (80%)
     const totalProfit = totalVideoEarnings + totalMeetEarnings;
 
     // Calculate stats from activities (for display in cards)
