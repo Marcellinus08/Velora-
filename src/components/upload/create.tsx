@@ -315,7 +315,7 @@ export default function UploadCreate() {
           if (attempt < retries && (
             uploadErr.message?.includes('Failed to fetch') ||
             uploadErr.message?.includes('Network') ||
-            uploadErr.statusCode === 0
+            (uploadErr as any).statusCode === 0
           )) {
             console.log(`[uploadToSupabase] Retrying in ${attempt * 1000}ms...`);
             await new Promise(resolve => setTimeout(resolve, attempt * 1000));
