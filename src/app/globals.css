@@ -132,7 +132,7 @@ html {
   display: none;
 }
 
-/* Hide all video controls on homepage video card preview */
+/* Hide all video controls ONLY on homepage video card preview - NOT on community posts */
 .mobile-video-card video {
   pointer-events: none !important;
 }
@@ -153,6 +153,22 @@ html {
   -webkit-appearance: none !important;
   opacity: 0 !important;
   visibility: hidden !important;
+}
+
+/* Ensure video controls work properly on community posts and other pages */
+video:not(.mobile-video-card video) {
+  pointer-events: auto !important;
+}
+
+video:not(.mobile-video-card video)::-webkit-media-controls,
+video:not(.mobile-video-card video)::-webkit-media-controls-panel,
+video:not(.mobile-video-card video)::-webkit-media-controls-play-button,
+video:not(.mobile-video-card video)::-webkit-media-controls-volume-slider,
+video:not(.mobile-video-card video)::-webkit-media-controls-mute-button,
+video:not(.mobile-video-card video)::-webkit-media-controls-timeline,
+video:not(.mobile-video-card video)::-webkit-media-controls-fullscreen-button {
+  pointer-events: auto !important;
+  cursor: pointer !important;
 }
 
 /* Pastikan konten masih bisa discroll */
