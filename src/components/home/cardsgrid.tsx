@@ -524,7 +524,7 @@ export default function CardsGrid({ selectedCategory = "All" }: { selectedCatego
       ) : (
         <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-x-4 gap-y-8
           max-sm:grid-cols-1 max-sm:gap-y-4">
-        {items.map((v) => {
+        {items.map((v, index) => {
         const addrLower = v.creator?.abstract_id?.toLowerCase() || "";
         const fetchedAbstract = addrLower ? absAvatars[addrLower] : "";
         const avatarSrc = v.creator?.avatar_url || fetchedAbstract || "";
@@ -547,7 +547,7 @@ export default function CardsGrid({ selectedCategory = "All" }: { selectedCatego
 
         return (
           <VideoCard
-            key={v.id}
+            key={`video-${v.id}-${index}`}
             videoId={v.id}
             title={v.title}
             thumbnailUrl={v.thumb_url || "/placeholder-thumb.png"}
