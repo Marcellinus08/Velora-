@@ -76,11 +76,36 @@ export const VideoCard = memo(function VideoCard({
 }: VideoCardProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [showVideo, setShowVideo] = useState(false);
-  const [countdown, setCountdown] = useState(10);
+  const [countdown, setCountdown] = useState(15);
+  const [isClaimed, setIsClaimed] = useState(() => {
+    // Check localStorage on mount
+    if (typeof window !== 'undefined') {
+      const claimed = localStorage.getItem('claimed_videos');
+      if (claimed) {
+        const claimedIds = JSON.parse(claimed) as string[];
+        return claimedIds.includes(videoId);
+      }
+    }
+    return false;
+  });
   const videoRef = useRef<HTMLVideoElement>(null);
   const hoverTimerRef = useRef<NodeJS.Timeout | null>(null);
   const playTimerRef = useRef<NodeJS.Timeout | null>(null);
   const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Handle claim for free videos
+  const handleClaim = () => {
+    setIsClaimed(true);
+    // Persist to localStorage
+    if (typeof window !== 'undefined') {
+      const claimed = localStorage.getItem('claimed_videos');
+      const claimedIds = claimed ? JSON.parse(claimed) as string[] : [];
+      if (!claimedIds.includes(videoId)) {
+        claimedIds.push(videoId);
+        localStorage.setItem('claimed_videos', JSON.stringify(claimedIds));
+      }
+    }
+  };
 
   // Handle hover start
   const handleMouseEnter = () => {
@@ -121,29 +146,29 @@ export const VideoCard = memo(function VideoCard({
     }
     
     setShowVideo(false);
-    setCountdown(10);
+    setCountdown(15);
   };
 
-  // Handle video play and auto-stop after 10 seconds
+  // Handle video play and auto-stop after 15 seconds
   useEffect(() => {
     if (showVideo && videoRef.current) {
       videoRef.current.currentTime = 0;
-      setCountdown(10);
+      setCountdown(15);
       
       const playPromise = videoRef.current.play();
       
       if (playPromise !== undefined) {
         playPromise
           .then(() => {
-            // Video started playing, set 10 second timer
+            // Video started playing, set 15 second timer
             playTimerRef.current = setTimeout(() => {
               if (videoRef.current) {
                 videoRef.current.pause();
                 videoRef.current.currentTime = 0;
               }
               setShowVideo(false);
-              setCountdown(10);
-            }, 10000); // 10 seconds
+              setCountdown(15);
+            }, 15000); // 15 seconds
 
             // Start countdown interval
             countdownIntervalRef.current = setInterval(() => {
@@ -202,8 +227,8 @@ export const VideoCard = memo(function VideoCard({
     >
       {/* Elegant Thumbnail */}
       <div className="relative w-full overflow-hidden rounded-t-xl">
-        {/* Points badge - simple and clean - Show for everyone including creator */}
-        {totalPoints > 0 && (
+        {/* Points badge - Show 0 pts for FREE videos, hide completely for owned/creator */}
+        {!isOwned && !isCreator && (
           <div className="absolute left-2 top-2 z-10 flex items-center gap-1.5 rounded-full border border-neutral-700 bg-neutral-900/85 px-2.5 py-1 text-xs font-semibold text-neutral-100 backdrop-blur">
             <span
               className="material-icons-round text-yellow-400 align-middle"
@@ -295,8 +320,14 @@ export const VideoCard = memo(function VideoCard({
         </div>
 
         <div className="mt-auto flex items-end justify-between">
-          <p className={`text-base font-bold mobile-video-card-price ${isOwned || isCreator ? "text-violet-300" : "text-neutral-50"}`}>
-            {isCreator ? "Your Video" : isOwned ? "Owned" : priceText}
+          <p className={`text-base font-bold mobile-video-card-price ${
+            isOwned || isCreator 
+              ? "text-violet-300" 
+              : priceUsd === 0 
+                ? "text-emerald-400" 
+                : "text-neutral-50"
+          }`}>
+            {isCreator ? "Your Video" : isOwned ? "Owned" : priceUsd === 0 ? "FREE" : priceText}
           </p>
 
           {/* Simple Action Buttons */}
@@ -313,6 +344,34 @@ export const VideoCard = memo(function VideoCard({
                 Watch
               </button>
             </Link>
+          ) : priceUsd === 0 ? (
+            /* FREE Video - Show Claim/Watch button */
+            isClaimed ? (
+              <Link href={`/video?id=${videoId}`} prefetch={false} className="relative z-10">
+                <button
+                  type="button"
+                  className="group relative inline-flex items-center gap-2 rounded-full bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-emerald-700 hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-neutral-900 cursor-pointer mobile-video-card-button"
+                  title="Watch this free video"
+                >
+                  <span className="material-icons-round text-[16px]" aria-hidden>
+                    play_arrow
+                  </span>
+                  Watch
+                </button>
+              </Link>
+            ) : (
+              <button
+                type="button"
+                onClick={handleClaim}
+                className="group relative inline-flex items-center gap-2 rounded-full bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition-all duration-200 ease-out hover:bg-emerald-700 hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-neutral-900 cursor-pointer mobile-video-card-button"
+                title="Claim this free video"
+              >
+                <span className="material-icons-round text-[16px]" aria-hidden>
+                  card_giftcard
+                </span>
+                Claim
+              </button>
+            )
           ) : canBuy ? (
             <div className="relative z-10">
               <BuyVideoButton
@@ -329,9 +388,9 @@ export const VideoCard = memo(function VideoCard({
               type="button"
               disabled
               className="inline-flex items-center gap-2 rounded-full bg-neutral-700 px-4 py-2 text-sm font-semibold text-white opacity-60 cursor-not-allowed mobile-video-card-button"
-              title={priceUsd <= 0 ? "Free video" : "Invalid creator address"}
+              title="Invalid creator address"
             >
-              {priceUsd <= 0 ? "Free" : "Buy"}
+              Buy
             </button>
           )}
         </div>

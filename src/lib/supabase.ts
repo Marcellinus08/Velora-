@@ -46,12 +46,17 @@ export function createClient() {
           
           for (let i = 0; i < maxRetries; i++) {
             try {
+              // Create timeout using AbortController for better compatibility
+              const controller = new AbortController();
+              const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 seconds
+              
               const response = await fetch(input as RequestInfo, { 
                 ...init, 
                 cache: "no-store",
-                // Add timeout
-                signal: AbortSignal.timeout(30000), // 30 seconds
+                signal: controller.signal,
               });
+              
+              clearTimeout(timeoutId);
               return response;
             } catch (error: any) {
               lastError = error;
