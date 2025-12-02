@@ -39,5 +39,5 @@ export type NewPostPayload = {
   title: string;
   category: string;
   content: string;
-  mediaPaths?: string[];           // path dari endpoint upload
+  mediaPaths?: { path: string; mime: string; width?: number | null; height?: number | null; duration_s?: number | null }[]; // path + metadata dari endpoint upload
 };

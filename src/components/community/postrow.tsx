@@ -78,6 +78,8 @@ function useDbAvatar(address?: string, initial?: string | null) {
 function MediaGrid({ media }: { media?: { url: string; mime?: string | null }[] }) {
   if (!media || !media.length) return null;
 
+  const [lightboxImage, setLightboxImage] = useState<string | null>(null);
+
   async function headOk(url: string) {
     try {
       const r = await fetch(url, { method: "HEAD" });
@@ -100,26 +102,71 @@ function MediaGrid({ media }: { media?: { url: string; mime?: string | null }[] 
   }, [media]);
 
   if (!valid.length) return null;
+  
+  // Helper to detect if file is video based on extension when mime is null
+  const isVideo = (m: { url: string; mime?: string | null }) => {
+    if (m.mime?.startsWith?.("video/")) return true;
+    // Fallback: check file extension
+    const ext = m.url.split('.').pop()?.toLowerCase();
+    return ext && ['mp4', 'webm', 'mov', 'avi', 'mkv', 'flv', 'm4v'].includes(ext);
+  };
+  
   return (
-    <div className="mt-3 max-sm:mt-2 grid grid-cols-2 gap-2 max-sm:gap-1.5 sm:grid-cols-3 md:grid-cols-4 max-sm:w-full max-sm:overflow-hidden md:gap-2">
-      {valid.map((m, i) => (
-        <div key={`${m.url}-${i}`} className="relative overflow-hidden rounded-lg max-sm:rounded-md border border-neutral-800 max-sm:w-full md:rounded-lg">
-          {m.mime?.startsWith?.("video/") ? (
-            <video src={m.url} className="h-40 max-sm:h-24 w-full object-cover md:h-40" controls playsInline preload="metadata" />
-          ) : (
-            <Image 
-              src={m.url} 
-              alt="Post media" 
-              width={400} 
-              height={160}
-              className="h-40 max-sm:h-24 w-full object-cover md:h-40"
-              loading="lazy"
-              quality={75}
+    <>
+      <div className="mt-3 max-sm:mt-2 grid grid-cols-2 gap-2 max-sm:gap-1.5 sm:grid-cols-3 md:grid-cols-4 max-sm:w-full max-sm:overflow-hidden md:gap-2">
+        {valid.map((m, i) => (
+          <div key={`${m.url}-${i}`} className="relative overflow-hidden rounded-lg max-sm:rounded-md border border-neutral-800 max-sm:w-full md:rounded-lg">
+            {isVideo(m) ? (
+              <video src={m.url} className="h-40 max-sm:h-24 w-full object-cover md:h-40" controls playsInline preload="metadata" />
+            ) : (
+              <div 
+                className="h-40 max-sm:h-24 w-full cursor-pointer hover:opacity-90 transition-opacity relative"
+                onClick={() => setLightboxImage(m.url)}
+              >
+                <Image 
+                  src={m.url} 
+                  alt="Post media" 
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 25vw"
+                  loading="lazy"
+                  quality={75}
+                />
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {/* Lightbox Modal */}
+      {lightboxImage && (
+        <div 
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 p-4 animate-in fade-in duration-200"
+          onClick={() => setLightboxImage(null)}
+        >
+          <button
+            onClick={() => setLightboxImage(null)}
+            className="absolute top-4 right-4 z-[101] rounded-full bg-neutral-800/80 p-2 text-white hover:bg-neutral-700 transition-colors"
+            aria-label="Close"
+          >
+            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+          <div className="relative max-w-7xl max-h-[90vh] w-full h-full flex items-center justify-center">
+            <Image
+              src={lightboxImage}
+              alt="Full size"
+              fill
+              className="object-contain"
+              sizes="100vw"
+              quality={100}
+              priority
             />
-          )}
+          </div>
         </div>
-      ))}
-    </div>
+      )}
+    </>
   );
 }
 
@@ -234,6 +281,30 @@ const CommunityPostRow = memo(function CommunityPostRow({
   // pilih ikon Like tergantung status (outline vs filled heart)
   const likeIcon = post.liked ? "favorite" : "favorite_border";
 
+  // Helper function to convert URLs in text to clickable links
+  const linkifyText = (text: string) => {
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    const parts = text.split(urlRegex);
+    
+    return parts.map((part, index) => {
+      if (part.match(urlRegex)) {
+        return (
+          <a
+            key={index}
+            href={part}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[var(--primary-500)] hover:underline break-all"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {part}
+          </a>
+        );
+      }
+      return <span key={index}>{part}</span>;
+    });
+  };
+
   return (
     <div className="rounded-lg border border-neutral-800 bg-neutral-900 p-4 max-sm:p-3 max-sm:rounded-md transition-colors hover:bg-neutral-800 max-sm:w-full max-sm:overflow-hidden md:p-4 md:rounded-lg">
       <div className="flex items-start gap-4 max-sm:gap-2.5 max-sm:w-full md:gap-3.5">
@@ -308,7 +379,7 @@ const CommunityPostRow = memo(function CommunityPostRow({
           <div className="mt-1 max-sm:text-sm text-neutral-400 break-words md:text-base">
             {!expanded ? (
               <>
-                {contentText.slice(0, 220)}
+                {linkifyText(contentText.slice(0, 220))}
                 {contentText.length > 220 ? "…" : ""}
                 {showReadMore && (
                   <button
@@ -321,7 +392,7 @@ const CommunityPostRow = memo(function CommunityPostRow({
               </>
             ) : (
               <>
-                <span className="whitespace-pre-wrap">{contentText}</span>{" "}
+                <span className="whitespace-pre-wrap">{linkifyText(contentText)}</span>{" "}
                 <button
                   className="ml-1 inline text-[var(--primary-500)] hover:underline cursor-pointer"
                   onClick={() => setExpanded(false)}

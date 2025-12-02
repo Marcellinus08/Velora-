@@ -85,7 +85,7 @@ export default function CreatePostModal({
 
     setSubmitting(true);
     try {
-      let mediaPaths: string[] = [];
+      let mediaPaths: { path: string; mime: string; width?: number | null; height?: number | null; duration_s?: number | null }[] = [];
 
       // Handle file uploads if there are any
       if (items.length) {
@@ -100,10 +100,16 @@ export default function CreatePostModal({
           throw new Error(j?.error || "Upload failed");
         }
         const j = await r.json();
-        mediaPaths = (j.items || []).map((x: any) => x.path);
+        mediaPaths = (j.items || []).map((x: any) => ({
+          path: x.path,
+          mime: x.mime,
+          width: x.width,
+          height: x.height,
+          duration_s: x.duration_s,
+        }));
       }
 
-      // Submit the post data including the file paths
+      // Submit the post data including the file paths with metadata
       onSubmit({ ...base, mediaPaths });
 
       // Clean up object URLs after successful submit
@@ -271,9 +277,9 @@ export default function CreatePostModal({
                         <video
                           src={it.url}
                           className="h-32 max-sm:h-20 w-full object-cover"
-                          muted
-                          loop
+                          controls
                           playsInline
+                          preload="metadata"
                         />
                       ) : (
                         // eslint-disable-next-line @next/next/no-img-element

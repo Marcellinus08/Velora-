@@ -116,7 +116,8 @@ export async function POST(req: Request) {
     const title = String(body.title || "").trim();
     const category = String(body.category || "All Topics").trim();
     const content = String(body.content || "").trim();
-    const mediaPaths: string[] = Array.isArray(body.mediaPaths) ? body.mediaPaths : [];
+    const mediaPaths: { path: string; mime: string; width?: number | null; height?: number | null; duration_s?: number | null }[] = 
+      Array.isArray(body.mediaPaths) ? body.mediaPaths : [];
 
     if (!/^0x[a-f0-9]{40}$/.test(abstractId) || !title || !content) {
       return NextResponse.json({ error: "abstractId (wallet), title, content required" }, { status: 400 });
@@ -134,7 +135,14 @@ export async function POST(req: Request) {
     if (error) throw new Error(error.message);
 
     if (mediaPaths.length) {
-      const rows = mediaPaths.map((p) => ({ post_id: post.id, path: p }));
+      const rows = mediaPaths.map((m) => ({ 
+        post_id: post.id, 
+        path: typeof m === 'string' ? m : m.path,
+        mime: typeof m === 'object' ? m.mime : null,
+        width: typeof m === 'object' ? m.width : null,
+        height: typeof m === 'object' ? m.height : null,
+        duration_s: typeof m === 'object' ? m.duration_s : null,
+      }));
       const { error: ferr } = await sbService.from("community_post_files").insert(rows);
       if (ferr) throw new Error(ferr.message);
     }
