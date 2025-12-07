@@ -1,11 +1,11 @@
 // src/app/layout.tsx
 import "./globals.css";
-import SiteHeader from "@/components/header/index";
 import { NextAbstractWalletProvider } from "@/components/agw-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import ProfileUpsertOnLogin from "@/components/auth/profile-upsert-on-login";
 import { ToastContainer } from "@/components/ui/toast";
 import type { ReactNode } from "react";
+import RootLayoutClient from "@/components/root-layout-client";
 
 export const metadata = {
   title: "Glonic",
@@ -50,7 +50,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         />
       </head>
       <body
-        className="relative flex min-h-screen flex-col overflow-y-auto overflow-x-hidden bg-neutral-900 pt-[57px] max-w-full"
+        className="relative flex min-h-screen flex-col overflow-y-auto overflow-x-hidden bg-neutral-900 max-w-full"
         style={{ fontFamily: `"Be Vietnam Pro", "Noto Sans", sans-serif` }}
       >
         <NextAbstractWalletProvider>
@@ -58,8 +58,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           <ProfileUpsertOnLogin />
 
           <TooltipProvider delayDuration={150}>
-            <SiteHeader />
-            {children}
+            <RootLayoutClient>
+              {children}
+            </RootLayoutClient>
           </TooltipProvider>
           
           {/* Toast notifications */}
